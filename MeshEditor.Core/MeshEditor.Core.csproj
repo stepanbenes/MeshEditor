@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MeshEditor</RootNamespace>
+    <AssemblyName>MeshEditor.Core</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\MeshEditor.Core.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\$(Configuration)\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="PowerCollections, Version=1.0.2141.24679, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\$(Configuration)\PowerCollections.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Construction\EdgeMark.cs" />
+    <Compile Include="CoreInterface\AppSettings.cs" />
+    <Compile Include="CoreInterface\AvailableAction.cs" />
+    <Compile Include="CoreInterface\AvailableValue.cs" />
+    <Compile Include="CoreInterface\IOEvents.cs" />
+    <Compile Include="CoreInterface\MouseButton.cs" />
+    <Compile Include="CoreInterface\SceneFacade.cs" />
+    <Compile Include="CoreInterface\ShowErrorEvent.cs" />
+    <Compile Include="Cuts\CutInfo.cs" />
+    <Compile Include="Cuts\CutPlane.cs" />
+    <Compile Include="Cuts\Cutter.cs" />
+    <Compile Include="Cuts\CutTestProvider.cs" />
+    <Compile Include="Cuts\FacesOnCutComputer.cs" />
+    <Compile Include="Data\PropertyCommand.cs" />
+    <Compile Include="IO\GiDMshFileFormatParser.cs" />
+    <Compile Include="IO\GiDMshFileFormatSaver.cs" />
+    <Compile Include="IO\VTKFileFormatSaver.cs" />
+    <Compile Include="UndoRedo\CompoundMemento.cs" />
+    <Compile Include="Data\MeshStatistics.cs" />
+    <Compile Include="Data\PropertyColorProvider.cs" />
+    <Compile Include="Data\ElementTypes\QuadraticBeam.cs" />
+    <Compile Include="Data\Content.cs" />
+    <Compile Include="Data\Surface\HiddenItemsProperties.cs" />
+    <Compile Include="Graphics\BeamVBO.cs" />
+    <Compile Include="Graphics\SimpleVBO.cs" />
+    <Compile Include="IO\CultureProvider.cs" />
+    <Compile Include="IO\DefaultFileFormatMeshSaver.cs" />
+    <Compile Include="IO\EdgeDraft.cs" />
+    <Compile Include="IO\FaceDraft.cs" />
+    <Compile Include="IO\MeshIOInterfaces.cs" />
+    <Compile Include="Construction\MeshConstructingException.cs" />
+    <Compile Include="Construction\MeshConstructor.cs" />
+    <Compile Include="Construction\QuadMark.cs" />
+    <Compile Include="Construction\TriangleMark.cs" />
+    <Compile Include="Data\IItemWithSignificantPoint.cs" />
+    <Compile Include="Data\Surface\IFaceOfElement3D.cs" />
+    <Compile Include="Data\Surface\QuadraticEdge.cs" />
+    <Compile Include="Data\ElementTypes\Hexahedron.cs" />
+    <Compile Include="Data\ElementTypes\ApproximationType.cs" />
+    <Compile Include="Data\ElementTypes\Element3D.cs" />
+    <Compile Include="Data\ElementTypes\Element2D.cs" />
+    <Compile Include="Data\ElementTypes\Beam.cs" />
+    <Compile Include="Data\ElementTypes\ElementType.cs" />
+    <Compile Include="Data\PreprocessorEnums.cs" />
+    <Compile Include="Data\Property.cs" />
+    <Compile Include="Data\PropertyEntityPair.cs" />
+    <Compile Include="Data\ElementTypes\Quadrilateral.cs" />
+    <Compile Include="Data\ElementTypes\Pyramid.cs" />
+    <Compile Include="Data\ElementTypes\Tetrahedron.cs" />
+    <Compile Include="Data\ElementTypes\Triangle.cs" />
+    <Compile Include="Data\ElementTypes\Wedge.cs" />
+    <Compile Include="Data\Surface\WingedEdge.cs" />
+    <Compile Include="Graphics\PropertyColorsMode.cs" />
+    <Compile Include="Graphics\Histogram.cs" />
+    <Compile Include="Graphics\IndexBufferObject.cs" />
+    <Compile Include="Graphics\RenderMode.cs" />
+    <Compile Include="Graphics\VertexBufferObject.cs" />
+    <Compile Include="IO\MeshSavingException.cs" />
+    <Compile Include="CoreInterface\MeshNeedRefreshEvent.cs" />
+    <Compile Include="Data\Selection.cs" />
+    <Compile Include="IO\ElementDraft.cs" />
+    <Compile Include="IO\MeshLoadingException.cs" />
+    <Compile Include="Data\ElementTypes\Element.cs" />
+    <Compile Include="Data\Mesh.cs" />
+    <Compile Include="Data\Surface\QuadFaceOfElement3D.cs" />
+    <Compile Include="Data\Surface\TriangleFaceOfElement3D.cs" />
+    <Compile Include="Data\Scene.cs" />
+    <Compile Include="Data\Node.cs" />
+    <Compile Include="IO\OBJFileFormatParser.cs" />
+    <Compile Include="IO\PLYFileFormatParser.cs" />
+    <Compile Include="IO\DefaultFileFormatParser.cs" />
+    <Compile Include="Graphics\Camera.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config" />
+    <None Include="CoreInterface\PublicTypes.cd" />
+    <None Include="Data\ElementTypes\ElementClassHierarchy.cd" />
+    <None Include="Data\meshIO.cd" />
+    <None Include="Data\Surface\SurfaceRepresentation.cd" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="CoreInterface\EditorMode.cs" />
+    <Compile Include="UndoRedo\IMemento.cs" />
+    <Compile Include="UndoRedo\Mementos.cs" />
+    <Compile Include="UndoRedo\RoundStack.cs" />
+    <Compile Include="UndoRedo\UndoRedoHistory.cs" />
+    <Compile Include="Utilities\PerformanceMeters.cs" />
+    <Compile Include="Utilities\Delegates.cs" />
+    <Compile Include="Utilities\Functions.cs" />
+    <Compile Include="Utilities\Matrix3x3.cs" />
+    <Compile Include="Utilities\PriorityQueue.cs" />
+    <Compile Include="Utilities\RandomNumber.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.OpenTKCompatibility\MeshEditor.OpenTKCompatibility.csproj">
+      <Project>{3ED73469-9212-4EC7-B450-EC243B344A39}</Project>
+      <Name>MeshEditor.OpenTKCompatibility</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

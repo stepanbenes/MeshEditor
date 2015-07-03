@@ -1,0 +1,1696 @@
+﻿namespace MeshEditor.WinUI
+{
+	partial class MainForm
+	{
+		/// <summary>
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.IContainer components = null;
+
+		/// <summary>
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && (components != null))
+			{
+				components.Dispose();
+			}
+			base.Dispose(disposing);
+		}
+
+		#region Windows Form Designer generated code
+
+		/// <summary>
+		/// Required method for Designer support - do not modify
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent()
+		{
+			this.components = new System.ComponentModel.Container();
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+			this.menuStrip = new System.Windows.Forms.MenuStrip();
+			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.closeActiveMeshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.redoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+			this.selectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.unselectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.invertSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.hideSelectedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+			this.setPropertyOfSelectedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.selectItemsByPropertyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.selectIncidingItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.axesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.intermediateNodesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
+			this.nodeNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.elementNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator20 = new System.Windows.Forms.ToolStripSeparator();
+			this.signalNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.signalElementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
+			this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
+			this.propertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.elementPropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.nodePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.edgePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamPropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.renderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.pointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.borderLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.allLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesRenderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.allLinesPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesBorderLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesAllLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesAllLinesPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.cameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.orbitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.panToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.lookAroundToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.zoomWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItemRotateZ1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
+			this.zoomToFitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
+			this.frontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.backToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.topToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.bottomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.rightToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.leftToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.isoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.selectToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.elementsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.nodesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.selectFacesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.edgesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.meshInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.listOfSelectedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+			this.cutsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.showHideElementsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.restoreCuttedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.invertAllNormalsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+			this.splitActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.closeActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
+			this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.readDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+			this.aboutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStrip = new System.Windows.Forms.ToolStrip();
+			this.openToolStripButton = new System.Windows.Forms.ToolStripButton();
+			this.saveToolStripButton = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonUndo = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonRedo = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripButtonPoints = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonBorderLines = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonAllLines = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonFaces = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripButtonOrbit = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonPan = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonLookAround = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonZoomWindow = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonRotateZ = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripButtonZoomToFit = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripButtonSelectElements = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonSelectNodes = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonSelectFaces = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonSelectEdges = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonSelectBeams = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
+			this.propertyColorsTtoolStripDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
+			this.elementPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.nodePropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.edgesPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamsPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripButtonSetPropertyOfSelectedItems = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonSelectItemsByProperty = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripButtonListOfSelectedItems = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonCutSelectArea = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonShowHideElements = new System.Windows.Forms.ToolStripButton();
+			this.toolStripButtonMeshInfo = new System.Windows.Forms.ToolStripButton();
+			this.statusStrip = new System.Windows.Forms.StatusStrip();
+			this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+			this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.selectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.elementsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.nodesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.facesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.edgesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+			this.orbitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.panToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.lookAroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.zoomWindowToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItemRotateZ = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.centralPanel = new System.Windows.Forms.Panel();
+			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.menuStrip.SuspendLayout();
+			this.toolStrip.SuspendLayout();
+			this.statusStrip.SuspendLayout();
+			this.contextMenuStrip.SuspendLayout();
+			this.SuspendLayout();
+			// 
+			// menuStrip
+			// 
+			this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem,
+            this.editToolStripMenuItem,
+            this.viewToolStripMenuItem,
+            this.renderToolStripMenuItem,
+            this.cameraToolStripMenuItem,
+            this.selectToolStripMenuItem1,
+            this.toolsToolStripMenuItem,
+            this.aboutToolStripMenuItem});
+			this.menuStrip.Location = new System.Drawing.Point(0, 0);
+			this.menuStrip.Name = "menuStrip";
+			this.menuStrip.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
+			this.menuStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+			this.menuStrip.Size = new System.Drawing.Size(875, 24);
+			this.menuStrip.TabIndex = 0;
+			this.menuStrip.Text = "menuStrip";
+			// 
+			// fileToolStripMenuItem
+			// 
+			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openToolStripMenuItem,
+            this.saveToolStripMenuItem,
+            this.closeActiveMeshToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.exitToolStripMenuItem});
+			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+			this.fileToolStripMenuItem.Text = "File";
+			// 
+			// openToolStripMenuItem
+			// 
+			this.openToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
+			this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
+			this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.openToolStripMenuItem.Text = "&Open";
+			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+			// 
+			// saveToolStripMenuItem
+			// 
+			this.saveToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources._active__Save;
+			this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+			this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+			this.saveToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.saveToolStripMenuItem.Text = "&Save As...";
+			this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+			// 
+			// closeActiveMeshToolStripMenuItem
+			// 
+			this.closeActiveMeshToolStripMenuItem.Name = "closeActiveMeshToolStripMenuItem";
+			this.closeActiveMeshToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.closeActiveMeshToolStripMenuItem.Text = "Close";
+			this.closeActiveMeshToolStripMenuItem.Click += new System.EventHandler(this.closeActiveMeshToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator1
+			// 
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(160, 6);
+			// 
+			// exitToolStripMenuItem
+			// 
+			this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+			this.exitToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.exitToolStripMenuItem.Text = "E&xit";
+			this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+			// 
+			// editToolStripMenuItem
+			// 
+			this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.undoToolStripMenuItem,
+            this.redoToolStripMenuItem,
+            this.toolStripSeparator6,
+            this.selectAllToolStripMenuItem,
+            this.unselectAllToolStripMenuItem,
+            this.invertSelectionToolStripMenuItem,
+            this.hideSelectedItemsToolStripMenuItem,
+            this.toolStripSeparator7,
+            this.setPropertyOfSelectedItemsToolStripMenuItem,
+            this.selectItemsByPropertyToolStripMenuItem,
+            this.selectIncidingItemsToolStripMenuItem});
+			this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+			this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+			this.editToolStripMenuItem.Text = "Edit";
+			this.editToolStripMenuItem.DropDownOpening += new System.EventHandler(this.editToolStripMenuItem_DropDownOpening);
+			// 
+			// undoToolStripMenuItem
+			// 
+			this.undoToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Undo;
+			this.undoToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
+			this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+			this.undoToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.undoToolStripMenuItem.Text = "&Undo";
+			this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
+			// 
+			// redoToolStripMenuItem
+			// 
+			this.redoToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Redo;
+			this.redoToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
+			this.redoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
+			this.redoToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.redoToolStripMenuItem.Text = "&Redo";
+			this.redoToolStripMenuItem.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator6
+			// 
+			this.toolStripSeparator6.Name = "toolStripSeparator6";
+			this.toolStripSeparator6.Size = new System.Drawing.Size(282, 6);
+			// 
+			// selectAllToolStripMenuItem
+			// 
+			this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
+			this.selectAllToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+			this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.selectAllToolStripMenuItem.Text = "&Select all";
+			this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
+			// 
+			// unselectAllToolStripMenuItem
+			// 
+			this.unselectAllToolStripMenuItem.Name = "unselectAllToolStripMenuItem";
+			this.unselectAllToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.unselectAllToolStripMenuItem.Text = "U&nselect all";
+			this.unselectAllToolStripMenuItem.Click += new System.EventHandler(this.unselectAllToolStripMenuItem_Click);
+			// 
+			// invertSelectionToolStripMenuItem
+			// 
+			this.invertSelectionToolStripMenuItem.Name = "invertSelectionToolStripMenuItem";
+			this.invertSelectionToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.invertSelectionToolStripMenuItem.Text = "&Invert selection";
+			this.invertSelectionToolStripMenuItem.Click += new System.EventHandler(this.invertSelectionToolStripMenuItem_Click);
+			// 
+			// hideSelectedItemsToolStripMenuItem
+			// 
+			this.hideSelectedItemsToolStripMenuItem.Name = "hideSelectedItemsToolStripMenuItem";
+			this.hideSelectedItemsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+			this.hideSelectedItemsToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.hideSelectedItemsToolStripMenuItem.Text = "&Hide selected elements";
+			this.hideSelectedItemsToolStripMenuItem.Click += new System.EventHandler(this.deleteSelectedElementsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator7
+			// 
+			this.toolStripSeparator7.Name = "toolStripSeparator7";
+			this.toolStripSeparator7.Size = new System.Drawing.Size(282, 6);
+			// 
+			// setPropertyOfSelectedItemsToolStripMenuItem
+			// 
+			this.setPropertyOfSelectedItemsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("setPropertyOfSelectedItemsToolStripMenuItem.Image")));
+			this.setPropertyOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.setPropertyOfSelectedItemsToolStripMenuItem.Name = "setPropertyOfSelectedItemsToolStripMenuItem";
+			this.setPropertyOfSelectedItemsToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.setPropertyOfSelectedItemsToolStripMenuItem.Text = "Set &property of selected entities";
+			this.setPropertyOfSelectedItemsToolStripMenuItem.Click += new System.EventHandler(this.setPropertyOfSelectedItemsToolStripMenuItem_Click);
+			// 
+			// selectItemsByPropertyToolStripMenuItem
+			// 
+			this.selectItemsByPropertyToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("selectItemsByPropertyToolStripMenuItem.Image")));
+			this.selectItemsByPropertyToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.selectItemsByPropertyToolStripMenuItem.Name = "selectItemsByPropertyToolStripMenuItem";
+			this.selectItemsByPropertyToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
+			this.selectItemsByPropertyToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.selectItemsByPropertyToolStripMenuItem.Text = "Select en&tities by property";
+			this.selectItemsByPropertyToolStripMenuItem.Click += new System.EventHandler(this.selectItemsByPropertyToolStripMenuItem_Click);
+			// 
+			// selectIncidingItemsToolStripMenuItem
+			// 
+			this.selectIncidingItemsToolStripMenuItem.Name = "selectIncidingItemsToolStripMenuItem";
+			this.selectIncidingItemsToolStripMenuItem.Size = new System.Drawing.Size(285, 22);
+			this.selectIncidingItemsToolStripMenuItem.Text = "Select items in&ciding with selected faces";
+			this.selectIncidingItemsToolStripMenuItem.Click += new System.EventHandler(this.selectIncidingItemsToolStripMenuItem_Click);
+			// 
+			// viewToolStripMenuItem
+			// 
+			this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.axesToolStripMenuItem,
+            this.intermediateNodesToolStripMenuItem,
+            this.beamsToolStripMenuItem2,
+            this.toolStripSeparator19,
+            this.nodeNumbersToolStripMenuItem,
+            this.elementNumbersToolStripMenuItem,
+            this.toolStripSeparator20,
+            this.signalNodeToolStripMenuItem,
+            this.signalElementToolStripMenuItem,
+            this.toolStripSeparator17,
+            this.refreshToolStripMenuItem,
+            this.toolStripSeparator9,
+            this.propertyColorsToolStripMenuItem});
+			this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+			this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+			this.viewToolStripMenuItem.Text = "View";
+			this.viewToolStripMenuItem.DropDownOpened += new System.EventHandler(this.viewToolStripMenuItem_DropDownOpened);
+			// 
+			// axesToolStripMenuItem
+			// 
+			this.axesToolStripMenuItem.Name = "axesToolStripMenuItem";
+			this.axesToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.axesToolStripMenuItem.Text = "&Axes";
+			this.axesToolStripMenuItem.Click += new System.EventHandler(this.axesToolStripMenuItem_Click);
+			// 
+			// intermediateNodesToolStripMenuItem
+			// 
+			this.intermediateNodesToolStripMenuItem.Name = "intermediateNodesToolStripMenuItem";
+			this.intermediateNodesToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.intermediateNodesToolStripMenuItem.Text = "&Mid-side nodes";
+			this.intermediateNodesToolStripMenuItem.ToolTipText = "View nodes in the middle of edges (used in elements with quadratic approximation)" +
+    "";
+			this.intermediateNodesToolStripMenuItem.Click += new System.EventHandler(this.midsideNodesToolStripMenuItem_Click);
+			// 
+			// beamsToolStripMenuItem2
+			// 
+			this.beamsToolStripMenuItem2.Name = "beamsToolStripMenuItem2";
+			this.beamsToolStripMenuItem2.Size = new System.Drawing.Size(215, 22);
+			this.beamsToolStripMenuItem2.Text = "&Beams";
+			this.beamsToolStripMenuItem2.Click += new System.EventHandler(this.beamsToolStripMenuItem2_Click);
+			// 
+			// toolStripSeparator19
+			// 
+			this.toolStripSeparator19.Name = "toolStripSeparator19";
+			this.toolStripSeparator19.Size = new System.Drawing.Size(212, 6);
+			// 
+			// nodeNumbersToolStripMenuItem
+			// 
+			this.nodeNumbersToolStripMenuItem.Name = "nodeNumbersToolStripMenuItem";
+			this.nodeNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.nodeNumbersToolStripMenuItem.Text = "&Node numbers";
+			this.nodeNumbersToolStripMenuItem.Click += new System.EventHandler(this.nodeNumbersToolStripMenuItem_Click);
+			// 
+			// elementNumbersToolStripMenuItem
+			// 
+			this.elementNumbersToolStripMenuItem.Name = "elementNumbersToolStripMenuItem";
+			this.elementNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.elementNumbersToolStripMenuItem.Text = "&Element numbers";
+			this.elementNumbersToolStripMenuItem.Click += new System.EventHandler(this.elementNumbersToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator20
+			// 
+			this.toolStripSeparator20.Name = "toolStripSeparator20";
+			this.toolStripSeparator20.Size = new System.Drawing.Size(212, 6);
+			// 
+			// signalNodeToolStripMenuItem
+			// 
+			this.signalNodeToolStripMenuItem.Name = "signalNodeToolStripMenuItem";
+			this.signalNodeToolStripMenuItem.ShortcutKeyDisplayString = "";
+			this.signalNodeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
+            | System.Windows.Forms.Keys.N)));
+			this.signalNodeToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.signalNodeToolStripMenuItem.Text = "&Signal node";
+			this.signalNodeToolStripMenuItem.ToolTipText = "Highlight node with specified id";
+			this.signalNodeToolStripMenuItem.Click += new System.EventHandler(this.signalNodeToolStripMenuItem_Click);
+			// 
+			// signalElementToolStripMenuItem
+			// 
+			this.signalElementToolStripMenuItem.Name = "signalElementToolStripMenuItem";
+			this.signalElementToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
+            | System.Windows.Forms.Keys.E)));
+			this.signalElementToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.signalElementToolStripMenuItem.Text = "Si&gnal element";
+			this.signalElementToolStripMenuItem.ToolTipText = "Highlight element with specified id";
+			this.signalElementToolStripMenuItem.Click += new System.EventHandler(this.signalElementToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator17
+			// 
+			this.toolStripSeparator17.Name = "toolStripSeparator17";
+			this.toolStripSeparator17.Size = new System.Drawing.Size(212, 6);
+			// 
+			// refreshToolStripMenuItem
+			// 
+			this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
+			this.refreshToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
+			this.refreshToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.refreshToolStripMenuItem.Text = "&Refresh scene";
+			this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator9
+			// 
+			this.toolStripSeparator9.Name = "toolStripSeparator9";
+			this.toolStripSeparator9.Size = new System.Drawing.Size(212, 6);
+			// 
+			// propertyColorsToolStripMenuItem
+			// 
+			this.propertyColorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.elementPropertyColorsToolStripMenuItem,
+            this.nodePropertyColorsToolStripMenuItem,
+            this.facePropertyColorsToolStripMenuItem,
+            this.edgePropertyColorsToolStripMenuItem,
+            this.beamPropertyColorsToolStripMenuItem});
+			this.propertyColorsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsToolStripMenuItem.Image")));
+			this.propertyColorsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.propertyColorsToolStripMenuItem.Name = "propertyColorsToolStripMenuItem";
+			this.propertyColorsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.propertyColorsToolStripMenuItem.Text = "&Property colors";
+			this.propertyColorsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.propertyColors_DropDownOpening);
+			// 
+			// elementPropertyColorsToolStripMenuItem
+			// 
+			this.elementPropertyColorsToolStripMenuItem.Name = "elementPropertyColorsToolStripMenuItem";
+			this.elementPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.elementPropertyColorsToolStripMenuItem.Text = "&Elements";
+			this.elementPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// nodePropertyColorsToolStripMenuItem
+			// 
+			this.nodePropertyColorsToolStripMenuItem.Name = "nodePropertyColorsToolStripMenuItem";
+			this.nodePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.nodePropertyColorsToolStripMenuItem.Text = "&Nodes";
+			this.nodePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// facePropertyColorsToolStripMenuItem
+			// 
+			this.facePropertyColorsToolStripMenuItem.Name = "facePropertyColorsToolStripMenuItem";
+			this.facePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.facePropertyColorsToolStripMenuItem.Text = "&Faces";
+			this.facePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// edgePropertyColorsToolStripMenuItem
+			// 
+			this.edgePropertyColorsToolStripMenuItem.Name = "edgePropertyColorsToolStripMenuItem";
+			this.edgePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.edgePropertyColorsToolStripMenuItem.Text = "Ed&ges";
+			this.edgePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// beamPropertyColorsToolStripMenuItem
+			// 
+			this.beamPropertyColorsToolStripMenuItem.Name = "beamPropertyColorsToolStripMenuItem";
+			this.beamPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.beamPropertyColorsToolStripMenuItem.Text = "&Beams";
+			this.beamPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// renderToolStripMenuItem
+			// 
+			this.renderToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pointsToolStripMenuItem,
+            this.borderLinesToolStripMenuItem,
+            this.allLinesToolStripMenuItem,
+            this.facesRenderToolStripMenuItem,
+            this.allLinesPointsToolStripMenuItem,
+            this.facesBorderLinesToolStripMenuItem,
+            this.facesAllLinesToolStripMenuItem,
+            this.facesAllLinesPointsToolStripMenuItem});
+			this.renderToolStripMenuItem.Name = "renderToolStripMenuItem";
+			this.renderToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
+			this.renderToolStripMenuItem.Text = "Render";
+			// 
+			// pointsToolStripMenuItem
+			// 
+			this.pointsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.points;
+			this.pointsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.pointsToolStripMenuItem.Name = "pointsToolStripMenuItem";
+			this.pointsToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.pointsToolStripMenuItem.Text = "&Points";
+			this.pointsToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// borderLinesToolStripMenuItem
+			// 
+			this.borderLinesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.borderLines;
+			this.borderLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.borderLinesToolStripMenuItem.Name = "borderLinesToolStripMenuItem";
+			this.borderLinesToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.borderLinesToolStripMenuItem.Text = "&Border lines";
+			this.borderLinesToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// allLinesToolStripMenuItem
+			// 
+			this.allLinesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.allLines;
+			this.allLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.allLinesToolStripMenuItem.Name = "allLinesToolStripMenuItem";
+			this.allLinesToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.allLinesToolStripMenuItem.Text = "&All lines";
+			this.allLinesToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// facesRenderToolStripMenuItem
+			// 
+			this.facesRenderToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.faces;
+			this.facesRenderToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.facesRenderToolStripMenuItem.Name = "facesRenderToolStripMenuItem";
+			this.facesRenderToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.facesRenderToolStripMenuItem.Text = "&Faces";
+			this.facesRenderToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// allLinesPointsToolStripMenuItem
+			// 
+			this.allLinesPointsToolStripMenuItem.Name = "allLinesPointsToolStripMenuItem";
+			this.allLinesPointsToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.allLinesPointsToolStripMenuItem.Text = "All &lines + points";
+			this.allLinesPointsToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// facesBorderLinesToolStripMenuItem
+			// 
+			this.facesBorderLinesToolStripMenuItem.Name = "facesBorderLinesToolStripMenuItem";
+			this.facesBorderLinesToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.facesBorderLinesToolStripMenuItem.Text = "Face&s + border lines";
+			this.facesBorderLinesToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// facesAllLinesToolStripMenuItem
+			// 
+			this.facesAllLinesToolStripMenuItem.Name = "facesAllLinesToolStripMenuItem";
+			this.facesAllLinesToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.facesAllLinesToolStripMenuItem.Text = "Fa&ces + all lines";
+			this.facesAllLinesToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// facesAllLinesPointsToolStripMenuItem
+			// 
+			this.facesAllLinesPointsToolStripMenuItem.Name = "facesAllLinesPointsToolStripMenuItem";
+			this.facesAllLinesPointsToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+			this.facesAllLinesPointsToolStripMenuItem.Text = "Faces + all lines + p&oints";
+			this.facesAllLinesPointsToolStripMenuItem.Click += new System.EventHandler(this.renderMode_item_click);
+			// 
+			// cameraToolStripMenuItem
+			// 
+			this.cameraToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.orbitToolStripMenuItem1,
+            this.panToolStripMenuItem1,
+            this.lookAroundToolStripMenuItem1,
+            this.zoomWindowToolStripMenuItem,
+            this.toolStripMenuItemRotateZ1,
+            this.toolStripSeparator10,
+            this.zoomToFitToolStripMenuItem,
+            this.toolStripSeparator16,
+            this.frontToolStripMenuItem,
+            this.backToolStripMenuItem,
+            this.topToolStripMenuItem,
+            this.bottomToolStripMenuItem,
+            this.rightToolStripMenuItem,
+            this.leftToolStripMenuItem,
+            this.isoToolStripMenuItem});
+			this.cameraToolStripMenuItem.Name = "cameraToolStripMenuItem";
+			this.cameraToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+			this.cameraToolStripMenuItem.Text = "Camera";
+			this.cameraToolStripMenuItem.DropDownOpened += new System.EventHandler(this.cameraToolStripMenuItem_DropDownOpened);
+			// 
+			// orbitToolStripMenuItem1
+			// 
+			this.orbitToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
+			this.orbitToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.orbitToolStripMenuItem1.Name = "orbitToolStripMenuItem1";
+			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.orbitToolStripMenuItem1.Text = "&Orbit";
+			this.orbitToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// panToolStripMenuItem1
+			// 
+			this.panToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
+			this.panToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.panToolStripMenuItem1.Name = "panToolStripMenuItem1";
+			this.panToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.panToolStripMenuItem1.Text = "&Pan";
+			this.panToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// lookAroundToolStripMenuItem1
+			// 
+			this.lookAroundToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
+			this.lookAroundToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.lookAroundToolStripMenuItem1.Name = "lookAroundToolStripMenuItem1";
+			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.lookAroundToolStripMenuItem1.Text = "Look &around";
+			this.lookAroundToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// zoomWindowToolStripMenuItem
+			// 
+			this.zoomWindowToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
+			this.zoomWindowToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomWindowToolStripMenuItem.Name = "zoomWindowToolStripMenuItem";
+			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.zoomWindowToolStripMenuItem.Text = "&Zoom window";
+			this.zoomWindowToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// toolStripMenuItemRotateZ1
+			// 
+			this.toolStripMenuItemRotateZ1.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
+			this.toolStripMenuItemRotateZ1.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripMenuItemRotateZ1.Name = "toolStripMenuItemRotateZ1";
+			this.toolStripMenuItemRotateZ1.Size = new System.Drawing.Size(151, 22);
+			this.toolStripMenuItemRotateZ1.Text = "&Rotate view";
+			this.toolStripMenuItemRotateZ1.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// toolStripSeparator10
+			// 
+			this.toolStripSeparator10.Name = "toolStripSeparator10";
+			this.toolStripSeparator10.Size = new System.Drawing.Size(148, 6);
+			// 
+			// zoomToFitToolStripMenuItem
+			// 
+			this.zoomToFitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
+			this.zoomToFitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomToFitToolStripMenuItem.Name = "zoomToFitToolStripMenuItem";
+			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.zoomToFitToolStripMenuItem.Text = "Zoo&m to fit";
+			this.zoomToFitToolStripMenuItem.Click += new System.EventHandler(this.zoomToFitToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator16
+			// 
+			this.toolStripSeparator16.Name = "toolStripSeparator16";
+			this.toolStripSeparator16.Size = new System.Drawing.Size(148, 6);
+			// 
+			// frontToolStripMenuItem
+			// 
+			this.frontToolStripMenuItem.Name = "frontToolStripMenuItem";
+			this.frontToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.frontToolStripMenuItem.Text = "&Front";
+			this.frontToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// backToolStripMenuItem
+			// 
+			this.backToolStripMenuItem.Name = "backToolStripMenuItem";
+			this.backToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.backToolStripMenuItem.Text = "&Back";
+			this.backToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// topToolStripMenuItem
+			// 
+			this.topToolStripMenuItem.Name = "topToolStripMenuItem";
+			this.topToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.topToolStripMenuItem.Text = "&Top";
+			this.topToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// bottomToolStripMenuItem
+			// 
+			this.bottomToolStripMenuItem.Name = "bottomToolStripMenuItem";
+			this.bottomToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.bottomToolStripMenuItem.Text = "Bo&ttom";
+			this.bottomToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// rightToolStripMenuItem
+			// 
+			this.rightToolStripMenuItem.Name = "rightToolStripMenuItem";
+			this.rightToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.rightToolStripMenuItem.Text = "&Right";
+			this.rightToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// leftToolStripMenuItem
+			// 
+			this.leftToolStripMenuItem.Name = "leftToolStripMenuItem";
+			this.leftToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.leftToolStripMenuItem.Text = "&Left";
+			this.leftToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// isoToolStripMenuItem
+			// 
+			this.isoToolStripMenuItem.Name = "isoToolStripMenuItem";
+			this.isoToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.isoToolStripMenuItem.Text = "&Iso";
+			this.isoToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
+			// 
+			// selectToolStripMenuItem1
+			// 
+			this.selectToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.elementsToolStripMenuItem1,
+            this.nodesToolStripMenuItem1,
+            this.selectFacesToolStripMenuItem,
+            this.edgesToolStripMenuItem1,
+            this.beamsToolStripMenuItem1});
+			this.selectToolStripMenuItem1.Name = "selectToolStripMenuItem1";
+			this.selectToolStripMenuItem1.Size = new System.Drawing.Size(50, 20);
+			this.selectToolStripMenuItem1.Text = "Select";
+			this.selectToolStripMenuItem1.DropDownOpening += new System.EventHandler(this.selectToolStripMenuItem_DropDownOpening);
+			// 
+			// elementsToolStripMenuItem1
+			// 
+			this.elementsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
+			this.elementsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.elementsToolStripMenuItem1.Name = "elementsToolStripMenuItem1";
+			this.elementsToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
+			this.elementsToolStripMenuItem1.Text = "&Elements";
+			this.elementsToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// nodesToolStripMenuItem1
+			// 
+			this.nodesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
+			this.nodesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.nodesToolStripMenuItem1.Name = "nodesToolStripMenuItem1";
+			this.nodesToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
+			this.nodesToolStripMenuItem1.Text = "&Nodes";
+			this.nodesToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// selectFacesToolStripMenuItem
+			// 
+			this.selectFacesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
+			this.selectFacesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.selectFacesToolStripMenuItem.Name = "selectFacesToolStripMenuItem";
+			this.selectFacesToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.selectFacesToolStripMenuItem.Text = "&Faces";
+			this.selectFacesToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// edgesToolStripMenuItem1
+			// 
+			this.edgesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
+			this.edgesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.edgesToolStripMenuItem1.Name = "edgesToolStripMenuItem1";
+			this.edgesToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
+			this.edgesToolStripMenuItem1.Text = "E&dges";
+			this.edgesToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// beamsToolStripMenuItem1
+			// 
+			this.beamsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
+			this.beamsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.beamsToolStripMenuItem1.Name = "beamsToolStripMenuItem1";
+			this.beamsToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
+			this.beamsToolStripMenuItem1.Text = "&Beams";
+			this.beamsToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// toolsToolStripMenuItem
+			// 
+			this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.meshInfoToolStripMenuItem,
+            this.listOfSelectedItemsToolStripMenuItem,
+            this.toolStripSeparator8,
+            this.cutsToolStripMenuItem,
+            this.showHideElementsToolStripMenuItem,
+            this.restoreCuttedItemsToolStripMenuItem,
+            this.invertAllNormalsToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.splitActiveWindowToolStripMenuItem,
+            this.closeActiveWindowToolStripMenuItem,
+            this.toolStripSeparator18,
+            this.settingsToolStripMenuItem});
+			this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+			this.toolsToolStripMenuItem.Text = "Tools";
+			this.toolsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.toolsToolStripMenuItem_DropDownOpening);
+			// 
+			// meshInfoToolStripMenuItem
+			// 
+			this.meshInfoToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.About;
+			this.meshInfoToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.meshInfoToolStripMenuItem.Name = "meshInfoToolStripMenuItem";
+			this.meshInfoToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4;
+			this.meshInfoToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.meshInfoToolStripMenuItem.Text = "&Mesh info";
+			this.meshInfoToolStripMenuItem.Click += new System.EventHandler(this.meshInfoToolStripMenuItem_Click);
+			// 
+			// listOfSelectedItemsToolStripMenuItem
+			// 
+			this.listOfSelectedItemsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.listOfSelectedItems;
+			this.listOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.listOfSelectedItemsToolStripMenuItem.Name = "listOfSelectedItemsToolStripMenuItem";
+			this.listOfSelectedItemsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
+			this.listOfSelectedItemsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.listOfSelectedItemsToolStripMenuItem.Text = "&List of selected entities";
+			this.listOfSelectedItemsToolStripMenuItem.Click += new System.EventHandler(this.listOfSelectedItemsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator8
+			// 
+			this.toolStripSeparator8.Name = "toolStripSeparator8";
+			this.toolStripSeparator8.Size = new System.Drawing.Size(209, 6);
+			// 
+			// cutsToolStripMenuItem
+			// 
+			this.cutsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.cutAndSelectArea;
+			this.cutsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.cutsToolStripMenuItem.Name = "cutsToolStripMenuItem";
+			this.cutsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F8;
+			this.cutsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.cutsToolStripMenuItem.Text = "&Cut / Select area";
+			this.cutsToolStripMenuItem.Click += new System.EventHandler(this.cutMeshToolStripMenuItem_Click);
+			// 
+			// showHideElementsToolStripMenuItem
+			// 
+			this.showHideElementsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.show_hide;
+			this.showHideElementsToolStripMenuItem.Name = "showHideElementsToolStripMenuItem";
+			this.showHideElementsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F9;
+			this.showHideElementsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.showHideElementsToolStripMenuItem.Text = "Show / Hide &elements";
+			this.showHideElementsToolStripMenuItem.Click += new System.EventHandler(this.showHideElementsToolStripMenuItem_Click);
+			// 
+			// restoreCuttedItemsToolStripMenuItem
+			// 
+			this.restoreCuttedItemsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.restore;
+			this.restoreCuttedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.restoreCuttedItemsToolStripMenuItem.Name = "restoreCuttedItemsToolStripMenuItem";
+			this.restoreCuttedItemsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F10;
+			this.restoreCuttedItemsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.restoreCuttedItemsToolStripMenuItem.Text = "&Restore mesh";
+			this.restoreCuttedItemsToolStripMenuItem.Click += new System.EventHandler(this.restoreMeshToolStripMenuItem_Click);
+			// 
+			// invertAllNormalsToolStripMenuItem
+			// 
+			this.invertAllNormalsToolStripMenuItem.Name = "invertAllNormalsToolStripMenuItem";
+			this.invertAllNormalsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.invertAllNormalsToolStripMenuItem.Text = "&Invert all normals";
+			this.invertAllNormalsToolStripMenuItem.Click += new System.EventHandler(this.invertAllNormalsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator4
+			// 
+			this.toolStripSeparator4.Name = "toolStripSeparator4";
+			this.toolStripSeparator4.Size = new System.Drawing.Size(209, 6);
+			// 
+			// splitActiveWindowToolStripMenuItem
+			// 
+			this.splitActiveWindowToolStripMenuItem.Name = "splitActiveWindowToolStripMenuItem";
+			this.splitActiveWindowToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.splitActiveWindowToolStripMenuItem.Text = "Spli&t active window";
+			this.splitActiveWindowToolStripMenuItem.Click += new System.EventHandler(this.splitActiveWindowToolStripMenuItem_Click);
+			// 
+			// closeActiveWindowToolStripMenuItem
+			// 
+			this.closeActiveWindowToolStripMenuItem.Name = "closeActiveWindowToolStripMenuItem";
+			this.closeActiveWindowToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.closeActiveWindowToolStripMenuItem.Text = "Close active &window";
+			this.closeActiveWindowToolStripMenuItem.Click += new System.EventHandler(this.closeActiveMeshToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator18
+			// 
+			this.toolStripSeparator18.Name = "toolStripSeparator18";
+			this.toolStripSeparator18.Size = new System.Drawing.Size(209, 6);
+			// 
+			// settingsToolStripMenuItem
+			// 
+			this.settingsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Settings;
+			this.settingsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+			this.settingsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F7;
+			this.settingsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+			this.settingsToolStripMenuItem.Text = "&Settings";
+			this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+			// 
+			// aboutToolStripMenuItem
+			// 
+			this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.readDocumentationToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.aboutToolStripMenuItem1});
+			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+			this.aboutToolStripMenuItem.Text = "Help";
+			// 
+			// readDocumentationToolStripMenuItem
+			// 
+			this.readDocumentationToolStripMenuItem.Name = "readDocumentationToolStripMenuItem";
+			this.readDocumentationToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
+			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+			this.readDocumentationToolStripMenuItem.Text = "&User guide";
+			this.readDocumentationToolStripMenuItem.Click += new System.EventHandler(this.readDocumentationToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator5
+			// 
+			this.toolStripSeparator5.Name = "toolStripSeparator5";
+			this.toolStripSeparator5.Size = new System.Drawing.Size(146, 6);
+			// 
+			// aboutToolStripMenuItem1
+			// 
+			this.aboutToolStripMenuItem1.Name = "aboutToolStripMenuItem1";
+			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(149, 22);
+			this.aboutToolStripMenuItem1.Text = "&About";
+			this.aboutToolStripMenuItem1.Click += new System.EventHandler(this.aboutToolStripMenuItem1_Click);
+			// 
+			// toolStrip
+			// 
+			this.toolStrip.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+			this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openToolStripButton,
+            this.saveToolStripButton,
+            this.toolStripButtonUndo,
+            this.toolStripButtonRedo,
+            this.toolStripSeparator,
+            this.toolStripButtonPoints,
+            this.toolStripButtonBorderLines,
+            this.toolStripButtonAllLines,
+            this.toolStripButtonFaces,
+            this.toolStripSeparator14,
+            this.toolStripButtonOrbit,
+            this.toolStripButtonPan,
+            this.toolStripButtonLookAround,
+            this.toolStripButtonZoomWindow,
+            this.toolStripButtonRotateZ,
+            this.toolStripSeparator11,
+            this.toolStripButtonZoomToFit,
+            this.toolStripSeparator15,
+            this.toolStripButtonSelectElements,
+            this.toolStripButtonSelectNodes,
+            this.toolStripButtonSelectFaces,
+            this.toolStripButtonSelectEdges,
+            this.toolStripButtonSelectBeams,
+            this.toolStripSeparator13,
+            this.propertyColorsTtoolStripDropDownButton,
+            this.toolStripButtonSetPropertyOfSelectedItems,
+            this.toolStripButtonSelectItemsByProperty,
+            this.toolStripSeparator12,
+            this.toolStripButtonListOfSelectedItems,
+            this.toolStripButtonCutSelectArea,
+            this.toolStripButtonShowHideElements,
+            this.toolStripButtonMeshInfo});
+			this.toolStrip.Location = new System.Drawing.Point(0, 24);
+			this.toolStrip.Name = "toolStrip";
+			this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+			this.toolStrip.Size = new System.Drawing.Size(875, 31);
+			this.toolStrip.TabIndex = 1;
+			this.toolStrip.Text = "toolStrip";
+			// 
+			// openToolStripButton
+			// 
+			this.openToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.openToolStripButton.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
+			this.openToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.openToolStripButton.Name = "openToolStripButton";
+			this.openToolStripButton.Size = new System.Drawing.Size(28, 28);
+			this.openToolStripButton.Text = "Open";
+			this.openToolStripButton.ToolTipText = "Open (Ctrl + O)";
+			this.openToolStripButton.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+			// 
+			// saveToolStripButton
+			// 
+			this.saveToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.saveToolStripButton.Image = global::MeshEditor.WinUI.Properties.Resources._active__Save;
+			this.saveToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.saveToolStripButton.Name = "saveToolStripButton";
+			this.saveToolStripButton.Size = new System.Drawing.Size(28, 28);
+			this.saveToolStripButton.Text = "Save As...";
+			this.saveToolStripButton.ToolTipText = "Save As... (Ctrl+S)";
+			this.saveToolStripButton.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+			// 
+			// toolStripButtonUndo
+			// 
+			this.toolStripButtonUndo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonUndo.Enabled = false;
+			this.toolStripButtonUndo.Image = global::MeshEditor.WinUI.Properties.Resources.Undo;
+			this.toolStripButtonUndo.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonUndo.Name = "toolStripButtonUndo";
+			this.toolStripButtonUndo.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonUndo.Text = "Undo";
+			this.toolStripButtonUndo.ToolTipText = "Undo (Ctrl+Z)";
+			this.toolStripButtonUndo.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
+			// 
+			// toolStripButtonRedo
+			// 
+			this.toolStripButtonRedo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonRedo.Enabled = false;
+			this.toolStripButtonRedo.Image = global::MeshEditor.WinUI.Properties.Resources.Redo;
+			this.toolStripButtonRedo.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonRedo.Name = "toolStripButtonRedo";
+			this.toolStripButtonRedo.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonRedo.Text = "Redo";
+			this.toolStripButtonRedo.ToolTipText = "Redo (Ctrl+Y)";
+			this.toolStripButtonRedo.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator
+			// 
+			this.toolStripSeparator.AutoSize = false;
+			this.toolStripSeparator.Name = "toolStripSeparator";
+			this.toolStripSeparator.Size = new System.Drawing.Size(20, 31);
+			// 
+			// toolStripButtonPoints
+			// 
+			this.toolStripButtonPoints.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonPoints.Image = global::MeshEditor.WinUI.Properties.Resources.points;
+			this.toolStripButtonPoints.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonPoints.Name = "toolStripButtonPoints";
+			this.toolStripButtonPoints.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonPoints.Text = "Show points";
+			this.toolStripButtonPoints.Click += new System.EventHandler(this.toolStripButtonPoints_Click);
+			// 
+			// toolStripButtonBorderLines
+			// 
+			this.toolStripButtonBorderLines.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonBorderLines.Image = global::MeshEditor.WinUI.Properties.Resources.borderLines;
+			this.toolStripButtonBorderLines.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonBorderLines.Name = "toolStripButtonBorderLines";
+			this.toolStripButtonBorderLines.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonBorderLines.Text = "Show border lines";
+			this.toolStripButtonBorderLines.Click += new System.EventHandler(this.toolStripButtonBorderLines_Click);
+			// 
+			// toolStripButtonAllLines
+			// 
+			this.toolStripButtonAllLines.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonAllLines.Image = global::MeshEditor.WinUI.Properties.Resources.allLines;
+			this.toolStripButtonAllLines.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonAllLines.Name = "toolStripButtonAllLines";
+			this.toolStripButtonAllLines.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonAllLines.Text = "Show all lines";
+			this.toolStripButtonAllLines.Click += new System.EventHandler(this.toolStripButtonAllLines_Click);
+			// 
+			// toolStripButtonFaces
+			// 
+			this.toolStripButtonFaces.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonFaces.Image = global::MeshEditor.WinUI.Properties.Resources.faces;
+			this.toolStripButtonFaces.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonFaces.Name = "toolStripButtonFaces";
+			this.toolStripButtonFaces.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonFaces.Text = "Show faces";
+			this.toolStripButtonFaces.Click += new System.EventHandler(this.toolStripButtonFaces_Click);
+			// 
+			// toolStripSeparator14
+			// 
+			this.toolStripSeparator14.AutoSize = false;
+			this.toolStripSeparator14.Name = "toolStripSeparator14";
+			this.toolStripSeparator14.Size = new System.Drawing.Size(20, 31);
+			// 
+			// toolStripButtonOrbit
+			// 
+			this.toolStripButtonOrbit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonOrbit.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
+			this.toolStripButtonOrbit.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonOrbit.Name = "toolStripButtonOrbit";
+			this.toolStripButtonOrbit.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonOrbit.Text = "Orbit";
+			this.toolStripButtonOrbit.ToolTipText = "Orbit (O)";
+			this.toolStripButtonOrbit.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonPan
+			// 
+			this.toolStripButtonPan.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonPan.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
+			this.toolStripButtonPan.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonPan.Name = "toolStripButtonPan";
+			this.toolStripButtonPan.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonPan.Text = "Pan";
+			this.toolStripButtonPan.ToolTipText = "Pan (P)";
+			this.toolStripButtonPan.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonLookAround
+			// 
+			this.toolStripButtonLookAround.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonLookAround.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
+			this.toolStripButtonLookAround.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonLookAround.Name = "toolStripButtonLookAround";
+			this.toolStripButtonLookAround.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonLookAround.Text = "Look around";
+			this.toolStripButtonLookAround.ToolTipText = "Look around (L)";
+			this.toolStripButtonLookAround.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonZoomWindow
+			// 
+			this.toolStripButtonZoomWindow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonZoomWindow.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
+			this.toolStripButtonZoomWindow.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonZoomWindow.Name = "toolStripButtonZoomWindow";
+			this.toolStripButtonZoomWindow.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonZoomWindow.Text = "Zoom window";
+			this.toolStripButtonZoomWindow.ToolTipText = "Zoom window (Z)";
+			this.toolStripButtonZoomWindow.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonRotateZ
+			// 
+			this.toolStripButtonRotateZ.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonRotateZ.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
+			this.toolStripButtonRotateZ.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonRotateZ.Name = "toolStripButtonRotateZ";
+			this.toolStripButtonRotateZ.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonRotateZ.Text = "Rotate view";
+			this.toolStripButtonRotateZ.ToolTipText = "Rotate view around screen axis";
+			this.toolStripButtonRotateZ.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripSeparator11
+			// 
+			this.toolStripSeparator11.Name = "toolStripSeparator11";
+			this.toolStripSeparator11.Size = new System.Drawing.Size(6, 31);
+			// 
+			// toolStripButtonZoomToFit
+			// 
+			this.toolStripButtonZoomToFit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonZoomToFit.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
+			this.toolStripButtonZoomToFit.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonZoomToFit.Name = "toolStripButtonZoomToFit";
+			this.toolStripButtonZoomToFit.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonZoomToFit.Text = "Zoom to fit";
+			this.toolStripButtonZoomToFit.Click += new System.EventHandler(this.zoomToFitToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator15
+			// 
+			this.toolStripSeparator15.Name = "toolStripSeparator15";
+			this.toolStripSeparator15.Size = new System.Drawing.Size(6, 31);
+			// 
+			// toolStripButtonSelectElements
+			// 
+			this.toolStripButtonSelectElements.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectElements.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
+			this.toolStripButtonSelectElements.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectElements.Name = "toolStripButtonSelectElements";
+			this.toolStripButtonSelectElements.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectElements.Text = "Select elements";
+			this.toolStripButtonSelectElements.ToolTipText = "Select elements (E)";
+			this.toolStripButtonSelectElements.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonSelectNodes
+			// 
+			this.toolStripButtonSelectNodes.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectNodes.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
+			this.toolStripButtonSelectNodes.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectNodes.Name = "toolStripButtonSelectNodes";
+			this.toolStripButtonSelectNodes.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectNodes.Text = "Select nodes";
+			this.toolStripButtonSelectNodes.ToolTipText = "Select nodes (N)";
+			this.toolStripButtonSelectNodes.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonSelectFaces
+			// 
+			this.toolStripButtonSelectFaces.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectFaces.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
+			this.toolStripButtonSelectFaces.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectFaces.Name = "toolStripButtonSelectFaces";
+			this.toolStripButtonSelectFaces.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectFaces.Text = "Select faces";
+			this.toolStripButtonSelectFaces.ToolTipText = "Select faces (F)";
+			this.toolStripButtonSelectFaces.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonSelectEdges
+			// 
+			this.toolStripButtonSelectEdges.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectEdges.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
+			this.toolStripButtonSelectEdges.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectEdges.Name = "toolStripButtonSelectEdges";
+			this.toolStripButtonSelectEdges.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectEdges.Text = "Select edges";
+			this.toolStripButtonSelectEdges.ToolTipText = "Select edges (G)";
+			this.toolStripButtonSelectEdges.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripButtonSelectBeams
+			// 
+			this.toolStripButtonSelectBeams.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectBeams.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
+			this.toolStripButtonSelectBeams.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectBeams.Name = "toolStripButtonSelectBeams";
+			this.toolStripButtonSelectBeams.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectBeams.Text = "Select beams";
+			this.toolStripButtonSelectBeams.ToolTipText = "Select beams (B)";
+			this.toolStripButtonSelectBeams.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
+			// 
+			// toolStripSeparator13
+			// 
+			this.toolStripSeparator13.AutoSize = false;
+			this.toolStripSeparator13.ForeColor = System.Drawing.SystemColors.ControlText;
+			this.toolStripSeparator13.Name = "toolStripSeparator13";
+			this.toolStripSeparator13.Size = new System.Drawing.Size(20, 31);
+			// 
+			// propertyColorsTtoolStripDropDownButton
+			// 
+			this.propertyColorsTtoolStripDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.propertyColorsTtoolStripDropDownButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.elementPropertyColorsToolStripMenuItem2,
+            this.nodePropertyColorsToolStripMenuItem2,
+            this.facesPropertyColorsToolStripMenuItem2,
+            this.edgesPropertyColorsToolStripMenuItem2,
+            this.beamsPropertyColorsToolStripMenuItem2});
+			this.propertyColorsTtoolStripDropDownButton.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			this.propertyColorsTtoolStripDropDownButton.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsTtoolStripDropDownButton.Image")));
+			this.propertyColorsTtoolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.White;
+			this.propertyColorsTtoolStripDropDownButton.Name = "propertyColorsTtoolStripDropDownButton";
+			this.propertyColorsTtoolStripDropDownButton.Size = new System.Drawing.Size(37, 28);
+			this.propertyColorsTtoolStripDropDownButton.Text = "Show property colors";
+			this.propertyColorsTtoolStripDropDownButton.ToolTipText = "Show property colors (Num 1-5)";
+			this.propertyColorsTtoolStripDropDownButton.DropDownOpening += new System.EventHandler(this.propertyColors_DropDownOpening);
+			// 
+			// elementPropertyColorsToolStripMenuItem2
+			// 
+			this.elementPropertyColorsToolStripMenuItem2.Name = "elementPropertyColorsToolStripMenuItem2";
+			this.elementPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.elementPropertyColorsToolStripMenuItem2.Text = "&Element property colors";
+			this.elementPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// nodePropertyColorsToolStripMenuItem2
+			// 
+			this.nodePropertyColorsToolStripMenuItem2.Name = "nodePropertyColorsToolStripMenuItem2";
+			this.nodePropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.nodePropertyColorsToolStripMenuItem2.Text = "&Node property colors";
+			this.nodePropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// facesPropertyColorsToolStripMenuItem2
+			// 
+			this.facesPropertyColorsToolStripMenuItem2.Name = "facesPropertyColorsToolStripMenuItem2";
+			this.facesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.facesPropertyColorsToolStripMenuItem2.Text = "&Face property colors";
+			this.facesPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// edgesPropertyColorsToolStripMenuItem2
+			// 
+			this.edgesPropertyColorsToolStripMenuItem2.Name = "edgesPropertyColorsToolStripMenuItem2";
+			this.edgesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.edgesPropertyColorsToolStripMenuItem2.Text = "Ed&ge property colors";
+			this.edgesPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// beamsPropertyColorsToolStripMenuItem2
+			// 
+			this.beamsPropertyColorsToolStripMenuItem2.Name = "beamsPropertyColorsToolStripMenuItem2";
+			this.beamsPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.beamsPropertyColorsToolStripMenuItem2.Text = "&Beam property colors";
+			this.beamsPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// toolStripButtonSetPropertyOfSelectedItems
+			// 
+			this.toolStripButtonSetPropertyOfSelectedItems.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSetPropertyOfSelectedItems.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSetPropertyOfSelectedItems.Image")));
+			this.toolStripButtonSetPropertyOfSelectedItems.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.toolStripButtonSetPropertyOfSelectedItems.Name = "toolStripButtonSetPropertyOfSelectedItems";
+			this.toolStripButtonSetPropertyOfSelectedItems.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSetPropertyOfSelectedItems.Text = "Set property of selected entities";
+			this.toolStripButtonSetPropertyOfSelectedItems.ToolTipText = "Set property of selected entities (Enter)";
+			this.toolStripButtonSetPropertyOfSelectedItems.Click += new System.EventHandler(this.setPropertyOfSelectedItemsToolStripMenuItem_Click);
+			// 
+			// toolStripButtonSelectItemsByProperty
+			// 
+			this.toolStripButtonSelectItemsByProperty.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonSelectItemsByProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSelectItemsByProperty.Image")));
+			this.toolStripButtonSelectItemsByProperty.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.toolStripButtonSelectItemsByProperty.Name = "toolStripButtonSelectItemsByProperty";
+			this.toolStripButtonSelectItemsByProperty.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonSelectItemsByProperty.Text = "Select entities by property (F6)";
+			this.toolStripButtonSelectItemsByProperty.Click += new System.EventHandler(this.selectItemsByPropertyToolStripMenuItem_Click);
+			this.toolStripButtonSelectItemsByProperty.MouseEnter += new System.EventHandler(this.toolStripButtonSelectItemsByProperty_MouseEnter);
+			// 
+			// toolStripSeparator12
+			// 
+			this.toolStripSeparator12.AutoSize = false;
+			this.toolStripSeparator12.Name = "toolStripSeparator12";
+			this.toolStripSeparator12.Size = new System.Drawing.Size(20, 31);
+			// 
+			// toolStripButtonListOfSelectedItems
+			// 
+			this.toolStripButtonListOfSelectedItems.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonListOfSelectedItems.Image = global::MeshEditor.WinUI.Properties.Resources.listOfSelectedItems;
+			this.toolStripButtonListOfSelectedItems.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonListOfSelectedItems.Name = "toolStripButtonListOfSelectedItems";
+			this.toolStripButtonListOfSelectedItems.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonListOfSelectedItems.Text = "Show list of selected entities (F3)";
+			this.toolStripButtonListOfSelectedItems.Click += new System.EventHandler(this.listOfSelectedItemsToolStripMenuItem_Click);
+			// 
+			// toolStripButtonCutSelectArea
+			// 
+			this.toolStripButtonCutSelectArea.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonCutSelectArea.Image = global::MeshEditor.WinUI.Properties.Resources.cutAndSelectArea;
+			this.toolStripButtonCutSelectArea.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonCutSelectArea.Name = "toolStripButtonCutSelectArea";
+			this.toolStripButtonCutSelectArea.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonCutSelectArea.Text = "Cut / Select area";
+			this.toolStripButtonCutSelectArea.ToolTipText = "Cut / Select area (F8)";
+			this.toolStripButtonCutSelectArea.Click += new System.EventHandler(this.cutMeshToolStripMenuItem_Click);
+			// 
+			// toolStripButtonShowHideElements
+			// 
+			this.toolStripButtonShowHideElements.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonShowHideElements.Image = global::MeshEditor.WinUI.Properties.Resources.show_hide;
+			this.toolStripButtonShowHideElements.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonShowHideElements.Name = "toolStripButtonShowHideElements";
+			this.toolStripButtonShowHideElements.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonShowHideElements.Text = "Show / hide elements";
+			this.toolStripButtonShowHideElements.ToolTipText = "Show / hide elements (F9)";
+			this.toolStripButtonShowHideElements.Click += new System.EventHandler(this.showHideElementsToolStripMenuItem_Click);
+			// 
+			// toolStripButtonMeshInfo
+			// 
+			this.toolStripButtonMeshInfo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripButtonMeshInfo.Image = global::MeshEditor.WinUI.Properties.Resources.About;
+			this.toolStripButtonMeshInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonMeshInfo.Name = "toolStripButtonMeshInfo";
+			this.toolStripButtonMeshInfo.Size = new System.Drawing.Size(28, 28);
+			this.toolStripButtonMeshInfo.Text = "Mesh info";
+			this.toolStripButtonMeshInfo.ToolTipText = "Mesh info (F4)";
+			this.toolStripButtonMeshInfo.Click += new System.EventHandler(this.meshInfoToolStripMenuItem_Click);
+			// 
+			// statusStrip
+			// 
+			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel});
+			this.statusStrip.Location = new System.Drawing.Point(0, 668);
+			this.statusStrip.Name = "statusStrip";
+			this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 10, 0);
+			this.statusStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+			this.statusStrip.Size = new System.Drawing.Size(875, 22);
+			this.statusStrip.TabIndex = 2;
+			this.statusStrip.Text = "statusStrip";
+			// 
+			// statusLabel
+			// 
+			this.statusLabel.Name = "statusLabel";
+			this.statusLabel.Size = new System.Drawing.Size(39, 17);
+			this.statusLabel.Text = "Ready";
+			// 
+			// contextMenuStrip
+			// 
+			this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.selectToolStripMenuItem,
+            this.toolStripSeparator3,
+            this.orbitToolStripMenuItem,
+            this.panToolStripMenuItem,
+            this.lookAroundToolStripMenuItem,
+            this.zoomWindowToolStripMenuItem1,
+            this.toolStripMenuItemRotateZ,
+            this.toolStripSeparator2,
+            this.splitWindowToolStripMenuItem,
+            this.closeWindowToolStripMenuItem});
+			this.contextMenuStrip.Name = "contextMenuStrip";
+			this.contextMenuStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+			this.contextMenuStrip.Size = new System.Drawing.Size(152, 192);
+			this.contextMenuStrip.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextMenuStrip_Closed);
+			this.contextMenuStrip.Opened += new System.EventHandler(this.cameraToolStripMenuItem_DropDownOpened);
+			// 
+			// selectToolStripMenuItem
+			// 
+			this.selectToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.elementsToolStripMenuItem,
+            this.nodesToolStripMenuItem,
+            this.facesToolStripMenuItem,
+            this.edgesToolStripMenuItem,
+            this.beamsToolStripMenuItem});
+			this.selectToolStripMenuItem.Name = "selectToolStripMenuItem";
+			this.selectToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.selectToolStripMenuItem.Text = "&Select";
+			this.selectToolStripMenuItem.DropDownOpening += new System.EventHandler(this.selectToolStripMenuItem_DropDownOpening);
+			// 
+			// elementsToolStripMenuItem
+			// 
+			this.elementsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
+			this.elementsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.elementsToolStripMenuItem.Name = "elementsToolStripMenuItem";
+			this.elementsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.elementsToolStripMenuItem.Text = "&Elements";
+			this.elementsToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// nodesToolStripMenuItem
+			// 
+			this.nodesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
+			this.nodesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.nodesToolStripMenuItem.Name = "nodesToolStripMenuItem";
+			this.nodesToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.nodesToolStripMenuItem.Text = "&Nodes";
+			this.nodesToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// facesToolStripMenuItem
+			// 
+			this.facesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
+			this.facesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.facesToolStripMenuItem.Name = "facesToolStripMenuItem";
+			this.facesToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.facesToolStripMenuItem.Text = "&Faces";
+			this.facesToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// edgesToolStripMenuItem
+			// 
+			this.edgesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
+			this.edgesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.edgesToolStripMenuItem.Name = "edgesToolStripMenuItem";
+			this.edgesToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.edgesToolStripMenuItem.Text = "Ed&ges";
+			this.edgesToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// beamsToolStripMenuItem
+			// 
+			this.beamsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
+			this.beamsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.beamsToolStripMenuItem.Name = "beamsToolStripMenuItem";
+			this.beamsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.beamsToolStripMenuItem.Text = "&Beams";
+			this.beamsToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
+			// 
+			// toolStripSeparator3
+			// 
+			this.toolStripSeparator3.Name = "toolStripSeparator3";
+			this.toolStripSeparator3.Size = new System.Drawing.Size(148, 6);
+			// 
+			// orbitToolStripMenuItem
+			// 
+			this.orbitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
+			this.orbitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.orbitToolStripMenuItem.Name = "orbitToolStripMenuItem";
+			this.orbitToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.orbitToolStripMenuItem.Text = "&Orbit";
+			this.orbitToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// panToolStripMenuItem
+			// 
+			this.panToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
+			this.panToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.panToolStripMenuItem.Name = "panToolStripMenuItem";
+			this.panToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.panToolStripMenuItem.Text = "&Pan";
+			this.panToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// lookAroundToolStripMenuItem
+			// 
+			this.lookAroundToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
+			this.lookAroundToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.lookAroundToolStripMenuItem.Name = "lookAroundToolStripMenuItem";
+			this.lookAroundToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.lookAroundToolStripMenuItem.Text = "&Look Around";
+			this.lookAroundToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// zoomWindowToolStripMenuItem1
+			// 
+			this.zoomWindowToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
+			this.zoomWindowToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomWindowToolStripMenuItem1.Name = "zoomWindowToolStripMenuItem1";
+			this.zoomWindowToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.zoomWindowToolStripMenuItem1.Text = "&Zoom window";
+			this.zoomWindowToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// toolStripMenuItemRotateZ
+			// 
+			this.toolStripMenuItemRotateZ.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
+			this.toolStripMenuItemRotateZ.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripMenuItemRotateZ.Name = "toolStripMenuItemRotateZ";
+			this.toolStripMenuItemRotateZ.Size = new System.Drawing.Size(151, 22);
+			this.toolStripMenuItemRotateZ.Text = "&Rotate view";
+			this.toolStripMenuItemRotateZ.ToolTipText = "Rotate view around screen axis";
+			this.toolStripMenuItemRotateZ.Click += new System.EventHandler(this.cameraToolChosen);
+			// 
+			// toolStripSeparator2
+			// 
+			this.toolStripSeparator2.Name = "toolStripSeparator2";
+			this.toolStripSeparator2.Size = new System.Drawing.Size(148, 6);
+			// 
+			// splitWindowToolStripMenuItem
+			// 
+			this.splitWindowToolStripMenuItem.Name = "splitWindowToolStripMenuItem";
+			this.splitWindowToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.splitWindowToolStripMenuItem.Text = "Split &window";
+			this.splitWindowToolStripMenuItem.Click += new System.EventHandler(this.splitWindowToolStripMenuItem_Click);
+			// 
+			// closeWindowToolStripMenuItem
+			// 
+			this.closeWindowToolStripMenuItem.Name = "closeWindowToolStripMenuItem";
+			this.closeWindowToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.closeWindowToolStripMenuItem.Text = "&Close window";
+			this.closeWindowToolStripMenuItem.Click += new System.EventHandler(this.closeActiveMeshToolStripMenuItem_Click);
+			// 
+			// centralPanel
+			// 
+			this.centralPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.centralPanel.Location = new System.Drawing.Point(0, 55);
+			this.centralPanel.Margin = new System.Windows.Forms.Padding(2);
+			this.centralPanel.Name = "centralPanel";
+			this.centralPanel.Size = new System.Drawing.Size(875, 613);
+			this.centralPanel.TabIndex = 5;
+			// 
+			// openFileDialog
+			// 
+			this.openFileDialog.Filter = "Default file format (*.top)|*.top|OBJ file format (*.obj)|*.obj|PLY file format (" +
+    "*.ply)|*.ply|All files (*.*)|*.*";
+			// 
+			// saveFileDialog
+			// 
+			this.saveFileDialog.Filter = "Default file format (*.top)|*.top|All files (*.*)|*.*";
+			// 
+			// MainForm
+			// 
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.ClientSize = new System.Drawing.Size(875, 690);
+			this.Controls.Add(this.centralPanel);
+			this.Controls.Add(this.statusStrip);
+			this.Controls.Add(this.toolStrip);
+			this.Controls.Add(this.menuStrip);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+			this.MainMenuStrip = this.menuStrip;
+			this.Margin = new System.Windows.Forms.Padding(2);
+			this.Name = "MainForm";
+			this.Text = "Mesh Editor";
+			this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+			this.menuStrip.ResumeLayout(false);
+			this.menuStrip.PerformLayout();
+			this.toolStrip.ResumeLayout(false);
+			this.toolStrip.PerformLayout();
+			this.statusStrip.ResumeLayout(false);
+			this.statusStrip.PerformLayout();
+			this.contextMenuStrip.ResumeLayout(false);
+			this.ResumeLayout(false);
+			this.PerformLayout();
+
+		}
+
+		#endregion
+
+		private System.Windows.Forms.MenuStrip menuStrip;
+		private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+		private System.Windows.Forms.ToolStrip toolStrip;
+		private System.Windows.Forms.StatusStrip statusStrip;
+		private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+		private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+		private System.Windows.Forms.ToolStripMenuItem splitWindowToolStripMenuItem;
+		private System.Windows.Forms.Panel centralPanel;
+		private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+		private System.Windows.Forms.OpenFileDialog openFileDialog;
+		private System.Windows.Forms.SaveFileDialog saveFileDialog;
+		private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+		private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem selectToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem orbitToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem panToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+		private System.Windows.Forms.ToolStripMenuItem facesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem edgesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem nodesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+		private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem lookAroundToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem elementsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem beamsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem cutsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem selectToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem elementsToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem nodesToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem selectFacesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem edgesToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem beamsToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem cameraToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+		private System.Windows.Forms.ToolStripMenuItem splitActiveWindowToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem orbitToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem lookAroundToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem panToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem readDocumentationToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripMenuItem selectAllToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem unselectAllToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem restoreCuttedItemsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+		private System.Windows.Forms.ToolStripMenuItem setPropertyOfSelectedItemsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+		private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem axesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem nodeNumbersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
+		private System.Windows.Forms.ToolStripMenuItem meshInfoToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem invertAllNormalsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem hideSelectedItemsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem selectItemsByPropertyToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem invertSelectionToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
+		private System.Windows.Forms.ToolStripMenuItem frontToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem backToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem topToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem bottomToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem rightToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem leftToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem isoToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem selectIncidingItemsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem redoToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+		private System.Windows.Forms.ToolStripMenuItem renderToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem showHideElementsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem pointsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem borderLinesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem allLinesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripButton openToolStripButton;
+		private System.Windows.Forms.ToolStripButton saveToolStripButton;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
+		private System.Windows.Forms.ToolStripButton toolStripButtonPoints;
+		private System.Windows.Forms.ToolStripButton toolStripButtonBorderLines;
+		private System.Windows.Forms.ToolStripButton toolStripButtonAllLines;
+		private System.Windows.Forms.ToolStripButton toolStripButtonFaces;
+		private System.Windows.Forms.ToolStripMenuItem allLinesPointsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem facesBorderLinesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem facesAllLinesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem facesRenderToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem facesAllLinesPointsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem propertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem nodePropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem elementPropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem facePropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem edgePropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem beamPropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator13;
+		private System.Windows.Forms.ToolStripDropDownButton propertyColorsTtoolStripDropDownButton;
+		private System.Windows.Forms.ToolStripMenuItem intermediateNodesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem elementPropertyColorsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripMenuItem nodePropertyColorsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripMenuItem facesPropertyColorsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripMenuItem edgesPropertyColorsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripMenuItem beamsPropertyColorsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripButton toolStripButtonOrbit;
+		private System.Windows.Forms.ToolStripButton toolStripButtonPan;
+		private System.Windows.Forms.ToolStripButton toolStripButtonLookAround;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator14;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectElements;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectNodes;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectFaces;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectEdges;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectBeams;
+		private System.Windows.Forms.ToolStripButton toolStripButtonZoomWindow;
+		private System.Windows.Forms.ToolStripButton toolStripButtonZoomToFit;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator15;
+		private System.Windows.Forms.ToolStripMenuItem zoomWindowToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem zoomToFitToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
+		private System.Windows.Forms.ToolStripMenuItem zoomWindowToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripButton toolStripButtonUndo;
+		private System.Windows.Forms.ToolStripButton toolStripButtonRedo;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSetPropertyOfSelectedItems;
+		private System.Windows.Forms.ToolStripButton toolStripButtonSelectItemsByProperty;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
+		private System.Windows.Forms.ToolStripButton toolStripButtonCutSelectArea;
+		private System.Windows.Forms.ToolStripButton toolStripButtonShowHideElements;
+		private System.Windows.Forms.ToolStripButton toolStripButtonMeshInfo;
+		private System.Windows.Forms.ToolStripMenuItem closeActiveMeshToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
+		private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem closeActiveWindowToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem closeWindowToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator18;
+		private System.Windows.Forms.ToolStripMenuItem listOfSelectedItemsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripButton toolStripButtonListOfSelectedItems;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
+		private System.Windows.Forms.ToolStripMenuItem elementNumbersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem beamsToolStripMenuItem2;
+		private System.Windows.Forms.ToolStripButton toolStripButtonRotateZ;
+		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRotateZ;
+		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRotateZ1;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator20;
+		private System.Windows.Forms.ToolStripMenuItem signalNodeToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem signalElementToolStripMenuItem;
+	}
+}
+

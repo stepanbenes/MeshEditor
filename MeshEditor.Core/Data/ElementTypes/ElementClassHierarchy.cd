@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Alphabetical">
+  <Class Name="MeshEditor.Data.Element" Collapsed="true">
+    <Position X="3.25" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAMaAkAQEAAAAAAAQIBAGACAABAAQAQAAQgE=</HashCode>
+      <FileName>Data\ElementTypes\Element.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MeshEditor.Data.Element2D" Collapsed="true">
+    <Position X="3.5" Y="1.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEIAAAAAAgAkAAAAAggAAgCAAAAAEACAAAAAQAA=</HashCode>
+      <FileName>Data\ElementTypes\Element2D.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Element3D" Collapsed="true">
+    <Position X="7.25" Y="1.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgEAAAAAAAAAAAAAAIAgEACAAAAAAAAAAYAA=</HashCode>
+      <FileName>Data\ElementTypes\Element3D.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Triangle" Collapsed="true">
+    <Position X="2.5" Y="3" Width="1.5" />
+    <InheritanceLine Type="MeshEditor.Data.Element2D" FixedToPoint="true">
+      <Path>
+        <Point X="4.125" Y="2.441" />
+        <Point X="4.125" Y="2.7" />
+        <Point X="3.25" Y="2.7" />
+        <Point X="3.25" Y="3" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAIEBAEiAgQAAgAAIAIgAGACAAEAAAABAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Triangle.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Quadrilateral" Collapsed="true">
+    <Position X="4.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAIEBAAiQgQAAkAAIAIgAWACAAEAAAABAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Quadrilateral.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Tetrahedron" Collapsed="true">
+    <Position X="5" Y="5.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Tetrahedron.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Wedge" Collapsed="true">
+    <Position X="8" Y="5.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Wedge.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Pyramid" Collapsed="true">
+    <Position X="6.5" Y="5.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Pyramid.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.Hexahedron" Collapsed="true">
+    <Position X="9.5" Y="5.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\ElementTypes\Hexahedron.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.QuadFaceOfElement3D" Collapsed="true">
+    <Position X="4.5" Y="4.25" Width="2" />
+    <InheritanceLine Type="MeshEditor.Data.Quadrilateral" FixedFromPoint="true">
+      <Path>
+        <Point X="5.25" Y="3.691" />
+        <Point X="5.25" Y="3.95" />
+        <Point X="5.5" Y="3.95" />
+        <Point X="5.5" Y="4.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Data\Surface\QuadFaceOfElement3D.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.1" />
+  </Class>
+  <Class Name="MeshEditor.Data.TriangleFaceOfElement3D" Collapsed="true">
+    <Position X="2" Y="4.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Data\Surface\TriangleFaceOfElement3D.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.125" />
+  </Class>
+  <Class Name="MeshEditor.Data.Beam" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AiAAAAIgAEAAAAAEAAAAAAAAAAAEACAAAAAAAAAAQAA=</HashCode>
+      <FileName>Data\ElementTypes\Beam.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.QuadraticBeam" Collapsed="true">
+    <Position X="0.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAAEAAAAAAAAAAAEACAAAAAAAABAQAA=</HashCode>
+      <FileName>Data\ElementTypes\QuadraticBeam.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

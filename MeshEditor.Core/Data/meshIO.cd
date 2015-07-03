@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MeshEditor.Data.Mesh" Collapsed="true">
+    <Position X="5" Y="4.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>RcraiJVAmLklUoElidQSLkTQgkEQgIAhADAGKGMEEwQ=</HashCode>
+      <FileName>Data\Mesh.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Right" Position="0.1" Collapsed="true" />
+  </Class>
+  <Interface Name="MeshEditor.IO.IProgressNotifier">
+    <Position X="4.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>IO\MeshIOInterfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MeshEditor.IO.IMeshCreator">
+    <Position X="3.25" Y="2.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>IO\MeshIOInterfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MeshEditor.IO.IMeshSaver">
+    <Position X="5.75" Y="2.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IO\MeshIOInterfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MeshEditor.IO.IMeshFileParser">
+    <Position X="0.75" Y="1" Width="1.5" />
+    <Members>
+      <Property Name="Filename" Hidden="true" />
+    </Members>
+    <InheritanceLine Type="System.IDisposable" FixedToPoint="true">
+      <Path>
+        <Point X="3.5" Y="1.062" />
+        <Point X="3.5" Y="1.438" />
+        <Point X="2.25" Y="1.438" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAEAAAAAAAAAEAAIAAAAAAAAACBA=</HashCode>
+      <FileName>IO\MeshIOInterfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MeshEditor.IO.IDefaultFileFormatParser">
+    <Position X="0.5" Y="3.75" Width="2" />
+    <Members>
+      <Property Name="CurrentLine" Hidden="true" />
+      <Event Name="LineWasSkipped" Hidden="true" />
+      <Method Name="ReadToEnd" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAEACAAQAAAQAQAAQAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IO\MeshIOInterfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="System.IDisposable" Collapsed="true">
+    <Position X="2.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -1,0 +1,1014 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Drawing;
+using System.Diagnostics;
+
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
+
+// Compatibility assembly (for TextPrinter)
+using OpenTK.Graphics;
+
+// alias
+using Utils = MeshEditor.Utilities.Functions;
+using MeshEditor.Graphics;
+using Wintellect.PowerCollections;
+
+
+namespace MeshEditor.Data
+{
+	/// <summary>
+	/// trida zapouzdrujici celou vnitni reprezentaci site. 
+	/// obsahuje strukturu typu okridlena hrana, seznamy uzlu, prvku, ploch, hran a beamu. a vertex buffer objekty
+	/// </summary>
+	public class Content
+	{
+		
+		#region Fields
+
+		// ---------------------------------------------------------------
+		
+		private List<Element> elements;
+		private List<Beam> beams;
+		private List<Element2D> faces;
+		private List<WingedEdge> edges;
+		private Dictionary<Node, List<WingedEdge>> nodesEdgesIncidence;
+		private List<Node> edgeMiddleNodes;
+		private Set<Node> beamNodesNotInFaces; // uzly od beamu, ktere nejsou obsazeny v siti
+		private Dictionary<Node, int> nodeIndexMap; // pro VBO - pro kazdy uzel - jeho index v bufferu
+
+		private Dictionary<Element2D, Vector2> faceCentersPositions;
+		private Dictionary<Beam, Vector2> beamCentersPositions;
+		private Set<Node> stickyNodes;
+
+		// ---------------------------------------------------------------
+
+		// buffers
+
+		private VertexBufferObject vbo; // main vertex buffer
+		private BeamVBO beamVBO; // vertex buffer for beams only
+		
+		private IndexBufferObject facesIBO;
+		private IndexBufferObject ordinaryEdgesIBO;
+		private IndexBufferObject softEdgesIBO;
+		private IndexBufferObject hardEdgesIBO;
+		private IndexBufferObject nodesIBO;
+		private IndexBufferObject middleNodesIBO;
+
+		private IndexBufferObject visibleNodesIBO;
+		
+		// ===============================
+
+		private Set<Node> visibleNodes;
+
+		private MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
+		private Font textFont;
+
+		private bool normalVectorsAreInverted;
+
+		// -------------------------------
+
+		#endregion
+
+		#region Constructor, initialization
+
+		public Content()
+		{
+			this.elements = new List<Element>();
+			this.beams = new List<Beam>();
+			this.faces = new List<Element2D>();
+			this.edges = new List<WingedEdge>();
+			this.nodesEdgesIncidence = new Dictionary<Node, List<WingedEdge>>();
+			this.edgeMiddleNodes = new List<Node>();
+			this.beamNodesNotInFaces = new Set<Node>();
+			this.nodeIndexMap = null;
+			this.faceCentersPositions = null;
+			this.beamCentersPositions = null;
+			this.stickyNodes = new Set<Node>();
+
+			vbo = null;
+			beamVBO = null;
+			facesIBO = ordinaryEdgesIBO = softEdgesIBO = hardEdgesIBO = nodesIBO = middleNodesIBO = null;
+
+			this.visibleNodes = null;
+			this.visibleNodesIBO = null;
+
+			this.textPrinter = new OpenTKCompatibility.TextPrinter();
+			this.textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
+
+			this.normalVectorsAreInverted = false;
+		}
+
+		public void TrimExcessMemory()
+		{
+			faces.TrimExcess();
+			edges.TrimExcess();
+			// nodesEdgesIncidence asi tezko zmensim
+			beams.TrimExcess();
+			edgeMiddleNodes.TrimExcess();
+
+			// tohle odebirat nebudu, jsou pak s tim problemy napriklad pri rezani site. a moc mista to neusetri...
+			// !!! remove2DElementsFromElementList();
+			
+			elements.TrimExcess();
+		}
+
+		//private void remove2DElementsFromElementList()
+		//{
+		//    // odebrat ze seznamu 2D prvky (jsou uz totiz v surface)
+		//    Predicate<Element> discard2D = delegate(Element e) { return e is Element2D; };
+		//    elements.RemoveAll(discard2D);
+		//}
+
+		#endregion
+
+		#region Properties
+
+		public List<Element> Elements
+		{
+			get { return elements; }
+		}
+		public List<Beam> Beams
+		{
+			get { return beams; }
+		}
+		public List<Element2D> Faces
+		{
+			get { return faces; }
+		}
+		public List<WingedEdge> Edges
+		{
+			get { return edges; }
+		}
+		public Dictionary<Node, List<WingedEdge>> NodesEdgesIncidence
+		{
+			get { return nodesEdgesIncidence; }
+		}
+		public List<Node> EdgeMiddleNodes
+		{
+			get { return edgeMiddleNodes; }
+		}
+		public Set<Node> BeamNodesNotInFaces
+		{
+			get { return beamNodesNotInFaces; }
+		}
+		
+		public bool VisibleNodesReady
+		{
+			get { return (this.visibleNodesIBO != null || this.visibleNodes != null); }
+		}
+
+		public Set<Node> VisibleNodes
+		{
+			get { return visibleNodes; }
+			set { visibleNodes = value; }
+		}
+
+		public int ExternalNodesCount
+		{
+			get { return nodesEdgesIncidence.Count + edgeMiddleNodes.Count + beamNodesNotInFaces.Count; }
+		}
+
+		public bool NormalVectorsAreInverted
+		{
+			get { return normalVectorsAreInverted; }
+		}
+
+		public Dictionary<Element2D, Vector2> FaceCentersPositions
+		{
+			get { return faceCentersPositions; }
+			set { faceCentersPositions = value; }
+		}
+
+		public Dictionary<Beam, Vector2> BeamCentersPositions
+		{
+			get { return beamCentersPositions; }
+			set { beamCentersPositions = value; }
+		}
+
+		public Set<Node> StickyNodes
+		{
+			get { return stickyNodes; }
+			set { stickyNodes = value; }
+		}
+
+		//public bool VBOisReady
+		//{
+		//    get { return vbo != null; }
+		//}
+
+		#endregion
+
+		#region Buffer creating, deleting
+
+		/// <summary>
+		/// Creates vertex buffer object for whole mesh and index buffer objects for each surface object.
+		/// </summary>
+		public bool CreateBuffers(PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
+		{
+            bool ready = false;
+			if (VertexBufferObject.IsSupported)
+			{
+#if !DEBUG
+				try
+				{
+#endif
+				Dictionary<Element2D, int[]> faceIndexMap;
+				//Dictionary<Node, int> nodeIndexMap;
+				Dictionary<WingedEdge, int> edgeIndexMap;
+
+				
+
+				// create global Vertex buffer object
+				this.vbo = new VertexBufferObject();
+				vbo.CreateFrom(faces, GetAllExternalNodes(), colorMode, softBorderLimit, hardBorderLimit, out faceIndexMap, out edgeIndexMap, out this.nodeIndexMap);
+
+                // create vertex buffer object for beams
+				if (this.beams.Count > 0)
+					createBeamVBO((colorMode & PropertyColorsMode.Beams) != 0);
+
+                // update colors
+                UpdateAllColors(new Set<ISelectable>()/**/, colorMode, softBorderLimit, hardBorderLimit);
+
+				// create index buffers
+				createIndexBuffers(faceIndexMap, edgeIndexMap, this.nodeIndexMap, softBorderLimit, hardBorderLimit);
+				// ----------------------------------------
+
+				ready = true;
+#if !DEBUG
+				}
+				catch (Exception)
+				{
+					this.vbo = null;
+					this.nodeIndexMap = null;
+					Scene.MeshShadingModel = ShadingModel.Flat;
+                    ready = false;
+				}
+#endif
+
+			}
+			else
+			{
+				this.vbo = null;
+				this.beamVBO = null;
+				Scene.MeshShadingModel = ShadingModel.Flat;
+                ready = false;
+			}
+            return ready;
+		}
+
+		private void createIndexBuffers(Dictionary<Element2D, int[]> faceIndexMap, Dictionary<WingedEdge, int> edgeIndexMap, Dictionary<Node, int> nodeIndexMap, float softBorderLimit, float hardBorderLimit)
+		{
+			List<int> indices = new List<int>(this.faces.Count * 3 /*approximate initial capacity*/);
+
+			// create Index buffer object for faces
+			foreach (Element2D face in faces)
+				indices.AddRange(faceIndexMap[face]);
+
+			if (indices.Count > 0)
+				this.facesIBO = new IndexBufferObject(BeginMode.Triangles, indices.ToArray());
+			// ------------------------------------
+			// create Index buffer object for nodes
+			indices = new List<int>(nodesEdgesIncidence.Count);
+			foreach (Node n in GetSimpleExternalNodes())
+				indices.Add(nodeIndexMap[n]);
+			
+			if (indices.Count > 0)
+				this.nodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+			// ------------------------------------
+			// create Index buffer object for middle nodes in center of edges
+			indices = new List<int>();
+			foreach (Node n in this.edgeMiddleNodes)
+				indices.Add(nodeIndexMap[n]);
+
+			if (indices.Count > 0)
+				this.middleNodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+			// ------------------------------------
+			// create Index buffer object for edges
+			List<int> ordinaryEdgesIndices = new List<int>();
+			List<int> softEdgesIndices = new List<int>();
+			List<int> hardEdgesIndices = new List<int>();
+
+			foreach (WingedEdge e in edges)
+			{
+				bool reversed;
+				int index = VertexBufferObject.DecodeEdgeIndex(edgeIndexMap[e], out reversed);
+				
+				int first = nodeIndexMap[(reversed) ? e.EndNode : e.BeginNode];
+				int second = index;
+
+				if (e.FeatureAngle >= hardBorderLimit)
+				{
+					hardEdgesIndices.Add(first);
+					hardEdgesIndices.Add(second);
+				}
+				else if (e.FeatureAngle >= softBorderLimit)
+				{
+					softEdgesIndices.Add(first);
+					softEdgesIndices.Add(second);
+				}
+				else
+				{
+					ordinaryEdgesIndices.Add(first);
+					ordinaryEdgesIndices.Add(second);
+				}
+			}
+
+			// ----------------------------------------
+			if (ordinaryEdgesIndices.Count > 0)
+				this.ordinaryEdgesIBO = new IndexBufferObject(BeginMode.Lines, ordinaryEdgesIndices.ToArray());
+			if (softEdgesIndices.Count > 0)
+				this.softEdgesIBO = new IndexBufferObject(BeginMode.Lines, softEdgesIndices.ToArray());
+			if (hardEdgesIndices.Count > 0)
+				this.hardEdgesIBO = new IndexBufferObject(BeginMode.Lines, hardEdgesIndices.ToArray());
+
+		}
+
+		private void createBeamVBO(bool beamPropertyColors)
+		{
+			this.beamVBO = new BeamVBO(beams.Count, beams, beamPropertyColors); 
+		}
+
+		public void DeleteBuffers()
+		{
+			if (this.vbo != null)
+			{
+				this.vbo.Dispose();
+				this.vbo = null;
+			}
+			if (this.beamVBO != null)
+			{
+				this.beamVBO.Dispose();
+				this.beamVBO = null;
+			}
+			if (this.facesIBO != null)
+			{
+				this.facesIBO.Dispose();
+				this.facesIBO = null;
+			}
+			if (this.ordinaryEdgesIBO != null)
+			{
+				this.ordinaryEdgesIBO.Dispose();
+				this.ordinaryEdgesIBO = null;
+			}
+			if (this.softEdgesIBO != null)
+			{
+				this.softEdgesIBO.Dispose();
+				this.softEdgesIBO = null;
+			}
+			if (this.hardEdgesIBO != null)
+			{
+				this.hardEdgesIBO.Dispose();
+				this.hardEdgesIBO = null;
+			}
+			if (this.nodesIBO != null)
+			{
+				this.nodesIBO.Dispose();
+				this.nodesIBO = null;
+			}
+			if (this.middleNodesIBO != null)
+			{
+				this.middleNodesIBO.Dispose();
+				this.middleNodesIBO = null;
+			}
+			if (this.visibleNodesIBO != null)
+			{
+				this.visibleNodesIBO.Dispose();
+				this.visibleNodesIBO = null;
+			}
+		}
+
+		public void CreateVisibleNodesBuffer(Rectangle window)
+		{
+			List<int> indices = new List<int>();
+
+			foreach (KeyValuePair<Node, int> pair in this.nodeIndexMap)
+			{
+				if (visibleNodes.Contains(pair.Key))
+				{
+					indices.Add(pair.Value);
+				}
+			}
+
+			if (this.visibleNodesIBO != null)
+			{
+				this.visibleNodesIBO.Dispose();
+				this.visibleNodesIBO = null;
+			}
+
+			if (visibleNodes.Count > 0)
+				this.visibleNodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+
+		}
+
+		#endregion
+
+		#region Buffer updating
+
+        public void UpdateAllColors(Set<ISelectable> selected, PropertyColorsMode colorMode, float edgeSoftBorderLimit, float edgeHardBorderLimit)
+        {
+            UpdateFaceColors(selected, colorMode);
+            UpdateNodeColors(selected, colorMode);
+            UpdateEdgeColors(selected, colorMode, edgeSoftBorderLimit, edgeHardBorderLimit);
+            UpdateBeamColors(selected, colorMode);
+        }
+
+		public void UpdateNodeColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		{
+			if (this.vbo == null)
+				return;
+
+			bool nodePropertyColors = (colorMode & PropertyColorsMode.Nodes) != 0;
+
+			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.NodeColorBufferID);
+			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+
+			unsafe
+			{
+				int* items = (int*)videoMemory.ToPointer();
+				int selectedColor = Utils.ColorToRgba32(Scene.SelectedNodeColor);
+				int nodeColor = 0;
+
+				foreach (Node node in GetAllExternalNodes())
+				{
+					int vertexIndex = this.nodeIndexMap[node];
+					if (selected.Contains(node))
+						items[vertexIndex] = selectedColor;
+					else
+					{
+						if (nodePropertyColors)
+							nodeColor = PropertyColorProvider.GetRGBA32(node.Property);
+						else
+							nodeColor = Utils.ColorToRgba32(Scene.NodesColor);
+						items[vertexIndex] = nodeColor;
+					}
+				}
+			}
+
+			if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+			{
+#if DEBUG
+				throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+			}
+			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+		}
+
+		public void UpdateEdgeColors(Set<ISelectable> selected, PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
+		{
+			if (this.vbo == null)
+				return;
+
+			bool edgePropertyColors = (colorMode & PropertyColorsMode.Edges) != 0;
+
+			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.EdgeColorBufferID);
+			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+
+			unsafe
+			{
+				int* items = (int*)videoMemory.ToPointer();
+				int selectedColor = Utils.ColorToRgba32(Scene.SelectedEdgeColor);
+				int edgeColor = 0;
+
+				int vertexIndex = 0;
+				foreach (Element2D face in faces)
+				{
+					foreach (WingedEdge edge in face.IterateThroughAllEdges())
+					{
+						if (selected.Contains(edge))
+							items[vertexIndex] = selectedColor;
+						else
+						{
+							if (edgePropertyColors)
+								edgeColor = PropertyColorProvider.GetRGBA32(edge.Property);
+							else if (edge.FeatureAngle >= hardBorderLimit)
+								edgeColor = Utils.ColorToRgba32(Scene.HardBorderColor);
+							else if (edge.FeatureAngle >= softBorderLimit)
+								edgeColor = Utils.ColorToRgba32(Scene.SoftBorderColor);
+							else
+								edgeColor = Utils.ColorToRgba32(Scene.OrdinaryEdgeColor);
+							items[vertexIndex] = edgeColor;
+						}
+						vertexIndex++;
+					}
+				}
+			}
+
+			if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+			{
+#if DEBUG
+				throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+			}
+			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+		}
+
+		public void UpdateFaceColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		{
+			if (this.vbo == null)
+				return;
+
+			bool facePropertyColors = (colorMode & PropertyColorsMode.Faces) != 0;
+			bool elementPropertyColors = (colorMode & PropertyColorsMode.Elements) != 0;
+
+			int selectedFaceColor = Utils.ColorToRgba32(Scene.SelectedFaceColor);
+			int selectedElementColor = Utils.ColorToRgba32(Scene.SelectedElementColor);
+			int selectedFaceAndElementColor = Utils.ColorToRgba32(Scene.SelectedFaceAndElementColor);
+			int ordinaryFaceColor = Utils.ColorToRgba32(Scene.FaceColor);
+			int faceColor = ordinaryFaceColor;
+
+			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.FaceColorBufferID);
+			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+
+			unsafe
+			{
+				int index = 0;
+				int* items = (int*)videoMemory.ToPointer();
+
+				foreach (Element2D face in faces)
+				{
+					// -------------------------------------------
+					// nastaveni barvy
+					IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
+					bool containsFace = selected.Contains(face);
+					bool containsParentElement = false;
+					bool faceIs2DElement = (faceOfElement == null || faceOfElement.ParentElement == null);
+					if (!faceIs2DElement)
+						containsParentElement = selected.Contains(faceOfElement.ParentElement);
+
+					if (containsParentElement && containsFace)
+						faceColor = Utils.ColorToRgba32(Scene.SelectedFaceAndElementColor);
+					else if (containsParentElement)
+						faceColor = Utils.ColorToRgba32(Scene.SelectedElementColor);
+					else if (containsFace)
+					{
+						if (faceIs2DElement)
+							faceColor = Utils.ColorToRgba32(Scene.SelectedElementColor);
+						else
+							faceColor = Utils.ColorToRgba32(Scene.SelectedFaceColor);
+					}
+					else if (elementPropertyColors && faceOfElement != null)
+						faceColor = PropertyColorProvider.GetRGBA32(faceOfElement.ParentElement.Property);
+					else if (facePropertyColors || (elementPropertyColors && faceOfElement == null))
+						faceColor = PropertyColorProvider.GetRGBA32(face.Property);
+					else
+						faceColor = ordinaryFaceColor;
+					// ------------------------------------------
+
+					// ------------------------------------
+					int count = face.NodeCount;
+					for (int i = 0; i < count; i++)
+						items[index + i] = faceColor;
+					// ------------------------------------
+					index += count;
+				}
+			}
+
+			if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+			{
+#if DEBUG
+				throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+			}
+			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+		}
+
+		public void UpdateBeamColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		{
+			if (this.beamVBO == null)
+				return;
+
+			bool beamPropertyColors = (colorMode & PropertyColorsMode.Beams) != 0;
+
+			GL.BindBuffer(BufferTarget.ArrayBuffer, this.beamVBO.ColorBufferID);
+			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+
+			unsafe
+			{
+				int* items = (int*)videoMemory.ToPointer();
+				int selectedColor = Utils.ColorToRgba32(Scene.SelectedBeamColor);
+				int beamColor = 0;
+				int vertexIndex = 0;
+				foreach (Beam beam in beams)
+				{
+					if (selected.Contains(beam))
+						items[vertexIndex] = items[vertexIndex + 1] = selectedColor;
+					else
+					{
+						if (beamPropertyColors)
+							beamColor = PropertyColorProvider.GetRGBA32(beam.Property);
+						else
+							beamColor = Utils.ColorToRgba32(Scene.BeamColor);
+						items[vertexIndex] = items[vertexIndex + 1] = beamColor;
+					}
+					vertexIndex += 2;
+				}
+			}
+
+			if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+			{
+#if DEBUG
+				throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+			}
+			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+		}
+
+		#endregion
+
+		#region Drawing
+
+		/// <summary>
+		/// Draws faces in mesh only
+		/// </summary>
+		public void DrawFacesOnly()
+		{
+			if (this.vbo != null)
+			{
+				vbo.DrawMinimum(this.facesIBO);
+			}
+			else
+			{
+				GL.Begin(BeginMode.Triangles);
+				foreach (Element2D face in faces)
+					face.Draw();
+				GL.End();
+			}
+		}
+
+		public void DrawFaces(Set<ISelectable> selectedItems, bool facePropertyColors, bool elementPropertyColors, bool drawElementNumbers, Camera camera)
+		{
+			if (vbo != null)
+			{
+				vbo.DrawFaces(this.facesIBO);
+			}
+			else
+			{
+				GL.Begin(BeginMode.Triangles);
+				foreach (Element2D face in faces)
+				{
+					// -------------------------------------------
+					// nastaveni barvy
+					IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
+                    bool containsFace = selectedItems.Contains(face);
+                    bool containsParentElement = false;
+                    bool faceIs2DElement = (faceOfElement == null || faceOfElement.ParentElement == null);
+                    if (!faceIs2DElement)
+                        containsParentElement = selectedItems.Contains(faceOfElement.ParentElement);
+
+                    if (containsParentElement && containsFace)
+                        GL.Color3(Scene.SelectedFaceAndElementColor);
+                    else if (containsParentElement)
+                        GL.Color3(Scene.SelectedElementColor);
+                    else if (containsFace)
+                    {
+                        if (faceIs2DElement)
+                            GL.Color3(Scene.SelectedElementColor);
+                        else
+                            GL.Color3(Scene.SelectedFaceColor);
+                    }
+					else if (elementPropertyColors && faceOfElement != null)
+					{
+						GL.Color3(PropertyColorProvider.Get(faceOfElement.ParentElement.Property));
+					}
+					else if (facePropertyColors)
+					{
+						GL.Color3(PropertyColorProvider.Get(face.Property));
+					}
+					else
+						GL.Color3(Scene.FaceColor);
+					// ------------------------------------------
+
+                   
+					GL.Normal3(face.NormalVector);
+					face.Draw();
+				}
+				GL.End();
+			}
+			// -------------------------------------------------------
+			if (drawElementNumbers)
+			{
+				drawVisibleElementsNumbers(selectedItems);
+			}
+		}
+
+		public void DrawOrdinaryAndSoftEdges(Set<ISelectable> selectedItems, float softBorderLimit, float hardBorderLimit, bool edgePropertyColors)
+		{
+			if (vbo != null)
+			{
+				vbo.DrawEdges(this.ordinaryEdgesIBO, Scene.EdgeLighting);
+				vbo.DrawEdges(this.softEdgesIBO, Scene.EdgeLighting);
+			}
+			else
+			{
+				GL.Begin(BeginMode.Lines);
+				foreach (WingedEdge edge in edges)
+				{
+					if (edge.FeatureAngle >= hardBorderLimit)
+						continue;
+					if (selectedItems.Contains(edge))
+						GL.Color3(Scene.SelectedEdgeColor);
+					else if (edgePropertyColors)
+						GL.Color3(PropertyColorProvider.Get(edge.Property));
+					else
+					{
+						if (edge.FeatureAngle >= softBorderLimit)
+							GL.Color3(Scene.SoftBorderColor);
+						else
+							GL.Color3(Scene.OrdinaryEdgeColor);
+					}
+					GL.Vertex3(edge.BeginNode.Position);
+					GL.Vertex3(edge.EndNode.Position);
+				}
+				GL.End();
+			}
+		}
+
+		public void DrawHardBorderEdges(Set<ISelectable> selectedItems, float hardBorderLimit, bool edgePropertyColors)
+		{
+			if (vbo != null)
+			{
+				vbo.DrawEdges(this.hardEdgesIBO, Scene.EdgeLighting);
+			}
+			else
+			{
+				GL.Begin(BeginMode.Lines);
+				foreach (WingedEdge edge in edges)
+				{
+					if (edge.FeatureAngle < hardBorderLimit)
+						continue;
+					if (selectedItems.Contains(edge))
+						GL.Color3(Scene.SelectedEdgeColor);
+					else if (edgePropertyColors)
+						GL.Color3(PropertyColorProvider.Get(edge.Property));
+					else
+						GL.Color3(Scene.HardBorderColor);
+					GL.Vertex3(edge.BeginNode.Position);
+					GL.Vertex3(edge.EndNode.Position);
+				}
+				GL.End();
+			}
+		}
+
+		public void DrawNodes(Set<ISelectable> selectedItems, bool nodePropertyColors, bool includeMiddleNodes)
+		{
+			if (vbo != null)
+			{
+				vbo.DrawNodes(this.nodesIBO);
+				if (includeMiddleNodes)
+					vbo.DrawNodes(this.middleNodesIBO);
+			}
+			else
+			{
+				GL.Begin(BeginMode.Points);
+				foreach (Node n in (includeMiddleNodes) ? GetAllExternalNodes() : GetSimpleExternalNodes())
+					DrawSingleNode(n, selectedItems.Contains(n), nodePropertyColors);
+				GL.End();
+			}
+		}
+
+		public static void DrawSingleNode(Node n, bool isSelected, bool nodePropertyColors)
+		{
+			if (isSelected)
+				GL.Color3(Scene.SelectedNodeColor);
+			else if (nodePropertyColors)
+				GL.Color3(PropertyColorProvider.Get(n.Property));
+			else
+				GL.Color3(Scene.NodesColor);
+			GL.Vertex3(n.Position);
+		}
+
+        public void DrawBeams(Set<ISelectable> selectedItems, bool beamPropertyColors, bool drawElementNumbers)
+		{
+			GL.LineWidth(Scene.BeamWidth);
+			if (Scene.LineSmooth)
+			{
+				GL.Enable(EnableCap.LineSmooth);
+				GL.Enable(EnableCap.Blend);
+			}
+			//GL.Color3(Scene.BeamColor);
+			// ----------------------------------------------
+			if (this.beamVBO != null) // buffer mode
+			{
+				this.beamVBO.Draw();
+			}
+			else // Immediate mode
+			{
+				GL.Begin(BeginMode.Lines);
+				foreach (Beam beam in beams)
+				{
+                    if (selectedItems.Contains(beam))
+                        GL.Color3(Scene.SelectedBeamColor);
+                    else if (beamPropertyColors)
+						GL.Color3(PropertyColorProvider.Get(beam.Property));
+                    else
+                        GL.Color3(Scene.BeamColor);
+					GL.Vertex3(beam.BeginNode.Position);
+					GL.Vertex3(beam.EndNode.Position);
+				}
+				GL.End();
+			}
+			// ----------------------------------------------
+			if (Scene.LineSmooth)
+			{
+				GL.Disable(EnableCap.LineSmooth);
+				GL.Disable(EnableCap.Blend);
+			}
+
+			if (drawElementNumbers)
+				drawBeamNumbers(selectedItems);
+		}
+
+		public void DrawVisibleNodes(Set<ISelectable> selectedItems, bool nodePropertyColors, bool drawNodeNumbers)
+		{
+			if (this.vbo != null && this.visibleNodesIBO != null)
+				this.vbo.DrawNodes(this.visibleNodesIBO);
+			else // vykreslit pomoci immediate mode
+			{
+				GL.Begin(BeginMode.Points);
+				foreach (Node n in visibleNodes)
+					DrawSingleNode(n, selectedItems.Contains(n), nodePropertyColors);
+				GL.End();
+			}
+			if (drawNodeNumbers)
+				drawVisibleNodeNumbers(selectedItems); /**/ // !!!
+		}
+
+		private void drawVisibleNodeNumbers(Set<ISelectable> selectedItems)
+		{
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			Scene.ExtractMatrices(out viewport, out modelview, out projection);
+
+			Vector3 winPos;
+
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+			foreach (Node n in this.visibleNodes)
+			{
+				if (stickyNodes.Contains(n))
+					continue;
+				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
+				area.X = winPos.X + 1;
+				area.Y = viewport[3] - winPos.Y + 1;
+				textPrinter.Print(n.ID.ToString(), textFont, selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
+			}
+			textPrinter.End(); // restores projection matrix
+		}
+
+		private void drawVisibleElementsNumbers(Set<ISelectable> selectedItems)
+		{
+			if (faceCentersPositions == null)
+				return;
+
+			int[] viewport;
+			Scene.ExtractViewport(out viewport);
+
+			//double[] modelview;
+			//double[] projection;
+			//Scene.ExtractMatrices(out viewport, out modelview, out projection);
+
+			//Vector3 cameraDir = camera.GetDirection();
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+			foreach (KeyValuePair<Element2D, Vector2> pair in faceCentersPositions)
+			{
+				Element2D face = pair.Key;
+				Vector2 winPos = pair.Value;
+				// --------------------------------------------------------------------------
+
+				IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
+				int id;
+				bool selected;
+				if (faceOfElement == null)
+				{
+					id = face.ID;
+					selected = selectedItems.Contains(face);
+				}
+				else if (faceOfElement.ParentElement == null)
+				{
+					continue;
+				}
+				else
+				{
+					id = faceOfElement.ParentElement.ID;
+					selected = selectedItems.Contains(faceOfElement.ParentElement);
+				}
+				// --------------------------------------------------------------------------
+				area.X = winPos.X - 10;
+				area.Y = viewport[3] - winPos.Y - 8;
+				textPrinter.Print(id.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+			}
+			textPrinter.End(); // restores projection matrix
+		}
+
+		private void drawBeamNumbers(Set<ISelectable> selectedItems)
+		{
+			//if (beams.Count == 0)
+			//    return;
+			//int[] viewport;
+			//double[] modelview;
+			//double[] projection;
+			//Scene.ExtractMatrices(out viewport, out modelview, out projection);
+
+			//Vector3 winPos;
+			//RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			//textPrinter.Begin(); // sets orthografic projection
+			//TextPrinterOptions options = TextPrinterOptions.NoCache; /* !!! */
+			//foreach (Beam beam in beams)
+			//{
+			//    if(!visibleNodes.Contains(beam.BeginNode) && !visibleNodes.Contains(beam.EndNode))
+			//        continue;
+			//    if (stickyNodes.Contains(beam.BeginNode) && stickyNodes.Contains(beam.EndNode))
+			//        continue;
+			//    Utils.GluProject(beam.GetCenter(), modelview, projection, viewport, out winPos);
+			//    //if (winPos.Z >= 0f && winPos.Z <= 1f)
+			//    //{
+			//        bool selected = selectedItems.Contains(beam);
+			//        area.X = winPos.X - 10;
+			//        area.Y = viewport[3] - winPos.Y - 8;
+			//        textPrinter.Print(beam.ID.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area, options);
+			//    //}
+			//}
+			//textPrinter.End(); // restores projection matrix
+		}
+
+		#endregion
+
+		#region Public methods
+
+		public void InvertAllNormals()
+		{
+			//GL.FrontFace(FrontFaceDirection.Cw);
+			if (this.vbo != null)
+				this.vbo.InvertAllNormals(); // invertovat vektory v normal bufferu
+			// jeste invertovat normal vektory vsech ploch
+			foreach (Element2D face in faces)
+				face.InvertNormalVector();
+			
+			// nastavit priznak
+			this.normalVectorsAreInverted = !this.normalVectorsAreInverted;
+		}
+
+		public IEnumerable<Node> GetSimpleExternalNodes()
+		{
+			foreach (Node n in nodesEdgesIncidence.Keys)
+				yield return n;
+			foreach (Node n in beamNodesNotInFaces)
+				yield return n;
+		}
+
+		public IEnumerable<Node> GetAllExternalNodes()
+		{
+			foreach (Node n in nodesEdgesIncidence.Keys)
+				yield return n;
+			foreach (Node n in this.edgeMiddleNodes)
+				yield return n;
+			foreach (Node n in beamNodesNotInFaces)
+				yield return n;
+		}
+
+		public IEnumerable<Node> GetBeamAndMiddleNodes()
+		{
+			foreach (Node n in this.edgeMiddleNodes)
+				yield return n;
+			foreach (Node n in beamNodesNotInFaces)
+				yield return n;
+		}
+
+		public IEnumerable<Node> GetBeamNodesNotInFacesIncludeMiddleNodes()
+		{
+			foreach (Node node in beamNodesNotInFaces)
+				yield return node;
+			foreach (Beam beam in beams)
+			{
+				QuadraticBeam q = beam as QuadraticBeam;
+				if (q != null && !nodesEdgesIncidence.ContainsKey(q.MiddleNode))
+					yield return q.MiddleNode;
+			}
+		}
+
+		public void ClearSurface()
+		{
+			this.faces = new List<Element2D>();
+			this.edges = new List<WingedEdge>();
+			this.nodesEdgesIncidence = new Dictionary<Node, List<WingedEdge>>();
+			this.edgeMiddleNodes = new List<Node>();
+			this.nodeIndexMap = null;
+			this.visibleNodes = null;
+		}
+
+		#endregion
+
+	}
+}

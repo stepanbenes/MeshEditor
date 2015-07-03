@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MeshEditor.CoreInterface.MeshNeedRefreshEventArgs" Collapsed="true">
+    <Position X="4.75" Y="3.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\MeshNeedRefreshEvent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.CoreInterface.ShowErrorEventArgs" Collapsed="true">
+    <Position X="7.25" Y="3.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAIAgAACA=</HashCode>
+      <FileName>CoreInterface\ShowErrorEvent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Graphics.Histogram" Collapsed="true">
+    <Position X="0.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAAAAAQAAACAAAAAgAAAQCAAAEAgAIAA=</HashCode>
+      <FileName>Graphics\Histogram.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.CoreInterface.MeshIOEventArgs" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\IOEvents.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.IO.MeshLoadingException" Collapsed="true">
+    <Position X="5" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAACAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IO\MeshLoadingException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.IO.MeshSavingException" Collapsed="true">
+    <Position X="5" Y="6.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAACAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IO\MeshSavingException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Cuts.CutTestProvider" Collapsed="true">
+    <Position X="8.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAIAAAAAAAAAAAAAAAAQIAAAAAAAAAAA=</HashCode>
+      <FileName>Cuts\CutTestProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Cuts.CutInfo" Collapsed="true">
+    <Position X="8.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QEAABEAgAAAAABAAAAAAAAAAAAQAAAAAQDAAAABAAAQ=</HashCode>
+      <FileName>Cuts\CutInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Data.MeshStatistics" Collapsed="true">
+    <Position X="2.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABAEAAAABCAAAgAgAAAARCAAAAQQAgAAEQIQCAAAAA=</HashCode>
+      <FileName>Data\MeshStatistics.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshEditor.Utilities.Chronometer" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAIAAAAEAQAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\PerformanceMeters.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MeshEditor.Utilities.MemoryMeter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAABAAAAAAAAAAAAAAAAEAQAAAAgAEAAAA=</HashCode>
+      <FileName>Utilities\PerformanceMeters.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MeshEditor.CoreInterface.SceneFacade" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\SceneFacade.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="MeshEditor.Data.Property" Collapsed="true">
+    <Position X="0.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQEgAAAAAAAAQAAAKAAAAAgAAAAAiA=</HashCode>
+      <FileName>Data\Property.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Struct>
+  <Interface Name="MeshEditor.Utilities.IMeter" Collapsed="true">
+    <Position X="9.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAEAQAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\PerformanceMeters.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="MeshEditor.CoreInterface.AvailableAction" Collapsed="true">
+    <Position X="3.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAIAIgABEBACLAQQQCgoBAEAAgAAAABkAQAIAAoA=</HashCode>
+      <FileName>CoreInterface\AvailableAction.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.CoreInterface.AvailableValue" Collapsed="true">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ADABADAEBEABAAAAAcAAAAAUAAA0AAIRAABCAAQAAAA=</HashCode>
+      <FileName>CoreInterface\AvailableValue.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.CoreInterface.EditorMode" Collapsed="true">
+    <Position X="3.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAADAAAAgAAAgAAACAACAAAEAAAAAGAAAEAAAA=</HashCode>
+      <FileName>CoreInterface\EditorMode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.CoreInterface.MouseButton" Collapsed="true">
+    <Position X="5.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAABAAAAAAAAAAAAAACACQAAEAAAA=</HashCode>
+      <FileName>CoreInterface\MouseButton.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.Data.ElementType" Collapsed="true">
+    <Position X="3" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAABAQAIgDgAAAAgAAAAABAAABAAAAgAhAA=</HashCode>
+      <FileName>Data\ElementTypes\ElementType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.Graphics.RenderMode" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAQAAgAAAAAAAAAAAAAAAAACAAACQAAEgAAA=</HashCode>
+      <FileName>Graphics\RenderMode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.Graphics.PropertyColorsMode" Collapsed="true">
+    <Position X="2.5" Y="2.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAggIAAAAAAAgAAAAAQAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Graphics\PropertyColorsMode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MeshEditor.Data.ItemTypeToSelect" Collapsed="true">
+    <Position X="2" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgABAAAQAAABAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Data\Selection.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Delegate Name="MeshEditor.CoreInterface.MeshNeedRefreshEventHandler" Collapsed="true">
+    <Position X="4.75" Y="4.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\MeshNeedRefreshEvent.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Delegate Name="MeshEditor.CoreInterface.ShowErrorEventHandler" Collapsed="true">
+    <Position X="7.25" Y="4.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAABA=</HashCode>
+      <FileName>CoreInterface\ShowErrorEvent.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Delegate Name="MeshEditor.CoreInterface.MeshIOEventHandler" Collapsed="true">
+    <Position X="0.5" Y="5.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAAAAAAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\IOEvents.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Delegate Name="MeshEditor.CoreInterface.YesNoQuestion" Collapsed="true">
+    <Position X="2.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CoreInterface\IOEvents.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Delegate Name="MeshEditor.Cuts.CutTest" Collapsed="true">
+    <Position X="8.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAADQAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Cuts\CutTestProvider.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

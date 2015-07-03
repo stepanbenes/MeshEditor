@@ -1,0 +1,227 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{971DBF6E-A0CB-467E-B11B-CBA7666D46F3}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MeshEditor.WinUI</RootNamespace>
+    <AssemblyName>MeshEditor</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ApplicationIcon>appIcon.ico</ApplicationIcon>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\MeshEditor.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\$(Configuration)\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\$(Configuration)\OpenTK.GLControl.dll</HintPath>
+    </Reference>
+    <Reference Include="PowerCollections, Version=1.0.2141.24679, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\$(Configuration)\PowerCollections.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="OpenGLControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="OpenGLControl.Designer.cs">
+      <DependentUpon>OpenGLControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
+      <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
+      <Name>MeshEditor.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj">
+      <Project>{A282D924-E26B-4077-A803-D3064F36A744}</Project>
+      <Name>MeshEditor.Forms</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\_active_ Save.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Open.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Undo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Redo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\_disabled_ About.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\About.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Settings.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\show_hide.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\orbit24.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\orbit.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pan.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lookAround.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoomWindow.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoomToFit.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\points48.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\borderLines48.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\points.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\borderLines.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\allLines.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\faces.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\propertyColors.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectElements.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectNodes.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectFaces.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectEdges.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectBeams.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cutAndSelectArea.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\setPropertyOfSelectedItems.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selectItemsByProperty.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\setPropertyOfSelectedItems1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\restore.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\help.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\help32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\porshe.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\listOfSelectedItems.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AppIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="appIcon.ico" />
+    <None Include="Resources\rotateZ.bmp" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
