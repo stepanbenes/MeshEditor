@@ -10,13 +10,17 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MeshEditor.WinUI</RootNamespace>
     <AssemblyName>MeshEditor</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>appIcon.ico</ApplicationIcon>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,6 +30,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,27 +39,22 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\MeshEditor.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\OpenTK.dll</HintPath>
+    <Reference Include="OpenTK">
+      <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="OpenTK.GLControl, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\OpenTK.GLControl.dll</HintPath>
-    </Reference>
-    <Reference Include="PowerCollections, Version=1.0.2141.24679, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\PowerCollections.dll</HintPath>
+    <Reference Include="OpenTK.GLControl">
+      <HintPath>..\packages\Lyncee.OpenTK.GLControl.1.1.1173.43182\lib\OpenTK.GLControl.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainForm.cs">
@@ -84,6 +84,16 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Content Include="..\Dependencies\$(Configuration)\OpenTK.Compatibility.dll.config">
+      <Link>OpenTK.Compatibility.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Dependencies\$(Configuration)\OpenTK.dll.config">
+      <Link>OpenTK.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="app.config" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -98,6 +108,10 @@
     <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
       <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
       <Name>MeshEditor.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj">
+      <Project>{f586dc27-a7fd-4ab7-9a6b-1b6683a84b3f}</Project>
+      <Name>MeshEditor.DataVisualizer</Name>
     </ProjectReference>
     <ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj">
       <Project>{A282D924-E26B-4077-A803-D3064F36A744}</Project>
@@ -214,9 +228,22 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="appIcon.ico" />
+    <None Include="Resources\animationIcon.png" />
+    <None Include="Resources\layersIcon.png" />
+    <None Include="Resources\drawGridIcon.png" />
+    <None Include="Resources\dataPickerIcon.png" />
+    <None Include="Resources\showExactValueIcon.png" />
+    <None Include="Resources\loadDataFromFile.png" />
     <None Include="Resources\rotateZ.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

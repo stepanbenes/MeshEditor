@@ -13,7 +13,7 @@ using OpenTK.Graphics;
 // alias
 using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.Graphics;
-using Wintellect.PowerCollections;
+using MeshEditor.CoreInterface;
 
 
 namespace MeshEditor.Data
@@ -35,18 +35,18 @@ namespace MeshEditor.Data
 		private List<WingedEdge> edges;
 		private Dictionary<Node, List<WingedEdge>> nodesEdgesIncidence;
 		private List<Node> edgeMiddleNodes;
-		private Set<Node> beamNodesNotInFaces; // uzly od beamu, ktere nejsou obsazeny v siti
+		private HashSet<Node> beamNodesNotInFaces; // uzly od beamu, ktere nejsou obsazeny v siti
 		private Dictionary<Node, int> nodeIndexMap; // pro VBO - pro kazdy uzel - jeho index v bufferu
 
 		private Dictionary<Element2D, Vector2> faceCentersPositions;
 		private Dictionary<Beam, Vector2> beamCentersPositions;
-		private Set<Node> stickyNodes;
+		private HashSet<Node> stickyNodes;
 
 		// ---------------------------------------------------------------
 
 		// buffers
 
-		private VertexBufferObject vbo; // main vertex buffer
+		private RichVBO vbo; // main vertex buffer
 		private BeamVBO beamVBO; // vertex buffer for beams only
 		
 		private IndexBufferObject facesIBO;
@@ -60,13 +60,17 @@ namespace MeshEditor.Data
 		
 		// ===============================
 
-		private Set<Node> visibleNodes;
+		private HashSet<Node> visibleNodes;
 
 		private MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
 		private Font textFont;
 
 		private bool normalVectorsAreInverted;
 
+		// -------------------------------
+
+		// Data visualizer
+		private IDataVisualizer dataVisualizer;
 		// -------------------------------
 
 		#endregion
@@ -81,11 +85,11 @@ namespace MeshEditor.Data
 			this.edges = new List<WingedEdge>();
 			this.nodesEdgesIncidence = new Dictionary<Node, List<WingedEdge>>();
 			this.edgeMiddleNodes = new List<Node>();
-			this.beamNodesNotInFaces = new Set<Node>();
+			this.beamNodesNotInFaces = new HashSet<Node>();
 			this.nodeIndexMap = null;
 			this.faceCentersPositions = null;
 			this.beamCentersPositions = null;
-			this.stickyNodes = new Set<Node>();
+			this.stickyNodes = new HashSet<Node>();
 
 			vbo = null;
 			beamVBO = null;
@@ -149,7 +153,7 @@ namespace MeshEditor.Data
 		{
 			get { return edgeMiddleNodes; }
 		}
-		public Set<Node> BeamNodesNotInFaces
+		public HashSet<Node> BeamNodesNotInFaces
 		{
 			get { return beamNodesNotInFaces; }
 		}
@@ -159,7 +163,7 @@ namespace MeshEditor.Data
 			get { return (this.visibleNodesIBO != null || this.visibleNodes != null); }
 		}
 
-		public Set<Node> VisibleNodes
+		public HashSet<Node> VisibleNodes
 		{
 			get { return visibleNodes; }
 			set { visibleNodes = value; }
@@ -187,7 +191,7 @@ namespace MeshEditor.Data
 			set { beamCentersPositions = value; }
 		}
 
-		public Set<Node> StickyNodes
+		public HashSet<Node> StickyNodes
 		{
 			get { return stickyNodes; }
 			set { stickyNodes = value; }
@@ -197,6 +201,12 @@ namespace MeshEditor.Data
 		//{
 		//    get { return vbo != null; }
 		//}
+
+		public IDataVisualizer DataVisualizer
+		{
+			get { return dataVisualizer; }
+			set { dataVisualizer = value; }
+		}
 
 		#endregion
 
@@ -208,20 +218,22 @@ namespace MeshEditor.Data
 		public bool CreateBuffers(PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
 		{
             bool ready = false;
-			if (VertexBufferObject.IsSupported)
+			if (RichVBO.IsSupported)
 			{
 #if !DEBUG
 				try
 				{
 #endif
+				
+				DeleteBuffers(); // first delete old buffers if exist
+
+				
 				Dictionary<Element2D, int[]> faceIndexMap;
 				//Dictionary<Node, int> nodeIndexMap;
 				Dictionary<WingedEdge, int> edgeIndexMap;
 
-				
-
 				// create global Vertex buffer object
-				this.vbo = new VertexBufferObject();
+				this.vbo = new RichVBO();
 				vbo.CreateFrom(faces, GetAllExternalNodes(), colorMode, softBorderLimit, hardBorderLimit, out faceIndexMap, out edgeIndexMap, out this.nodeIndexMap);
 
                 // create vertex buffer object for beams
@@ -229,7 +241,7 @@ namespace MeshEditor.Data
 					createBeamVBO((colorMode & PropertyColorsMode.Beams) != 0);
 
                 // update colors
-                UpdateAllColors(new Set<ISelectable>()/**/, colorMode, softBorderLimit, hardBorderLimit);
+                UpdateAllColors(new HashSet<ISelectable>()/**/, colorMode, softBorderLimit, hardBorderLimit);
 
 				// create index buffers
 				createIndexBuffers(faceIndexMap, edgeIndexMap, this.nodeIndexMap, softBorderLimit, hardBorderLimit);
@@ -293,7 +305,7 @@ namespace MeshEditor.Data
 			foreach (WingedEdge e in edges)
 			{
 				bool reversed;
-				int index = VertexBufferObject.DecodeEdgeIndex(edgeIndexMap[e], out reversed);
+				int index = RichVBO.DecodeEdgeIndex(edgeIndexMap[e], out reversed);
 				
 				int first = nodeIndexMap[(reversed) ? e.EndNode : e.BeginNode];
 				int second = index;
@@ -406,7 +418,70 @@ namespace MeshEditor.Data
 
 		#region Buffer updating
 
-        public void UpdateAllColors(Set<ISelectable> selected, PropertyColorsMode colorMode, float edgeSoftBorderLimit, float edgeHardBorderLimit)
+		public void UpdateNodeCoordinates()
+		{
+			IntPtr videoMemory;
+			if (this.vbo != null && this.vbo.MapBuffer(BufferTarget.ArrayBuffer, this.vbo.VertexBufferID, BufferAccess.WriteOnly, out videoMemory))
+			{
+				unsafe
+				{
+					Vector3* items = (Vector3*)videoMemory.ToPointer();
+					//int selectedColor = Utils.ColorToRgba32(Scene.SelectedNodeColor);
+					//int nodeColor = 0;
+					int index = 0;
+					foreach (Element2D face in faces)
+					{
+						foreach (Node node in face.IterateThroughAllNodes())
+						{
+							items[index++] = node.Position;
+						}
+					}
+					foreach (Node node in GetBeamAndMiddleNodes())
+					{
+						index = nodeIndexMap[node];
+						items[index] = node.Position;
+					}
+				}
+
+				if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+				{
+#if DEBUG
+					throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+				}
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			}
+
+			if (this.beamVBO != null && this.beamVBO.MapBuffer(BufferTarget.ArrayBuffer, this.beamVBO.VertexBufferID, BufferAccess.WriteOnly, out videoMemory))
+			{
+				unsafe
+				{
+					Vector3* items = (Vector3*)videoMemory.ToPointer();
+					//int selectedColor = Utils.ColorToRgba32(Scene.SelectedNodeColor);
+					//int nodeColor = 0;
+					int index = 0;
+					foreach (Beam beam in beams)
+					{
+						items[index++] = beam.BeginNode.Position;
+						items[index++] = beam.EndNode.Position;
+					}
+				}
+
+				if (!GL.UnmapBuffer(BufferTarget.ArrayBuffer))
+				{
+#if DEBUG
+					throw new Exception("Error while unmapping buffer.");
+#else
+				Console.WriteLine("Error while unmapping buffer.");
+#endif
+				}
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			}
+		}
+
+        public void UpdateAllColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode, float edgeSoftBorderLimit, float edgeHardBorderLimit)
         {
             UpdateFaceColors(selected, colorMode);
             UpdateNodeColors(selected, colorMode);
@@ -414,15 +489,17 @@ namespace MeshEditor.Data
             UpdateBeamColors(selected, colorMode);
         }
 
-		public void UpdateNodeColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		public void UpdateNodeColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode)
 		{
 			if (this.vbo == null)
 				return;
 
 			bool nodePropertyColors = (colorMode & PropertyColorsMode.Nodes) != 0;
 
-			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.NodeColorBufferID);
-			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+			IntPtr videoMemory;
+
+			if (!this.vbo.MapBuffer(BufferTarget.ArrayBuffer, this.vbo.NodeColorBufferID, BufferAccess.WriteOnly, out videoMemory))
+				return;
 
 			unsafe
 			{
@@ -457,15 +534,17 @@ namespace MeshEditor.Data
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 		}
 
-		public void UpdateEdgeColors(Set<ISelectable> selected, PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
+		public void UpdateEdgeColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
 		{
 			if (this.vbo == null)
 				return;
 
 			bool edgePropertyColors = (colorMode & PropertyColorsMode.Edges) != 0;
 
-			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.EdgeColorBufferID);
-			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+			IntPtr videoMemory;
+
+			if (!this.vbo.MapBuffer(BufferTarget.ArrayBuffer, this.vbo.EdgeColorBufferID, BufferAccess.WriteOnly, out videoMemory))
+				return;
 
 			unsafe
 			{
@@ -478,8 +557,14 @@ namespace MeshEditor.Data
 				{
 					foreach (WingedEdge edge in face.IterateThroughAllEdges())
 					{
-						if (selected.Contains(edge))
+						IFaceOfElement3D face1OfElement3D = edge.Face1 as IFaceOfElement3D;
+						IFaceOfElement3D face2OfElement3D = edge.Face2 as IFaceOfElement3D;
+						bool parentElementIsSelected = (face1OfElement3D != null && selected.Contains(face1OfElement3D.ParentElement)) || (face2OfElement3D != null && selected.Contains(face2OfElement3D.ParentElement)) || (face1OfElement3D == null && selected.Contains(edge.Face1)) || (face2OfElement3D == null && selected.Contains(edge.Face2));
+
+						if (selected.Contains(edge) || parentElementIsSelected)
+						{
 							items[vertexIndex] = selectedColor;
+						}
 						else
 						{
 							if (edgePropertyColors)
@@ -508,7 +593,7 @@ namespace MeshEditor.Data
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 		}
 
-		public void UpdateFaceColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		public void UpdateFaceColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode)
 		{
 			if (this.vbo == null)
 				return;
@@ -522,8 +607,10 @@ namespace MeshEditor.Data
 			int ordinaryFaceColor = Utils.ColorToRgba32(Scene.FaceColor);
 			int faceColor = ordinaryFaceColor;
 
-			GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo.FaceColorBufferID);
-			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+			IntPtr videoMemory;
+
+			if (!this.vbo.MapBuffer(BufferTarget.ArrayBuffer, this.vbo.FaceColorBufferID, BufferAccess.WriteOnly, out videoMemory))
+				return;
 
 			unsafe
 			{
@@ -560,12 +647,28 @@ namespace MeshEditor.Data
 						faceColor = ordinaryFaceColor;
 					// ------------------------------------------
 
-					// ------------------------------------
-					int count = face.NodeCount;
-					for (int i = 0; i < count; i++)
-						items[index + i] = faceColor;
-					// ------------------------------------
-					index += count;
+					bool drawData = dataVisualizer != null && dataVisualizer.DisplayColors && !elementPropertyColors && !facePropertyColors;
+
+					if (drawData)
+					{
+						Element element = faceIs2DElement ? (Element)face : (Element)faceOfElement.ParentElement;
+						foreach (Node node in face.IterateThroughAllNodes())
+						{
+							int dataColor = dataVisualizer.GetDataColor(node, element);
+							if (containsFace || containsParentElement) // if face is selected, invert color
+								dataColor = Utils.InvertColor(dataColor) & 0x00FFFFFF; // zero alpha byte to mark color to be handled special in iso-areas shader
+							items[index++] = dataColor;
+						}
+					}
+					else
+					{
+						// ------------------------------------
+						int count = face.NodeCount;
+						for (int i = 0; i < count; i++)
+							items[index + i] = faceColor;
+						// ------------------------------------
+						index += count;
+					}
 				}
 			}
 
@@ -580,15 +683,17 @@ namespace MeshEditor.Data
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 		}
 
-		public void UpdateBeamColors(Set<ISelectable> selected, PropertyColorsMode colorMode)
+		public void UpdateBeamColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode)
 		{
 			if (this.beamVBO == null)
 				return;
 
 			bool beamPropertyColors = (colorMode & PropertyColorsMode.Beams) != 0;
 
-			GL.BindBuffer(BufferTarget.ArrayBuffer, this.beamVBO.ColorBufferID);
-			IntPtr videoMemory = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+			IntPtr videoMemory;
+
+			if (!this.beamVBO.MapBuffer(BufferTarget.ArrayBuffer, this.beamVBO.ColorBufferID, BufferAccess.WriteOnly, out videoMemory))
+				return;
 
 			unsafe
 			{
@@ -598,15 +703,30 @@ namespace MeshEditor.Data
 				int vertexIndex = 0;
 				foreach (Beam beam in beams)
 				{
-					if (selected.Contains(beam))
-						items[vertexIndex] = items[vertexIndex + 1] = selectedColor;
+					if (dataVisualizer != null && dataVisualizer.DisplayColors)
+					{
+						items[vertexIndex] = dataVisualizer.GetDataColor(beam.BeginNode, beam);
+						items[vertexIndex + 1] = dataVisualizer.GetDataColor(beam.EndNode, beam);
+						if (selected.Contains(beam))
+						{
+							items[vertexIndex] = Utils.InvertColor(items[vertexIndex], alpha: 252); // zero alpha byte to mark color to be handled special in iso-areas shader,
+							items[vertexIndex + 1] = Utils.InvertColor(items[vertexIndex + 1], alpha: 252); // but blending is on, so I can't set alpha to zero, alpha is set almost to ze 1.0, but not entirely to help shader to distinguish selected entity
+						}
+					}
 					else
 					{
-						if (beamPropertyColors)
-							beamColor = PropertyColorProvider.GetRGBA32(beam.Property);
+						if (selected.Contains(beam))
+						{
+							items[vertexIndex] = items[vertexIndex + 1] = selectedColor;
+						}
 						else
-							beamColor = Utils.ColorToRgba32(Scene.BeamColor);
-						items[vertexIndex] = items[vertexIndex + 1] = beamColor;
+						{
+							if (beamPropertyColors)
+								beamColor = PropertyColorProvider.GetRGBA32(beam.Property);
+							else
+								beamColor = Utils.ColorToRgba32(Scene.BeamColor);
+							items[vertexIndex] = items[vertexIndex + 1] = beamColor;
+						}
 					}
 					vertexIndex += 2;
 				}
@@ -645,7 +765,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void DrawFaces(Set<ISelectable> selectedItems, bool facePropertyColors, bool elementPropertyColors, bool drawElementNumbers, Camera camera)
+		public void DrawFaces(HashSet<ISelectable> selectedItems, bool facePropertyColors, bool elementPropertyColors, bool drawElementNumbers, Camera camera)
 		{
 			if (vbo != null)
 			{
@@ -701,7 +821,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void DrawOrdinaryAndSoftEdges(Set<ISelectable> selectedItems, float softBorderLimit, float hardBorderLimit, bool edgePropertyColors)
+		public void DrawOrdinaryAndSoftEdges(HashSet<ISelectable> selectedItems, float softBorderLimit, float hardBorderLimit, bool edgePropertyColors)
 		{
 			if (vbo != null)
 			{
@@ -733,7 +853,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void DrawHardBorderEdges(Set<ISelectable> selectedItems, float hardBorderLimit, bool edgePropertyColors)
+		public void DrawHardBorderEdges(HashSet<ISelectable> selectedItems, float hardBorderLimit, bool edgePropertyColors)
 		{
 			if (vbo != null)
 			{
@@ -759,7 +879,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void DrawNodes(Set<ISelectable> selectedItems, bool nodePropertyColors, bool includeMiddleNodes)
+		public void DrawNodes(HashSet<ISelectable> selectedItems, bool nodePropertyColors, bool includeMiddleNodes)
 		{
 			if (vbo != null)
 			{
@@ -787,7 +907,7 @@ namespace MeshEditor.Data
 			GL.Vertex3(n.Position);
 		}
 
-        public void DrawBeams(Set<ISelectable> selectedItems, bool beamPropertyColors, bool drawElementNumbers)
+        public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors, bool drawElementNumbers)
 		{
 			GL.LineWidth(Scene.BeamWidth);
 			if (Scene.LineSmooth)
@@ -828,7 +948,7 @@ namespace MeshEditor.Data
 				drawBeamNumbers(selectedItems);
 		}
 
-		public void DrawVisibleNodes(Set<ISelectable> selectedItems, bool nodePropertyColors, bool drawNodeNumbers)
+		public void DrawVisibleNodes(HashSet<ISelectable> selectedItems, bool nodePropertyColors, bool drawNodeNumbers)
 		{
 			if (this.vbo != null && this.visibleNodesIBO != null)
 				this.vbo.DrawNodes(this.visibleNodesIBO);
@@ -843,7 +963,7 @@ namespace MeshEditor.Data
 				drawVisibleNodeNumbers(selectedItems); /**/ // !!!
 		}
 
-		private void drawVisibleNodeNumbers(Set<ISelectable> selectedItems)
+		private void drawVisibleNodeNumbers(HashSet<ISelectable> selectedItems)
 		{
 			int[] viewport;
 			double[] modelview;
@@ -866,7 +986,7 @@ namespace MeshEditor.Data
 			textPrinter.End(); // restores projection matrix
 		}
 
-		private void drawVisibleElementsNumbers(Set<ISelectable> selectedItems)
+		private void drawVisibleElementsNumbers(HashSet<ISelectable> selectedItems)
 		{
 			if (faceCentersPositions == null)
 				return;
@@ -912,7 +1032,7 @@ namespace MeshEditor.Data
 			textPrinter.End(); // restores projection matrix
 		}
 
-		private void drawBeamNumbers(Set<ISelectable> selectedItems)
+		private void drawBeamNumbers(HashSet<ISelectable> selectedItems)
 		{
 			//if (beams.Count == 0)
 			//    return;

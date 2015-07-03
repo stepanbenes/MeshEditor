@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -52,16 +53,21 @@ namespace MeshEditor.Data
 
 		public override string ToString()
 		{
-			return "Beam ID: " + id + " | (Nodes: " + beginNode.ID + ", " + endNode.ID + ") | Approximation: " + ApproximationString + " | Property: " + property;
+			return "Beam ID: " + id + " | (Nodes: " + beginNode.ID + ", " + endNode.ID + ")" + (ApproximationIsQuadratic ? (" | Approximation: " + ApproximationString) : string.Empty) + " | Property: " + Property;
 		}
 
-		public override IEnumerable<Vector3> GetAllIntersectionsOfEdgesWithPlane(Vector3 pointOnPlane, Vector3 planeNormal)
+		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset)
 		{
-			if (ApproximationIsQuadratic)
-				throw new NotImplementedException();
-			Vector3 intersection;
-			if (Utilities.Functions.LinePlaneIntersection(beginNode.Position, endNode.Position, ref pointOnPlane, ref planeNormal, out intersection))
-				yield return intersection;
+			float intersection;
+			if (Utilities.Functions.LinePlaneIntersection(beginNode.Position, endNode.Position, ref planeNormal, planeOffset, out intersection))
+				yield return new EdgeIntersection(beginNode, endNode, intersection);
+		}
+
+		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues)
+		{
+			float intersection;
+			if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[0], nodeValues[1], out intersection))
+				yield return new EdgeIntersection(beginNode, endNode, intersection);
 		}
 	}
 }

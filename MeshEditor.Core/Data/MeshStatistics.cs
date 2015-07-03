@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Graphics;
-using Wintellect.PowerCollections;
+using System.Linq;
 
 namespace MeshEditor.Data
 {
@@ -17,7 +17,7 @@ namespace MeshEditor.Data
 		#region Fields, constructor
 
 		private Dictionary<Property, List<EntityType>> allUsedProperties;
-		private Set<ElementType> includedElementTypes;
+		private HashSet<ElementType> includedElementTypes;
 		private Dictionary<Property, string> propertyComments;
 		private Dictionary<PropertyEntityPair, List<PropertyCommand>> propertyCommands;
 
@@ -35,7 +35,7 @@ namespace MeshEditor.Data
 		public MeshStatistics()
 		{
 			this.allUsedProperties = null;
-			this.includedElementTypes = new Set<ElementType>();
+			this.includedElementTypes = new HashSet<ElementType>();
 			this.propertyComments = new Dictionary<Property, string>();
 			this.propertyCommands = new Dictionary<PropertyEntityPair, List<PropertyCommand>>();
 

@@ -31,11 +31,13 @@ namespace MeshEditor.CoreInterface
 		Status, // string
 		DrawQuadraticNodes, // bool
 		MeshHasHiddenElements, // bool
-		IsUndoPossible, // bool
-		IsRedoPossible, // bool
 		UnsavedChangesInMesh, // bool
 		DrawBeams, // bool
 		NodeSignalIsSet, // bool
-		ElementSignalIsSet // bool
+		ElementSignalIsSet, // bool
+		DataVisualizer, // MeshEditor.CoreInterface.IDataVisualizer
+		LayerList, // IList<MeshEditor.CoreInterface.ILayer>
+		MeshDimensions, // OpenTK.Vector3
+		LastUsedCutInfo // Cuts.CutInfo
 	}
 }

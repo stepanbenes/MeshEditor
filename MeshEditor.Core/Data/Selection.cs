@@ -16,18 +16,6 @@ namespace MeshEditor.Data
 		/// </summary>
 		Property Property { get; set; }
 		
-		// -----------------------------
-		
-		/// <summary>
-		/// priznak urcujici, zda dany objekt muze obsahovat vice vlastnosti nebo jen jednu (tyka se uzlu)
-		/// </summary>
-		bool ContainsMultipleProperties { get; }
-		
-		/// <summary>
-		/// smaze naposledy prirazenou vlastnost.
-		/// urceno pro objekty ktere obsahuji vice vlastnoti (uzly)
-		/// </summary>
-		void RemoveLastProperty();
 	}
 
 	/// <summary>

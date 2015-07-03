@@ -8,7 +8,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 
 using Utils = MeshEditor.Utilities.Functions;
-using Wintellect.PowerCollections;
 using System.Drawing;
 
 

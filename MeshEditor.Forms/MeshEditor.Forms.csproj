@@ -10,12 +10,14 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MeshEditor.Forms</RootNamespace>
     <AssemblyName>MeshEditor.Forms</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,6 +27,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,22 +36,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\MeshEditor.Forms.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="PowerCollections, Version=1.0.2141.24679, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\PowerCollections.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AboutDialog.cs">
@@ -56,6 +51,12 @@
     </Compile>
     <Compile Include="AboutDialog.Designer.cs">
       <DependentUpon>AboutDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CheckedInputValueForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CheckedInputValueForm.Designer.cs">
+      <DependentUpon>CheckedInputValueForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CheckMessageBox.cs">
       <SubType>Form</SubType>
@@ -81,19 +82,12 @@
     <Compile Include="InputValueForm.Designer.cs">
       <DependentUpon>InputValueForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="LegendControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="LegendControl.Designer.cs">
-      <DependentUpon>LegendControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="ListOfSelectedItemsForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ListOfSelectedItemsForm.Designer.cs">
       <DependentUpon>ListOfSelectedItemsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="LongOpNotifier.cs" />
     <Compile Include="MeshInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -147,6 +141,9 @@
     <EmbeddedResource Include="AboutDialog.resx">
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CheckedInputValueForm.resx">
+      <DependentUpon>CheckedInputValueForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CheckMessageBox.resx">
       <DependentUpon>CheckMessageBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -158,9 +155,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="InputValueForm.resx">
       <DependentUpon>InputValueForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LegendControl.resx">
-      <DependentUpon>LegendControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ListOfSelectedItemsForm.resx">
       <DependentUpon>ListOfSelectedItemsForm.cs</DependentUpon>
@@ -189,6 +183,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Resources\porshe.png" />
   </ItemGroup>
   <ItemGroup>

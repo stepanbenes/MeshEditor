@@ -4,6 +4,7 @@ using System.Text;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -139,6 +140,17 @@ namespace MeshEditor.Data
 		{
 			Utilities.Functions.Swap(ref node2, ref node3);
 			Utilities.Functions.Swap(ref edge2, ref edge3);
+		}
+
+		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues)
+		{
+			float parameter;
+			if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[0], nodeValues[1], out parameter))
+				yield return new EdgeIntersection(node1, node2, parameter);
+			if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[1], nodeValues[2], out parameter))
+				yield return new EdgeIntersection(node2, node3, parameter);
+			if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[2], nodeValues[0], out parameter))
+				yield return new EdgeIntersection(node3, node1, parameter);
 		}
 	}
 }

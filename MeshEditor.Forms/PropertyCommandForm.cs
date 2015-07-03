@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using MeshEditor.Data;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Wintellect.PowerCollections;
 
 namespace MeshEditor.WinUI
 {
@@ -300,7 +298,7 @@ namespace MeshEditor.WinUI
 				oldVariableValueMap[row.Cells[0].Value.ToString()] = row;
 			}
 
-			Set<string> variablesWithNumericSuffix = new Set<string>();
+			HashSet<string> variablesWithNumericSuffix = new HashSet<string>();
 
 			foreach (string variable in SelectedCommand.GetAllVariables())
 			{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Linq;
 
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
@@ -16,8 +17,10 @@ using MeshEditor.Utilities;
 using MeshEditor.CoreInterface;
 using System.ComponentModel;
 using OpenTK;
-using Wintellect.PowerCollections;
 using System.Threading;
+using MeshEditor.DataVisualizer;
+using MeshEditor.DataVisualizer.UI;
+using MeshEditor.DataVisualizer.Data;
 
 namespace MeshEditor.WinUI
 {
@@ -29,18 +32,28 @@ namespace MeshEditor.WinUI
 
 		#region Fields, Constructor
 
+		public const int PANEL_MINSIZE = 30;
+
 		private OpenGLControl activeControl;
 		private List<OpenGLControl> openGLControls;
 		private LongOpNotifier longOpNotifier;
+		private ProgressViewForm progressViewForm;
 
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
 		private string settingsFilePath, userGuidFilePath;
 
-		public const int PANEL_MINSIZE = 30;
-
 		private string[] arguments;
+
+		private DataVisualizerLoaderForm dataVisualizerLoader;
+		private DataPickerForm dataPicker;
+		private LayersForm layersDialog;
+		private AnimationCreatorForm animationDialog;
+
+		private int takeScreenshotLastFilterIndex;
+		private string takeScreenshotLastFilename;
+
 
 		public LongOpNotifier LongOpNotifier
 		{
@@ -68,16 +81,14 @@ namespace MeshEditor.WinUI
 			initLongOpNotifier();
 
 
-			// !!!
-			// using(){} otestovat depth-buffer bits; pokud je 16, tak nastavit priznak a pak volat OpenGLControl s parametrem
-
-
 			OpenGLControl mainOpenGLControl = OpenGLControl.Create(null, openGLControl_MouseDown);
-			
-			
 
-			// musi byt inicializovat opengl kontext
+
+			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
 			AppSettings.LoadFromFile(this.settingsFilePath);
+
+			// load window state settings
+			loadAppSettings();
 
             this.centralPanel.Controls.Add(mainOpenGLControl);
             mainOpenGLControl.MyContainer = this.centralPanel;
@@ -98,9 +109,13 @@ namespace MeshEditor.WinUI
 		{
 			base.OnShown(e);
 
-			if (arguments != null && arguments.Length > 0) // nactu soubor v argumentu
+			if (arguments != null && arguments.Length > 0) // load file in command file arguments
 			{
-				activeControl.LoadFile(arguments[0]);
+				activeControl.LoadFiles(arguments[0]);
+			}
+			else if (File.Exists(Properties.Settings.Default.LastLoadedMesh)) // load last loaded file (if exists)
+			{
+				activeControl.LoadFiles(Properties.Settings.Default.LastLoadedMesh);
 			}
 		}
 
@@ -118,12 +133,17 @@ namespace MeshEditor.WinUI
 
 		protected override void OnClosed(EventArgs e)
 		{
-			base.OnClosed(e);
+			// save settings from Options dialog
+			AppSettings.SaveToFile(this.settingsFilePath);
+
+			// save window state settings
+			saveAppSettings();
+
+			// dispose all meshes
 			foreach (OpenGLControl c in openGLControls)
 				c.DisposeScene();
 
-			// ulozit nastaveni do souboru
-			AppSettings.SaveToFile(this.settingsFilePath);
+			base.OnClosed(e);
 		}
 
 		#endregion
@@ -396,6 +416,7 @@ namespace MeshEditor.WinUI
 			// ---------------------------------------------
 
 			openFileDialog.Filter = SceneFacade.InputFileFormatFilter;
+			openFileDialog.Multiselect = true;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				// nejdriv zavrit okna, co by mohli vadit
@@ -410,7 +431,7 @@ namespace MeshEditor.WinUI
 					this.cutEditorForm = null;
 				}
 				// ---------------------------------------------
-				activeControl.LoadFile(openFileDialog.FileName);
+				activeControl.LoadFiles(openFileDialog.FileNames);
 			}
 		}
 
@@ -659,6 +680,11 @@ namespace MeshEditor.WinUI
 			activeControl.SelectItemsWithProperty(getNameOfItemsToSelectAcordingToEditorMode() ?? "elements");
 		}
 
+		private void invisibleSelectEntitiesByPropertyAddToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			activeControl.SelectItemsWithProperty(getNameOfItemsToSelectAcordingToEditorMode() ?? "elements", addToSelection: true);
+		}
+
 		private void cameraStandardViewToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			CameraView view;
@@ -842,30 +868,6 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void undoToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			undoToolStripMenuItem.Enabled = toolStripButtonUndo.Enabled = false;
-			longOpNotifier.Begin();
-			activeControl.SceneFacade.PerformAction(AvailableAction.Undo);
-			longOpNotifier.End();
-			undoRedoSetEnableIndication();
-		}
-		
-		private void redoToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			redoToolStripMenuItem.Enabled = toolStripButtonRedo.Enabled = false;
-			longOpNotifier.Begin();
-			activeControl.SceneFacade.PerformAction(AvailableAction.Redo);
-			longOpNotifier.End();
-			undoRedoSetEnableIndication();
-		}
-		
-		private void undoRedoSetEnableIndication()
-		{
-			undoToolStripMenuItem.Enabled = toolStripButtonUndo.Enabled = (bool)activeControl.SceneFacade.GetValue(AvailableValue.IsUndoPossible);
-			redoToolStripMenuItem.Enabled = toolStripButtonRedo.Enabled = (bool)activeControl.SceneFacade.GetValue(AvailableValue.IsRedoPossible);
-		}
-
 		private void closeActiveMeshToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (activeControl.SceneFacade.ContainsMesh)
@@ -935,8 +937,11 @@ namespace MeshEditor.WinUI
 		{
 			if (activeControl.SceneFacade.ContainsMesh)
 			{
-				bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.NodeSignalIsSet);
-				activeControl.SignalNodeByID(value, longOpNotifier);
+				bool signalIsSet = (bool)activeControl.SceneFacade.GetValue(AvailableValue.NodeSignalIsSet);
+				if (signalIsSet)
+					activeControl.SignalNodeByID(null); // clear signal
+				else
+					activeControl.SignalNodeByID(/*, longOpNotifier*/); // ask user for node ids
 			}
 		}
 
@@ -949,6 +954,150 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private void loadDataToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (!activeControl.SceneFacade.ContainsMesh)
+			{
+				MessageBox.Show("No mesh is loaded. Open mesh file first.", "Can not load data");
+				return;
+			}
+
+			if (dataVisualizerLoader == null)
+			{
+				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+				//if (dataVisualizer == null) // initialize
+				//{
+				//	dataVisualizer = new OctreeDataVisualizer();
+				//	setNewDataVisualizer(dataVisualizer);
+				//}
+
+				dataVisualizerLoader = new DataVisualizerLoaderForm(dataVisualizer, longOpNotifier);
+
+				dataVisualizerLoader.NeedInitialize += (s, ea) =>
+				{
+					if (dataVisualizerLoader.DataVisualizer != dataVisualizer) // new object created
+					{
+						dataVisualizer = dataVisualizerLoader.DataVisualizer;
+						setNewDataVisualizer(dataVisualizer);
+					}
+				};
+
+				dataVisualizerLoader.NeedRefresh += (s, ea) =>
+				{
+					activeControl.SceneFacade.PerformAction(AvailableAction.Refresh);
+				};
+
+				dataVisualizerLoader.FormClosed += (s, ea) =>
+				{
+					loadDataToolStripMenuItem.Checked = toolStripButtonDataVisualizer.Checked = false;
+					dataVisualizerLoader = null;
+				};
+
+				dataVisualizerLoader.Show(this); // show dialog
+
+				loadDataToolStripMenuItem.Checked = toolStripButtonDataVisualizer.Checked = true;
+			}
+			else
+			{
+				//loader.Activate();
+				dataVisualizerLoader.Close();
+			}
+		}
+
+		private void dataPickerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (dataPicker == null)
+			{
+				IDataVisualizerController dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
+				dataPicker = new DataPickerForm(dataVisualizer, longOpNotifier);
+				dataPicker.FormClosed += (s, ea) => { dataPickerToolStripMenuItem.Checked = toolStripButtonDataPicker.Checked = false; dataPicker = null; };
+				dataPickerToolStripMenuItem.Checked = toolStripButtonDataPicker.Checked = true;
+				dataPicker.Show();
+			}
+			else
+			{
+				dataPicker.Close();
+				dataPicker = null;
+			}
+		}
+
+		private void showgridToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			IDataVisualizerController dataVisualizerController = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
+			if (dataVisualizerController != null)
+			{
+				bool drawGrid = dataVisualizerController.Settings.DrawGrid; // get value
+				drawGrid = !drawGrid; // switch value
+				dataVisualizerController.Settings.DrawGrid = drawGrid; // set it back
+				showgridToolStripMenuItem.Checked = drawGrid; // change button check state
+				//activeControl.SceneFacade.PerformAction(AvailableAction.Refresh); // refresh
+			}
+		}
+
+		private void animationToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (animationDialog == null)
+			{
+				IDataVisualizerController dataVisualizerController = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
+				if (dataVisualizerController != null)
+				{
+					animationDialog = new AnimationCreatorForm(dataVisualizerController, longOpNotifier, (width, height) => activeControl.TakeScreenshot(width, height), activeControl.SceneFacade.MeshFilename);
+					animationDialog.FormClosed += (s, ea) => { animationToolStripMenuItem.Checked = false; animationDialog = null; };
+					animationToolStripMenuItem.Checked = true;
+					animationDialog.Show();
+				}
+			}
+			else
+			{
+				animationDialog.Close();
+				animationDialog = null;
+			}
+		}
+
+		private void signalDataMaximumToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (activeControl.SceneFacade.ContainsMesh)
+			{
+				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+				if (dataVisualizer != null)
+				{
+					activeControl.SignalNodeByID(dataVisualizer.GetEntitiesWithMaximumDataValue());
+				}
+			}
+		}
+
+		private void signalDataMinimumToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (activeControl.SceneFacade.ContainsMesh)
+			{
+				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+				if (dataVisualizer != null)
+				{
+					activeControl.SignalNodeByID(dataVisualizer.GetEntitiesWithMinimumDataValue());
+				}
+			}
+		}
+
+		private void layersToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (layersDialog == null)
+			{
+				IList<ILayer> layers = activeControl.SceneFacade.GetValue(AvailableValue.LayerList) as IList<ILayer>;
+				Vector3 meshDimensions = (Vector3)activeControl.SceneFacade.GetValue(AvailableValue.MeshDimensions);
+				EventHandler redrawMeshHandler = (s, ea) => { meshNeedRefreshHandler(this, new MeshNeedRefreshEventArgs(activeControl.SceneFacade.MeshFilename)); };
+				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+				layersDialog = new LayersForm(layers, redrawMeshHandler, meshDimensions, dataVisualizer != null);
+				layersDialog.FormClosed += (s, ea) => { layersToolStripMenuItem.Checked = toolStripButtonLayers.Checked = false; layersDialog = null; };
+				layersToolStripMenuItem.Checked = toolStripButtonLayers.Checked = true;
+				layersDialog.Show();
+			}
+			else
+			{
+				layersDialog.Close();
+				layersDialog = null;
+			}
+		}
+
 		#endregion
 
 		#region Help methods
@@ -957,7 +1106,7 @@ namespace MeshEditor.WinUI
 		{
 			string caption = "Save changes?";
 			
-			Set<string> processedMeshes = new Set<string>();
+			HashSet<string> processedMeshes = new HashSet<string>();
 			// ----------------------------------------------------
 			// zajistit, ze se me to nebude ptat na site, ktere jsou jeste otevrene
 			foreach (OpenGLControl c in openGLControls)
@@ -966,7 +1115,7 @@ namespace MeshEditor.WinUI
 			// ----------------------------------------------------
 			foreach (OpenGLControl control in controls)
 			{
-				if (control.SceneFacade.ContainsMesh && !processedMeshes.Add(control.SceneFacade.MeshFilename))
+				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.MeshFilename))
 				{
 					bool unsaved = (bool)control.SceneFacade.GetValue(AvailableValue.UnsavedChangesInMesh);
 					if (unsaved)
@@ -1017,6 +1166,7 @@ namespace MeshEditor.WinUI
 		private void initLongOpNotifier()
 		{
 			longOpNotifier = new LongOpNotifier();
+
 			longOpNotifier.HasBegun += delegate
 			{
 				this.Cursor = Cursors.WaitCursor;
@@ -1024,14 +1174,66 @@ namespace MeshEditor.WinUI
 				statusLabel.Text = "Wait for operation to finish ...";
 				statusLabel.ForeColor = Color.Blue;
 				statusStrip.Refresh();
+
+				setupProgressViewTimer();
 			};
-			longOpNotifier.HasEnd += delegate
+			longOpNotifier.HasEnded += delegate
 			{
 				this.Cursor = Cursors.Default;
 				activeControl.SetCursorAccordingToEditorMode();
 				statusLabel.ForeColor = Color.Black;
 				updateStatus();
+				if (progressViewForm != null)
+				{
+					progressViewForm.Close();
+					progressViewForm = null;
+				}
 			};
+			longOpNotifier.ProgressChanged += delegate (object s, MeshIOEventArgs e)
+			{
+				Action reportAction = delegate
+				{
+					reportOperationProgress(e.PercentDone, e.TaskName, e.OperationName);
+				};
+				this.Invoke(reportAction); // dispatch to UI thread
+			};
+		}
+
+		private void reportOperationProgress(int percentDone, string taskName, string operationName)
+		{
+			statusLabel.Text = taskName;
+			if (percentDone > 0)
+				statusLabel.Text += string.Format(" ({0}%)", percentDone);
+			statusStrip.Refresh();
+
+			if (progressViewForm != null)
+			{
+				progressViewForm.Caption = taskName;
+				progressViewForm.OperationName = operationName;
+				progressViewForm.SetProgressState(percentDone);
+			}
+		}
+
+		private void setupProgressViewTimer()
+		{
+			System.Windows.Forms.Timer delayTimer = new System.Windows.Forms.Timer();
+			delayTimer.Interval = 500;
+			delayTimer.Tick += delegate
+			{
+				delayTimer.Stop();
+				if (longOpNotifier.IsRunning)
+				{
+					Debug.Assert(progressViewForm == null);
+					progressViewForm = new ProgressViewForm("Processing operation ...");
+					progressViewForm.Cancel += delegate { longOpNotifier.Cancel(); };
+
+					this.Cursor = Cursors.Default;
+					activeControl.SetCursorAccordingToEditorMode();
+
+					progressViewForm.Show();
+				}
+			};
+			delayTimer.Start();
 		}
 
 		private void setRenderModeAcordingToToolStripButtons()
@@ -1100,15 +1302,14 @@ namespace MeshEditor.WinUI
 			{
 				updateCaption();
 				updateStatus();
-				undoRedoSetEnableIndication();
 				updateRenderModeButtons();
+				updateDataVisualizerButtons();
 			};
 
 			openGLControl.MeshNeedRefresh += meshNeedRefreshHandler;
 			openGLControl.ActionPerformed += delegate
 			{
 				updateStatus();
-				undoRedoSetEnableIndication();
 			};
 			openGLControl.ColorModeChanged += delegate
 			{
@@ -1203,6 +1404,156 @@ namespace MeshEditor.WinUI
 			return activeControl.MyContainer is SplitterPanel;
 		}
 
+		//private void alwaysShowNumbersToolStripMenuItem_Click(object sender, EventArgs e)
+		//{
+		//    bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.AlwaysShowNumbers);
+		//    value = !value;
+		//    activeControl.SceneFacade.SetValue(AvailableValue.AlwaysShowNumbers, value);
+		//    alwaysShowNumbersToolStripMenuItem.Checked = value;
+		//}
+
+		private void setNewDataVisualizer(IDataVisualizer dataVisualizer)
+		{
+			// close data picker
+			if (dataPicker != null)
+			{
+				dataPicker.Close();
+				dataPicker = null;
+			}
+			// close animation dialog
+			if (animationDialog != null)
+			{
+				animationDialog.Close();
+				animationDialog = null;
+			}
+
+			showgridToolStripMenuItem.Enabled = dataPickerToolStripMenuItem.Enabled = toolStripButtonDataPicker.Enabled = animationToolStripMenuItem.Enabled = (dataVisualizer != null); // enable changing Show exact value property
+			if (dataVisualizer == null)
+				signalDataMaximumToolStripMenuItem.Enabled = signalDataMinimumToolStripMenuItem.Enabled = false;
+
+			IDataVisualizerController controller = dataVisualizer as IDataVisualizerController;
+			if (controller != null)
+			{
+				showgridToolStripMenuItem.Checked = controller.Settings.DrawGrid; // implicitly not checked
+				// register handler for refreshing window
+				controller.Settings.PropertyChanged += dataVisualizerSettings_PropertyChanged;
+			}
+
+			activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
+
+			updateDataVisualizerButtons();
+		}
+
+		private void updateDataVisualizerButtons()
+		{
+			IDataVisualizer dv = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+			showgridToolStripMenuItem.Enabled = dataPickerToolStripMenuItem.Enabled = toolStripButtonDataPicker.Enabled = animationToolStripMenuItem.Enabled = (dv != null); // enable changing Show exact value property
+
+			IDataVisualizerController dc = dv as IDataVisualizerController;
+			if (dc != null)
+			{
+				showgridToolStripMenuItem.Checked = dc.Settings.DrawGrid; // implicitly not checked
+			}
+		}
+
+		private void dataVisualizerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			IVisualizerSettings settings = sender as IVisualizerSettings;
+			Debug.Assert(settings != null);
+
+			bool updateColorBuffers = false;
+			bool updateNodeCoordinates = false;
+			bool updateElementsCutByValueLimit = false;
+			bool invalidate = false;
+
+			string[] propertyNames = e.PropertyName.Split(';');
+			foreach (string propertyName in propertyNames)
+			{
+				switch (propertyName)
+				{
+					case "DrawIsoAreas":
+					case "IsoAreasSubIntervalNumber":
+					case "DrawGrid":
+					case "VectorDataIndex":
+					case "VectorLengthFactor":
+					case "MoveEndOfArrowsToNodes":
+					case "ShowColorScaleLegend":
+					case "ShowVectors":
+						invalidate = true;
+						break;
+					case "DeformationScale":
+						updateNodeCoordinates = true;
+						break;
+					case "ScalarDataIndex":
+					case "DisplayMethod":
+						updateElementsCutByValueLimit = true;
+						goto case "ColorScale";
+					case "ColorScale":
+						updateColorBuffers = settings.ShowScalars; // update colors only if scalars are enabled
+						invalidate = !updateColorBuffers;
+						break;
+					case "ShowScalars":
+						signalDataMaximumToolStripMenuItem.Enabled = signalDataMinimumToolStripMenuItem.Enabled = settings.ShowScalars;
+						updateColorBuffers = true;
+						break;
+				}
+			}
+
+			if (updateElementsCutByValueLimit)
+			{
+				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateElementsCutByValueLimit);
+			}
+			if (updateNodeCoordinates)
+			{
+				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateNodeCoordinates);
+			}
+			if (updateColorBuffers)
+			{
+				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
+			}
+			if (invalidate && !(updateNodeCoordinates || updateColorBuffers))
+			{
+				activeControl.Invalidate();
+			}
+		}
+
+		private void loadAppSettings()
+		{
+			this.Width = Properties.Settings.Default.MainWindowWidth;
+			this.Height = Properties.Settings.Default.MainWindowHeight;
+
+			this.Left = Properties.Settings.Default.MainWindowPositionLeft;
+			this.Top = Properties.Settings.Default.MainWindowPositionTop;
+
+			this.WindowState = Properties.Settings.Default.MainWindowState;
+		}
+
+		private void saveAppSettings()
+		{
+			Properties.Settings.Default.MainWindowState = this.WindowState;
+			if (this.WindowState != FormWindowState.Maximized)
+			{
+				Properties.Settings.Default.MainWindowWidth = this.Width;
+				Properties.Settings.Default.MainWindowHeight = this.Height;
+			}
+			Properties.Settings.Default.MainWindowPositionLeft = this.Left;
+			Properties.Settings.Default.MainWindowPositionTop = this.Top;
+
+			//if (!string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
+			Properties.Settings.Default.LastLoadedMesh = activeControl.SceneFacade.MeshFilename;
+
+			Properties.Settings.Default.Save();
+		}
+
+		private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+		{
+			closeActiveMeshToolStripMenuItem.Enabled = activeControl.SceneFacade.ContainsMesh;
+		}
+
+		#endregion
+
+		#region Tool strip handlers
+
 		private void nodeNumbersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawNodeNumbers);
@@ -1218,18 +1569,6 @@ namespace MeshEditor.WinUI
 			activeControl.SceneFacade.SetValue(AvailableValue.DrawElementNumbers, value);
 			elementNumbersToolStripMenuItem.Checked = value;
 		}
-
-		//private void alwaysShowNumbersToolStripMenuItem_Click(object sender, EventArgs e)
-		//{
-		//    bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.AlwaysShowNumbers);
-		//    value = !value;
-		//    activeControl.SceneFacade.SetValue(AvailableValue.AlwaysShowNumbers, value);
-		//    alwaysShowNumbersToolStripMenuItem.Checked = value;
-		//}
-
-		#endregion
-
-		#region Tool strip handlers
 
 		private void toolStripButtonPoints_Click(object sender, EventArgs e)
 		{
@@ -1289,6 +1628,66 @@ namespace MeshEditor.WinUI
 		{
 			string itemsName = getNameOfItemsToSelectAcordingToEditorMode() ?? "elements";
 			toolStripButtonSelectItemsByProperty.Text = "Select " + itemsName + " by property (F6)";
+		}
+
+		private void toolStripButtonDataVisualizer_Click(object sender, EventArgs e)
+		{
+			loadDataToolStripMenuItem_Click(sender, e);
+		}
+
+		private void toolStripButtonDataPicker_Click(object sender, EventArgs e)
+		{
+			dataPickerToolStripMenuItem_Click(sender, e);
+		}
+
+		private void toolStripButtonLayers_Click(object sender, EventArgs e)
+		{
+			layersToolStripMenuItem_Click(null, null);
+		}
+
+		private void takeScreenshotToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			SaveFileDialog dialog = new SaveFileDialog();
+			dialog.Filter = "PNG image format (*.png)|*.png|JPEG image format (*.jpg; *.jpeg)|*.jpg;*.jpeg|BMP image format (*.bmp)|*.bmp";
+			dialog.FilterIndex = this.takeScreenshotLastFilterIndex;
+			if (takeScreenshotLastFilename != null)
+			{
+				dialog.FileName = takeScreenshotLastFilename;
+			}
+			else
+			{
+				if (activeControl.SceneFacade.ContainsMesh)
+				{
+					//dialog.InitialDirectory = Path.GetDirectoryName(activeControl.SceneFacade.MeshFilename);
+					dialog.FileName = Path.GetFileName(activeControl.SceneFacade.MeshFilename);
+				}
+			}
+			if (dialog.ShowDialog() == DialogResult.OK)
+			{
+				int width = 0; // zero means "keep current window size"
+				int height = 0;
+				System.Drawing.Imaging.ImageFormat imageFormat;
+				switch (Path.GetExtension(dialog.FileName).ToLower())
+				{
+					case ".jpg":
+					case ".jpeg":
+						imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
+						break;
+					case ".bmp":
+						imageFormat = System.Drawing.Imaging.ImageFormat.Bmp;
+						break;
+					case ".png":
+					default:
+						imageFormat = System.Drawing.Imaging.ImageFormat.Png;
+						break;
+				}
+				using (Bitmap screenshot = activeControl.TakeScreenshot(width, height))
+				{
+					screenshot.Save(dialog.FileName, imageFormat); // image format must correspond to file extension (.png)
+				}
+				this.takeScreenshotLastFilterIndex = dialog.FilterIndex;
+				this.takeScreenshotLastFilename = Path.GetFileName(dialog.FileName);
+			}
 		}
 
 		#endregion

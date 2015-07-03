@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using MeshEditor.CoreInterface;
 using MeshEditor.Data;
-using Wintellect.PowerCollections;
 using MeshEditor.Cuts;
 using MeshEditor.Graphics;
+using System.Linq;
 
 namespace MeshEditor.WinUI
 {
@@ -22,15 +21,6 @@ namespace MeshEditor.WinUI
 	{
 
 		#region Fields, Constructor
-
-		private static string previousMeshFilename;
-		private static Set<ElementType> checkedElementTypes;
-		
-		static ShowHideElementsForm()
-		{
-			previousMeshFilename = null;
-			checkedElementTypes = null;
-		}
 
 		private SceneFacade sceneFacade;
 		private SortedDictionary<Property, bool> allProperties;
@@ -50,21 +40,60 @@ namespace MeshEditor.WinUI
 
 		private void initLists()
 		{
+			CutInfo lastUsedCutInfo = sceneFacade.GetValue(AvailableValue.LastUsedCutInfo) as CutInfo;
+
+			this.allProperties = sceneFacade.GetValue(AvailableValue.MeshElementPropertiesSorted) as SortedDictionary<Property, bool>;
+
 			MeshStatistics statistics = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
-			if (statistics == null)
-				return;
 
-			this.allProperties = (SortedDictionary<Property, bool>)sceneFacade.GetValue(AvailableValue.MeshElementPropertiesSorted);
+			initPropertyList(statistics, lastUsedCutInfo);
+			initElementTypeList(statistics, lastUsedCutInfo);
 
-			initPropertyList(statistics);
-			initElementTypeList(statistics);
+			// init or hide Data Value Limit page
+			initValueLimit(lastUsedCutInfo);
 		}
 
-		private void initPropertyList(MeshStatistics statistics)
+		private void initValueLimit(CutInfo lastUsedCutInfo)
 		{
-			listViewProperties.Columns.Add("Property", 100, HorizontalAlignment.Right);
-			listViewProperties.Columns.Add("Description", 280);
+			IDataVisualizer dataVisualizer = sceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
+			if (dataVisualizer != null)
+			{
+				if (lastUsedCutInfo != null && lastUsedCutInfo.ValueLimit != null)
+				{
+					if (lastUsedCutInfo.ValueLimit.Maximum != null)
+					{
+						textBoxMaximum.Text = lastUsedCutInfo.ValueLimit.Maximum.ToString();
+						checkBoxMaximum.Checked = true;
+					}
+					else
+					{
+						textBoxMaximum.Text = dataVisualizer.GetMaximumDataValue().ToString();
+					}
+					if (lastUsedCutInfo.ValueLimit.Minimum != null)
+					{
+						textBoxMinimum.Text = lastUsedCutInfo.ValueLimit.Minimum.ToString();
+						checkBoxMinimum.Checked = true;
+					}
+					else
+					{
+						textBoxMinimum.Text = dataVisualizer.GetMinimumDataValue().ToString();
+					}
+					checkBoxAllNodesInRange.Checked = (lastUsedCutInfo.HitDecision == CutInfo.ItemHitDecision.AllNodes);
+				}
+				else
+				{
+					textBoxMaximum.Text = dataVisualizer.GetMaximumDataValue().ToString();
+					textBoxMinimum.Text = dataVisualizer.GetMinimumDataValue().ToString();
+				}
+			}
+			else
+			{
+				tabControl.TabPages.Remove(tabPageValueLimit);
+			}
+		}
 
+		private void initPropertyList(MeshStatistics statistics, CutInfo lastUsedCutInfo)
+		{
 			foreach (Property property in allProperties.Keys)
 			{
 				ListViewItem item = new ListViewItem(property.ToString());
@@ -73,35 +102,27 @@ namespace MeshEditor.WinUI
 				if (statistics.PropertyComments.TryGetValue(property, out description))
 					item.SubItems.Add(description);
 				// --------------------------------------------------
-				item.Checked = allProperties[property];
+				//item.Checked = allProperties[property];
+				item.Checked = (lastUsedCutInfo == null || lastUsedCutInfo.ElementPropertiesToShow == null || lastUsedCutInfo.ElementPropertiesToShow.Contains(property));
 				// --------------------------------------------------
 				// set property color as background
 				item.BackColor = PropertyColorProvider.Get(property);
 				// if property color is too dark, use light foreground color
-				if (Utilities.Functions.GetLuminanceOfColor(PropertyColorProvider.Get(property)) < 0.5f)
-					item.ForeColor = Color.White;
-				else
-					item.ForeColor = Color.Black;
+				item.ForeColor = Utilities.Functions.GetContrastColor(PropertyColorProvider.Get(property));
 				// --------------------------------------------------
 				listViewProperties.Items.Add(item);
 			}
 		}
 
-		private void initElementTypeList(MeshStatistics statistics)
+		private void initElementTypeList(MeshStatistics statistics, CutInfo lastUsedCutInfo)
 		{
-			listViewElementTypes.Columns.Add("Element type", 200);
-
 			ElementType[] allTypes = statistics.GetIncludedElementTypesArray();
 
 			foreach (ElementType type in allTypes)
 			{
 				ListViewItem item = new ListViewItem(type.ToString());
-				item.Checked = true;
 				// --------------------------------------------------
-				if (sceneFacade.MeshFilename == previousMeshFilename && checkedElementTypes != null && !checkedElementTypes.Contains(type))
-					item.Checked = false;
-				else
-					item.Checked = true;
+				item.Checked = (lastUsedCutInfo == null || lastUsedCutInfo.ElementTypesToShow == null || lastUsedCutInfo.ElementTypesToShow.Contains(type));
 				// --------------------------------------------------
 				listViewElementTypes.Items.Add(item);
 			}
@@ -122,9 +143,18 @@ namespace MeshEditor.WinUI
 				cutInfo.ElementPropertiesToShow = getPropertiesToShow(statistics);
 				cutInfo.ElementTypesToShow = getElementTypesToShow(statistics);
 
+				try
+				{
+					cutInfo.ValueLimit = getDataValueLimitToShow();
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(ex.Message, "Value limit error");
+				}
+
+				cutInfo.HitDecision = checkBoxAllNodesInRange.Checked ? CutInfo.ItemHitDecision.AllNodes : CutInfo.ItemHitDecision.SomeNodes;
+
 				sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
-				// ...
-				saveState(statistics);
 			}
 			longOpNotifier.End();
 			this.Cursor = temp;
@@ -148,14 +178,36 @@ namespace MeshEditor.WinUI
 			return result;
 		}
 
-		private void saveState(MeshStatistics statistics)
+		private DataValueRange getDataValueLimitToShow()
 		{
-			ElementType[] allTypes = statistics.GetIncludedElementTypesArray();
+			//throw new NotImplementedException(); // TODO: check if min is less than max
+			double? min = null, max = null;
+			if (checkBoxMinimum.Checked)
+				min = double.Parse(textBoxMinimum.Text);
+			if (checkBoxMaximum.Checked)
+				max = double.Parse(textBoxMaximum.Text);
 
-			previousMeshFilename = sceneFacade.MeshFilename;
-			checkedElementTypes = new Set<ElementType>();
-			foreach (int index in listViewElementTypes.CheckedIndices)
-				checkedElementTypes.Add(allTypes[index]);
+			ensureMonotony(ref min, ref max);
+
+			return (min == null && max == null) ? null : new DataValueRange(min, max, checkBoxInverse.Checked); // return null, if value limit is not set
+		}
+
+		private void ensureMonotony(ref double? min, ref double? max)
+		{
+			if (min != null && max != null && min > max)
+			{
+				// minimum is greater than maximum!
+				// swap values
+				double? temp = min;
+				min = max;
+				max = temp;
+				// swap texts in textboxes
+				string tempText = textBoxMinimum.Text;
+				textBoxMinimum.Text = textBoxMaximum.Text;
+				textBoxMaximum.Text = tempText;
+				// inform user
+				throw new ArgumentException("Maximum must be greater than mininum. Values swapped.");
+			}
 		}
 
 		#endregion
@@ -172,40 +224,234 @@ namespace MeshEditor.WinUI
 			doIt();
 		}
 		
-		private void listViewProperties_SelectedIndexChanged(object sender, EventArgs e)
+		private void checkBoxMinimum_CheckedChanged(object sender, EventArgs e)
 		{
-			listViewProperties.SelectedIndices.Clear();
+			textBoxMinimum.Enabled = checkBoxMinimum.Checked;
+			checkBoxInverse.Enabled = checkBoxAllNodesInRange.Enabled = checkBoxMinimum.Checked || checkBoxMaximum.Checked;
 		}
+
+		private void checkBoxMaximum_CheckedChanged(object sender, EventArgs e)
+		{
+			textBoxMaximum.Enabled = checkBoxMaximum.Checked;
+			checkBoxInverse.Enabled = checkBoxAllNodesInRange.Enabled = checkBoxMinimum.Checked || checkBoxMaximum.Checked;
+		}
+
+		#region CheckBoxes Check Properties
+
+		bool checkAllPropertiesStateChanging, checkSelectedPropertiesStateChanging;
+		bool itemCheckPropertiesChanging;
+
+		private void checkBoxCheckAllProperties_CheckedChanged(object sender, EventArgs e)
+		{
+			if (checkAllPropertiesStateChanging)
+				return;
+
+			itemCheckPropertiesChanging = true;
+			{
+				foreach (ListViewItem item in listViewProperties.Items)
+					item.Checked = checkBoxCheckAllProperties.Checked;
+			}
+			itemCheckPropertiesChanging = false;
+
+			updateCheckSelectedPropertiesState();
+		}
+
+		private void checkBoxCheckSelectedProperties_CheckedChanged(object sender, EventArgs e)
+		{
+			if (checkSelectedPropertiesStateChanging)
+				return;
+
+			itemCheckPropertiesChanging = true;
+			{
+				foreach (ListViewItem item in listViewProperties.SelectedItems)
+					item.Checked = checkBoxCheckSelectedProperties.Checked;
+			}
+			itemCheckPropertiesChanging = false;
+
+			updateCheckAllPropertiesState();
+		}
+
+		private void listViewProperties_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+		{
+			if (itemCheckPropertiesChanging)
+				return;
+			updateCheckSelectedPropertiesState();
+		}
+
+		private void listViewProperties_ItemChecked(object sender, ItemCheckedEventArgs e)
+		{
+			if (itemCheckPropertiesChanging)
+				return;
+			updateCheckAllPropertiesState();
+			updateCheckSelectedPropertiesState();
+		}
+
+		private void updateCheckAllPropertiesState()
+		{
+			bool none = true;
+			bool all = true;
+			foreach (ListViewItem item in listViewProperties.Items)
+			{
+				if (item.Checked)
+				{
+					none = false;
+				}
+				else
+				{
+					all = false;
+				}
+			}
+
+			checkAllPropertiesStateChanging = true;
+			{
+				if (none)
+					checkBoxCheckAllProperties.CheckState = CheckState.Unchecked;
+				else if (all)
+					checkBoxCheckAllProperties.CheckState = CheckState.Checked;
+				else
+					checkBoxCheckAllProperties.CheckState = CheckState.Indeterminate;
+			}
+			checkAllPropertiesStateChanging = false;
+		}
+
+		private void updateCheckSelectedPropertiesState()
+		{
+			bool none = true;
+			bool all = true;
+			foreach (ListViewItem item in listViewProperties.SelectedItems)
+			{
+				if (item.Checked)
+				{
+					none = false;
+				}
+				else
+				{
+					all = false;
+				}
+			}
+
+			checkSelectedPropertiesStateChanging = true;
+			{
+				if (none)
+					checkBoxCheckSelectedProperties.CheckState = CheckState.Unchecked;
+				else if (all)
+					checkBoxCheckSelectedProperties.CheckState = CheckState.Checked;
+				else
+					checkBoxCheckSelectedProperties.CheckState = CheckState.Indeterminate;
+			}
+			checkSelectedPropertiesStateChanging = false;
+		}
+
+		#endregion
+
+		#region Checkboxes Check Element Types
+
+		bool checkAllElementTypesStateChanging, checkSelectedElementTypesStateChanging;
+		bool itemCheckElementTypesChanging;
+
+		private void checkBoxCheckAllElementTypes_CheckedChanged(object sender, EventArgs e)
+		{
+			if (checkAllElementTypesStateChanging)
+				return;
+
+			itemCheckElementTypesChanging = true;
+			{
+				foreach (ListViewItem item in listViewElementTypes.Items)
+					item.Checked = checkBoxCheckAllElementTypes.Checked;
+			}
+			itemCheckElementTypesChanging = false;
+
+			updateCheckSelectedElementTypesState();
+		}
+
+		private void checkBoxCheckSelectedElementTypes_CheckedChanged(object sender, EventArgs e)
+		{
+			if (checkSelectedElementTypesStateChanging)
+				return;
+
+			itemCheckElementTypesChanging = true;
+			{
+				foreach (ListViewItem item in listViewElementTypes.SelectedItems)
+					item.Checked = checkBoxCheckSelectedElementTypes.Checked;
+			}
+			itemCheckElementTypesChanging = false;
+
+			updateCheckAllElementTypesState();
+		}
+
+		private void listViewElementTypes_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+		{
+			if (itemCheckElementTypesChanging)
+				return;
+			updateCheckSelectedElementTypesState();
+		}
+
+		private void listViewElementTypes_ItemChecked(object sender, ItemCheckedEventArgs e)
+		{
+			if (itemCheckElementTypesChanging)
+				return;
+			updateCheckAllElementTypesState();
+			updateCheckSelectedElementTypesState();
+		}
+
+		private void updateCheckAllElementTypesState()
+		{
+			bool none = true;
+			bool all = true;
+			foreach (ListViewItem item in listViewElementTypes.Items)
+			{
+				if (item.Checked)
+				{
+					none = false;
+				}
+				else
+				{
+					all = false;
+				}
+			}
+
+			checkAllElementTypesStateChanging = true;
+			{
+				if (none)
+					checkBoxCheckAllElementTypes.CheckState = CheckState.Unchecked;
+				else if (all)
+					checkBoxCheckAllElementTypes.CheckState = CheckState.Checked;
+				else
+					checkBoxCheckAllElementTypes.CheckState = CheckState.Indeterminate;
+			}
+			checkAllElementTypesStateChanging = false;
+		}
+
+		private void updateCheckSelectedElementTypesState()
+		{
+			bool none = true;
+			bool all = true;
+			foreach (ListViewItem item in listViewElementTypes.SelectedItems)
+			{
+				if (item.Checked)
+				{
+					none = false;
+				}
+				else
+				{
+					all = false;
+				}
+			}
+
+			checkSelectedElementTypesStateChanging = true;
+			{
+				if (none)
+					checkBoxCheckSelectedElementTypes.CheckState = CheckState.Unchecked;
+				else if (all)
+					checkBoxCheckSelectedElementTypes.CheckState = CheckState.Checked;
+				else
+					checkBoxCheckSelectedElementTypes.CheckState = CheckState.Indeterminate;
+			}
+			checkSelectedElementTypesStateChanging = false;
+		}
+
+		#endregion
 		
-		private void listViewElementTypes_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			listViewElementTypes.SelectedIndices.Clear();
-		}
-
-		private void buttonSelectAllProperties_Click(object sender, EventArgs e)
-		{
-			foreach (ListViewItem item in listViewProperties.Items)
-				item.Checked = true;
-		}
-
-		private void buttonSelectNoneProperties_Click(object sender, EventArgs e)
-		{
-			foreach (ListViewItem item in listViewProperties.Items)
-				item.Checked = false;
-		}
-
-		private void buttonSelectAllElementTypes_Click(object sender, EventArgs e)
-		{
-			foreach (ListViewItem item in listViewElementTypes.Items)
-				item.Checked = true;
-		}
-
-		private void buttonSelectNoneElementTypes_Click(object sender, EventArgs e)
-		{
-			foreach (ListViewItem item in listViewElementTypes.Items)
-				item.Checked = false;
-		}
-
 		#endregion
 
 	}

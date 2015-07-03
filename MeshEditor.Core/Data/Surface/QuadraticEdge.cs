@@ -22,9 +22,16 @@ namespace MeshEditor.Data
 			this.middleNode = middle;
 		}
 
+		public override IEnumerable<Node> IterateThroughAllNodes()
+		{
+			yield return beginNode;
+			yield return endNode;
+			yield return middleNode;
+		}
+
 		public override string ToString()
 		{
-			return "Edge | (Nodes: " + beginNode.ID + ", " + endNode.ID + ", " + middleNode.ID + ") | Approximation: Quadratic | Property: " + property;
+			return "Edge | (Nodes: " + beginNode.ID + ", " + endNode.ID + ", " + middleNode.ID + ") | Approximation: Quadratic | Property: " + Property;
 		}
 	}
 }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
-using Wintellect.PowerCollections;
 using MeshEditor.Construction;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -18,7 +18,7 @@ namespace MeshEditor.Data
 		protected int id;
 		//protected ApproximationType approximationType;
 		protected ElementType elementType;
-		protected Property property;
+		private Property property;
 		//protected Property[] edgeProperties;
 
 		public Element(int id, ElementType type)
@@ -33,7 +33,6 @@ namespace MeshEditor.Data
 		#endregion
 
 		#region Public properties
-
 
 		public int ID
 		{
@@ -73,7 +72,9 @@ namespace MeshEditor.Data
 
 		#region Public methods
 
-		public abstract IEnumerable<Vector3> GetAllIntersectionsOfEdgesWithPlane(Vector3 pointOnPlane, Vector3 planeNormal);
+		public abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset);
+
+		public abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues);
 
 		public abstract IEnumerable<Node> IterateThroughAllNodes();
 		public abstract IEnumerable<Node> IterateThroughAllNodesIncludingEdgeMiddleNodes();
@@ -97,7 +98,7 @@ namespace MeshEditor.Data
 
 		public bool ContainsNodes(params Node[] nodes)
 		{
-			Set<Node> allNodes = new Set<Node>(IterateThroughAllNodes());
+			HashSet<Node> allNodes = new HashSet<Node>(IterateThroughAllNodes());
 			foreach (Node n in nodes)
 				if (!allNodes.Contains(n))
 					return false;
@@ -124,10 +125,12 @@ namespace MeshEditor.Data
 			}
 
 			text.Append(" | Type: ");
-			text.Append(this.GetType().Name);
+			text.Append(elementType.ToString());
 
-			text.Append(" | Approximation: ");
-			text.Append(ApproximationString);
+			//text.Append(" | Type: ");
+			//text.Append(this.GetType().Name);
+			//text.Append(" | Approximation: ");
+			//text.Append(ApproximationString);
 
 			text.Append(" | Property: ");
 			text.Append(property.ToString());
@@ -238,7 +241,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return 12;
 				default:
-					throw new ArgumentException("This argument is not supported", "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
 			}
 		}
 
@@ -273,7 +276,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return 6;
 				default:
-					throw new ArgumentException("This argument is not supported", "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
 			}
 		}
 		
@@ -298,7 +301,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return ApproximationType.Quadratic;
 				default:
-					throw new ArgumentException("This argument is not supported", "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
 			}
 		}
 
@@ -466,16 +469,6 @@ namespace MeshEditor.Data
 		{
 			get { return this.property; }
 			set { this.property = value; }
-		}
-
-		public bool ContainsMultipleProperties
-		{
-			get { return false; }
-		}
-
-		public void RemoveLastProperty()
-		{
-			// do nothing
 		}
 
 		#endregion

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Data;
 using MeshEditor.Construction;
-using Wintellect.PowerCollections;
 using OpenTK;
 using System.Diagnostics;
 using MeshEditor.Utilities;
+using MeshEditor.CoreInterface;
 
 namespace MeshEditor.Cuts
 {
@@ -44,8 +44,8 @@ namespace MeshEditor.Cuts
 			if (mesh == null || cutInfo.CutTestMethod == null)
 				return;
 
-			Set<Element> elementHits;
-			Set<Node> nodeHits;
+			HashSet<Element> elementHits;
+			HashSet<Node> nodeHits;
 
 			if (cutInfo.HitDecision == CutInfo.ItemHitDecision.AllNodes)
 				getHitsAllNodesInArea(mesh, cutInfo.CutTestMethod, transformCoordinates, out elementHits, (cutInfo.Action != CutInfo.ActionType.SelectElements), out nodeHits);
@@ -61,7 +61,7 @@ namespace MeshEditor.Cuts
 		{
 			//cutInfo.CutTestMethod = createCutTestForCutPlanes(cutPlanes, cutInfo);
 			//SelectItemsByExpression(mesh, cutInfo, false);
-			Set<ISelectable> newSelection = new Set<ISelectable>();
+			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
 			mesh.SelectedItems = newSelection;
 			bool allNodesFlag = (cutInfo.HitDecision == CutInfo.ItemHitDecision.AllNodes);
 
@@ -74,9 +74,9 @@ namespace MeshEditor.Cuts
 			// ------------------------------------------------------------------------
 
 			cutInfo.HitDecision = CutInfo.ItemHitDecision.SomeNodes;
-			Set<Node> nodeHitsForSomeNodesOption = getNodeHits(getAllNodes(mesh), createCutTestForCutPlanes(cutPlanes, cutInfo));
+			HashSet<Node> nodeHitsForSomeNodesOption = getNodeHits(getAllNodes(mesh), createCutTestForCutPlanes(cutPlanes, cutInfo));
 			cutInfo.HitDecision = CutInfo.ItemHitDecision.AllNodes;
-			Set<Node> nodeHitsForAllNodesOption = getNodeHits(getAllNodes(mesh), createCutTestForCutPlanes(cutPlanes, cutInfo));
+			HashSet<Node> nodeHitsForAllNodesOption = getNodeHits(getAllNodes(mesh), createCutTestForCutPlanes(cutPlanes, cutInfo));
 			// vratit puvodni volbu
 			cutInfo.HitDecision = allNodesFlag ? CutInfo.ItemHitDecision.AllNodes : CutInfo.ItemHitDecision.SomeNodes;
 
@@ -88,8 +88,10 @@ namespace MeshEditor.Cuts
 				return;
 			}
 
-			Set<Node> borderNodes = nodeHitsForAllNodesOption.Difference(nodeHitsForSomeNodesOption);
-			//Set<Node> nodeHits = (allNodesFlag) ? nodeHitsForAllNodesOption : nodeHitsForSomeNodesOption;
+			HashSet<Node> borderNodes = new HashSet<Node>(nodeHitsForAllNodesOption);
+			borderNodes.ExceptWith(nodeHitsForSomeNodesOption);
+
+			//HashSet<Node> nodeHits = (allNodesFlag) ? nodeHitsForAllNodesOption : nodeHitsForSomeNodesOption;
 			if (cutInfo.Action == CutInfo.ActionType.SelectFaces) // faces
 			{
 				if (allNodesFlag)
@@ -142,7 +144,7 @@ namespace MeshEditor.Cuts
 			if (mesh == null)
 				return;
 			
-			Set<Element> toHide = new Set<Element>();
+			HashSet<Element> toHide = new HashSet<Element>();
 
 			foreach (ISelectable item in mesh.SelectedItems)
 			{
@@ -168,7 +170,7 @@ namespace MeshEditor.Cuts
 			hideElements(mesh, toHide);
 		}
 
-		public static void HideElements(Mesh mesh, Set<Element> elementsToHide)
+		public static void HideElements(Mesh mesh, HashSet<Element> elementsToHide)
 		{
 			if (mesh == null)
 				return;
@@ -209,8 +211,10 @@ namespace MeshEditor.Cuts
 
 			//Property[] propertyValues = cutInfo.ElementPropertiesToShow;
 			//Type[] elementTypes = convertToTypeArray(cutInfo.ElementTypesToShow);
-			Set<Property> propertyValues = (cutInfo.ElementPropertiesToShow == null) ? null : new Set<Property>(cutInfo.ElementPropertiesToShow);
-			Set<ElementType> elementTypes = (cutInfo.ElementTypesToShow == null) ? null : new Set<ElementType>(cutInfo.ElementTypesToShow);
+			HashSet<Property> propertyValues = (cutInfo.ElementPropertiesToShow == null) ? null : new HashSet<Property>(cutInfo.ElementPropertiesToShow);
+			HashSet<ElementType> elementTypes = (cutInfo.ElementTypesToShow == null) ? null : new HashSet<ElementType>(cutInfo.ElementTypesToShow);
+
+			IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
 
 			ElementTest test;
 
@@ -225,42 +229,67 @@ namespace MeshEditor.Cuts
 			{
 				test = delegate(Element e)
 				{
-					return propertyValues.Contains(e.Property) && elementTypes.Contains(e.ElementType);
+					return propertyValues.Contains(e.Property) && elementTypes.Contains(e.ElementType) && elementIsInDataValueLimit(e, dataVisualizer, cutInfo);
 				};
 			}
 			// ============================================================
 			setElementVisibility(mesh, test);
 		}
 
-		public static void RestoreElements(Mesh mesh, Set<Element> elementsToRestore)
+		private static bool elementIsInDataValueLimit(Element element, IDataVisualizer dataVisualizer, CutInfo cutInfo)
 		{
-			if (mesh == null)
-				return;
-
-			mesh.SelectedItems = new Set<ISelectable>(); // odoznacit polozky
-			mesh.HiddenElements.RemoveMany(elementsToRestore); // smazat obnovene prvky ze seznamu uriznutych prvku
-			
-			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, new Set<Element>(), elementsToRestore, new Set<Node>(), false);
+			if (dataVisualizer == null || cutInfo.ValueLimit == null)
+				return true;
+			DataValueRange valueLimit = cutInfo.ValueLimit;
+			if (cutInfo.HitDecision == CutInfo.ItemHitDecision.AllNodes)
+			{
+				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				{
+					if (!valueLimit.Contains(dataVisualizer.GetDataValue(node)))
+						return false;
+				}
+			}
+			else if (cutInfo.HitDecision == CutInfo.ItemHitDecision.SomeNodes)
+			{
+				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				{
+					if (valueLimit.Contains(dataVisualizer.GetDataValue(node)))
+						return true;
+				}
+				return false;
+			}
+			return true;
 		}
 
-		public static void HideRestoreElements(Mesh mesh, Set<Element> toHide, Set<Element> toRestore, bool selectFaces)
+		public static void RestoreElements(Mesh mesh, HashSet<Element> elementsToRestore)
 		{
 			if (mesh == null)
 				return;
 
-			Set<Node> allNodesOfHiddenElements = new Set<Node>();
+			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
+			mesh.HiddenElements.ExceptWith(elementsToRestore); // smazat obnovene prvky ze seznamu uriznutych prvku
+			
+			MeshConstructor ctor = new MeshConstructor();
+			ctor.CutMesh(mesh, new HashSet<Element>(), elementsToRestore, new HashSet<Node>(), false);
+		}
+
+		public static void HideRestoreElements(Mesh mesh, HashSet<Element> toHide, HashSet<Element> toRestore, bool selectFaces)
+		{
+			if (mesh == null)
+				return;
+
+			HashSet<Node> allNodesOfHiddenElements = new HashSet<Node>();
 			foreach (Element e in toHide)
 			{
-				allNodesOfHiddenElements.AddMany(e.IterateThroughAllNodes());
+				allNodesOfHiddenElements.UnionWith(e.IterateThroughAllNodes());
 				mesh.HiddenElements.Add(e);
 			}
-			mesh.HiddenElements.RemoveMany(toRestore);
+			mesh.HiddenElements.ExceptWith(toRestore);
 
 			// odoznacit polozky
-			mesh.SelectedItems = new Set<ISelectable>();
+			mesh.SelectedItems = new HashSet<ISelectable>();
 			MeshConstructor ctor = new MeshConstructor();
-			Set<ISelectable> facesOnCut = ctor.CutMesh(mesh, toHide, toRestore, allNodesOfHiddenElements, selectFaces);
+			HashSet<ISelectable> facesOnCut = ctor.CutMesh(mesh, toHide, toRestore, allNodesOfHiddenElements, selectFaces);
 
 			if (selectFaces && facesOnCut != null)
 			{
@@ -321,10 +350,10 @@ namespace MeshEditor.Cuts
 			return test;
 		}
 
-		private static Set<ISelectable> findSelectedItemsInMesh(Mesh mesh, CutInfo cutInfo, Set<Element> elementHits, Set<Node> nodeHits)
+		private static HashSet<ISelectable> findSelectedItemsInMesh(Mesh mesh, CutInfo cutInfo, HashSet<Element> elementHits, HashSet<Node> nodeHits)
 		{
 			bool allNodes = (cutInfo.HitDecision == CutInfo.ItemHitDecision.AllNodes);
-			Set<ISelectable> result = new Set<ISelectable>();
+			HashSet<ISelectable> result = new HashSet<ISelectable>();
 			switch (cutInfo.Action)
 			{
 				case CutInfo.ActionType.SelectElements:
@@ -412,11 +441,11 @@ namespace MeshEditor.Cuts
 
 		private static void setElementVisibility(Mesh mesh, ElementTest elementVisibilityTest)
 		{
-			mesh.SelectedItems = new Set<ISelectable>(); // odoznacit polozky
+			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
 
-			Set<Element> toCut = new Set<Element>();
-			Set<Element> toRestore = new Set<Element>();
-			Set<Node> allNodesOfCuttedElements = new Set<Node>();
+			HashSet<Element> toCut = new HashSet<Element>();
+			HashSet<Element> toRestore = new HashSet<Element>();
+			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
 
 			foreach (Element e in mesh.Elements)
 			{
@@ -427,7 +456,7 @@ namespace MeshEditor.Cuts
 					{
 						toCut.Add(e);
 						mesh.HiddenElements.Add(e);
-						allNodesOfCuttedElements.AddMany(e.IterateThroughAllNodes());
+						allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
 					}
 				}
 				else if (cutted)
@@ -438,15 +467,15 @@ namespace MeshEditor.Cuts
 
 			MeshConstructor ctor = new MeshConstructor();
 			ctor.CutMesh(mesh, toCut, toRestore, allNodesOfCuttedElements, false);
-			mesh.HiddenElements.RemoveMany(toRestore); // uz nejsou zadne uriznute
+			mesh.HiddenElements.ExceptWith(toRestore); // uz nejsou zadne uriznute
 		}
 
-		private static void hideElements(Mesh mesh, Set<Element> toHide)
+		private static void hideElements(Mesh mesh, HashSet<Element> toHide)
 		{
-			Set<Node> allNodesOfCuttedElements = new Set<Node>();
+			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
 			foreach(Element e in toHide)
 			{
-				allNodesOfCuttedElements.AddMany(e.IterateThroughAllNodes());
+				allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
 				mesh.HiddenElements.Add(e);
 			}
 
@@ -454,17 +483,17 @@ namespace MeshEditor.Cuts
 				return;
 
 			// odoznacit polozky
-			mesh.SelectedItems = new Set<ISelectable>();
+			mesh.SelectedItems = new HashSet<ISelectable>();
 			
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, toHide, new Set<Element>(), allNodesOfCuttedElements, false);
+			ctor.CutMesh(mesh, toHide, new HashSet<Element>(), allNodesOfCuttedElements, false);
 
 		}
 
 		private static void doCut(Mesh mesh, CutTest isToCut, CutInfo.ItemHitDecision hitDecision, bool transformCoordinates)
 		{
-			Set<Element> elementHits;
-			Set<Node> nodeHits;
+			HashSet<Element> elementHits;
+			HashSet<Node> nodeHits;
 			//getHits(mesh, isToCut, transformCoordinates, hitDecision, out elementsHits, false, out nodeHits);
 
 			if (hitDecision == CutInfo.ItemHitDecision.AllNodes)
@@ -474,23 +503,23 @@ namespace MeshEditor.Cuts
 			else
 				throw new NotSupportedException(hitDecision.ToString() + " option is not supported");
 
-			Set<Node> allNodesOfCuttedElements = new Set<Node>();
+			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
 			foreach (Element e in elementHits)
-				allNodesOfCuttedElements.AddMany(e.IterateThroughAllNodes());
+				allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
 
-			mesh.HiddenElements.AddMany(elementHits); // pridat do seznamu vymazanych
+			mesh.HiddenElements.UnionWith(elementHits); // pridat do seznamu vymazanych
 
-			mesh.SelectedItems = new Set<ISelectable>(); // odoznacit polozky
+			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
 
 			MeshConstructor ctor = new MeshConstructor();
-			Set<ISelectable> facesOnCut = ctor.CutMesh(mesh, elementHits, new Set<Element>(), allNodesOfCuttedElements, Scene.SelectFacesOnCut);
+			HashSet<ISelectable> facesOnCut = ctor.CutMesh(mesh, elementHits, new HashSet<Element>(), allNodesOfCuttedElements, Scene.SelectFacesOnCut);
 			if (Scene.SelectFacesOnCut && facesOnCut != null)
 				mesh.SelectedItems = facesOnCut;
 		}
 
 		private static IEnumerable<Node> getAllNodes(Mesh mesh)
 		{
-			Set<Node> allNodes = new Set<Node>();
+			HashSet<Node> allNodes = new HashSet<Node>();
 			foreach (Element e in mesh.Elements)
 			{
 				if (mesh.HiddenElements.Contains(e))
@@ -510,9 +539,9 @@ namespace MeshEditor.Cuts
 			return allNodes;
 		}
 
-		private static Set<Node> getNodeHits(IEnumerable<Node> nodes, CutTest isToCut)
+		private static HashSet<Node> getNodeHits(IEnumerable<Node> nodes, CutTest isToCut)
 		{
-			Set<Node>  nodeHits = new Set<Node>();
+			HashSet<Node>  nodeHits = new HashSet<Node>();
 
 			foreach (Node n in nodes)
 			{
@@ -524,10 +553,10 @@ namespace MeshEditor.Cuts
 			return nodeHits;
 		}
 
-		private static void getHitsSomeNodesInArea(Mesh mesh, CutTest isToCut, bool transformCoordinates, out Set<Element> elementsHits, bool computeNodeHits, out Set<Node> nodeHits)
+		private static void getHitsSomeNodesInArea(Mesh mesh, CutTest isToCut, bool transformCoordinates, out HashSet<Element> elementsHits, bool computeNodeHits, out HashSet<Node> nodeHits)
 		{
-			elementsHits = new Set<Element>();
-			nodeHits = new Set<Node>();
+			elementsHits = new HashSet<Element>();
+			nodeHits = new HashSet<Node>();
 
 			float invertedResizeFactor = 1f / mesh.ResizeFactor;
 			Vector3 positionOffset = mesh.PositionOffset;
@@ -560,10 +589,10 @@ namespace MeshEditor.Cuts
 			}
 		}
 
-		private static void getHitsAllNodesInArea(Mesh mesh, CutTest isToCut, bool transformCoordinates, out Set<Element> elementsHits, bool computeNodeHits, out Set<Node> nodeHits)
+		private static void getHitsAllNodesInArea(Mesh mesh, CutTest isToCut, bool transformCoordinates, out HashSet<Element> elementsHits, bool computeNodeHits, out HashSet<Node> nodeHits)
 		{
-			elementsHits = new Set<Element>();
-			nodeHits = new Set<Node>();
+			elementsHits = new HashSet<Element>();
+			nodeHits = new HashSet<Node>();
 
 			float invertedResizeFactor = 1f / mesh.ResizeFactor;
 			Vector3 positionOffset = mesh.PositionOffset;

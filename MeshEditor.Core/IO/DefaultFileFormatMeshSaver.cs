@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using MeshEditor.Data;
+using System.Diagnostics;
 using System.IO;
-using MeshEditor.CoreInterface;
+using System.Linq;
+using System.Text;
 using MeshEditor.Construction;
+using MeshEditor.CoreInterface;
+using MeshEditor.Data;
 using OpenTK;
-
 using Utils = MeshEditor.Utilities.Functions;
 
 namespace MeshEditor.IO
@@ -20,8 +21,7 @@ namespace MeshEditor.IO
 		#region Fields, contructor
 
 		private TextWriter output;
-		IDefaultFileFormatParser sourceFileParser;
-		//private int lineNumber;
+		private IDefaultFileFormatParser sourceFileParser;
 
 		private Mesh mesh;
 		private Dictionary<int, Node> nodeMap;
@@ -33,9 +33,8 @@ namespace MeshEditor.IO
 
 		public DefaultFileFormatMeshSaver()
 		{
-			sourceFileParser = null;
+			this.sourceFileParser = null;
 			this.output = null;
-			//this.lineNumber = -1;
 			this.nodeMap = null;
 			this.elementMap = null;
 			this.mesh = null;
@@ -60,16 +59,14 @@ namespace MeshEditor.IO
 			{
 				if (mesh.LoadedFromDefaultFileFormat && File.Exists(mesh.Filename))
 				{
-					this.sourceFileParser = new DefaultFileFormatParser(mesh.Filename);
-					completed = saveMeshHavingSource(mesh, saveWithoutHiddenElements, cancelled);
+					sourceFileParser = new DefaultFileFormatParser(mesh.Filename);
+					completed = saveMesh(mesh, saveWithoutHiddenElements, cancelled, rewriteNodeCoordinatesFromSource: true);
 				}
 				else
 				{
-					this.sourceFileParser = null;
-					completed = saveMeshWithoutSource(mesh, saveWithoutHiddenElements, cancelled);
+					sourceFileParser = null;
+					completed = saveMesh(mesh, saveWithoutHiddenElements, cancelled, rewriteNodeCoordinatesFromSource: false);
 				}
-				// ---------------------------------------------------------------------------
-
 			}
 			finally
 			{
@@ -100,7 +97,7 @@ namespace MeshEditor.IO
 
 		public void SaveMesh(IMeshFileParser fileParser, string destination, YesNoQuestion cancelled)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		private void writePropertyCommandsFile(MeshStatistics meshStatistics, string meshFilename)
@@ -232,109 +229,8 @@ namespace MeshEditor.IO
 				return PreprocessorSections.Unknown;
 			}
 		}
-
-		private bool saveMeshHavingSource(Mesh mesh, bool saveWithoutHiddenElements, YesNoQuestion cancelled)
-		{
-			generateMaps(mesh, saveWithoutHiddenElements);
-			FacesAndEdgesToWrite facesAndEdgesToWrite = new FacesAndEdgesToWrite(mesh, this.nodeMap);
-			itemsToWrite = nodeMap.Count + elementMap.Count + facesAndEdgesToWrite.AllItemsCount;
-
-			// ----------------------------
-			writePropertyComments();
-			writePropertyCommandFilePath();
-			// ----------------------------
-			writeNodeCount(nodeMap.Count);
-
-			foreach (Node n in sourceFileParser.ReadNodes())
-			{
-				if (writeNode(n, sourceFileParser.CurrentLine))
-					itemIndex++;
-				if (Step != null) // informuj o postupu
-				{
-					int percent = (int)((float)itemIndex / (float)itemsToWrite * 100f);
-					if (ioea.PercentDone != percent)
-					{
-						if (cancelled != null && cancelled())
-							return false;
-						ioea.PercentDone = percent;
-						Step(this, ioea);
-					}
-				}
-			}
-
 		
-			//----------------------------
-			//int elementCount = (Scene.SaveMeshInCuttedForm) ? sourceFileParser.ElementCount - mesh.CuttedElements.Count : sourceFileParser.ElementCount;
-			writeElementCount(elementMap.Count);
-			foreach (ElementDraft e in sourceFileParser.ReadElements())
-			{
-				if (writeElement(e, sourceFileParser.CurrentLine))
-					itemIndex++;
-				if (Step != null) // informuj o postupu
-				{
-					int percent = (int)((float)itemIndex / (float)itemsToWrite * 100f);
-					if (ioea.PercentDone != percent)
-					{
-						if (cancelled != null && cancelled())
-							return false;
-						ioea.PercentDone = percent;
-						Step(this, ioea);
-					}
-				}
-			}
-			// ---------------------------
-			
-			//while(true) // opakovat dokud mam co cist nebo nenarazim na faces nebo edges
-			//{
-			//    string restOfFileLine = sourceFileParser.ReadNextLine();
-			//    if (restOfFileLine == null)
-			//        break;
-			//    restOfFileLine = restOfFileLine.Trim();
-			//    if (restOfFileLine.StartsWith(DefaultFileFormatParser.FACES_PATERN) || restOfFileLine.StartsWith(DefaultFileFormatParser.EDGES_PATERN))
-			//        break;
-			//    output.WriteLine(restOfFileLine);
-			//}
-
-
-			// zapsat zbytek, co byl v puvodnim souboru az do vyskytu faces nebo edges
-			//output.WriteLine();
-			sourceFileParser.LineWasSkipped += delegate
-			{
-				output.WriteLine(sourceFileParser.CurrentLine);
-				//Console.WriteLine(sourceFileParser.CurrentLine);
-			};
-
-			foreach (FaceDraft fd in sourceFileParser.ReadFaces())
-				;
-			writeFaces(facesAndEdgesToWrite, cancelled);
-			// ---------------------------
-			foreach (EdgeDraft ed in sourceFileParser.ReadEdges())
-				;
-			writeEdges(facesAndEdgesToWrite, cancelled);
-			//output.WriteLine();
-
-			// prepsat zbytek souboru
-			sourceFileParser.ReadToEnd();
-
-			
-			// ---------------------------
-			/**/ // tady v tom dole je nejaka chyba, obcas t pri cteni facu zahlasi: Integer expected
-			// zapsat zbytek, co byl v puvodnim souboru
-			//sourceFileParser.LineWasSkipped += sourceFileParser_LineWasSkipped;
-			//if (sourceFileParser.FaceCount == 0)
-			//    sourceFileParser_LineWasSkipped(null, null);
-			//while (sourceFileParser.ReadFaces().GetEnumerator().MoveNext())
-			//    ;
-			//if (sourceFileParser.EdgeCount == 0)
-			//    sourceFileParser_LineWasSkipped(null, null);
-			//while (sourceFileParser.ReadEdges().GetEnumerator().MoveNext())
-			//    ;
-			//sourceFileParser.ReadToEnd();
-
-			return true;
-		}
-
-		private bool saveMeshWithoutSource(Mesh mesh, bool saveWithoutHiddenElements, YesNoQuestion cancelled)
+		private bool saveMesh(Mesh mesh, bool saveWithoutHiddenElements, YesNoQuestion cancelled, bool rewriteNodeCoordinatesFromSource)
 		{
 			generateMaps(mesh, saveWithoutHiddenElements);
 			FacesAndEdgesToWrite facesAndEdgesToWrite = new FacesAndEdgesToWrite(mesh, this.nodeMap);
@@ -346,14 +242,32 @@ namespace MeshEditor.IO
 			writeNodeCount(nodeMap.Count);
 			// ---------------------------
 
-			Node[] nodeArray = new Node[nodeMap.Count];
-			nodeMap.Values.CopyTo(nodeArray, 0);
-			Array.Sort<Node>(nodeArray);
-
-			foreach (Node n in nodeArray)
+			IEnumerable<Node> nodeSequence;
+			if (rewriteNodeCoordinatesFromSource)
 			{
-				writeNode(n);
-				itemIndex++;
+				nodeSequence = sourceFileParser.ReadNodes();
+			}
+			else
+			{
+				Node[] nodeArray = new Node[nodeMap.Count];
+				nodeMap.Values.CopyTo(nodeArray, 0);
+				Array.Sort<Node>(nodeArray);
+				nodeSequence = nodeArray;
+			}
+
+			foreach (Node n in nodeSequence)
+			{
+				if (rewriteNodeCoordinatesFromSource)
+				{
+					if (writeNode(n, sourceFileParser.CurrentLine))
+						itemIndex++;
+				}
+				else
+				{
+					writeNode(n);
+					itemIndex++;
+				}
+
 				if (Step != null) // informuj o postupu
 				{
 					int percent = (int)((float)itemIndex / (float)itemsToWrite * 100f);
@@ -366,9 +280,11 @@ namespace MeshEditor.IO
 					}
 				}
 			}
-			nodeArray = null;
-
+			nodeSequence = null;
+			output.WriteLine();
 			//----------------------------
+
+			EdgeFacePropertySet edgeFacePropertySet = getCurrentEdgeFacePropertySet();
 
 			Element[] elementArray = new Element[elementMap.Count];
 			elementMap.Values.CopyTo(elementArray, 0);
@@ -377,7 +293,7 @@ namespace MeshEditor.IO
 			writeElementCount(elementMap.Count);
 			foreach (Element e in elementArray)
 			{
-				writeElement(e);
+				writeElement(e, edgeFacePropertySet);
 				itemIndex++;
 				if (Step != null) // informuj o postupu
 				{
@@ -392,13 +308,23 @@ namespace MeshEditor.IO
 				}
 			}
 
-
-			// ---------------------------
-			writeFaces(facesAndEdgesToWrite, cancelled);
-			writeEdges(facesAndEdgesToWrite, cancelled);
-			// ---------------------------
-
 			return true;
+		}
+
+		private EdgeFacePropertySet getCurrentEdgeFacePropertySet()
+		{
+			EdgeFacePropertySet edgeFacePropertySet = new EdgeFacePropertySet(mesh.HiddenItemsProperties); // copy properties of hidden edges and faces
+			foreach (WingedEdge edge in mesh.Edges)
+			{
+				if (!edge.Property.IsZero)
+					edgeFacePropertySet.AddEdgeProperty(edge);
+			}
+			foreach (Element2D face in mesh.Faces)
+			{
+				if (!face.Property.IsZero)
+					edgeFacePropertySet.AddFaceProperty(face);
+			}
+			return edgeFacePropertySet;
 		}
 
 		#endregion
@@ -456,85 +382,9 @@ namespace MeshEditor.IO
 			output.WriteLine(nodeCount);
 		}
 
-		private bool writeNode(Node node, string line)
-		{
-			Property propertyToWrite = Property.Zero;
-			Node orig;
-			if (nodeMap.TryGetValue(node.ID, out orig))
-				propertyToWrite = orig.Property;
-			else
-			{
-				//output.WriteLine(line); // uzel v siti neni, opisu cely radek a koncim
-				return false;
-			}
-			// ---------------------------------------
-			string[] parts = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-			StringBuilder text = new StringBuilder();
-			text.Append(parts[0]);
-			text.Append(" ");
-			text.Append(parts[1]);
-			text.Append(" ");
-			text.Append(parts[2]);
-			text.Append(" ");
-			text.Append(parts[3]);
-			text.Append(" ");
-
-			//if (propertyToWrite.IsZero)
-			//    text.Append("0"); // zadna vlastnost
-			//else
-			//{
-			//    text.Append("1 1 "); // jedna vlastnost, typ - uzel
-			//    text.Append(propertyToWrite.ToString());
-			//}
-			text.Append(orig.PropertyListInDefaultFormat());
-			// ---------------------------------------
-			output.WriteLine(text.ToString());
-			return true;
-		}
-
 		private void writeElementCount(int elementCount)
 		{
 			output.WriteLine(elementCount);
-		}
-
-		private bool writeElement(ElementDraft element, string line)
-		{
-			Property propertyToWrite = Property.Zero;
-			Element orig;
-			if (elementMap.TryGetValue(element.ID, out orig))
-				propertyToWrite = orig.Property;
-			else
-			{
-				//output.WriteLine(line); // prvek v siti neni, tak koncim
-				return false;
-			}
-			// ---------------------------------------
-			string[] parts = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-			StringBuilder text = new StringBuilder();
-
-			text.Append(parts[0]); // cislo prvku
-			text.Append(" ");
-			text.Append(parts[1]); // typ prvku
-			text.Append(" ");
-			
-			// zapsat uzly
-			int nodeCountOfElement = Element.MapElementTypeToNodeCount(element.Type);
-			for (int i = 0; i < nodeCountOfElement; i++)
-			{
-				text.Append(parts[i + 2]);
-				text.Append(" ");
-			}
-			// zapsat property
-			text.Append(propertyToWrite.ToString());
-			// opsat zbytek ze vstupniho souboru
-			for (int i = 3 + nodeCountOfElement; i < parts.Length; i++)
-			{
-				text.Append(" ");
-				text.Append(parts[i]);
-			}
-			// ---------------------------------------
-			output.WriteLine(text.ToString());
-			return true;
 		}
 
 		private void writeNode(Node node)
@@ -545,59 +395,89 @@ namespace MeshEditor.IO
 			output.WriteLine(text.ToString());
 		}
 
-		private void writeElement(Element element)
+		private bool writeNode(Node node, string line)
+		{
+			Property propertyToWrite = Property.Zero;
+			Node original;
+			if (!nodeMap.TryGetValue(node.ID, out original))
+			{
+				return false;
+			}
+			// ---------------------------------------
+			string[] parts = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			Debug.Assert(parts.Length >= 4);
+			StringBuilder text = new StringBuilder();
+			text.Append(parts[0]); // id
+			text.Append(" ");
+			text.Append(parts[1]); // x coordinate
+			text.Append(" ");
+			text.Append(parts[2]); // y coordinate
+			text.Append(" ");
+			text.Append(parts[3]); // z coordinate
+			text.Append(" ");
+
+			text.Append(original.PropertyListInDefaultFormat());
+			// ---------------------------------------
+			output.WriteLine(text.ToString());
+			return true;
+		}
+
+		private void writeElement(Element element, EdgeFacePropertySet edgeFacePropertySet)
 		{
 			//1       5           1 2 5 4      12
 			StringBuilder text = new StringBuilder();
-			AppendDesriptionOfElement(element, text);
+			AppendDescriptionOfElement(element, text);
+			appendDescriptionOfEdgesAndFaces(element, text, edgeFacePropertySet);
 			output.WriteLine(text.ToString());
 		}
 
-		private void writeFaces(FacesAndEdgesToWrite facesAndEdgesToWrite, YesNoQuestion cancelled)
+		private void appendDescriptionOfEdgesAndFaces(Element element, StringBuilder text, EdgeFacePropertySet edgeFacePropertySet)
 		{
-			if (facesAndEdgesToWrite.FaceCount == 0)
-				return;
+			int[] nodeIDs = element.IterateThroughAllNodesIncludingEdgeMiddleNodes().Select(node => node.ID).ToArray();
 
-			output.WriteLine(DefaultFileFormatParser.FACES_PATERN + " " + facesAndEdgesToWrite.FaceCount);
-			foreach (string itemDescription in facesAndEdgesToWrite.GetDescriptionsOfFaces())
+			foreach (EdgeMark edgeMark in Element.GetSequenceOfEdges(element.ElementType, nodeIDs)) // write edge properties
 			{
-				output.WriteLine(itemDescription);
-				// -------------------------------------------
-				itemIndex++;
-				if (Step != null) // informuj o postupu
+				Property property;
+				if (edgeFacePropertySet.EdgeProperties.TryGetValue(edgeMark, out property))
 				{
-					int percent = (int)((float)itemIndex / (float)itemsToWrite * 100f);
-					if (ioea.PercentDone != percent)
-					{
-						if (cancelled != null && cancelled())
-							return;
-						ioea.PercentDone = percent;
-						Step(this, ioea);
-					}
+					text.Append(" ");
+					text.Append(property.ToString());
+				}
+				else
+				{
+					text.Append(" 0");
 				}
 			}
-		}
 
-		private void writeEdges(FacesAndEdgesToWrite facesAndEdgesToWrite, YesNoQuestion cancelled)
-		{
-			if (facesAndEdgesToWrite.EdgeCount == 0)
-				return;
-
-			output.WriteLine(DefaultFileFormatParser.EDGES_PATERN + " " + facesAndEdgesToWrite.EdgeCount);
-			foreach (string itemDescription in facesAndEdgesToWrite.GetDescriptionOfEdges())
+			Element3D element3D = element as Element3D;
+			if (element3D != null) // if it is 3D element
 			{
-				output.WriteLine(itemDescription);
-				// -----------------------------------
-				itemIndex++;
-				if (Step != null) // informuj o postupu
+				foreach (object faceMark in Element.GetSequenceOfFaces(element3D.ElementType, nodeIDs)) // write face properties
 				{
-					int percent = (int)((float)itemIndex / (float)itemsToWrite * 100f);
-					if (ioea.PercentDone != percent)
+					Property property;
+					if (faceMark is TriangleMark)
 					{
-						if (cancelled != null && cancelled())
-							return;
-						ioea.PercentDone = percent;
-						Step(this, ioea);
+						if (edgeFacePropertySet.TriangleProperties.TryGetValue((TriangleMark)faceMark, out property))
+						{
+							text.Append(" ");
+							text.Append(property.ToString());
+						}
+						else
+						{
+							text.Append(" 0");
+						}
+					}
+					else if (faceMark is QuadMark)
+					{
+						if (edgeFacePropertySet.QuadProperties.TryGetValue((QuadMark)faceMark, out property))
+						{
+							text.Append(" ");
+							text.Append(property.ToString());
+						}
+						else
+						{
+							text.Append(" 0");
+						}
 					}
 				}
 			}
@@ -634,7 +514,6 @@ namespace MeshEditor.IO
 		private void initOutput(string filename)
 		{
 			output = new StreamWriter(filename);
-			//lineNumber = 0;
 		}
 
 		#endregion
@@ -643,19 +522,18 @@ namespace MeshEditor.IO
 
 		public static void AppendDescriptionOfNode(Node node, StringBuilder text, Mesh mesh)
 		{
+			text.Append(node.ID);
+			text.Append(" ");
+
 			Vector3 transformedPosition = (node.Position / mesh.ResizeFactor) + mesh.PositionOffset;
-			text.Append(node.ID); text.Append(" ");
 			text.Append(transformedPosition.X.ToString(CultureProvider.EnglishCulture)); text.Append(" ");
 			text.Append(transformedPosition.Y.ToString(CultureProvider.EnglishCulture)); text.Append(" ");
 			text.Append(transformedPosition.Z.ToString(CultureProvider.EnglishCulture)); text.Append(" ");
-			//if (!node.Property.IsZero)
-			//    text.Append("1 1 " + node.Property);
-			//else
-			//    text.Append("0");
+
 			text.Append(node.PropertyListInDefaultFormat());
 		}
 
-		public static void AppendDesriptionOfElement(Element element, StringBuilder text)
+		public static void AppendDescriptionOfElement(Element element, StringBuilder text)
 		{
 			text.Append(element.ID);
 			text.Append(" ");
@@ -733,7 +611,7 @@ namespace MeshEditor.IO
 				addHiddenEdge(mesh.HiddenItemsProperties, nodeMap);
 			}
 
-			private void addHiddenFaces(HiddenItemsProperties hiddenItemsProperties, Dictionary<int, Node> nodeMap)
+			private void addHiddenFaces(EdgeFacePropertySet hiddenItemsProperties, Dictionary<int, Node> nodeMap)
 			{
 				foreach (KeyValuePair<TriangleMark, Property> pair in hiddenItemsProperties.TriangleProperties)
 					if (nodeMap.ContainsKey(pair.Key.Node1ID) && nodeMap.ContainsKey(pair.Key.Node2ID) && nodeMap.ContainsKey(pair.Key.Node3ID))
@@ -743,7 +621,7 @@ namespace MeshEditor.IO
 						quads.Add(pair);
 			}
 
-			private void addHiddenEdge(HiddenItemsProperties hiddenItemsProperties, Dictionary<int, Node> nodeMap)
+			private void addHiddenEdge(EdgeFacePropertySet hiddenItemsProperties, Dictionary<int, Node> nodeMap)
 			{
 				foreach (KeyValuePair<EdgeMark, Property> pair in hiddenItemsProperties.EdgeProperties)
 					if (nodeMap.ContainsKey(pair.Key.Node1ID) && nodeMap.ContainsKey(pair.Key.Node2ID))

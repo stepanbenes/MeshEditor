@@ -7,7 +7,7 @@ namespace MeshEditor.Data
 	/// <summary>
 	/// vlastnost objektu (tuto datovou polozku obsahuji objekt typu Element, Node, WingedEdge, ...)
 	/// </summary>
-	public struct Property : IComparable
+	public struct Property : IComparable, IComparable<Property>, IEquatable<Property>
 	{
 		private int value;
 
@@ -21,7 +21,6 @@ namespace MeshEditor.Data
 		public int Value
 		{
 			get { return this.value; }
-			set { this.value = value; }
 		}
 
 		public Property(int value)
@@ -65,7 +64,12 @@ namespace MeshEditor.Data
 
 		public int CompareTo(object obj)
 		{
-			return this.value.CompareTo(((Property)obj).value);
+			return CompareTo((Property)obj);
+		}
+
+		public int CompareTo(Property other)
+		{
+			return this.value.CompareTo(other.value);
 		}
 
 		#endregion

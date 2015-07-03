@@ -29,5 +29,11 @@ namespace MeshEditor.OpenTKCompatibility
 		{
 			openTK_TextPrinter.Print(text, font, color, rect, textPrinterOptions);
 		}
+
+		public RectangleF Measure(string text, Font font, RectangleF rect)
+		{
+			OpenTK.Graphics.TextExtents textExtents = openTK_TextPrinter.Measure(text, font, rect, textPrinterOptions);
+			return textExtents.BoundingBox;
+		}
 	}
 }

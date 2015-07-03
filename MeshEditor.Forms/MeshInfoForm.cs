@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using MeshEditor.CoreInterface;
-using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
 using MeshEditor.Data;
-using Wintellect.PowerCollections;
 using System.Diagnostics;
 
 namespace MeshEditor.WinUI

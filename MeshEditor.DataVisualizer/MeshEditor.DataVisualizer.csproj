@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MeshEditor.DataVisualizer</RootNamespace>
+    <AssemblyName>MeshEditor.DataVisualizer</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK">
+      <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data\DataIndex.cs" />
+    <Compile Include="Data\DataSequence.cs" />
+    <Compile Include="Data\GaussPointsInfo.cs" />
+    <Compile Include="Data\Interval.cs" />
+    <Compile Include="Data\ScalarDataDisplayMethod.cs" />
+    <Compile Include="Graphics\VectorField.cs" />
+    <Compile Include="IO\DataParserFactory.cs" />
+    <Compile Include="IO\PositionAwareStreamReader.cs" />
+    <Compile Include="Layers\CrossSection.cs" />
+    <Compile Include="Layers\IsoSurfaceSection.cs" />
+    <Compile Include="DataVisualizers\ApproximationParameters.cs" />
+    <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
+    <Compile Include="DataVisualizers\ExactDataVisualizer.cs" />
+    <Compile Include="DataVisualizers\TimetreeDataVisualizer.cs" />
+    <Compile Include="Data\ColorScale.cs" />
+    <Compile Include="Data\DataLocation.cs" />
+    <Compile Include="Data\DataType.cs" />
+    <Compile Include="Data\DataValue.cs" />
+    <Compile Include="Data\DeformationScale.cs" />
+    <Compile Include="Data\VisualizerSettings.cs" />
+    <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
+    <Compile Include="Graphics\IsoAreasShader.cs" />
+    <Compile Include="Graphics\ShaderHolder.cs" />
+    <Compile Include="IO\DataLoadingException.cs" />
+    <Compile Include="IO\GiDResFileFormatParser.cs" />
+    <Compile Include="IO\IDataFileParser.cs" />
+    <Compile Include="Data\DataInfo.cs" />
+    <Compile Include="Mathematics\Common.cs" />
+    <Compile Include="Mathematics\Polynomial.cs" />
+    <Compile Include="Mathematics\Approximation.cs" />
+    <Compile Include="Mathematics\MatrixLibrary.cs" />
+    <Compile Include="Data\DataAbstract.cs" />
+    <Compile Include="Octree\LeafNode.cs" />
+    <Compile Include="Octree\InternalNode.cs" />
+    <Compile Include="Octree\TreeNode.cs" />
+    <Compile Include="DataVisualizers\OctreeDataVisualizer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\AnimationCreatorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\AnimationCreatorForm.Designer.cs">
+      <DependentUpon>AnimationCreatorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ColorScaleSetter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ColorScaleSetter.Designer.cs">
+      <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DataPickerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\DataPickerControl.Designer.cs">
+      <DependentUpon>DataPickerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DataPickerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\DataPickerForm.Designer.cs">
+      <DependentUpon>DataPickerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DataIndexSetter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\DataIndexSetter.Designer.cs">
+      <DependentUpon>DataIndexSetter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DataVisualizerLoaderForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\DataVisualizerLoaderForm.Designer.cs">
+      <DependentUpon>DataVisualizerLoaderForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\LayersForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\LayersForm.Designer.cs">
+      <DependentUpon>LayersForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\AnimationCreatorForm.resx">
+      <DependentUpon>AnimationCreatorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ColorScaleSetter.resx">
+      <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DataPickerControl.resx">
+      <DependentUpon>DataPickerControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DataPickerForm.resx">
+      <DependentUpon>DataPickerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DataIndexSetter.resx">
+      <DependentUpon>DataIndexSetter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DataVisualizerLoaderForm.resx">
+      <DependentUpon>DataVisualizerLoaderForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\LayersForm.resx">
+      <DependentUpon>LayersForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
+      <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
+      <Name>MeshEditor.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

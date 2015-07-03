@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -67,17 +68,11 @@ namespace MeshEditor.Data
 
 		}
 
-		public override IEnumerable<Vector3> GetAllIntersectionsOfEdgesWithPlane(Vector3 pointOnPlane, Vector3 planeNormal)
+		private static readonly int[] nodeEdgeIndexArray = { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 };
+
+		protected override int[] NodeEdgeIndexArray
 		{
-			if (ApproximationIsQuadratic)
-				throw new NotImplementedException();
-			int[] indexArray = { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 };
-			for (int i = 0; i < indexArray.Length; )
-			{
-				Vector3 intersection;
-				if (Utilities.Functions.LinePlaneIntersection(nodes[indexArray[i++]].Position, nodes[indexArray[i++]].Position, ref pointOnPlane, ref planeNormal, out intersection))
-					yield return intersection;
-			}
+			get { return nodeEdgeIndexArray; }
 		}
 	}
 }

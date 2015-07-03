@@ -11,6 +11,7 @@ using OpenTK.Graphics.OpenGL;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 
 namespace MeshEditor.Utilities
@@ -274,9 +275,70 @@ namespace MeshEditor.Utilities
 			return text.ToString();
 		}
 
+		public static byte[] ConvertStructureToByteArray<T>(T str) where T : struct
+		{
+			int len = Marshal.SizeOf(str);
+			byte[] arr = new byte[len];
+			IntPtr ptr = Marshal.AllocHGlobal(len);
+			Marshal.StructureToPtr(str, ptr, true);
+			Marshal.Copy(ptr, arr, 0, len);
+			Marshal.FreeHGlobal(ptr);
+			return arr;
+		}
+
+		public static void ConvertByteArrayToStructure<T>(byte[] byteArray, ref T str) where T : struct
+		{
+			int len = Marshal.SizeOf(str);
+			IntPtr i = Marshal.AllocHGlobal(len);
+			Marshal.Copy(byteArray, 0, i, len);
+			str = (T)Marshal.PtrToStructure(i, str.GetType());
+			Marshal.FreeHGlobal(i);
+		}
+
+		public static bool EnumTryParse<TEnum>(string strEnumValue, out TEnum result) where TEnum: struct
+		{
+			Type type = typeof(TEnum);
+			if (!Enum.IsDefined(type, strEnumValue))
+			{
+				result = default(TEnum);
+				return false;
+			}
+
+			result = (TEnum)Enum.Parse(type, strEnumValue);
+			return true;
+		}
+
+		public static bool EnumTryParseIgnoreCase<TEnum>(string strType, out TEnum result, ref string[] namesCache) where TEnum : struct
+		{
+			string strTypeFixed = strType.Replace(' ', '_');
+			if (Enum.IsDefined(typeof(TEnum), strTypeFixed))
+			{
+				result = (TEnum)Enum.Parse(typeof(TEnum), strTypeFixed, true);
+				return true;
+			}
+			else
+			{
+				if (namesCache == null)
+				{
+					namesCache = Enum.GetNames(typeof(TEnum));
+				}
+
+				foreach (string value in namesCache)
+				{
+					if (value.Equals(strTypeFixed, StringComparison.OrdinalIgnoreCase))
+					{
+						result = (TEnum)Enum.Parse(typeof(TEnum), value);
+						return true;
+					}
+				}
+				result = default(TEnum);
+				return false;
+			}
+		}
+
 		#endregion
 
-		#region Color manipulating
+		#region Color manipulation
 
 		/// <summary>
 		/// Converts a System.Drawing.Color to a System.Int32.
@@ -286,8 +348,70 @@ namespace MeshEditor.Utilities
 		/// given System.Drawing.Color in the Rbga32 format.</returns>
 		public static int ColorToRgba32(Color c)
 		{
-			return ((int)c.A << 24) | ((int)c.B << 16) | ((int)c.G << 8) | (int)c.R;
+			return ColorToRgba32(c.R, c.G, c.B, c.A);
+			//return ((int)c.A << 24) | ((int)c.B << 16) | ((int)c.G << 8) | (int)c.R;
 			//return c.ToArgb();
+		}
+
+		public static int ColorToRgba32(byte red, byte green, byte blue, byte alpha)
+		{
+			return ((int)alpha << 24) | ((int)blue << 16) | ((int)green << 8) | (int)red;
+		}
+
+		/// <summary>
+		/// Get byte components of color in RGBA 32bit format
+		/// </summary>
+		/// <param name="color">color in RGBA 32bit format</param>
+		/// <param name="red">output parameter - red color component</param>
+		/// <param name="green">output parameter - green color component</param>
+		/// <param name="blue">output parameter - blue color component</param>
+		/// <param name="alpha">output parameter - alpha color component</param>
+		public static void GetColorComponents(int color, out byte red, out byte green, out byte blue, out byte alpha)
+		{
+			int mask = 0x000000FF;
+			red = (byte)(color & mask);
+			green = (byte)((color >> 8) & mask);
+			blue = (byte)((color >> 16) & mask);
+			alpha = (byte)((color >> 24) & mask);
+		}
+
+		/// <summary>
+		/// Get float components of color in RGBA 32bit format in range <0.0f, 1.0f>
+		/// </summary>
+		/// <param name="color">color in RGBA 32bit format</param>
+		/// <param name="red">output parameter - red color component</param>
+		/// <param name="green">output parameter - green color component</param>
+		/// <param name="blue">output parameter - blue color component</param>
+		public static void GetColorComponents(int color, out float red, out float green, out float blue)
+		{
+			int mask = 0x000000FF;
+			red = (float)(color & mask) / 255f;
+			green = (float)((color >> 8) & mask) / 255f;
+			blue = (float)((color >> 16) & mask) / 255f;
+			//alpha = (float)((color >> 24) & mask) / 255f;
+		}
+
+		/// <summary>
+		/// Returns inverted color. Assumes that alpha is the leftmost byte.
+		/// </summary>
+		/// <param name="colorRGBA32">color to invert in RGBA 32 bit format</param>
+		/// <returns>Inverted color</returns>
+		public static int InvertColor(int colorRGBA32)
+		{
+			return 0x00FFFFFF ^ colorRGBA32;
+		}
+
+		/// <summary>
+		/// Returns inverted color (except alpha component). Assumes that alpha is the leftmost byte.
+		/// </summary>
+		/// <param name="colorRGBA32">color to invert in RGBA 32 bit format</param>
+		/// <returns>Inverted color</returns>
+		public static int InvertColor(int colorRGBA32, byte alpha)
+		{
+			int result = 0x00FFFFFF ^ colorRGBA32;
+			result &= 0x00FFFFFF;
+			result |= alpha << 24;
+			return result;
 		}
 
 		public static Color HslToColor(float hue, float saturation, float luminance)
@@ -328,18 +452,53 @@ namespace MeshEditor.Utilities
 			return ColorToRgba32(HslToColor(hue, saturation, luminance));
 		}
 
-		public static float GetLuminanceOfColor(Color color)
+		//public static float GetLuminanceOfColor(Color color)
+		//{
+		//	// normalizes red-green-blue values
+		//	float nRed = (float)color.R / 255.0f;
+		//	float nGreen = (float)color.G / 255.0f;
+		//	float nBlue = (float)color.B / 255.0f;
+
+		//	float max = Math.Max(nRed, Math.Max(nGreen, nBlue));
+		//	float min = Math.Min(nRed, Math.Min(nGreen, nBlue));
+
+		//	// luminance
+		//	return (max + min) / 2.0f;
+		//}
+
+		public static Color GetContrastColor(Color color)
 		{
-			// normalizes red-green-blue values
-			float nRed = (float)color.R / 255.0f;
-			float nGreen = (float)color.G / 255.0f;
-			float nBlue = (float)color.B / 255.0f;
+			// Counting the perceptive luminance - human eye favors green color... 
+			double a = 1 - (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
 
-			float max = Math.Max(nRed, Math.Max(nGreen, nBlue));
-			float min = Math.Min(nRed, Math.Min(nGreen, nBlue));
+			int d = 0;
 
-			// luminance
-			return (max + min) / 2.0f;
+			if (a < 0.5)
+				d = 0; // bright colors - black contrast color
+			else
+				d = 255; // dark colors - white contrast color
+
+			return Color.FromArgb(d, d, d);
+		}
+
+		public static int InterpolateTwoColors(int colorMin, int colorMax, double position)
+		{
+			Debug.Assert(position >= 0.0 && position <= 1.0);
+
+			//return (int)((controlPoints[index].Color - controlPoints[index - 1].Color) * position + controlPoints[index - 1].Color);
+
+			//return ((int)alpha << 24) | ((int)blue << 16) | ((int)green << 8) | (int)red;
+
+			byte rMin, gMin, bMin, aMin, rMax, gMax, bMax, aMax;
+			GetColorComponents(colorMin, out rMin, out gMin, out bMin, out aMin);
+			GetColorComponents(colorMax, out rMax, out gMax, out bMax, out aMax);
+
+			byte r = (byte)(position * (rMax - rMin) + rMin);
+			byte g = (byte)(position * (gMax - gMin) + gMin);
+			byte b = (byte)(position * (bMax - bMin) + bMin);
+			byte a = (byte)(position * (aMax - aMin) + aMin);
+
+			return ColorToRgba32(r, g, b, a);
 		}
 
 		#endregion
@@ -432,7 +591,9 @@ namespace MeshEditor.Utilities
 
 		public static bool LinePlaneIntersection(Vector3 lineA, Vector3 lineB, ref Vector3 planePoint, ref Vector3 planeNormal, out Vector3 intersection)
 		{
-			float nominator = Vector3.Dot(planePoint, planeNormal) - Vector3.Dot(lineA, planeNormal);
+			float planeOffset;
+			Vector3.Dot(ref planePoint, ref planeNormal, out planeOffset);
+			float nominator = planeOffset - Vector3.Dot(lineA, planeNormal);
 			float denominator = Vector3.Dot(lineB - lineA, planeNormal);
 
 			if (denominator == 0f) // usecka je rovnobezna s plochou
@@ -446,7 +607,26 @@ namespace MeshEditor.Utilities
 
 			if (t < 0f || t > 1f) // prusecik je mimo usecku
 				return false;
-			
+
+			return true;
+		}
+
+		public static bool LinePlaneIntersection(Vector3 lineA, Vector3 lineB, ref Vector3 planeNormal, float planeOffset, out float parameter)
+		{
+			float nominator = planeOffset - Vector3.Dot(lineA, planeNormal);
+			float denominator = Vector3.Dot(lineB - lineA, planeNormal);
+
+			if (denominator == 0f) // usecka je rovnobezna s plochou
+			{
+				parameter = 0f;
+				return false;
+			}
+
+			parameter = nominator / denominator;
+
+			if (parameter < 0f || parameter > 1f) // prusecik je mimo usecku
+				return false;
+
 			return true;
 		}
 		
@@ -463,6 +643,23 @@ namespace MeshEditor.Utilities
 			//return parametres.X >= 0f && parametres.X <= 1f && parametres.Y >= 0f && parametres.Y <= 1f && parametres.Z >= 0f && parametres.Z <= 1f;
 
 			return true;
+		}
+
+		public static bool ValueIsInInterval(double value, double a, double b, out float parameter)
+		{
+			double range = b - a;
+			if (range == 0.0)
+			{
+				parameter = 0.0f;
+				return false; /**/ // check whether value is equal to min?
+			}
+			parameter = (float)((value - a) / range);
+			return value.CompareTo(a) != value.CompareTo(b);
+		}
+
+		public static bool ValueIsInInterval(double value, double a, double b)
+		{
+			return value.CompareTo(a) != value.CompareTo(b);
 		}
 
 		private static bool tryComputeParametresOfLinePlaneIntersection(Vector3 a, Vector3 b, Vector3 planeA, Vector3 planeB, Vector3 planeC, out Vector3 parametres)
@@ -631,6 +828,57 @@ namespace MeshEditor.Utilities
 			GL.PopMatrix();
 			GL.MatrixMode(MatrixMode.Projection);
 			GL.PopMatrix();
+		}
+
+		#endregion
+
+		#region Text drawing
+
+		static MeshEditor.OpenTKCompatibility.TextPrinter textPrinter = new OpenTKCompatibility.TextPrinter();
+		static Font textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
+
+		public static void DrawText(string text, Vector3 position, Color color)
+		{
+			// NOTE: only for testing; very bad performance
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			MeshEditor.Data.Scene.ExtractMatrices(out viewport, out modelview, out projection);
+
+			Vector3 winPos;
+
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+
+			GluProject(position, modelview, projection, viewport, out winPos);
+			area.X = winPos.X + 1;
+			area.Y = viewport[3] - winPos.Y + 1;
+			textPrinter.Print(text, textFont, color, area);
+
+			textPrinter.End(); // restores projection matrix
+		}
+
+		public static void DrawText(string text, Vector2 windowPosition, Color color)
+		{
+			// NOTE: only for testing; very bad performance
+
+			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+
+			textPrinter.Print(text, textFont, color, area);
+
+			textPrinter.End(); // restores projection matrix
+		}
+
+		public static SizeF MeasureText(string text, Vector2 windowPosition)
+		{
+			// NOTE: only for testing; very bad performance
+
+			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+			RectangleF measuredArea = textPrinter.Measure(text, textFont, area);
+			textPrinter.End(); // restores projection matrix
+			return measuredArea.Size;
 		}
 
 		#endregion
@@ -852,6 +1100,14 @@ namespace MeshEditor.Utilities
 			{
 				return false;
 			}
+		}
+
+		public static string GetFileBatchDescription(params string[] filenames)
+		{
+			Debug.Assert(filenames != null && filenames.Length > 0);
+			if (filenames == null || filenames.Length == 0)
+				return "Empty";
+			return Path.GetFileName(filenames[0]); // pick name of first file
 		}
 
 		#endregion

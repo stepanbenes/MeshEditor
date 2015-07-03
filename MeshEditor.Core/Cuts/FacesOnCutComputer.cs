@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Construction;
 using MeshEditor.Data;
-using Wintellect.PowerCollections;
 
 namespace MeshEditor.Cuts
 {
@@ -21,7 +20,7 @@ namespace MeshEditor.Cuts
 			quadHits = new Dictionary<QuadMark, Quadrilateral>();
 		}
 
-		public void Init(IEnumerable<Element2D> allFaces, Set<Element> processedElements)
+		public void Init(IEnumerable<Element2D> allFaces, HashSet<Element> processedElements)
 		{
 			foreach (Element2D face in allFaces)
 			{
@@ -37,10 +36,10 @@ namespace MeshEditor.Cuts
 			}
 		}
 
-		public Set<ISelectable> GetFacesOnCut(IEnumerable<Element2D> allFaces, Dictionary<TriangleMark, Triangle> triangleFaces, Dictionary<QuadMark, Quadrilateral> quadFaces)
+		public HashSet<ISelectable> GetFacesOnCut(IEnumerable<Element2D> allFaces, Dictionary<TriangleMark, Triangle> triangleFaces, Dictionary<QuadMark, Quadrilateral> quadFaces)
 		{
-			Set<ISelectable> facesOnCut = new Set<ISelectable>();
-			Set<Element2D> oldFacesSet = new Set<Element2D>(allFaces);
+			HashSet<ISelectable> facesOnCut = new HashSet<ISelectable>();
+			HashSet<Element2D> oldFacesSet = new HashSet<Element2D>(allFaces);
 			foreach (KeyValuePair<TriangleMark, Triangle> pair in triangleFaces)
 			{
 				if (!oldFacesSet.Contains(pair.Value) && !triangleHits.ContainsKey(pair.Key))

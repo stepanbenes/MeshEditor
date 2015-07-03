@@ -20,17 +20,27 @@ namespace MeshEditor.CoreInterface
 			get { return percentDone; }
 			set
 			{
-				if (value < 0)
-					percentDone = 0;
-				else if (value > 100)
-					percentDone = 100;
-				else
-					percentDone = value;
+				//if (value < 0)
+				//	percentDone = 0;
+				//else if (value > 100)
+				//	percentDone = 100;
+				//else
+				percentDone = value;
 			}
 		}
+		
+		public string TaskName { get; private set; }
+		public string OperationName	{ get; set; }
+
 		public MeshIOEventArgs(int percentDone)
 		{
 			PercentDone = percentDone;
+		}
+		public MeshIOEventArgs(int percentDone, string taskName, string operationName)
+		{
+			PercentDone = percentDone;
+			OperationName = operationName;
+			TaskName = taskName;
 		}
 	}
 

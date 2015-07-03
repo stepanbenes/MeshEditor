@@ -41,7 +41,7 @@ namespace MeshEditor.Data
 
 		public override string ToString()
 		{
-			return "Beam ID: " + id + " | (Nodes: " + beginNode.ID + ", " + endNode.ID + ", " + middleNode.ID + ") | Approximation: " + ApproximationString + " | Property: " + property;
+			return "Beam ID: " + id + " | (Nodes: " + beginNode.ID + ", " + endNode.ID + ", " + middleNode.ID + ") | Approximation: " + ApproximationString + " | Property: " + Property;
 		}
 	}
 }

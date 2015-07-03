@@ -4,9 +4,7 @@ using System.Text;
 using MeshEditor.Data;
 using System.Drawing;
 using System.ComponentModel;
-using System.Xml.Serialization;
 using System.IO;
-using System.Xml;
 using System.Runtime.Serialization.Formatters.Binary;
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
@@ -57,7 +55,7 @@ namespace MeshEditor.CoreInterface
 				formatter.Serialize(mem, Instance);
 				mem.Position = 0;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				mem = null;
 			}
@@ -75,7 +73,7 @@ namespace MeshEditor.CoreInterface
 				instance.update();
 			}
 #if !DEBUG
-			catch (Exception ex)
+			catch (Exception)
 			{
 
 			}
@@ -146,7 +144,7 @@ namespace MeshEditor.CoreInterface
 
 		#region Private fields & constructor
 
-		private bool lineSmooth, pointSmooth, edgeLighting;
+		private bool lineSmooth, pointSmooth, edgeLighting, faceLighting;
 		private float pointSize, ordinaryEdgeWidth, borderEdgeWidth, beamWidth, defaultCameraDistance;
 		private Color activeBackColor, nonActiveBackColor, faceColor, ordinaryEdgeColor, firstBorderColor, secondBorderColor, selectedElementColor, selectedFaceColor, selectedEdgeColor, selectedNodeColor, selectedFaceAndElementColor, beamColor, selectedBeamColor, nodesColor, nodeNumbersColor, elementNumbersColor, selectedElementNumbersColor;
 		private ShadingModel shadingModel;
@@ -156,12 +154,14 @@ namespace MeshEditor.CoreInterface
 		private bool selectFacesOnCut;
 		private int undoOperationsMaxCount;
 		private float defaultFirstBorderAngleLimit, defaultSecondBorderAngleLimit;
+		private ColorScaleLegendPosition legendPosition;
 
 		private void update()
 		{
 			LineSmooth = lineSmooth;
 			PointSmooth = pointSmooth;
 			EdgeLighting = edgeLighting;
+			FaceLighting = faceLighting;
 			
 			ShadingModel = shadingModel;
 			PointSize = pointSize;
@@ -191,10 +191,11 @@ namespace MeshEditor.CoreInterface
 			SelectedElementNumbersColor = selectedElementNumbersColor;
 
 			SelectFacesOnCut = selectFacesOnCut;
-			UndoOperationsMaxCount = undoOperationsMaxCount;
 
 			DefaultFirstBorderAngleLimit = defaultFirstBorderAngleLimit;
 			DefaultSecondBorderAngleLimit = defaultSecondBorderAngleLimit;
+
+			LegendPosition = legendPosition;
 		}
 
 		/// <summary>
@@ -205,6 +206,7 @@ namespace MeshEditor.CoreInterface
 			lineSmooth = LineSmooth;
 			pointSmooth = PointSmooth;
 			edgeLighting = EdgeLighting;
+			faceLighting = FaceLighting;
 			shadingModel = ShadingModel;
 			pointSize = PointSize;
 			ordinaryEdgeWidth = OrdinaryEdgeWidth;
@@ -234,10 +236,11 @@ namespace MeshEditor.CoreInterface
 
 			showOpenGLLowVersionMessage = true;
 			selectFacesOnCut = SelectFacesOnCut;
-			undoOperationsMaxCount = UndoOperationsMaxCount;
 
 			defaultFirstBorderAngleLimit = DefaultFirstBorderAngleLimit;
 			defaultSecondBorderAngleLimit = DefaultSecondBorderAngleLimit;
+
+			legendPosition = LegendPosition;
 		}
 
 		#endregion
@@ -265,6 +268,13 @@ namespace MeshEditor.CoreInterface
 			set { pointSmooth = Scene.PointSmooth = value; }
 		}
 
+		[Category("Entity appearance"), DisplayName("Face lighting")]
+		public bool FaceLighting
+		{
+			get { return Scene.FaceLighting; }
+			set { faceLighting = Scene.FaceLighting = value; }
+		}
+		
 		[Category("Entity appearance"), DisplayName("Edge lighting")]
 		public bool EdgeLighting
 		{
@@ -370,18 +380,6 @@ namespace MeshEditor.CoreInterface
 		{
 			get { return Scene.SelectFacesOnCut; }
 			set { selectFacesOnCut = Scene.SelectFacesOnCut = value; }
-		}
-
-		[DisplayName("Undo operations max count"), Description("Maximum number of operations stored in undo/redo history. Set 0 for turn off the undo/redo history. (Decrease of this value can save some memory space.)")]
-		[ChangeUndoRedoHistoryCapacity]
-		public int UndoOperationsMaxCount
-		{
-			get { return Scene.UndoOperationsMaxCount; }
-			set
-			{
-				if (value >= 0)
-					undoOperationsMaxCount = Scene.UndoOperationsMaxCount = value;
-			}
 		}
 
 		[DisplayName("Input file format ext"), Description("Extension of default input/output file format")]
@@ -541,6 +539,16 @@ namespace MeshEditor.CoreInterface
 			set { elementNumbersColor = Scene.ElementNumbersColor = value; }
 		}
 
+		// -----------------------------------------------------------------------------
+		// POSTPROCESSING
+
+		[Category("Postprocessing"), DisplayName("Color scale legend position")]
+		public ColorScaleLegendPosition LegendPosition
+		{
+			get { return Scene.ColorScaleLegendPosition; }
+			set { legendPosition = Scene.ColorScaleLegendPosition = value; }
+		}
+
 		#endregion
 
 	}
@@ -564,13 +572,6 @@ namespace MeshEditor.CoreInterface
 	/// </summary>
 	[global::System.AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
 	public sealed class RecreateBuffersAttribute : Attribute
-	{ }
-
-	/// <summary>
-	/// atribut, ktery rika, ze ma byt zmenena kapacita historie akci po zmene dane polozky
-	/// </summary>
-	[global::System.AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
-	public sealed class ChangeUndoRedoHistoryCapacityAttribute : Attribute
 	{ }
 	
 }

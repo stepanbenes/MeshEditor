@@ -6,7 +6,6 @@ using MeshEditor.CoreInterface;
 using System.IO;
 using OpenTK;
 using System.Diagnostics;
-using Wintellect.PowerCollections;
 using System.Reflection;
 
 namespace MeshEditor.IO
@@ -146,7 +145,7 @@ namespace MeshEditor.IO
 			text.Append(element.ID + " ");
 			foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
 				text.Append(node.ID.ToString() + " ");
-			text.Append(element.Property.Value);
+			text.Append(element.Property);
 			output.WriteLine(text.ToString());
 		}
 

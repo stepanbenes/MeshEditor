@@ -6,15 +6,14 @@ using System.Drawing;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-using Wintellect.PowerCollections;
-
 using MeshEditor.Graphics;
 using MeshEditor.Construction;
 using MeshEditor.Utilities;
 
 // alias
 using Utils = MeshEditor.Utilities.Functions;
-using MeshEditor.UndoRedo;
+using MeshEditor.CoreInterface;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -33,14 +32,13 @@ namespace MeshEditor.Data
 		
 		// --- DATA ----------------------
 		private Content content;
-		private HiddenItemsProperties hiddenItemsProperties;
+		private EdgeFacePropertySet hiddenItemsProperties;
 
 		private MeshStatistics statistics;
 
 		private int totalNodeCount;
 		private bool buffersAreReady;
 
-		private UndoRedoHistory<Mesh> history;
 		private bool unsavedChanges;
 
 		// -------------------------------
@@ -59,12 +57,12 @@ namespace MeshEditor.Data
 		// -------------------------------
 
 		// --- CUTTED ELEMENTS ------------------
-		private Set<Element> hiddenElements;
+		private HashSet<Element> hiddenElements;
 		// --- SELECTED ITEMS -------------------
-		private Set<ISelectable> selectedItems;
-		// --------------------------------------
-
-		
+		private HashSet<ISelectable> selectedItems;
+		// --- CROSS-SECTIONS -------------------
+		private List<ILayer> layers;
+		// ======================================
 
 		// ==========================================
 		public Mesh(string sourceFilename, bool loadedFromDefaultFileformat, Vector3 meshPositionOffset, float meshResizeFactor)
@@ -76,37 +74,26 @@ namespace MeshEditor.Data
 
 			this.referenceCount = 0;
 
-			this.selectedItems = new Set<ISelectable>();
+			this.selectedItems = new HashSet<ISelectable>();
 
             this.colorMode = PropertyColorsMode.None;
 
 			this.totalNodeCount = 0;
 			this.content = new Content();
-			this.hiddenItemsProperties = new HiddenItemsProperties();
+			this.hiddenItemsProperties = new EdgeFacePropertySet();
 
             this.buffersAreReady = false;
 
 			this.centerOfRotation = Vector3.Zero;
 			this.radius = 1f;
 
-			this.hiddenElements = new Set<Element>();
+			this.hiddenElements = new HashSet<Element>();
 
-			SetHistoryCapacity();
 			this.unsavedChanges = false;
 
 			this.statistics = new MeshStatistics();
 			//this.statistics.RecreateBuffersNeeded += delegate { RecreateBuffers(); };
-		}
-
-		void history_DoCalled(object sender, EventArgs e)
-		{
-			if(unsavedChanges)
-				return;
-			MeshMemento mem = history.PeekUndo() as MeshMemento;
-			if (mem != null)
-			{
-				unsavedChanges = mem is SetPropertyMemento || mem is HideRestoreElementsMemento;
-			}
+			this.layers = new List<ILayer>();
 		}
 
 		#endregion
@@ -117,11 +104,6 @@ namespace MeshEditor.Data
 		{
 			get { return unsavedChanges; }
 			set { unsavedChanges = value; }
-		}
-
-		public UndoRedoHistory<Mesh> History
-		{
-			get { return history; }
 		}
 
 		public bool LoadedFromDefaultFileFormat
@@ -175,7 +157,7 @@ namespace MeshEditor.Data
 
 		// -----------------------
 
-		public HiddenItemsProperties HiddenItemsProperties
+		public EdgeFacePropertySet HiddenItemsProperties
 		{
 			get { return hiddenItemsProperties; }
 		}
@@ -237,13 +219,13 @@ namespace MeshEditor.Data
 			get { return resizeFactor; }
 		}
 
-		public Set<ISelectable> SelectedItems
+		public HashSet<ISelectable> SelectedItems
 		{
 			get { return selectedItems; }
 			set { selectedItems = value; }
 		}
 
-		public Set<Element> HiddenElements
+		public HashSet<Element> HiddenElements
 		{
 			get { return hiddenElements; }
 			set { hiddenElements = value; }
@@ -300,22 +282,35 @@ namespace MeshEditor.Data
 			}
 		}
 
+		public IList<ILayer> Layers
+		{
+			get { return layers; }
+		}
+
 		#endregion
 
 		#region Public methods
 
-		public void SetHistoryCapacity()
+		public IDataVisualizer GetDataVisualizer()
 		{
-			if (Scene.UndoOperationsMaxCount > 0)
+			return content.DataVisualizer;
+		}
+
+		public void SetDataVisualizer(IDataVisualizer dv)
+		{
+			if (content.DataVisualizer != dv)
 			{
-				if (this.history == null || this.history.Capacity != Scene.UndoOperationsMaxCount)
+				if (content.DataVisualizer != null)
 				{
-					this.history = new UndoRedoHistory<Mesh>(this, Scene.UndoOperationsMaxCount); // set new capacity
-					this.history.DoCalled += new EventHandler(history_DoCalled);
+					content.DataVisualizer.Dispose();
+					UpdateNodeCoordinates();
+				}
+				content.DataVisualizer = dv;
+				if (content.DataVisualizer != null)
+				{
+					content.DataVisualizer.Initialize(this);
 				}
 			}
-			else
-				this.history = null;
 		}
 
 		public void InitializeMesh(Histogram edgeAnglesHistogram)
@@ -348,10 +343,10 @@ namespace MeshEditor.Data
 				return totalNodeCount;
 
 			// pomerne narocne na vypocet
-			Set<Node> currentNodes = new Set<Node>();
+			HashSet<Node> currentNodes = new HashSet<Node>();
 			foreach (Element e in content.Elements)
 				if (!hiddenElements.Contains(e))
-					currentNodes.AddMany(e.IterateThroughAllNodes());
+					currentNodes.UnionWith(e.IterateThroughAllNodes());
 			return currentNodes.Count;
 		}
 
@@ -418,7 +413,7 @@ namespace MeshEditor.Data
 		
 		public IEnumerable<Element2D> GetFacesIncidingWithNode(Node n)
 		{
-			Set<Element2D> result = new Set<Element2D>();
+			HashSet<Element2D> result = new HashSet<Element2D>();
 			List<WingedEdge> incidingEdges;
 			if (!content.NodesEdgesIncidence.TryGetValue(n, out incidingEdges) || incidingEdges == null)
 				return result;
@@ -481,7 +476,7 @@ namespace MeshEditor.Data
 		}
 
 		/// <summary>
-		/// Draws surface representation of mesh contained in octree, 
+		/// Draws surface representation of mesh, 
 		/// if there are some 1D elements, it draws them too
 		/// </summary>
 		public void DrawContent(RenderMode renderMode, Camera camera, bool optimizeForMoving, bool optimizeForSelecting, bool drawNodeNumbers, bool drawElementNumbers, bool drawBeams)
@@ -495,12 +490,41 @@ namespace MeshEditor.Data
 			//bool numbersAreOK = !optimizeForMoving && content.VisibleNodesReady;// && (Scene.AlwaysShowNumbers || !optimizeForSelecting);
 			bool showNumbers = drawElementNumbers && !optimizeForMoving;
 
+			foreach (ILayer layer in layers)
+			{
+				if (layer.Visible)
+				{
+					if (layer.UpdateNeeded)
+						layer.Update(this, content.DataVisualizer, elementPropertyColors);
+
+					layer.Draw(content.DataVisualizer, renderMode, elementPropertyColors);
+				}
+			}
+
 			if ((renderMode & RenderMode.Faces) != 0)
 			{
 				GL.Enable(EnableCap.PolygonOffsetFill);
 				GL.PolygonOffset(1f, 1f);
 
+				if (Scene.FaceLighting)
+					GL.Enable(EnableCap.Lighting);
+				else
+					GL.Disable(EnableCap.Lighting);
+
+				bool drawData = content.DataVisualizer != null && !facePropertyColors && !elementPropertyColors;
+
+				// data visualizer begin draw
+				if (drawData)
+					content.DataVisualizer.BeginDraw(Scene.FaceLighting);
+
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, showNumbers, camera);
+
+				// data visualizer end draw
+				if (drawData)
+					content.DataVisualizer.EndDraw();
+
+				if (!Scene.FaceLighting)
+					GL.Enable(EnableCap.Lighting);
 
 				GL.Disable(EnableCap.PolygonOffsetFill);
 			}
@@ -563,7 +587,19 @@ namespace MeshEditor.Data
 			{
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
+
+				bool drawData = content.DataVisualizer != null && !beamPropertyColors;
+
+				// data visualizer begin draw
+				if (drawData)
+					content.DataVisualizer.BeginDraw(Scene.EdgeLighting);
+
 				content.DrawBeams(selectedItems, beamPropertyColors, showNumbers);
+
+				// data visualizer end draw
+				if (drawData)
+					content.DataVisualizer.EndDraw();
+
 				if (!Scene.EdgeLighting)
 					GL.Enable(EnableCap.Lighting);
 			}
@@ -601,6 +637,13 @@ namespace MeshEditor.Data
 				}
 				GL.Enable(EnableCap.Lighting);
 			}
+
+			if (content.DataVisualizer != null)
+			{
+				content.DataVisualizer.DrawItems(colorMode);
+			}
+
+			// Console.Write("*"); // neprekresluje se sit po kazde akci dvakrat?
 		}
 
 		#region Draw Section
@@ -692,13 +735,17 @@ namespace MeshEditor.Data
 		public void UpdateColors()
 		{
 			content.UpdateAllColors(this.selectedItems, this.colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
+			updateLayerColors();
 		}
 
 		public void UpdateColors(PropertyColorsMode newColorMode, PropertyColorsMode oldColorMode)
 		{
-			Set<ISelectable> empty = new Set<ISelectable>();
+			HashSet<ISelectable> empty = new HashSet<ISelectable>();
 			if ((newColorMode & PropertyColorsMode.Faces) != (oldColorMode & PropertyColorsMode.Faces) || (newColorMode & PropertyColorsMode.Elements) != (oldColorMode & PropertyColorsMode.Elements))
+			{
 				content.UpdateFaceColors(this.selectedItems, colorMode);
+				updateLayerColors();
+			}
 			if ((newColorMode & PropertyColorsMode.Edges) != (oldColorMode & PropertyColorsMode.Edges))
 				content.UpdateEdgeColors(this.selectedItems, colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
 			if ((newColorMode & PropertyColorsMode.Nodes) != (oldColorMode & PropertyColorsMode.Nodes))
@@ -707,29 +754,10 @@ namespace MeshEditor.Data
 				content.UpdateBeamColors(this.selectedItems, colorMode);
 		}
 
-		public void ClearFaceColors()
-		{
-			content.UpdateFaceColors(new Set<ISelectable>(), colorMode);
-		}
-
-		public void ClearEdgeColors()
-		{
-			content.UpdateEdgeColors(new Set<ISelectable>(), colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
-		}
-
-		public void ClearNodeColor()
-		{
-			content.UpdateNodeColors(new Set<ISelectable>(), colorMode);
-		}
-
-		public void ClearBeamColor()
-		{
-			content.UpdateBeamColors(new Set<ISelectable>(), colorMode);
-		}
-
 		public void UpdateFaceColors()
 		{
 			content.UpdateFaceColors(this.selectedItems, colorMode);
+			updateLayerColors();
 		}
 
 		public void UpdateEdgeColors()
@@ -747,19 +775,32 @@ namespace MeshEditor.Data
 			content.UpdateBeamColors(this.selectedItems, colorMode);
 		}
 
+		public void UpdateNodeCoordinates()
+		{
+			content.UpdateNodeCoordinates();
+
+			foreach (ILayer layer in layers)
+				layer.GeometryChanged = true;
+		}
+
 		public void Dispose()
 		{
 			content.DeleteBuffers();
             this.buffersAreReady = false;
+
+			if (content.DataVisualizer != null)
+			{
+				content.DataVisualizer.Dispose();
+				content.DataVisualizer = null;
+			}
 		}
 
 		public void RecreateBuffers()
 		{
 			// nejdrive vsechno odoznacim
-			selectedItems = new Set<ISelectable>();
+			selectedItems = new HashSet<ISelectable>();
 
 			/**/ // je nutny je mazat a vytvaret cely znova? (asi jo)
-			content.DeleteBuffers();
             this.buffersAreReady = false;
 			this.buffersAreReady = content.CreateBuffers(colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
 		}
@@ -926,7 +967,7 @@ namespace MeshEditor.Data
 			return distance;
 		}
 
-		public Set<Node> FindVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity)
+		public HashSet<Node> FindVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity)
 		{
 			Dictionary<Node, Vector3> screenProjections;
 			return findVisibleNodes(area, camera, xRayVision, computeNodeDensity, out screenProjections);
@@ -935,7 +976,7 @@ namespace MeshEditor.Data
 		public Dictionary<Node, Vector3> FindVisibleNodesProjectedPositions(Rectangle area, Camera camera)
 		{
 			Dictionary<Node, Vector3> screenProjections, result = new Dictionary<Node, Vector3>();
-			Set<Node> visibleNodes = findVisibleNodes(area, camera, false, false, out screenProjections);
+			HashSet<Node> visibleNodes = findVisibleNodes(area, camera, false, false, out screenProjections);
 			foreach (Node n in visibleNodes)
 				result[n] = screenProjections[n];
 			return result;
@@ -950,7 +991,13 @@ namespace MeshEditor.Data
 
 		#region Private methods
 
-		private Set<Node> findVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, out Dictionary<Node, Vector3> screenProjections)
+		private void updateLayerColors()
+		{
+			foreach (ILayer layer in layers)
+				layer.ColorsChanged = true;
+		}
+
+		private HashSet<Node> findVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, out Dictionary<Node, Vector3> screenProjections)
 		{
 			int[] viewport;
 			double[] modelview;
@@ -969,7 +1016,7 @@ namespace MeshEditor.Data
 			Scene.ExtractMatrices(out viewport, out modelview, out projection);
 
 			Vector2 minBound, maxBound;
-			Set<Node> result;
+			HashSet<Node> result;
 
 			// ===================================================================
 			// projit plochy a pouze u tech privracenych vypocitat projekce uzlu
@@ -998,7 +1045,7 @@ namespace MeshEditor.Data
 			if (xRayVision)
 			{
 				GL.PopMatrix(); // vratit ulozenou matici projekce
-				result = new Set<Node>(screenProjections.Keys);
+				result = new HashSet<Node>(screenProjections.Keys);
 				if (computeNodeDensity)
 					findStickyNodes(screenProjections, result);
 				return result;
@@ -1029,7 +1076,7 @@ namespace MeshEditor.Data
 
 			// ===================================================================
 
-			result = new Set<Node>();
+			result = new HashSet<Node>();
 			float depth;
 
 			//foreach (Node node in getNodes(Scene.IncludeEdgeMiddleNodes))
@@ -1073,9 +1120,9 @@ namespace MeshEditor.Data
 
 		}
 
-		private void findStickyNodes(Dictionary<Node, Vector3> screenProjections, Set<Node> result)
+		private void findStickyNodes(Dictionary<Node, Vector3> screenProjections, HashSet<Node> result)
 		{
-			content.StickyNodes = new Set<Node>();
+			content.StickyNodes = new HashSet<Node>();
 			foreach (WingedEdge edge in content.Edges)
 			{
 				QuadraticEdge q = edge as QuadraticEdge;
@@ -1088,7 +1135,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		private void decideIfLinkIsShort(Dictionary<Node, Vector3> screenProjections, Set<Node> visibleNodes, Node n1, Node n2, Node middle)
+		private void decideIfLinkIsShort(Dictionary<Node, Vector3> screenProjections, HashSet<Node> visibleNodes, Node n1, Node n2, Node middle)
 		{
 			if (visibleNodes.Contains(n1) && visibleNodes.Contains(n2))
 			{
@@ -1171,6 +1218,13 @@ namespace MeshEditor.Data
 			if (content.BeamNodesNotInFaces.Count > 0)
 				return content.GetSimpleExternalNodes();
 			return content.NodesEdgesIncidence.Keys;
+		}
+
+		public bool IsNodeClearlyVisible(Node node)
+		{
+			if (!content.VisibleNodesReady)
+				return false;
+			return content.VisibleNodes.Contains(node) && !content.StickyNodes.Contains(node);
 		}
 
 		#endregion

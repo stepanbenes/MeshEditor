@@ -8,7 +8,6 @@ using MeshEditor.IO;
 using MeshEditor.Utilities;
 using OpenTK;
 
-using Wintellect.PowerCollections;
 using MeshEditor.Graphics;
 using MeshEditor.CoreInterface;
 using System.Diagnostics;
@@ -30,7 +29,7 @@ namespace MeshEditor.Construction
 		private Dictionary<TriangleMark, Triangle> triangleFaces;
 		private Dictionary<QuadMark, Quadrilateral> quadFaces;
 		private Dictionary<EdgeMark, WingedEdge> edgeMarks;
-		private HiddenItemsProperties hiddenItemsProperties;
+		private EdgeFacePropertySet hiddenItemsProperties;
 
 		private List<Beam> oneDimensionalElements;
 		private Dictionary<Element2D, Node[]> additionalQuadraticNodes;
@@ -127,8 +126,8 @@ namespace MeshEditor.Construction
 				mesh.Statistics = statistics;
 
 				// nacti prvky
-				//Set<Property> elementProperties = new Set<Property>();
-				//Set<ElementType> elementTypes = new Set<ElementType>();
+				//HashSet<Property> elementProperties = new HashSet<Property>();
+				//HashSet<ElementType> elementTypes = new HashSet<ElementType>();
 				int processedElements = 0;
 				foreach (ElementDraft draft in meshFileParser.ReadElements())
 				{
@@ -816,7 +815,7 @@ namespace MeshEditor.Construction
 					q.Edge4 = original;
 				}
 
-				// jeste vlozit face do octree
+				// jeste vlozit face do site
 				mesh.AddFace(face);
 				count++;
 
@@ -915,7 +914,7 @@ namespace MeshEditor.Construction
 
 		public void AddSurfaceOfElement3DToMesh(Mesh mesh, Element3D element)
 		{
-			this.hiddenItemsProperties = new HiddenItemsProperties(); // add temp object
+			this.hiddenItemsProperties = new EdgeFacePropertySet(); // add temp object
 			List<Element2D> existingFacesOfElement = new List<Element2D>();
 			foreach (Element2D face in mesh.Faces)
 			{
@@ -953,7 +952,7 @@ namespace MeshEditor.Construction
 
 		#region Cutting
 
-		public Set<ISelectable> CutMesh(Mesh mesh, Set<Element> elementHits, Set<Element> elementsToRestore, Set<Node> allNodesOfCuttedElements, bool returnFacesOnCut)
+		public HashSet<ISelectable> CutMesh(Mesh mesh, HashSet<Element> elementHits, HashSet<Element> elementsToRestore, HashSet<Node> allNodesOfCuttedElements, bool returnFacesOnCut)
 		{
 			if (elementHits.Count == 0 && elementsToRestore.Count == 0) // pokud neni co na praci, tak koncim
 				return null;
@@ -968,7 +967,7 @@ namespace MeshEditor.Construction
 				mesh.InvertAllNormals();
 			// -------------------------------------------------------------
 
-			Set<ISelectable> facesOnCut = null;
+			HashSet<ISelectable> facesOnCut = null;
 			IEnumerable<Element2D> oldFaces = mesh.Faces; // nejdriv ulozit plochy
 			Dictionary<Node, List<WingedEdge>> oldNodesEdgesIncidence = mesh.NodesEdgesIncidence;
 			
@@ -1012,7 +1011,7 @@ namespace MeshEditor.Construction
 			}
 
 			//oldFaces = null; // uz muzu zahodit
-			Set<Element> processedElements = new Set<Element>();
+			HashSet<Element> processedElements = new HashSet<Element>();
 			// projit prvky na hranici rezu a zpracovat jejich prislusne plochy
 			if (allNodesOfCuttedElements.Count > 0)
 			{
@@ -1095,7 +1094,7 @@ namespace MeshEditor.Construction
 			additionalQuadraticNodes[face] = middleNodes.ToArray();
 		}
 
-		private void cutOrRestoreBeams(Mesh mesh, Set<Element> elementHits, Set<Element> elementsToRestore)
+		private void cutOrRestoreBeams(Mesh mesh, HashSet<Element> elementHits, HashSet<Element> elementsToRestore)
 		{
 			List<Beam> beamBackup = new List<Beam>(mesh.Beams);
 			mesh.Beams.Clear();
@@ -1124,7 +1123,7 @@ namespace MeshEditor.Construction
 			return false;
 		}
 		
-		public static bool allNodesInSet(IEnumerable<Node> test, Set<Node> nodes)
+		public static bool allNodesInSet(IEnumerable<Node> test, HashSet<Node> nodes)
 		{
 			foreach (Node n in test)
 				if (!nodes.Contains(n))
@@ -1132,7 +1131,7 @@ namespace MeshEditor.Construction
 			return true;
 		}
 
-		public static bool someNodesInSet(IEnumerable<Node> test, Set<Node> nodes)
+		public static bool someNodesInSet(IEnumerable<Node> test, HashSet<Node> nodes)
 		{
 			foreach (Node n in test)
 				if (nodes.Contains(n))
@@ -1140,7 +1139,7 @@ namespace MeshEditor.Construction
 			return false;
 		}
 
-		public static bool noNodesInSet(IEnumerable<Node> test, Set<Node> nodes)
+		public static bool noNodesInSet(IEnumerable<Node> test, HashSet<Node> nodes)
 		{
 			foreach (Node n in test)
 				if (nodes.Contains(n))
@@ -1148,7 +1147,7 @@ namespace MeshEditor.Construction
 			return true;
 		}
 
-		private static bool noNodesInSets(IEnumerable<Node> test, Set<Node> nodes1, Set<Node> nodes2)
+		private static bool noNodesInSets(IEnumerable<Node> test, HashSet<Node> nodes1, HashSet<Node> nodes2)
 		{
 			foreach (Node n in test)
 				if (nodes1.Contains(n) || nodes2.Contains(n))

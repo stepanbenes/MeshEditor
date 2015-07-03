@@ -52,20 +52,27 @@ namespace MeshEditor.Graphics
 		{
 			this.elementCount = indices.Length;
 			// generovani index bufferu
-			GL.GenBuffers(1, out bufferID);
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer, bufferID);
-			int sizeInBytes = indices.Length * sizeof(int);
-			GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)sizeInBytes, indices, BufferUsageHint.StaticDraw);
-			int size;
-			GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out size);
-			if (size != sizeInBytes)
-				throw new ApplicationException("Index array not uploaded correctly");
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+			if (indices.Length > 0)
+			{
+				GL.GenBuffers(1, out bufferID);
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, bufferID);
+				int sizeInBytes = indices.Length * sizeof(int);
+				GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)sizeInBytes, indices, BufferUsageHint.StaticDraw);
+				int size;
+				GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out size);
+				if (size != sizeInBytes)
+					throw new ApplicationException("Index array not uploaded correctly");
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+			}
 		}
 
 		public void Dispose()
 		{
-			GL.DeleteBuffers(1, ref bufferID);
+			if (bufferID > 0)
+			{
+				GL.DeleteBuffers(1, ref bufferID);
+				bufferID = 0;
+			}
 		}
 
 		#endregion

@@ -8,6 +8,8 @@ using System.IO;
 using MeshEditor.Construction;
 using MeshEditor.Data;
 using MeshEditor.CoreInterface;
+using System.Threading;
+using System.Globalization;
 
 namespace MeshEditor.FormatConverter
 {
@@ -15,6 +17,8 @@ namespace MeshEditor.FormatConverter
 	{
 		static void Main(string[] args)
 		{
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
 			if(args.Length < 2)
 			{
 				Console.WriteLine("Usage: {0} input output", Path.GetFileName(Assembly.GetExecutingAssembly().CodeBase));
@@ -22,50 +26,29 @@ namespace MeshEditor.FormatConverter
 				return;
 			}
 
-			IMeshFileParser parser;
-
-			// choose parser
-			switch (Path.GetExtension(args[0]))
-			{
-				case ".top":
-					parser = new DefaultFileFormatParser(args[0]);
-					break;
-				case ".ply":
-					parser = new PLYFileFormatParser(args[0]);
-					break;
-				case ".obj":
-					parser = new OBJFileFormatParser(args[0]);
-					break;
-				case ".msh":
-					parser = new GiDMshFileFormatParser(args[0]);
-					break;
-				default:
-					throw new NotSupportedException();
-			}
+			IMeshFileParser parser = MeshParserFactory.Create(args[0]); // choose parser
 
 			IMeshSaver meshSaver;
 
 			// choose saver
 			switch (Path.GetExtension(args[1]))
 			{
-				case ".msh":
-					meshSaver = new GiDMshFileFormatSaver();
-					break;
-				case ".vtk":
-					meshSaver = new VTKFileFormatSaver(VTKFileFormatSaver.VTKFileFormats.SimpleASCII);
+				case ".res":
+					GiDResFileFormatGenerator generator = new GiDResFileFormatGenerator();
+					generator.GenerateResultFile(parser, args[1]);
+					meshSaver = null;
 					break;
 				default:
-					throw new NotSupportedException();
+					meshSaver = MeshSaverFactory.Create(args[1]);
+					break;
 			}
-			meshSaver.Step += meshSaver_Step;
 
-			meshSaver.SaveMesh(parser, args[1], /*cancelled: */ null);
-
-			//MeshConstructor constructor = new MeshConstructor();
-			//Mesh mesh = constructor.CreateMesh(parser, null);			
-			//GiDMshFileFormatSaver meshSaver = new GiDMshFileFormatSaver();
-			//meshSaver.SaveMesh(mesh, args[1], /*saveWithoutCuttedElements: */ false, null);
-
+			if (meshSaver != null)
+			{
+				meshSaver.Step += meshSaver_Step;
+				meshSaver.SaveMesh(parser, args[1], /*cancelled: */ null);
+			}
+			
 			Console.Clear();
 			Console.Write("Done.");
 

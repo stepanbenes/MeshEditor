@@ -211,7 +211,6 @@ namespace MeshEditor.IO
 										break;
 									}
 									Debug.Assert(parts.Length >= nnode + 1);
-									int id;
 									ElementDraft ed = new ElementDraft();
 									ed.Type = elementType;
 									ed.ID = parseInteger(parts[0]);

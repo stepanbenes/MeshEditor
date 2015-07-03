@@ -4,13 +4,13 @@ using System.Drawing;
 using MeshEditor.CoreInterface;
 using MeshEditor.Cuts;
 using MeshEditor.Graphics;
-using MeshEditor.UndoRedo;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using Wintellect.PowerCollections;
 using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.Construction;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 
 namespace MeshEditor.Data
@@ -37,10 +37,13 @@ namespace MeshEditor.Data
 		private bool drawElementNumbersFlag;
 		private bool drawBeamsFlag;
 
-		private int? nodeSignal;
+		private int[] nodeSignal;
 		private int? elementSignal;
 
-		private Vector3 nodeSignalPosition, elementSignalPosition;
+		private List<Vector3> nodeSignalPositions;
+		private Vector3 elementSignalPosition;
+
+		CutInfo lastUsedCutInfo;
 
 		public Scene()
 		{
@@ -55,7 +58,8 @@ namespace MeshEditor.Data
 			this.cutPlaneDefinitionNodes = new List<Node>();
 			this.cutPlanes = new List<CutPlane>();
 
-			this.nodeSignal = this.elementSignal = null;
+			this.nodeSignal = null;
+			this.elementSignal = null;
 		}
 
 		#endregion
@@ -94,6 +98,7 @@ namespace MeshEditor.Data
 		public static Color NodeNumbersColor;
 		public static bool LineSmooth;
 		public static bool PointSmooth;
+		public static bool FaceLighting;
 		public static bool EdgeLighting;
 		public static bool IncludeEdgeMiddleNodes;
 		public static int UndoOperationsMaxCount;
@@ -119,7 +124,9 @@ namespace MeshEditor.Data
 		public static readonly int EDGE_SELECTION_TOLERANCE_DISTANCE; // pixels
 		public static readonly float LIMIT_ANGLE_FOR_POINT_INSIDE_FACE_DECISION; // degrees
 
-		
+		// POSTPROCESSING ---------------
+		public static ColorScaleLegendPosition ColorScaleLegendPosition;
+		// ------------------------------
 
 		static Scene()
 		{
@@ -137,6 +144,8 @@ namespace MeshEditor.Data
 			NODE_SELECTION_TOLERANCE_DISTANCE = 20;
 			EDGE_SELECTION_TOLERANCE_DISTANCE = 20;
 			LIMIT_ANGLE_FOR_POINT_INSIDE_FACE_DECISION = 10f; /**/
+
+			ColorScaleLegendPosition = ColorScaleLegendPosition.RightTop;
 
 			// ---------------------------------------------------
 			AlwaysShowNumbers = false;
@@ -179,6 +188,7 @@ namespace MeshEditor.Data
 			IncludeEdgeMiddleNodes = true;
 			LineSmooth = true;
 			PointSmooth = true;
+			FaceLighting = true;
 			EdgeLighting = false;
 			AxisLength = 50f;
 			PointSize = 8f;
@@ -289,12 +299,16 @@ namespace MeshEditor.Data
 			get { return cutPlaneDefinitionNodes; }
 		}
 
-		public int? NodeSignal
+		public int[] NodeSignal
 		{
 			get { return nodeSignal; }
 			set
 			{
 				setNodeSignal(value);
+				if (value == null)
+				{
+					selectItemsInSet(new HashSet<ISelectable>()); // clear selection
+				}
 			}
 		}
 
@@ -304,17 +318,26 @@ namespace MeshEditor.Data
 			set
 			{
 				setElementSignal(value);
+				if (value == null)
+				{
+					selectItemsInSet(new HashSet<ISelectable>()); // clear selection
+				}
 			}
 		}
 
-		public Vector3 NodeSignalPosition
+		public List<Vector3> NodeSignalPositions
 		{
-			get { return nodeSignalPosition; }
+			get { return nodeSignalPositions; }
 		}
 
 		public Vector3 ElementSignalPosition
 		{
 			get { return elementSignalPosition; }
+		}
+
+		public CutInfo LastUsedCutInfo
+		{
+			get { return lastUsedCutInfo; }
 		}
 
 		#endregion
@@ -326,42 +349,144 @@ namespace MeshEditor.Data
 			if (mesh != null)
 			{
 				saveStateBeforeSettingProperty(property);
-				
-				EntityType targetEntity = EntityType.Vertex;
 
+				Dictionary<Node, HashSet<Property>> nodesEdgeProperties = new Dictionary<Node, HashSet<Property>>();
+				Dictionary<Node, HashSet<Property>> nodesSurfaceProperties = new Dictionary<Node, HashSet<Property>>();
+				Dictionary<Node, HashSet<Property>> nodesRegionProperties = new Dictionary<Node, HashSet<Property>>();
+				HashSet<EntityType> usedEntityTypes = new HashSet<EntityType>();
 				foreach (ISelectable item in mesh.SelectedItems)
 				{
 					item.Property = property;
-					targetEntity = getPropertyTypeFromSelectableItem(item);
+					EntityType entityType;
+					collectAdjacentNodesProperties(item, property, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties, out entityType);
+					usedEntityTypes.Add(entityType);
 				}
 
-				mesh.Statistics.AddProperty(property, targetEntity);
+				updateNodeProperties(nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+
+				foreach (EntityType entityType in usedEntityTypes)
+				{
+					mesh.Statistics.AddProperty(property, entityType);
+				}
 			}
 		}
 
-		private static EntityType getPropertyTypeFromSelectableItem(ISelectable item)
+		private void collectAdjacentNodesProperties(ISelectable item, Property property, Dictionary<Node, HashSet<Property>> nodesEdgeProperties, Dictionary<Node, HashSet<Property>> nodesSurfaceProperties, Dictionary<Node, HashSet<Property>> nodesRegionProperties, out EntityType entityType)
 		{
-			EntityType type;
-			if (item is Node)
-				type = EntityType.Vertex;
-			else if (item is WingedEdge)
-				type = EntityType.Edge;
-			else if (item is IFaceOfElement3D)
-				type = EntityType.Surface;
-			else // Element
-				type = EntityType.Region;
-			return type;
+			if (item is Node) // its node, do not update
+			{
+				entityType = EntityType.Vertex;
+				return;
+			}
+			WingedEdge edge = item as WingedEdge;
+			if (edge != null)
+			{
+				entityType = EntityType.Edge;
+				foreach (Node node in edge.IterateThroughAllNodes())
+					inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+				return;
+			}
+			IFaceOfElement3D face = item as IFaceOfElement3D;
+			if (face != null)
+			{
+				entityType = EntityType.Surface;
+				foreach (Node node in ((Element2D)face).IterateThroughAllNodesIncludingEdgeMiddleNodes())
+					inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+				return;
+			}
+			Element element = item as Element;
+			if (element != null)
+			{
+				entityType = EntityType.Region;
+				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				{
+					if (mesh.NodesEdgesIncidence.ContainsKey(node))
+						inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+				}
+				return;
+			}
+		
+			throw new NotSupportedException(); // unknown item type
+		}
 
-			//EntityType type = EntityType.Vertex;
-			//if (item is Node)
-			//    type = EntityType.Vertex;
-			//else if (item is WingedEdge)
-			//    type = EntityType.Edge;
-			//else if (item is IFaceOfElement3D)
-			//    type = EntityType.Surface;
-			//else // ELement
-			//    type = EntityType.Region; /**/
-			//return type;
+		private void addPropertyToMap(Node node, Property property, Dictionary<Node, HashSet<Property>> map)
+		{
+			Debug.Assert(node != null);
+			Debug.Assert(map != null);
+
+			if (property.IsZero)
+				return; // ignore
+
+			HashSet<Property> set;
+			if (!map.TryGetValue(node, out set))
+				map.Add(node, set = new HashSet<Property>());
+			set.Add(property);
+		}
+
+		private void inspectNodeAdjacentEntities(Node node, Dictionary<Node, HashSet<Property>> nodesEdgeProperties, Dictionary<Node, HashSet<Property>> nodesSurfaceProperties, Dictionary<Node, HashSet<Property>> nodesRegionProperties)
+		{
+			Debug.Assert(mesh.NodesEdgesIncidence.ContainsKey(node));
+
+			foreach (WingedEdge edge in mesh.NodesEdgesIncidence[node])
+			{
+				// Edge
+				addPropertyToMap(node, edge.Property, nodesEdgeProperties);
+				// Face 1
+				IFaceOfElement3D faceOfElement = edge.Face1 as IFaceOfElement3D;
+				if (faceOfElement != null)
+				{
+					addPropertyToMap(node, faceOfElement.Property, nodesSurfaceProperties); // face of 3D element
+					addPropertyToMap(node, faceOfElement.ParentElement.Property, nodesRegionProperties);
+				}
+				else if (edge.Face1 != null) // 2D element
+				{
+					addPropertyToMap(node, edge.Face1.Property, nodesRegionProperties);
+				}
+				// Face 2
+				faceOfElement = edge.Face2 as IFaceOfElement3D;
+				if (faceOfElement != null)
+				{
+					addPropertyToMap(node, faceOfElement.Property, nodesSurfaceProperties); // face of 3D element
+					addPropertyToMap(node, faceOfElement.ParentElement.Property, nodesRegionProperties);
+				}
+				else if (edge.Face2 != null) // 2D element
+				{
+					addPropertyToMap(node, edge.Face2.Property, nodesRegionProperties);
+				}
+			}
+		}
+
+		private void updateNodeProperties(Dictionary<Node, HashSet<Property>> nodesEdgeProperties, Dictionary<Node, HashSet<Property>> nodesSurfaceProperties, Dictionary<Node, HashSet<Property>> nodesRegionProperties)
+		{
+			foreach (Element3D element3D in mesh.Elements.OfType<Element3D>()) // walk through all nodes of 3D elements
+			{
+				if (!element3D.Property.IsZero)
+				{
+					foreach (Node node in element3D.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+					{
+						HashSet<Property> set;
+						if (nodesRegionProperties.TryGetValue(node, out set))
+							set.Add(element3D.Property);
+					}
+				}
+			}
+
+			HashSet<Node> affectedNodes = new HashSet<Node>();
+			foreach (Node node in nodesEdgeProperties.Keys)
+				affectedNodes.Add(node);
+			foreach (Node node in nodesSurfaceProperties.Keys)
+				affectedNodes.Add(node);
+			foreach (Node node in nodesRegionProperties.Keys)
+				affectedNodes.Add(node);
+
+			foreach(Node node in affectedNodes)
+			{
+				HashSet<Property> edgeProperties, surfaceProperties, regionProperties;
+				nodesEdgeProperties.TryGetValue(node, out edgeProperties);
+				nodesSurfaceProperties.TryGetValue(node, out surfaceProperties);
+				nodesRegionProperties.TryGetValue(node, out regionProperties);
+				node.RebuildEdgeSurfaceRegionProperties(edgeProperties, surfaceProperties, regionProperties);
+			}
 		}
 
 		public void AddPropertyToSelectedNodes(Property property)
@@ -525,6 +650,27 @@ namespace MeshEditor.Data
 			return position;
 		}
 
+		public void SetDefaultCameraView()
+		{
+			if (mesh == null)
+			{
+				camera.Reset();
+				return;
+			}
+
+			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
+			const float negligibleRelativeSize = 0.001f;
+
+			if (relativeDimensions.X < negligibleRelativeSize)
+				camera.SetView(CameraView.Right);
+			else if (relativeDimensions.Y < negligibleRelativeSize)
+				camera.SetView(CameraView.Front);
+			else if (relativeDimensions.Z < negligibleRelativeSize)
+				camera.SetView(CameraView.Top);
+			else
+				camera.SetView(CameraView.Iso);
+		}
+
 		public void Dispose()
 		{
 			if (this.mesh != null)
@@ -540,9 +686,9 @@ namespace MeshEditor.Data
 
 		#region Signal
 
-		private Node tempNodeAddedToSurfaceRepresentation;
+		private Node[] tempNodesAddedToSurfaceRepresentation;
 
-		private void setNodeSignal(int? nodeSignalToSet)
+		private void setNodeSignal(int[] nodeSignalToSet)
 		{
 			try
 			{
@@ -550,54 +696,56 @@ namespace MeshEditor.Data
 					return;
 
 				// clear old signal
-				if (tempNodeAddedToSurfaceRepresentation != null) // remove new free node if was added
+				if (tempNodesAddedToSurfaceRepresentation != null) // remove new free nodes if added
 				{
-					mesh.NodesEdgesIncidence.Remove(tempNodeAddedToSurfaceRepresentation);
-					tempNodeAddedToSurfaceRepresentation = null;
+					foreach (Node tempNode in tempNodesAddedToSurfaceRepresentation)
+						mesh.NodesEdgesIncidence.Remove(tempNode);
+					tempNodesAddedToSurfaceRepresentation = null;
 					mesh.CreateBuffers();
 				}
 
 				if (nodeSignalToSet == null)
 				{
-					//selectItemsInSet(new Set<ISelectable>()); // clear selection					
 					return;
 				}
 
-				int nodeID = nodeSignalToSet.Value;
-
-				bool found = false;
+				HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
+				HashSet<Node> toAddToSurfaceRep = new HashSet<Node>();
+				HashSet<int> nodesToSet = new HashSet<int>(nodeSignalToSet);
 				foreach (Element element in mesh.Elements)
 				{
 					foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
 					{
-						if (node.ID == nodeID)
+						if (nodesToSet.Contains(node.ID))
 						{
-							nodeSignalPosition = node.Position;							
 							// ------------------------------------------------
 							if (!mesh.NodesEdgesIncidence.ContainsKey(node))
 							{
-								tempNodeAddedToSurfaceRepresentation = node;
-								mesh.NodesEdgesIncidence[node] = null; // add free node
-								mesh.CreateBuffers();
+								toAddToSurfaceRep.Add(node);
 							}
-							// ------------------------------------------------
-							Set<ISelectable> toSelect = new Set<ISelectable>();
 							toSelect.Add(node);
-							selectItemsInSet(toSelect); // select signalled node
-							// ------------------------------------------------
-							found = true;
-							break;
 						}
 					}
-					if (found)
-						break;
 				}
-				if (!found)
+
+				// throw if some id does not exist
+				if (nodesToSet.Count > toSelect.Count)
 				{
-					//nodeSignal = null;
+					string missingNodes = string.Join(", ", nodesToSet.Except(toSelect.Cast<Node>().Select(n => n.ID)).Select(id => id.ToString()).ToArray());
 					Exception nullException = null;
-					throw new ArgumentOutOfRangeException("Node with ID " + nodeID + " does not exist!", nullException);
+					string textFormat = (nodesToSet.Count - toSelect.Count == 1) ? "Node with ID {0} does not exist!" : "Nodes with IDs {0} do not exist!";
+					throw new ArgumentOutOfRangeException(string.Format(textFormat, missingNodes), nullException);
 				}
+
+				// ------------------------------------------------
+				tempNodesAddedToSurfaceRepresentation = toAddToSurfaceRep.ToArray();
+				foreach (Node tempNode in tempNodesAddedToSurfaceRepresentation)
+					mesh.NodesEdgesIncidence[tempNode] = null; // add free node
+				mesh.CreateBuffers();
+				// ------------------------------------------------
+				selectItemsInSet(toSelect); // select signalled nodes
+				nodeSignalPositions = toSelect.Cast<Node>().Select(n => n.Position).ToList();
+				// ------------------------------------------------
 			}
 			finally
 			{
@@ -618,10 +766,10 @@ namespace MeshEditor.Data
 				if (tempElementAddedToSurfaceRepresentation != null)
 				{
 					Debug.Assert(signalElementConstructor != null);
-					Set<Element> elementsToRestore = new Set<Element>();
+					HashSet<Element> elementsToRestore = new HashSet<Element>();
 					elementsToRestore.Add(tempElementAddedToSurfaceRepresentation);
 
-					signalElementConstructor.CutMesh(mesh, new Set<Element>(), elementsToRestore, new Set<Node>(), false); // remove signalled element from surface representation
+					signalElementConstructor.CutMesh(mesh, new HashSet<Element>(), elementsToRestore, new HashSet<Node>(), false); // remove signalled element from surface representation
 
 					tempElementAddedToSurfaceRepresentation = null;
 					signalElementConstructor = null;
@@ -629,7 +777,6 @@ namespace MeshEditor.Data
 
 				if (elementSignalToSet == null)
 				{
-					//selectItemsInSet(new Set<ISelectable>()); // clear selection					
 					return;
 				}
 
@@ -650,7 +797,7 @@ namespace MeshEditor.Data
 							signalElementConstructor.AddSurfaceOfElement3DToMesh(mesh, element3D); // add element to surface representation
 						}
 						// ------------------------------------------------
-						Set<ISelectable> toSelect = new Set<ISelectable>();
+						HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
 						toSelect.Add(element);
 						selectItemsInSet(toSelect); // select signalled element
 						// ------------------------------------------------
@@ -671,12 +818,12 @@ namespace MeshEditor.Data
 			}
 		}
 
-		private void selectItemsInSet(Set<ISelectable> itemsToSelect)
+		private void selectItemsInSet(HashSet<ISelectable> itemsToSelect)
 		{
 			// ulozit pred oznacenim do historie --------------------------------------
 			saveStateBeforeSelect();
 			// ------------------------------------------------------------------------			
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
 			mesh.SelectedItems = itemsToSelect;
 			updateColorBuffers(oldSelection, itemsToSelect);
 		}
@@ -798,22 +945,133 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Selecting
+		#region Selection
 
 		public string GetSelectedItemsDescription()
 		{
-			if (mesh == null || mesh.SelectedItems.Count == 0) // nic neni vybrano
+			if (mesh == null || mesh.SelectedItems.Count == 0) // nothing selected
 				return string.Empty;
-			else if (mesh.SelectedItems.Count > 1) // je vybrana vic jak jedna polozka
-				return mesh.SelectedItems.Count.ToString() + " items selected"; // vypisu jen kolik je vybrano polozek
-			// jinak zobrazim popis jedne vybrane polozky
+
+			if (mesh.SelectedItems.Count > 1) // selected more than one entity
+			{
+				return getSelectionGroupSummary();
+			}
+			
+			// otherwise show single selected entity description
 			ISelectable item = getFirstSelectedItem();
 
 			Node node = item as Node;
 			if (node != null)
-				return node.ToStringWithOriginalCoordinates(mesh.ResizeFactor, mesh.PositionOffset);
+			{
+				string nodeDescription = node.ToStringWithOriginalCoordinates(mesh.ResizeFactor, mesh.PositionOffset);
+				IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
+				if (dataVisualizer != null)
+				{
+					float error;
+					double value = dataVisualizer.GetDataValue(node, out error);
+					nodeDescription += string.Format(" | Data value: {0:G4}", value);
+					if (!double.IsNaN(value) && !double.IsInfinity(value) && error != 0.0)
+						nodeDescription += string.Format(" \u00B1 {0:G2}", error); // +- error
+				}
+				return nodeDescription;
+			}
 			else
+			{
 				return item.ToString();
+			}
+		}
+
+		private string getSelectionGroupSummary()
+		{
+			Debug.Assert(mesh.SelectedItems.Count > 1);
+
+			StringBuilder text = new StringBuilder();
+
+			bool nodeOnly = true, edgeOnly = true, faceOnly = true, elementOnly = true;
+			HashSet<Property> properties = new HashSet<Property>();
+			HashSet<ElementType> elementTypes = new HashSet<ElementType>();
+			
+			IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
+			double dataValueMin = double.MaxValue, dataValueMax = double.MinValue;
+
+			foreach (var entity in mesh.SelectedItems)
+			{
+				properties.Add(entity.Property);
+
+				Node node = entity as Node;
+				Element element = entity as Element;
+				if (node != null)
+				{
+					edgeOnly = faceOnly = elementOnly = false;
+					if (dataVisualizer != null)
+					{
+						double dataValue = dataVisualizer.GetDataValue(node);
+						dataValueMin = Math.Min(dataValueMin, dataValue);
+						dataValueMax = Math.Max(dataValueMax, dataValue);
+					}
+				}
+				else if (entity is WingedEdge)
+				{
+					nodeOnly = faceOnly = elementOnly = false;
+				}
+				else if (entity is IFaceOfElement3D)
+				{
+					nodeOnly = edgeOnly = elementOnly = false;
+				}
+				else if (element != null)
+				{
+					nodeOnly = edgeOnly = faceOnly = false;
+					elementTypes.Add(element.ElementType);
+				}
+			}
+
+			text.Append(mesh.SelectedItems.Count); // selected items count
+			text.Append(' ');
+
+			// check if all items are of the same type
+			if (nodeOnly)
+			{
+				text.Append("nodes");
+			}
+			else if (edgeOnly)
+			{
+				text.Append("edges");
+			}
+			else if (faceOnly)
+			{
+				text.Append("faces");
+			}
+			else if (elementOnly)
+			{
+				text.Append("elements");
+				if (elementTypes.Count == 1)
+				{
+					text.AppendFormat(" | Type: {0}", elementTypes.First());
+				}
+			}
+			else
+			{
+				text.Append("entities");
+			}
+
+			if (properties.Count != 1 || properties.First() != Property.Zero)
+			{
+				if (properties.Count == 1)
+					text.Append(" | Property: ");
+				else
+					text.Append(" | Properties: ");
+				text.Append(string.Join(", ", properties.OrderBy(p => p.Value).Select(p => p.ToString()).ToArray()));
+			}
+
+			if (nodeOnly && dataVisualizer != null)
+			{
+				if (dataValueMin == dataValueMax)
+					text.AppendFormat(" | Data value: {0:G4}", dataValueMin);
+				else
+					text.AppendFormat(" | Data value range: <{0:G4}, {1:G4}>", dataValueMin, dataValueMax);
+			}
+
+			return text.ToString();
 		}
 
 		public void SelectItems(Rectangle area, SelectMode mode, SelectOperationType opType, bool allVerticesInArea, ItemTypeToSelect itemType)
@@ -827,7 +1085,7 @@ namespace MeshEditor.Data
 			camera.LookAt(); // nastavit kameru
 			// ------------------------------------------------
 
-			Set<ISelectable> newSelection;
+			HashSet<ISelectable> newSelection;
 
 			if (area.Size == Size.Empty)
 				newSelection = getPointSelection(area.X, area.Y, mode, itemType); /**/
@@ -842,49 +1100,50 @@ namespace MeshEditor.Data
 			// ------------------------------------------------------------------------
 
 
-			Set<ISelectable> selectedItems = mesh.SelectedItems;
+			HashSet<ISelectable> selectedItems = new HashSet<ISelectable>(mesh.SelectedItems);
 
 			switch (opType)
 			{
 				case SelectOperationType.New:
+					selectedItems = newSelection;
 					break;
 				case SelectOperationType.Union:
-					newSelection = selectedItems.Union(newSelection);
+					selectedItems.UnionWith(newSelection);
 					break;
 				case SelectOperationType.Intersection:
-					newSelection = selectedItems.Intersection(newSelection);
+					selectedItems.IntersectWith(newSelection);
 					break;
 				case SelectOperationType.Except:
-					newSelection = selectedItems.Difference(newSelection);
+					selectedItems.ExceptWith(newSelection);
 					break;
 				case SelectOperationType.SymetricDifference:
-					newSelection = selectedItems.SymmetricDifference(newSelection);
+					selectedItems.SymmetricExceptWith(newSelection);
 					break;
 				default:
 					throw new NotSupportedException("This select operation type is not supported.");
 			}
 
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
-			mesh.SelectedItems = newSelection;
-			updateColorBuffers(oldSelection, newSelection);
-			
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			mesh.SelectedItems = selectedItems;
+			updateColorBuffers(oldSelection, selectedItems);
+
 			GL.MatrixMode(MatrixMode.Modelview);
 			GL.PopMatrix();
 		}
 
-		private Set<ISelectable> getPointSelection(int x, int y, SelectMode mode, ItemTypeToSelect itemType)
+		private HashSet<ISelectable> getPointSelection(int x, int y, SelectMode mode, ItemTypeToSelect itemType)
 		{
-			Set<ISelectable> newSelection;
+			HashSet<ISelectable> newSelection;
 			// Select single face first
 			Element2D faceHit;
 			ItemTypeToSelect typeToSelect = (mode > SelectMode.Single && itemType == ItemTypeToSelect.Node) ? ItemTypeToSelect.Edge : itemType;
 			ISelectable item = getSingleEntityOnLocation(x, y, typeToSelect, out faceHit);
 			if (item == null && faceHit == null)
-				return new Set<ISelectable>();
+				return new HashSet<ISelectable>();
 
             if (itemType == ItemTypeToSelect.Beam)
             {
-                newSelection = new Set<ISelectable>();
+                newSelection = new HashSet<ISelectable>();
 				if (item != null)
 					newSelection.Add(item);
                 return newSelection;
@@ -893,10 +1152,10 @@ namespace MeshEditor.Data
 			switch (mode)
 			{
 				case SelectMode.None:
-					newSelection = new Set<ISelectable>();
+					newSelection = new HashSet<ISelectable>();
 					break;
 				case SelectMode.Single:
-					newSelection = new Set<ISelectable>();
+					newSelection = new HashSet<ISelectable>();
 					if (item != null)
 						newSelection.Add(item);
 					break;
@@ -915,10 +1174,10 @@ namespace MeshEditor.Data
 			return newSelection;
 		}
 
-		private Set<ISelectable> advancedPointSelection(SelectMode mode, ItemTypeToSelect itemType, Element2D faceHit, ISelectable item)
+		private HashSet<ISelectable> advancedPointSelection(SelectMode mode, ItemTypeToSelect itemType, Element2D faceHit, ISelectable item)
 		{
 			WingedEdge edgeHit = item as WingedEdge;
-			Set<ISelectable> selection = new Set<ISelectable>();
+			HashSet<ISelectable> selection = new HashSet<ISelectable>();
 
 			float angleLimit = this.mesh.SoftBorderLimit;
 			if (mode == SelectMode.ExtendedSurface)
@@ -958,7 +1217,7 @@ namespace MeshEditor.Data
 		/// </summary>
 		private delegate IEnumerable<WingedEdge> NeighborSelection(WingedEdge edge);
 
-		private Set<WingedEdge> getHardBorderEdges(WingedEdge edgeHit, Element2D faceHit, SelectMode mode)
+		private HashSet<WingedEdge> getHardBorderEdges(WingedEdge edgeHit, Element2D faceHit, SelectMode mode)
 		{
 			NeighborSelection getNeighborsFun;
 			switch (mode)
@@ -967,7 +1226,7 @@ namespace MeshEditor.Data
 					getNeighborsFun = delegate(WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
-						Set<WingedEdge> neighbors = new Set<WingedEdge>();
+						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
 						WingedEdge neighbor = null;
 						int count = 0;
 						foreach (WingedEdge n in e.BeginNeighbors)
@@ -1019,11 +1278,11 @@ namespace MeshEditor.Data
 								goto case SelectMode.NearSurface; /**/ // vratit se zpatky
 						}
 					}
-					Set<Element2D> surface = selectWholeSurface(faceHit, this.mesh.HardBorderLimit);
+					HashSet<Element2D> surface = selectWholeSurface(faceHit, this.mesh.HardBorderLimit);
 					getNeighborsFun = delegate(WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
-						Set<WingedEdge> neighbors = new Set<WingedEdge>();
+						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
 						foreach (WingedEdge n in e.BeginNeighbors)
 							if (n != e && n.FeatureAngle >= this.mesh.HardBorderLimit && (surface.Contains(n.Face1) || surface.Contains(n.Face2)))
 								neighbors.Add(n);
@@ -1037,7 +1296,7 @@ namespace MeshEditor.Data
 					getNeighborsFun = delegate(WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
-						Set<WingedEdge> neighbors = new Set<WingedEdge>();
+						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
 						foreach (WingedEdge n in e.BeginNeighbors)
 							if (n != e && n.FeatureAngle >= this.mesh.HardBorderLimit)
 								neighbors.Add(n);
@@ -1054,9 +1313,9 @@ namespace MeshEditor.Data
 			return getBorderEdges(edgeHit, getNeighborsFun);
 		}
 
-		private static Set<WingedEdge> getBorderEdges(WingedEdge startEdge, NeighborSelection getNeighborsFun)
+		private static HashSet<WingedEdge> getBorderEdges(WingedEdge startEdge, NeighborSelection getNeighborsFun)
 		{
-			Set<WingedEdge> selection = new Set<WingedEdge>();
+			HashSet<WingedEdge> selection = new HashSet<WingedEdge>();
 			Stack<WingedEdge> expansion = new Stack<WingedEdge>();
 			expansion.Push(startEdge);
 			selection.Add(startEdge);
@@ -1064,15 +1323,15 @@ namespace MeshEditor.Data
 			{
 				WingedEdge top = expansion.Pop();
 				foreach(WingedEdge neighbor in getNeighborsFun(top))
-					if (!selection.Add(neighbor))
+					if (selection.Add(neighbor))
 						expansion.Push(neighbor);
 			}
 			return selection;
 		}
 
-		private static Set<ISelectable> transformSelectedFacesInto(ItemTypeToSelect itemType, Set<Element2D> faces)
+		private static HashSet<ISelectable> transformSelectedFacesInto(ItemTypeToSelect itemType, HashSet<Element2D> faces)
 		{
-			Set<ISelectable> items = new Set<ISelectable>();
+			HashSet<ISelectable> items = new HashSet<ISelectable>();
 			switch (itemType)
 			{
 				case ItemTypeToSelect.Face:
@@ -1264,8 +1523,8 @@ namespace MeshEditor.Data
 
 		private void unselectAllItems()
 		{
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
-			Set<ISelectable> newSelection = new Set<ISelectable>();
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
 			mesh.SelectedItems = newSelection;
 			updateColorBuffers(oldSelection, newSelection);
 		}
@@ -1281,8 +1540,8 @@ namespace MeshEditor.Data
 
 			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
 
-			Set<ISelectable> temp = mesh.SelectedItems;
-			mesh.SelectedItems = new Set<ISelectable>();
+			HashSet<ISelectable> temp = mesh.SelectedItems;
+			mesh.SelectedItems = new HashSet<ISelectable>();
 
 			switch (itemType)
 			{
@@ -1368,8 +1627,8 @@ namespace MeshEditor.Data
 			else
 				return;
 			// -------------------------------------------
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
-			mesh.SelectedItems = new Set<ISelectable>();
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			mesh.SelectedItems = new HashSet<ISelectable>();
 
 			switch (itemType)
 			{
@@ -1418,8 +1677,8 @@ namespace MeshEditor.Data
 			saveStateBeforeSelect();
 			// ------------------------------------------------------------------------
 
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
-			Set<ISelectable> newSelection = new Set<ISelectable>();
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
 			
 			switch (SceneFacade.EditorMode)
 			{
@@ -1462,9 +1721,10 @@ namespace MeshEditor.Data
 
 		private ISelectable getFirstSelectedItem()
 		{
-			IEnumerator<ISelectable> enumerator = mesh.SelectedItems.GetEnumerator();
-			enumerator.MoveNext();
-			return enumerator.Current;
+			//IEnumerator<ISelectable> enumerator = mesh.SelectedItems.GetEnumerator();
+			//enumerator.MoveNext();
+			//return enumerator.Current;
+			return mesh.SelectedItems.FirstOrDefault();
 		}
 
 		private static float getPixelDepth(int x, int y, int[] viewport)
@@ -1474,10 +1734,10 @@ namespace MeshEditor.Data
 			return depth[0];
 		}
 
-		private void updateColorBuffers(Set<ISelectable> oldSelection, Set<ISelectable> newSelection)
+		private void updateColorBuffers(HashSet<ISelectable> oldSelection, HashSet<ISelectable> newSelection)
 		{
 			int changedFacesCount = 0;
-			int chengedEdgesCount = 0;
+			int changedEdgesCount = 0;
 			int changedNodesCount = 0;
 			int changedBeamsCount = 0;
 
@@ -1486,7 +1746,7 @@ namespace MeshEditor.Data
 				if (item is Element2D || item is Element3D)
 					changedFacesCount++;
 				else if (item is WingedEdge)
-					chengedEdgesCount++;
+					changedEdgesCount++;
 				else if (item is Node)
 					changedNodesCount++;
 				else if (item is Beam)
@@ -1498,7 +1758,7 @@ namespace MeshEditor.Data
 				if (item is Element2D || item is Element3D)
 					changedFacesCount++;
 				else if (item is WingedEdge)
-					chengedEdgesCount++;
+					changedEdgesCount++;
 				else if (item is Node)
 					changedNodesCount++;
 				else if (item is Beam)
@@ -1506,8 +1766,11 @@ namespace MeshEditor.Data
 			}
 
 			if (changedFacesCount > 0)
+			{
 				mesh.UpdateFaceColors();
-			if (chengedEdgesCount > 0)
+				mesh.UpdateEdgeColors(); // when some element is selected, edge is also drawn as selected (to be visible if wireframe rendering is on)
+			}
+			else if (changedEdgesCount > 0)
 				mesh.UpdateEdgeColors();
 			if (changedNodesCount > 0)
 				mesh.UpdateNodeColors();
@@ -1571,13 +1834,13 @@ namespace MeshEditor.Data
 			return angleSum > LIMIT_ANGLE_FOR_POINT_INSIDE_FACE_DECISION; /**/
 		}
 
-		private Set<ISelectable> getItemsInArea(Rectangle selectionArea, ItemTypeToSelect itemType, bool allVerticesInArea)
+		private HashSet<ISelectable> getItemsInArea(Rectangle selectionArea, ItemTypeToSelect itemType, bool allVerticesInArea)
 		{
 			// --------------------------------------
 			bool xRay = ((itemType == ItemTypeToSelect.Beam || itemType == ItemTypeToSelect.Node) && (renderMode & RenderMode.Faces) == 0) ? true : Scene.XRayVision;
-			Set<Node> visibleNodes = mesh.FindVisibleNodes(selectionArea, this.camera, xRay, false);
+			HashSet<Node> visibleNodes = mesh.FindVisibleNodes(selectionArea, this.camera, xRay, false);
 			// --------------------------------------
-			Set<ISelectable> result = new Set<ISelectable>();
+			HashSet<ISelectable> result = new HashSet<ISelectable>();
 			// --------------------------------------
 
 			if (itemType == ItemTypeToSelect.Node)
@@ -1599,18 +1862,18 @@ namespace MeshEditor.Data
             // hrany timto zpusobem nevybiram, nejdriv najdu viditelne plochy, jinak bych totiz vybral i hrany, co maj sice videt jeden uzel, ale jinak jsou skryty
 			
             // ---------------------------------------
-			Set<Element2D> pickedFaces = new Set<Element2D>();
+			HashSet<Element2D> pickedFaces = new HashSet<Element2D>();
 
 			// najdi pickedfaces
 			foreach(Node node in visibleNodes)
 			{
 				if (Scene.XRayVision)
 				{
-					pickedFaces.AddMany(mesh.GetFacesIncidingWithNode(node)); // pridat vsechny
+					pickedFaces.UnionWith(mesh.GetFacesIncidingWithNode(node)); // pridat vsechny
 					continue;
 				}
-				Set<Element2D> frontFaces = new Set<Element2D>();
-				Set<Element2D> backFaces = new Set<Element2D>();
+				HashSet<Element2D> frontFaces = new HashSet<Element2D>();
+				HashSet<Element2D> backFaces = new HashSet<Element2D>();
 				Element2D frontOne = null, backOne = null;
 				List<WingedEdge> incidingEdges;
 				if (!mesh.NodesEdgesIncidence.TryGetValue(node, out incidingEdges) || incidingEdges == null) // neni to normalni uzel, site, ale bud uzel ve stredu hrany nebo jiny uzel (treba uplne mimo - jeden uzel beamu...)
@@ -1650,15 +1913,15 @@ namespace MeshEditor.Data
 				
 				// =========
 				if (frontOne == null)
-					pickedFaces.AddMany(backFaces);
+					pickedFaces.UnionWith(backFaces);
 				else if (backOne == null)
-					pickedFaces.AddMany(frontFaces);
+					pickedFaces.UnionWith(frontFaces);
 				else
 				{
 					if (frontFaceIsCloserToEye(frontOne, backOne))
-						pickedFaces.AddMany(frontFaces);
+						pickedFaces.UnionWith(frontFaces);
 					else
-						pickedFaces.AddMany(backFaces);
+						pickedFaces.UnionWith(backFaces);
 				}
 				// =========
 			}
@@ -1738,7 +2001,7 @@ namespace MeshEditor.Data
 			return (Vector3.Dot(camera.Eye - /*face.GetCenter()*/face.GetSignificantPoint(), face.NormalVector) > 0);
 		}
 
-		private int getNumberOfVisibleNodesFrom(IEnumerable<Node> someNodes, Set<Node> visibleNodes)
+		private int getNumberOfVisibleNodesFrom(IEnumerable<Node> someNodes, HashSet<Node> visibleNodes)
 		{
 			int number = 0;
 			foreach (Node n in someNodes)
@@ -1747,9 +2010,9 @@ namespace MeshEditor.Data
 			return number;
 		}
 
-		private static Set<Element2D> selectWholeSurface(Element2D startFace, float borderAngleLimit)
+		private static HashSet<Element2D> selectWholeSurface(Element2D startFace, float borderAngleLimit)
 		{
-			Set<Element2D> selectionSet = new Set<Element2D>();
+			HashSet<Element2D> selectionSet = new HashSet<Element2D>();
 			Stack<Element2D> faces = new Stack<Element2D>();
 			faces.Push(startFace);
 			selectionSet.Add(startFace);
@@ -1757,13 +2020,13 @@ namespace MeshEditor.Data
 			{
 				Element2D face = faces.Pop();
 				foreach (Element2D neighbor in face.GetNeighbors(borderAngleLimit))
-					if (!selectionSet.Add(neighbor))
+					if (selectionSet.Add(neighbor))
 						faces.Push(neighbor);
 			}
 			return selectionSet;
 		}
 
-		public void SelectItemsWithProperty(EditorMode editorMode, Property property)
+		public void SelectItemsWithProperty(EditorMode editorMode, Property property, bool addToSelection)
 		{
 			if (mesh == null)
 				return;
@@ -1774,8 +2037,8 @@ namespace MeshEditor.Data
 
 			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
 
-			Set<ISelectable> oldSelection = mesh.SelectedItems;
-			Set<ISelectable> newSelection = new Set<ISelectable>();
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = addToSelection ? new HashSet<ISelectable>(oldSelection) : new HashSet<ISelectable>();
 			mesh.SelectedItems = newSelection;
 			// --------------------------------------------
 			switch (itemType)
@@ -1848,10 +2111,19 @@ namespace MeshEditor.Data
 			cutPlaneDefinitionNodes.Clear();
 		}
 
+		public void UpdateLastUsedCut()
+		{
+			if (lastUsedCutInfo != null)
+				Cut(lastUsedCutInfo);
+		}
+
 		public void Cut(CutInfo cutInfo)
 		{
-			if(mesh == null)
+			Debug.Assert(cutInfo != null);
+			if (mesh == null)
 				return;
+
+			this.lastUsedCutInfo = cutInfo;
 
 			unselectAllItems();
 
@@ -1977,7 +2249,7 @@ namespace MeshEditor.Data
 			// ----------------------------------
 			saveStateBeforeHideRestoreElements(false);
 			// ----------------------------------
-			Set<Element> toRestore = new Set<Element>(mesh.HiddenElements);
+			HashSet<Element> toRestore = new HashSet<Element>(mesh.HiddenElements);
 			Cutter.RestoreElements(mesh, toRestore);
 		}
 
@@ -1987,53 +2259,44 @@ namespace MeshEditor.Data
 
 		private void saveStateBeforeInvertNormals()
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			mesh.History.Do(new InvertNormalsMemento(camera));
+			// no unsaved changes
 		}
 
 		private void saveStateBeforeSelect()
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			SelectionMemento peek = mesh.History.PeekUndo() as SelectionMemento;
-			//if (!mesh.History.CanUndo)
-			//	mesh.History.Do(new SelectionMemento(new Set<ISelectable>()));
-			if (peek != null && peek.SelectedItemsCount == 0 && mesh.SelectedItems.Count == 0)
-				return;
-			mesh.History.Do(new SelectionMemento(mesh.SelectedItems, camera));
+			// no unsaved changes
 		}
 
 		private void saveStateBeforeSettingProperty(Property property)
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			mesh.History.Do(new SetPropertyMemento(property, mesh.SelectedItems, camera));
+			mesh.UnsavedChanges = true;
 		}
 
 		private void saveStateBeforeAddingPropertyToSelectedNodes(Property property)
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			mesh.History.Do(new AddPropertyToSelectedNodesMemento(property, camera));
+			mesh.UnsavedChanges = true;
 		}
 
 		private void saveStateBeforeRemovingPropertyFromSelectedNodes(Property property)
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			mesh.History.Do(new RemovePropertyFromSelectedNodesMemento(property, camera));
+			mesh.UnsavedChanges = true;
 		}
 
 		private void saveStateBeforeHideRestoreElements(bool selectFacesOnCut)
 		{
-			if (mesh == null || mesh.History == null)
+			if (mesh == null)
 				return;
-			mesh.History.Clear(); /**/
-			//mesh.History.BeginCompoundDo();
-			//mesh.History.Do(new SelectionMemento(mesh.SelectedItems));
-			mesh.History.Do(new HideRestoreElementsMemento(mesh.HiddenElements, selectFacesOnCut, selectFacesOnCut, camera));
-			//mesh.History.EndCompoundDo();
+			mesh.UnsavedChanges = true;
 		}
 
 		#endregion

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Wintellect.PowerCollections;
 
 namespace MeshEditor.Data
 {
@@ -284,7 +283,7 @@ namespace MeshEditor.Data
 		private static IEnumerable<string> findDistinctVariablesInText(string text)
 		{
 			string[] parts = text.Split(new char[] { ' ', '\t', '[', ']', '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
-			Set<string> variables = new Set<string>();
+			HashSet<string> variables = new HashSet<string>();
 			foreach (string part in parts)
 			{
 				if (!string.IsNullOrEmpty(part) && part[0] == '%')
@@ -296,8 +295,8 @@ namespace MeshEditor.Data
 		private static IEnumerable<string> findDuplicitVariablesInText(string text)
 		{
 			string[] parts = text.Split(new char[] { ' ', '\t', '[', ']', '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
-			Set<string> result = new Set<string>();
-			Set<string> variables = new Set<string>();
+			HashSet<string> result = new HashSet<string>();
+			HashSet<string> variables = new HashSet<string>();
 			foreach (string part in parts)
 			{
 				if (!string.IsNullOrEmpty(part) && part[0] == '%')

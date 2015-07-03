@@ -7,7 +7,7 @@ namespace MeshEditor.Data
 	/// <summary>
 	/// trida reprezentujici parovou dvojici [typ entity; vlastnost entity]
 	/// </summary>
-	public struct PropertyEntityPair
+	public struct PropertyEntityPair : IComparable<PropertyEntityPair>
 	{
 		private EntityType entityType;
 		private Property property;
@@ -34,5 +34,18 @@ namespace MeshEditor.Data
 		{
 			return "[" + Property + "; " + EntityType + "]";
 		}
+
+		#region IComparable<PropertyEntityPair> Members
+
+		public int CompareTo(PropertyEntityPair other)
+		{
+			if (this.entityType < other.entityType)
+				return -1;
+			if (this.entityType > other.entityType)
+				return 1;
+			return property.CompareTo(other.property);
+		}
+
+		#endregion
 	}
 }

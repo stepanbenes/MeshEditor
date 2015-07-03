@@ -53,6 +53,7 @@ namespace MeshEditor.Cuts
 		private ItemHitDecision hitDecision;
 		private Property[] elementPropertiesToShow;
 		private ElementType[] elementTypesToShow;
+		private DataValueRange valueLimit;
 
 		public Property[] ElementPropertiesToShow
 		{
@@ -64,6 +65,12 @@ namespace MeshEditor.Cuts
 		{
 			get { return elementTypesToShow; }
 			set { elementTypesToShow = value; }
+		}
+
+		public DataValueRange ValueLimit
+		{
+			get { return valueLimit; }
+			set { valueLimit = value; }
 		}
 
 		public ItemHitDecision HitDecision
@@ -98,6 +105,7 @@ namespace MeshEditor.Cuts
 			this.cutTestMethod = null;
 			this.elementPropertiesToShow = null;
 			this.elementTypesToShow = null;
+			this.valueLimit = null;
 		}
 	}
 }

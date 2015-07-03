@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MeshEditor</RootNamespace>
     <AssemblyName>MeshEditor.Core</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
@@ -33,6 +33,10 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,6 +48,7 @@
     <WarningLevel>0</WarningLevel>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -53,28 +58,28 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Release\MeshEditor.Core.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="PowerCollections, Version=1.0.2141.24679, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\$(Configuration)\PowerCollections.dll</HintPath>
+    <Reference Include="OpenTK">
+      <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Construction\EdgeMark.cs" />
     <Compile Include="CoreInterface\AppSettings.cs" />
     <Compile Include="CoreInterface\AvailableAction.cs" />
     <Compile Include="CoreInterface\AvailableValue.cs" />
+    <Compile Include="CoreInterface\ColorScaleLegendPosition.cs" />
+    <Compile Include="CoreInterface\IDataVisualizer.cs" />
+    <Compile Include="CoreInterface\ILayer.cs" />
     <Compile Include="CoreInterface\IOEvents.cs" />
+    <Compile Include="CoreInterface\LongOpNotifier.cs" />
     <Compile Include="CoreInterface\MouseButton.cs" />
     <Compile Include="CoreInterface\SceneFacade.cs" />
     <Compile Include="CoreInterface\ShowErrorEvent.cs" />
@@ -82,19 +87,24 @@
     <Compile Include="Cuts\CutPlane.cs" />
     <Compile Include="Cuts\Cutter.cs" />
     <Compile Include="Cuts\CutTestProvider.cs" />
+    <Compile Include="Cuts\DataValueRange.cs" />
+    <Compile Include="Cuts\EdgeIntersection.cs" />
     <Compile Include="Cuts\FacesOnCutComputer.cs" />
     <Compile Include="Data\PropertyCommand.cs" />
+    <Compile Include="Graphics\IVertexBufferObject.cs" />
+    <Compile Include="Graphics\VBO.cs" />
     <Compile Include="IO\GiDMshFileFormatParser.cs" />
     <Compile Include="IO\GiDMshFileFormatSaver.cs" />
+    <Compile Include="IO\MeshParserFactory.cs" />
+    <Compile Include="IO\MeshSaverFactory.cs" />
+    <Compile Include="IO\MultipleFilesParser.cs" />
     <Compile Include="IO\VTKFileFormatSaver.cs" />
-    <Compile Include="UndoRedo\CompoundMemento.cs" />
     <Compile Include="Data\MeshStatistics.cs" />
     <Compile Include="Data\PropertyColorProvider.cs" />
     <Compile Include="Data\ElementTypes\QuadraticBeam.cs" />
     <Compile Include="Data\Content.cs" />
-    <Compile Include="Data\Surface\HiddenItemsProperties.cs" />
+    <Compile Include="Data\Surface\EdgeFacePropertySet.cs" />
     <Compile Include="Graphics\BeamVBO.cs" />
-    <Compile Include="Graphics\SimpleVBO.cs" />
     <Compile Include="IO\CultureProvider.cs" />
     <Compile Include="IO\DefaultFileFormatMeshSaver.cs" />
     <Compile Include="IO\EdgeDraft.cs" />
@@ -126,7 +136,7 @@
     <Compile Include="Graphics\Histogram.cs" />
     <Compile Include="Graphics\IndexBufferObject.cs" />
     <Compile Include="Graphics\RenderMode.cs" />
-    <Compile Include="Graphics\VertexBufferObject.cs" />
+    <Compile Include="Graphics\RichVBO.cs" />
     <Compile Include="IO\MeshSavingException.cs" />
     <Compile Include="CoreInterface\MeshNeedRefreshEvent.cs" />
     <Compile Include="Data\Selection.cs" />
@@ -157,7 +167,10 @@
     <None Include="CoreInterface\PublicTypes.cd" />
     <None Include="Data\ElementTypes\ElementClassHierarchy.cd" />
     <None Include="Data\meshIO.cd" />
-    <None Include="Data\Surface\SurfaceRepresentation.cd" />
+    <None Include="Data\Surface\SurfaceRepresentation.cd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -168,10 +181,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="CoreInterface\EditorMode.cs" />
-    <Compile Include="UndoRedo\IMemento.cs" />
-    <Compile Include="UndoRedo\Mementos.cs" />
-    <Compile Include="UndoRedo\RoundStack.cs" />
-    <Compile Include="UndoRedo\UndoRedoHistory.cs" />
     <Compile Include="Utilities\PerformanceMeters.cs" />
     <Compile Include="Utilities\Delegates.cs" />
     <Compile Include="Utilities\Functions.cs" />
@@ -203,6 +212,13 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

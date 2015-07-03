@@ -59,13 +59,14 @@
 			// 
 			// richTextBox
 			// 
-			this.richTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.richTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.richTextBox.ContextMenuStrip = this.textBoxContextMenuStrip;
 			this.richTextBox.HideSelection = false;
 			this.richTextBox.Location = new System.Drawing.Point(12, 103);
 			this.richTextBox.Name = "richTextBox";
+			this.richTextBox.ReadOnly = true;
 			this.richTextBox.Size = new System.Drawing.Size(550, 338);
 			this.richTextBox.TabIndex = 3;
 			this.richTextBox.Text = "";
@@ -78,32 +79,32 @@
             this.toolStripSeparator1,
             this.selectallToolStripMenuItem});
 			this.textBoxContextMenuStrip.Name = "textBoxContextMenuStrip";
-			this.textBoxContextMenuStrip.Size = new System.Drawing.Size(139, 82);
+			this.textBoxContextMenuStrip.Size = new System.Drawing.Size(121, 76);
 			this.textBoxContextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.textBoxContextMenuStrip_Opening);
 			// 
 			// copySelectionToolStripMenuItem
 			// 
 			this.copySelectionToolStripMenuItem.Name = "copySelectionToolStripMenuItem";
-			this.copySelectionToolStripMenuItem.Size = new System.Drawing.Size(138, 24);
+			this.copySelectionToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
 			this.copySelectionToolStripMenuItem.Text = "&Copy";
 			this.copySelectionToolStripMenuItem.Click += new System.EventHandler(this.copyselectionToolStripMenuItem_Click);
 			// 
 			// copyAllToolStripMenuItem
 			// 
 			this.copyAllToolStripMenuItem.Name = "copyAllToolStripMenuItem";
-			this.copyAllToolStripMenuItem.Size = new System.Drawing.Size(138, 24);
+			this.copyAllToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
 			this.copyAllToolStripMenuItem.Text = "C&opy all";
 			this.copyAllToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(135, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(117, 6);
 			// 
 			// selectallToolStripMenuItem
 			// 
 			this.selectallToolStripMenuItem.Name = "selectallToolStripMenuItem";
-			this.selectallToolStripMenuItem.Size = new System.Drawing.Size(138, 24);
+			this.selectallToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
 			this.selectallToolStripMenuItem.Text = "Select &all";
 			this.selectallToolStripMenuItem.Click += new System.EventHandler(this.selectallToolStripMenuItem_Click);
 			// 
@@ -112,7 +113,7 @@
 			this.labelItems.AutoSize = true;
 			this.labelItems.Location = new System.Drawing.Point(13, 44);
 			this.labelItems.Name = "labelItems";
-			this.labelItems.Size = new System.Drawing.Size(124, 17);
+			this.labelItems.Size = new System.Drawing.Size(93, 13);
 			this.labelItems.TabIndex = 4;
 			this.labelItems.Text = "(Nothing selected)";
 			// 
@@ -121,7 +122,7 @@
 			this.labelShowListOf.AutoSize = true;
 			this.labelShowListOf.Location = new System.Drawing.Point(12, 20);
 			this.labelShowListOf.Name = "labelShowListOf";
-			this.labelShowListOf.Size = new System.Drawing.Size(136, 17);
+			this.labelShowListOf.Size = new System.Drawing.Size(104, 13);
 			this.labelShowListOf.TabIndex = 5;
 			this.labelShowListOf.Text = "Show list of selected";
 			// 
@@ -136,16 +137,18 @@
             "Edges"});
 			this.comboBoxEntityType.Location = new System.Drawing.Point(171, 18);
 			this.comboBoxEntityType.Name = "comboBoxEntityType";
-			this.comboBoxEntityType.Size = new System.Drawing.Size(103, 24);
+			this.comboBoxEntityType.Size = new System.Drawing.Size(103, 21);
 			this.comboBoxEntityType.TabIndex = 6;
 			this.comboBoxEntityType.SelectedIndexChanged += new System.EventHandler(this.comboBoxEntityType_SelectedIndexChanged);
 			// 
 			// checkBoxShowCompleteInfo
 			// 
 			this.checkBoxShowCompleteInfo.AutoSize = true;
+			this.checkBoxShowCompleteInfo.Checked = true;
+			this.checkBoxShowCompleteInfo.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.checkBoxShowCompleteInfo.Location = new System.Drawing.Point(12, 76);
 			this.checkBoxShowCompleteInfo.Name = "checkBoxShowCompleteInfo";
-			this.checkBoxShowCompleteInfo.Size = new System.Drawing.Size(152, 21);
+			this.checkBoxShowCompleteInfo.Size = new System.Drawing.Size(119, 17);
 			this.checkBoxShowCompleteInfo.TabIndex = 9;
 			this.checkBoxShowCompleteInfo.Text = "Show complete info";
 			this.checkBoxShowCompleteInfo.UseVisualStyleBackColor = true;
@@ -157,7 +160,7 @@
 			this.linkLabelAddProperty.AutoSize = true;
 			this.linkLabelAddProperty.Location = new System.Drawing.Point(354, 20);
 			this.linkLabelAddProperty.Name = "linkLabelAddProperty";
-			this.linkLabelAddProperty.Size = new System.Drawing.Size(149, 17);
+			this.linkLabelAddProperty.Size = new System.Drawing.Size(111, 13);
 			this.linkLabelAddProperty.TabIndex = 10;
 			this.linkLabelAddProperty.TabStop = true;
 			this.linkLabelAddProperty.Text = "Add property to nodes";
@@ -170,7 +173,7 @@
 			this.linkLabelRemoveProperty.AutoSize = true;
 			this.linkLabelRemoveProperty.Location = new System.Drawing.Point(354, 44);
 			this.linkLabelRemoveProperty.Name = "linkLabelRemoveProperty";
-			this.linkLabelRemoveProperty.Size = new System.Drawing.Size(192, 17);
+			this.linkLabelRemoveProperty.Size = new System.Drawing.Size(143, 13);
 			this.linkLabelRemoveProperty.TabIndex = 11;
 			this.linkLabelRemoveProperty.TabStop = true;
 			this.linkLabelRemoveProperty.Text = "Remove property from nodes";
@@ -180,7 +183,7 @@
 			// ListOfSelectedItemsForm
 			// 
 			this.AcceptButton = this.buttonClose;
-			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonClose;
 			this.ClientSize = new System.Drawing.Size(574, 492);

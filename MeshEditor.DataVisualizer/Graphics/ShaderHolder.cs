@@ -1,0 +1,238 @@
+﻿using OpenTK.Graphics.OpenGL;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+namespace MeshEditor.DataVisualizer.Graphics
+{
+	public abstract class ShaderHolder : IDisposable
+	{
+		protected List<int> vertexShaderId;
+		protected List<int> fragmentShaderId;
+
+		protected int programShaderId;
+
+		private int activeVertexShaderIndex, activeFragmentShaderIndex;
+
+		public ShaderHolder()
+		{
+			vertexShaderId = new List<int>();
+			fragmentShaderId = new List<int>();
+			
+			programShaderId = -1;
+
+			activeVertexShaderIndex = activeFragmentShaderIndex = -1;
+		}
+
+		public int Program
+		{
+			get { return programShaderId; }
+		}
+
+		//public bool LoadShaderFiles(string[] vertexShaderFiles, string[] fragmentShaderFiles)
+		//{
+		//	const int badResult = -1;
+
+		//	if (vertexShaderFiles != null)
+		//	{
+		//		foreach (string vs in vertexShaderFiles)
+		//		{
+		//			if (AddVertexShaderFile(vs) == badResult)
+		//				return false;
+		//		}
+		//	}
+
+		//	if (fragmentShaderFiles != null)
+		//	{
+		//		foreach (string fs in fragmentShaderFiles)
+		//		{
+		//			if (AddFragmentShaderFile(fs) == badResult)
+		//				return false;
+		//		}
+		//	}
+
+		//	return true;
+		//}
+
+		protected bool LoadShaderStrings(string[] vertexShaderStrings, string[] fragmentShaderStrings)
+		{
+			const int badResult = -1;
+
+			if (vertexShaderStrings != null)
+			{
+				foreach (string vs in vertexShaderStrings)
+				{
+					if (AddVertexShaderString(vs) == badResult)
+						return false;
+				}
+			}
+
+			if (fragmentShaderStrings != null)
+			{
+				foreach (string fs in fragmentShaderStrings)
+				{
+					if (AddFragmentShaderString(fs) == badResult)
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		//private string getString(string filename)
+		//{
+		//	if (!File.Exists(filename))
+		//	{
+		//		System.Windows.Forms.MessageBox.Show("file " + filename + " does not exist");
+		//		return null;
+		//	}
+			
+		//	string shaderString = null;
+		//	using (StreamReader reader = File.OpenText(filename))
+		//	{
+		//		shaderString = reader.ReadToEnd();
+		//	}
+
+		//	return shaderString;
+		//}
+
+		//private int AddVertexShaderFile(string filename)
+		//{
+		//	string vertexShaderString = getString(filename);
+		//	return AddVertexShaderString(vertexShaderString);
+		//}
+
+		private int AddVertexShaderString(string vertexShaderString)
+		{
+			int vId = CreateVertexShader(vertexShaderString);
+			if (!CheckShader(vId))
+				return -1;
+
+			vertexShaderId.Add(vId);
+			return vId;
+		}
+
+		//private int AddFragmentShaderFile(string filename)
+		//{
+		//	string fragmentShaderString = getString(filename);
+		//	return AddFragmentShaderString(fragmentShaderString);
+		//}
+
+		private int AddFragmentShaderString(string fragmentShaderString)
+		{
+			int fId = CreateFragmentShader(fragmentShaderString);
+			if (!CheckShader(fId))
+				return -1;
+
+			fragmentShaderId.Add(fId);
+			return fId;
+		}
+
+		protected bool SetActiveShaders(int vertexShaderIndex, int fragmentShaderIndex)
+		{
+			if (programShaderId == -1)
+			{
+				programShaderId = GL.CreateProgram();
+			}
+
+			bool change = false;
+			if (activeVertexShaderIndex != vertexShaderIndex)
+			{
+				if (activeVertexShaderIndex != -1)
+					GL.DetachShader(programShaderId, vertexShaderId[activeVertexShaderIndex]);
+				GL.AttachShader(programShaderId, vertexShaderId[vertexShaderIndex]);
+				activeVertexShaderIndex = vertexShaderIndex;
+				change = true;
+			}
+			if (activeFragmentShaderIndex != fragmentShaderIndex)
+			{
+				if (activeFragmentShaderIndex != -1)
+					GL.DetachShader(programShaderId, fragmentShaderId[activeFragmentShaderIndex]);
+				GL.AttachShader(programShaderId, fragmentShaderId[fragmentShaderIndex]);
+				activeFragmentShaderIndex = fragmentShaderIndex;
+				change = true;
+			}
+
+			if (!change)
+				return true;
+
+			GL.LinkProgram(programShaderId);
+
+			return CheckProgram(programShaderId);
+		}
+
+		private int CreateVertexShader(string vertexShaderString)
+		{
+			int shaderId = GL.CreateShader(ShaderType.VertexShader);
+			GL.ShaderSource(shaderId, vertexShaderString);
+			GL.CompileShader(shaderId);
+
+			return shaderId;
+		}
+
+		private int CreateFragmentShader(string fragmentShaderString)
+		{
+			int shaderId = GL.CreateShader(ShaderType.FragmentShader);
+			GL.ShaderSource(shaderId, fragmentShaderString);
+			GL.CompileShader(shaderId);
+
+			return shaderId;
+		}
+
+		private bool CheckShader(int shaderId)
+		{
+			int res = -1;
+			GL.GetShader(shaderId, ShaderParameter.CompileStatus, out res);
+			if (res != 1)
+			{
+				string infoLog;
+				GL.GetShaderInfoLog(shaderId, out infoLog);
+				System.Windows.Forms.MessageBox.Show(infoLog);
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool CheckProgram(int programId)
+		{
+			int res = -1;
+			GL.GetProgram(programId, ProgramParameter.LinkStatus, out res);
+			if (res != 1)
+			{
+				string infoLog;
+				GL.GetProgramInfoLog(programId, out infoLog);
+				System.Windows.Forms.MessageBox.Show(infoLog);
+				return false;
+			}
+
+			return true;
+		}
+
+		#region IDisposable
+
+		public void Dispose()
+		{
+			// get rid of resources
+
+			if (programShaderId != -1)
+			{
+				if (activeVertexShaderIndex >= 0)
+					GL.DetachShader(programShaderId, vertexShaderId[activeVertexShaderIndex]);
+				foreach (int id in vertexShaderId)
+					GL.DeleteShader(id);
+				if (activeFragmentShaderIndex >= 0)
+					GL.DetachShader(programShaderId, fragmentShaderId[activeFragmentShaderIndex]);
+				foreach (int id in fragmentShaderId)
+					GL.DeleteShader(id);
+				GL.DeleteProgram(programShaderId);
+			}
+		}
+
+		#endregion
+
+	}
+}

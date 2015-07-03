@@ -1,7 +1,24 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MeshEditor.WinUI.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="MainWindowWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">800</Value>
+    </Setting>
+    <Setting Name="MainWindowHeight" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">600</Value>
+    </Setting>
+    <Setting Name="MainWindowState" Type="System.Windows.Forms.FormWindowState" Scope="User">
+      <Value Profile="(Default)">Maximized</Value>
+    </Setting>
+    <Setting Name="MainWindowPositionLeft" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="MainWindowPositionTop" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="LastLoadedMesh" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
 </SettingsFile>

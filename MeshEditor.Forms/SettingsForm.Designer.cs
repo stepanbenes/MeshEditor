@@ -36,21 +36,23 @@
 			// 
 			// propertyGrid
 			// 
-			this.propertyGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.propertyGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.propertyGrid.Cursor = System.Windows.Forms.Cursors.Default;
-			this.propertyGrid.Location = new System.Drawing.Point(12, 12);
+			this.propertyGrid.Location = new System.Drawing.Point(9, 10);
+			this.propertyGrid.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
 			this.propertyGrid.Name = "propertyGrid";
-			this.propertyGrid.Size = new System.Drawing.Size(438, 398);
+			this.propertyGrid.Size = new System.Drawing.Size(328, 323);
 			this.propertyGrid.TabIndex = 3;
 			// 
 			// buttonOK
 			// 
 			this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonOK.Location = new System.Drawing.Point(277, 416);
+			this.buttonOK.Location = new System.Drawing.Point(208, 338);
+			this.buttonOK.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
 			this.buttonOK.Name = "buttonOK";
-			this.buttonOK.Size = new System.Drawing.Size(84, 34);
+			this.buttonOK.Size = new System.Drawing.Size(63, 28);
 			this.buttonOK.TabIndex = 0;
 			this.buttonOK.Text = "OK";
 			this.buttonOK.UseVisualStyleBackColor = true;
@@ -60,9 +62,10 @@
 			// 
 			this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.buttonCancel.Location = new System.Drawing.Point(367, 416);
+			this.buttonCancel.Location = new System.Drawing.Point(275, 338);
+			this.buttonCancel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
 			this.buttonCancel.Name = "buttonCancel";
-			this.buttonCancel.Size = new System.Drawing.Size(84, 34);
+			this.buttonCancel.Size = new System.Drawing.Size(63, 28);
 			this.buttonCancel.TabIndex = 1;
 			this.buttonCancel.Text = "Cancel";
 			this.buttonCancel.UseVisualStyleBackColor = true;
@@ -71,9 +74,10 @@
 			// buttonReset
 			// 
 			this.buttonReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.buttonReset.Location = new System.Drawing.Point(12, 420);
+			this.buttonReset.Location = new System.Drawing.Point(9, 341);
+			this.buttonReset.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
 			this.buttonReset.Name = "buttonReset";
-			this.buttonReset.Size = new System.Drawing.Size(126, 30);
+			this.buttonReset.Size = new System.Drawing.Size(119, 24);
 			this.buttonReset.TabIndex = 4;
 			this.buttonReset.Text = "Reset to Defaults";
 			this.buttonReset.UseVisualStyleBackColor = true;
@@ -82,18 +86,19 @@
 			// SettingsForm
 			// 
 			this.AcceptButton = this.buttonOK;
-			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(463, 462);
+			this.ClientSize = new System.Drawing.Size(347, 375);
 			this.ControlBox = false;
 			this.Controls.Add(this.buttonReset);
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.buttonOK);
 			this.Controls.Add(this.propertyGrid);
+			this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
-			this.MinimumSize = new System.Drawing.Size(376, 341);
+			this.MinimumSize = new System.Drawing.Size(286, 284);
 			this.Name = "SettingsForm";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;

@@ -9,7 +9,6 @@ using MeshEditor.Graphics;
 using MeshEditor.Data;
 using MeshEditor.CoreInterface;
 
-using OpenTK.Graphics.OpenGL;
 using System.Threading;
 
 namespace MeshEditor.WinUI
@@ -62,22 +61,11 @@ namespace MeshEditor.WinUI
 				RecreateBuffers();
 			}
 
-			if(item.PropertyDescriptor.Attributes.Contains(new ChangeUndoRedoHistoryCapacityAttribute()))
-			{
-				ChangeUndoRedoHistoryCapacity();
-			}
-
 			// pokud vlastnost neobsahuje atribut DontRefresh, tak prekreslit
 			if (!item.PropertyDescriptor.Attributes.Contains(new DontRefreshAttribute()))
 			{
 				RefreshAll();
 			}
-		}
-
-		private void ChangeUndoRedoHistoryCapacity()
-		{
-			foreach (SceneFacade scene in scenes)
-				scene.PerformAction(AvailableAction.ChangeHistoryCapacity);
 		}
 
 		private void RefreshAll()
@@ -126,7 +114,6 @@ namespace MeshEditor.WinUI
 		{
 			UpdateColorBuffers();
 			RecreateBuffers();
-			ChangeUndoRedoHistoryCapacity();
 			RefreshAll();
 		}
 	}

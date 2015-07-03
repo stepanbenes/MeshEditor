@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using MeshEditor.Cuts;
 
 namespace MeshEditor.Data
 {
@@ -118,30 +119,28 @@ namespace MeshEditor.Data
 						text.Append(", ");
 				}
 
-				text.Append(" | Approximation: ");
-				text.Append(ApproximationString);
+				text.Append(" | Parent element type: ");
+				text.Append(parent.ElementType.ToString());
 
 				text.Append(" | Property: ");
-				text.Append(property.ToString());
+				text.Append(Property.ToString());
 
 				return text.ToString();
 			}
 			return base.ToString();
 		}
 
-		#endregion
-
-		public override IEnumerable<Vector3> GetAllIntersectionsOfEdgesWithPlane(Vector3 pointOnPlane, Vector3 planeNormal)
+		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset)
 		{
-			if (ApproximationIsQuadratic)
-				throw new NotImplementedException();
 			foreach (WingedEdge edge in IterateThroughAllEdges())
 			{
-				Vector3 intersection;
-				if (Utilities.Functions.LinePlaneIntersection(edge.BeginNode.Position, edge.EndNode.Position, ref pointOnPlane, ref planeNormal, out intersection))
-					yield return intersection;
+				float intersection;
+				if (Utilities.Functions.LinePlaneIntersection(edge.BeginNode.Position, edge.EndNode.Position, ref planeNormal, planeOffset, out intersection))
+					yield return new EdgeIntersection(edge.BeginNode, edge.EndNode, intersection);
 			}
 		}
+
+		#endregion
 
 	}
 }

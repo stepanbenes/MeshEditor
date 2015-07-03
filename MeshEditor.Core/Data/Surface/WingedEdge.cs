@@ -20,7 +20,7 @@ namespace MeshEditor.Data
 		protected Element2D face1, face2;
 		protected List<WingedEdge> beginNeighbors;
 		protected List<WingedEdge> endNeighbors;
-		protected Property property;
+		private Property property;
 
 		protected float featureAngle;
 
@@ -93,6 +93,12 @@ namespace MeshEditor.Data
 		{
 			get { return endNeighbors; }
 			set { endNeighbors = value; }
+		}
+
+		public virtual IEnumerable<Node> IterateThroughAllNodes()
+		{
+			yield return beginNode;
+			yield return endNode;
 		}
 
 		#endregion
@@ -191,16 +197,6 @@ namespace MeshEditor.Data
 		{
 			get { return property; }
 			set { property = value; }
-		}
-
-		public bool ContainsMultipleProperties
-		{
-			get { return false; }
-		}
-
-		public void RemoveLastProperty()
-		{
-			// do nothing
 		}
 
 		#endregion

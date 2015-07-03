@@ -9,6 +9,8 @@ namespace MeshEditor.Data
 	/// </summary>
 	public interface IFaceOfElement3D
 	{
+		Property Property { get; }
+
 		Element3D ParentElement { get; }
 	}
 }

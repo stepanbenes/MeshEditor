@@ -10,7 +10,7 @@ namespace MeshEditor.Graphics
 	/// <summary>
 	/// trida pro reprezentaci Vertex Buffer Object urceneho pro zobrazeni mnoziny beamu (1D usecek)
 	/// </summary>
-    public class BeamVBO : IDisposable
+    public class BeamVBO : IVertexBufferObject
     {
 
         #region Fields, Constructor, Properties
@@ -28,6 +28,11 @@ namespace MeshEditor.Graphics
 		public int ColorBufferID
 		{
 			get { return colorBufferID; }
+		}
+
+		public int VertexBufferID
+		{
+			get { return vertexBufferID; }
 		}
 
         #endregion
@@ -52,18 +57,24 @@ namespace MeshEditor.Graphics
             }
 
             // generovani vertex bufferu
-            GL.GenBuffers(1, out vertexBufferID);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
-            int vertexBufferSize = vertices.Length * Vector3.SizeInBytes;
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)vertexBufferSize, vertices, BufferUsageHint.StaticDraw);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			if (vertices.Length > 0)
+			{
+				GL.GenBuffers(1, out vertexBufferID);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
+				int vertexBufferSize = vertices.Length * Vector3.SizeInBytes;
+				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)vertexBufferSize, vertices, BufferUsageHint.StaticDraw);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			}
 
             // generovani face-color bufferu
-            GL.GenBuffers(1, out colorBufferID);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
-            int faceColorBufferSize = colors.Length * sizeof(int);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)faceColorBufferSize, colors, BufferUsageHint.StaticDraw/**/);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			if (colors.Length > 0)
+			{
+				GL.GenBuffers(1, out colorBufferID);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
+				int faceColorBufferSize = colors.Length * sizeof(int);
+				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)faceColorBufferSize, colors, BufferUsageHint.StaticDraw/**/);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			}
         }
 
         #endregion
@@ -76,17 +87,37 @@ namespace MeshEditor.Graphics
 			//----------------------------------------------------
 			GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
 			GL.VertexPointer(3, VertexPointerType.Float, 0, IntPtr.Zero);
-			GL.EnableClientState(EnableCap.VertexArray);
+			GL.EnableClientState(ArrayCap.VertexArray);
 			
 			GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
 			GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
-			GL.EnableClientState(EnableCap.ColorArray);
+			GL.EnableClientState(ArrayCap.ColorArray);
 
 			GL.DrawArrays(BeginMode.Lines, 0, vertexCount);
 
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			//----------------------------------------------------
 			GL.PopClientAttrib();
+		}
+
+		public bool MapBuffer(BufferTarget target, int bufferID, BufferAccess access, out IntPtr videoMemoryPointer)
+		{
+			//try
+			//{
+			if (bufferID <= 0)
+			{
+				videoMemoryPointer = IntPtr.Zero;
+				return false;
+			}
+			GL.BindBuffer(target, bufferID);
+			videoMemoryPointer = GL.MapBuffer(target, access);
+			return true;
+			//}
+			//catch // Do not catch exeptions, here I have no options to deal with it
+			//{
+			//	videoMemoryPointer = IntPtr.Zero;
+			//	return false;
+			//}
 		}
 
         public void Dispose()
@@ -99,5 +130,5 @@ namespace MeshEditor.Graphics
 
         #endregion
 
-    }
+	}
 }

@@ -12,11 +12,11 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 using Utils = MeshEditor.Utilities.Functions;
-using Wintellect.PowerCollections;
 using System.Collections.Generic;
 using MeshEditor.Cuts;
-using MeshEditor.UndoRedo;
 using System.Text;
+using System.Diagnostics;
+using System.Linq;
 
 
 namespace MeshEditor.CoreInterface
@@ -247,9 +247,13 @@ namespace MeshEditor.CoreInterface
 			get { return SceneFacade.editorMode; }
 			set
 			{
-				SceneFacade.editorMode = value;
-				if (EditorModeChanged != null)
-					EditorModeChanged(null, EventArgs.Empty);
+				if (SceneFacade.editorMode != value)
+				{
+					SceneFacade.editorMode = value;
+					var handler = EditorModeChanged;
+					if (handler != null)
+						handler(null, EventArgs.Empty);
+				}
 			}
 		}
 
@@ -311,7 +315,7 @@ namespace MeshEditor.CoreInterface
 				foreach (Element e in elements)
 				{
 					if (showCompleteInfo)
-						DefaultFileFormatMeshSaver.AppendDesriptionOfElement(e, text);
+						DefaultFileFormatMeshSaver.AppendDescriptionOfElement(e, text);
 					else
 						text.Append(e.ID);
 					text.AppendLine();
@@ -338,7 +342,7 @@ namespace MeshEditor.CoreInterface
 			scene.SetPropertyOfSelectedItems(property);
 		}
 
-		public void DrawScene(bool isActive)
+		public void DrawScene(bool isActive, bool swapBuffers)
 		{
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
@@ -374,7 +378,7 @@ namespace MeshEditor.CoreInterface
 			if (scene.NodeSignal != null || scene.ElementSignal != null)
 				drawSignals();
 
-			if (SwapBuffersNeeded != null)
+			if (swapBuffers && SwapBuffersNeeded != null)
 				SwapBuffersNeeded(this, EventArgs.Empty);
 		}
 
@@ -432,6 +436,14 @@ namespace MeshEditor.CoreInterface
 						thisMeshNeedRefreshInOtherWindows = true;
 					}
 					break;
+				case AvailableAction.UpdateElementsCutByValueLimit:
+					if (scene.LastUsedCutInfo != null && scene.LastUsedCutInfo.Action == CutInfo.ActionType.ShowHideElements && scene.LastUsedCutInfo.ValueLimit != null)
+					{
+						scene.UpdateLastUsedCut();
+						needToComputeVisibleNodesFlag = true;
+						thisMeshNeedRefreshInOtherWindows = true;
+					}
+					break;
 				case AvailableAction.DeleteSelectedElements:
 					if (scene.Mesh != null)
 					{
@@ -453,6 +465,9 @@ namespace MeshEditor.CoreInterface
 					break;
 				case AvailableAction.PointSmooth:
 					Scene.PointSmooth = !Scene.PointSmooth;
+					break;
+				case AvailableAction.FaceLighting:
+					Scene.FaceLighting = !Scene.FaceLighting;
 					break;
 				case AvailableAction.EdgeLighting:
 					Scene.EdgeLighting = !Scene.EdgeLighting;
@@ -498,7 +513,8 @@ namespace MeshEditor.CoreInterface
 						RenderModeChanged(this, EventArgs.Empty);
 					break;
 				case AvailableAction.CameraReset:
-					scene.Camera.Reset();
+					//scene.Camera.Reset();
+					scene.SetDefaultCameraView();
 					needToComputeVisibleNodesFlag = true;
 					break;
 				case AvailableAction.CameraStandardView:
@@ -522,9 +538,10 @@ namespace MeshEditor.CoreInterface
 					thisMeshNeedRefreshInOtherWindows = true;
 					break;
 				case AvailableAction.SelectItemsWithProperty:
+				case AvailableAction.SelectItemsWithPropertyAdd:
 					if (parameter != null)
 					{
-						scene.SelectItemsWithProperty(editorMode, (Property)parameter);
+						scene.SelectItemsWithProperty(editorMode, (Property)parameter, addToSelection: (action == AvailableAction.SelectItemsWithPropertyAdd));
 						thisMeshNeedRefreshInOtherWindows = true;
 					}
 					break;
@@ -533,14 +550,17 @@ namespace MeshEditor.CoreInterface
 					{
 						scene.Mesh.UpdateColors();
 						computeVisibleNodes();
+						thisMeshNeedRefreshInOtherWindows = true;
 					}
+					break;
+				case AvailableAction.Redraw:
 					thisMeshNeedRefreshInOtherWindows = true;
 					break;
 				case AvailableAction.UpdateColorBuffers:
 					if (scene.Mesh != null)
 					{
 						scene.Mesh.UpdateColors();
-						//thisMeshNeedRefreshInOtherWindows = true;
+						thisMeshNeedRefreshInOtherWindows = true;
 					}
 					break;
 				case AvailableAction.Storno:
@@ -577,28 +597,6 @@ namespace MeshEditor.CoreInterface
 						return;
 					scene.Mesh.ClearHiddenElements();
 					break;
-				case AvailableAction.ClearHistory:
-					if (scene.Mesh == null || scene.Mesh.History == null)
-						return;
-					scene.Mesh.History.Clear();
-					break;
-				case AvailableAction.ChangeHistoryCapacity:
-					if (scene.Mesh == null)
-						return;
-					scene.Mesh.SetHistoryCapacity();
-					break;
-				case AvailableAction.Undo:
-					if (scene.Mesh == null)
-						return;
-					undo();
-					thisMeshNeedRefreshInOtherWindows = true;
-					break;
-				case AvailableAction.Redo:
-					if (scene.Mesh == null)
-						return;
-					redo();
-					thisMeshNeedRefreshInOtherWindows = true;
-					break;
 				case AvailableAction.AddPropertyToSelectedNodes:
 					scene.AddPropertyToSelectedNodes((Property)parameter);
 					break;
@@ -608,7 +606,16 @@ namespace MeshEditor.CoreInterface
 				case AvailableAction.SignalNode:
 					try
 					{
-						scene.NodeSignal = (int)parameter;
+						int[] intArray = parameter as int[];
+						if (intArray != null)
+						{
+							scene.NodeSignal = intArray;
+						}
+						else
+						{
+							Debug.Assert(parameter is int);
+							scene.NodeSignal = new int[] { (int)parameter };
+						}
 					}
 					catch (ArgumentException ex)
 					{
@@ -639,15 +646,22 @@ namespace MeshEditor.CoreInterface
 					scene.ElementSignal = null;
 					needToComputeVisibleNodesFlag = true;
 					break;
+				case AvailableAction.UpdateNodeCoordinates:
+					if (scene.Mesh != null)
+					{
+						scene.Mesh.UpdateNodeCoordinates();
+						thisMeshNeedRefreshInOtherWindows = true;
+						needToComputeVisibleNodesFlag = true;
+					}
+					break;
 				default:
 					return;
 			}
 
-			if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
-			
 			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename)); // nerefreshuje se zbytecne aktivni okno dvakrat ???
+				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+			else if (RefreshNeeded != null)
+				RefreshNeeded(this, EventArgs.Empty);
 
 			if (ActionPerformed != null)
 				ActionPerformed(this, EventArgs.Empty);
@@ -668,7 +682,7 @@ namespace MeshEditor.CoreInterface
 						return scene.Mesh.Statistics;
 					return null;
 				case AvailableValue.VBOSupported:
-					return VertexBufferObject.IsSupported;
+					return RichVBO.IsSupported;
 				case AvailableValue.OrdinaryEdgeColor:
 					return Scene.OrdinaryEdgeColor;
 				case AvailableValue.FaceColor:
@@ -727,22 +741,28 @@ namespace MeshEditor.CoreInterface
 					if (scene.Mesh != null)
 						return scene.Mesh.HasHiddenElements();
 					return false;
-				case AvailableValue.IsUndoPossible:
-					if (scene.Mesh != null && scene.Mesh.History != null)
-						return scene.Mesh.History.CanUndo;
-					return false;
-				case AvailableValue.IsRedoPossible:
-					if (scene.Mesh != null && scene.Mesh.History != null)
-						return scene.Mesh.History.CanRedo;
-					return false;
 				case AvailableValue.UnsavedChangesInMesh:
 					if (scene.Mesh == null)
 						return false;
 					return scene.Mesh.UnsavedChanges;
 				case AvailableValue.NodeSignalIsSet:
-					return scene.NodeSignal.HasValue;
+					return scene.NodeSignal != null;
 				case AvailableValue.ElementSignalIsSet:
 					return scene.ElementSignal.HasValue;
+				case AvailableValue.DataVisualizer:
+					if (scene.Mesh != null)
+						return scene.Mesh.GetDataVisualizer();
+					return null;
+				case AvailableValue.LayerList:
+					if (scene.Mesh != null)
+						return scene.Mesh.Layers;
+					return null;
+				case AvailableValue.MeshDimensions:
+					if (scene.Mesh != null)
+						return scene.Mesh.UpperBound - scene.Mesh.LowerBound;
+					return Vector3.Zero;
+				case AvailableValue.LastUsedCutInfo:
+					return scene.LastUsedCutInfo;
 				default:
 					return null;
 			}
@@ -808,13 +828,19 @@ namespace MeshEditor.CoreInterface
 					if (scene.Mesh != null && value != null && value is bool)
 						scene.Mesh.UnsavedChanges = (bool)value;
 					break;
+				case AvailableValue.DataVisualizer:
+					if (scene.Mesh != null)
+					{
+						IDataVisualizer dataVisualizer = value as IDataVisualizer;
+						scene.Mesh.SetDataVisualizer(dataVisualizer);
+					}
+					break;
 			}
 
-			if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
-
 			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename)); // nerefreshuje se zbytecne aktivni okno dvakrat ???
+				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+			else if (RefreshNeeded != null)
+				RefreshNeeded(this, EventArgs.Empty);
 		}
 
 		public void MouseDownHandler(Point location)
@@ -994,10 +1020,8 @@ namespace MeshEditor.CoreInterface
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
 
-			scene.Camera.Reset();
-
-			//if (RefreshNeeded != null)
-			//	RefreshNeeded(this, EventArgs.Empty);
+			//scene.Camera.Reset();
+			scene.SetDefaultCameraView();
 
 			createBuffers();
 			needToComputeVisibleNodesFlag = true;
@@ -1044,7 +1068,7 @@ namespace MeshEditor.CoreInterface
 
 			float[] ambient2 = { 0.2f, 0.2f, 0.2f, 1f };
 			float[] diffuse2 = { 0.9f, 0.9f, 0.9f, 1f };
-			float[] specular2 = { 0.9f, 0.7f, 0.7f, 1f };
+			float[] specular2 = { 0.7f, 0.7f, 0.7f, 1f };
 			float[] globalAmbient2 = { 0f, 0f, 0f, 1f };
 
 			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT, ambient2);
@@ -1071,6 +1095,11 @@ namespace MeshEditor.CoreInterface
 			GL.Hint(HintTarget.PointSmoothHint, HintMode.Fastest);
 			GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
 
+			// The surface normal, as the name indicates, has to be a normal or unit length vector, otherwise the lighting calculations won't work. If you use glScale anywhere, 
+			// surface normals may no longer be correct because the scaling will shorten or lengthen the vector. At startup, write 
+			//GL.Enable(EnableCap.Normalize); // I dont use GL.Scale anywhere for now...
+			// so OpenGL will check and if necessary renormalise all your surface normals. In Olden Times this could slow your program down significantly, but these days it doesn't matter.
+
 			//int depth;
 			//GL.GetInteger(GetPName.DepthBits, out depth);
             //Console.WriteLine("Depth buffer size: " + depth);
@@ -1084,35 +1113,21 @@ namespace MeshEditor.CoreInterface
 
 		public static string InputFileFormatFilter
 		{
-			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+			get { return string.Format("All supported files (*{0}, *.msh, *.obj, *.ply)|*{0};*.msh;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
 		}
 
 
 		public static string OutputFileFormatFilter
 		{
-			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
 		}
 
-		public void LoadMeshFromFile(string filename, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
+		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
 		{
-			IMeshFileParser parser;
+			Debug.Assert(filenames != null && filenames.Length > 0);
 
-			// vyber spravny loader podle pripony souboru
-			switch (Path.GetExtension(filename).ToLower())
-			{
-				case ".ply":
-					parser = new PLYFileFormatParser(filename);
-					break;
-				case ".msh":
-					parser = new GiDMshFileFormatParser(filename);
-					break;
-				case ".obj":
-					parser = new OBJFileFormatParser(filename);
-					break;
-				default:
-					parser = new DefaultFileFormatParser(filename);
-					break;
-			}
+			IMeshFileParser parser = MeshParserFactory.Create(filenames);
+
 			Mesh result = null;
 			using (parser)
 			{
@@ -1153,16 +1168,7 @@ namespace MeshEditor.CoreInterface
 //#endif
 			if (scene.Mesh != null)
 			{
-				IMeshSaver meshSaver;
-				switch (Path.GetExtension(filename).ToLower())
-				{
-					case ".msh":
-						meshSaver = new GiDMshFileFormatSaver();
-						break;
-					default:
-						meshSaver = new DefaultFileFormatMeshSaver();
-						break;
-				}
+				IMeshSaver meshSaver = MeshSaverFactory.Create(filename);
 				if (progressNotifier != null)
 					meshSaver.Step += progressNotifier;
 				meshSaver.SaveMesh(scene.Mesh, filename, saveWithoutCuttedElements, cancelled);
@@ -1204,7 +1210,7 @@ namespace MeshEditor.CoreInterface
 		{
 			if (scene.Mesh == null)
 				return false;
-			if (VertexBufferObject.IsSupported/* && scene.Mesh.BuffersAreReady*/)
+			if (RichVBO.IsSupported/* && scene.Mesh.BuffersAreReady*/)
 				return false;
 			// nejsou buffery
 			return true;
@@ -1213,26 +1219,6 @@ namespace MeshEditor.CoreInterface
 		#endregion
 
 		#region Private stuff
-
-		private void undo()
-		{
-			if (scene.Mesh.History == null || !scene.Mesh.History.CanUndo)
-				return;
-			MeshMemento.TempCameraBox = scene.Camera;
-			scene.Mesh.History.Undo();
-			scene.Camera = MeshMemento.TempCameraBox;
-			computeVisibleNodes();
-		}
-
-		private void redo()
-		{
-			if (scene.Mesh.History == null || !scene.Mesh.History.CanRedo)
-				return;
-			MeshMemento.TempCameraBox = scene.Camera;
-			scene.Mesh.History.Redo();
-			scene.Camera = MeshMemento.TempCameraBox;
-			computeVisibleNodes();
-		}
 
 		private void processMouseClick()
 		{
@@ -1410,7 +1396,7 @@ namespace MeshEditor.CoreInterface
 			SelectOperationType opType = SelectOperationType.New;
 			if (ControlDown && ShiftDown)
 			{
-				if (clickCount == 1)
+				if (clickCount <= 1)
 					opType = SelectOperationType.SymetricDifference;
 				else
 					opType = SelectOperationType.Union; /**/
@@ -1737,19 +1723,18 @@ namespace MeshEditor.CoreInterface
 			Vector3 projectedPosition;
 			if (scene.NodeSignal != null)
 			{
-				projectedPosition = Scene.ProjectWorldCoordToWindowCoords(scene.NodeSignalPosition);
-				if (projectedPosition.Z < 1f)
-					drawSignal(projectedPosition.Xy, Scene.SelectedNodeColor);
+				Vector3[] projectedPositions = scene.NodeSignalPositions.Select(pos => Scene.ProjectWorldCoordToWindowCoords(pos)).Where(proj => proj.Z < 1f).ToArray();
+				drawSignal(Scene.SelectedNodeColor, projectedPositions);
 			}
 			if (scene.ElementSignal != null)
 			{
 				projectedPosition = Scene.ProjectWorldCoordToWindowCoords(scene.ElementSignalPosition);
 				if (projectedPosition.Z < 1f)
-					drawSignal(projectedPosition.Xy, Scene.SelectedElementColor);
+					drawSignal(Scene.SelectedElementColor, projectedPosition);
 			}
 		}
 
-		private void drawSignal(Vector2 windowPosition, Color color)
+		private void drawSignal(Color color, params Vector3[] windowPositions)
 		{
 			// --------------------------------------
 
@@ -1767,26 +1752,30 @@ namespace MeshEditor.CoreInterface
 			GL.Color3(color);
 			// ----------
 
-			float pointX = windowPosition.X;
-			float pointY = clientWindowSize.Height - windowPosition.Y;
+			Debug.Assert(windowPositions != null);
 
 			GL.Enable(EnableCap.LineStipple);
 			GL.LineStipple(2, 52428);
-
 			GL.LineWidth(2.0f);
 
+			Vector2[] windowCorners = { new Vector2(), new Vector2(clientWindowSize.Width, 0f), new Vector2(0f, clientWindowSize.Height), new Vector2(clientWindowSize.Width, clientWindowSize.Height) };
+
+			GL.Enable(EnableCap.LineSmooth);
+			GL.Enable(EnableCap.Blend);
 			GL.Begin(BeginMode.Lines);
+			for (int i = 0; i < windowPositions.Length; i++)
 			{
-				GL.Vertex2(0.0, 0.0);
-				GL.Vertex2(pointX, pointY);
-				GL.Vertex2(0.0, clientWindowSize.Height);
-				GL.Vertex2(pointX, pointY);
-				GL.Vertex2(clientWindowSize.Width, clientWindowSize.Height);
-				GL.Vertex2(pointX, pointY);
-				GL.Vertex2(clientWindowSize.Width, 0.0);
-				GL.Vertex2(pointX, pointY);
+				Vector2 point = new Vector2(windowPositions[i].X, clientWindowSize.Height - windowPositions[i].Y);
+
+				foreach (Vector2 corner in windowCorners.OrderBy(c => (c - point).LengthSquared).Take(2)) // take two nearest corners
+				{
+					GL.Vertex2(corner.X, corner.Y);
+					GL.Vertex2(point.X, point.Y);
+				}
 			}
 			GL.End();
+			GL.Disable(EnableCap.Blend);
+			GL.Disable(EnableCap.LineSmooth);
 
 			GL.Disable(EnableCap.LineStipple);
 

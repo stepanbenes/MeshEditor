@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -13,7 +12,34 @@ namespace MeshEditor.WinUI
 	/// </summary>
 	public partial class ProgressViewForm : Form
 	{
-		private readonly string caption;
+		public string Caption
+		{
+			get { return caption; }
+			set
+			{
+				if (caption != value)
+				{
+					caption = value;
+					updateCaption();
+				}
+			}
+		}
+
+		public string OperationName
+		{
+			get { return operationName; }
+			set
+			{
+				if (operationName != value)
+				{
+					operationName = value;
+					updateOperationNameLabel();
+				}
+			}
+		}
+
+		string caption, operationName;
+		int percentIndicator;
 
 		/// <summary>
 		/// udalost informujici o tom ze uzivatel stiskl tlacitko Cancel - zrusil prubeh procesu
@@ -27,8 +53,7 @@ namespace MeshEditor.WinUI
 		public ProgressViewForm(string caption)
 		{
 			InitializeComponent();
-			this.caption = caption;
-			this.Text = this.caption;
+			this.Caption = caption;
 			progressBar.Minimum = 0;
 			progressBar.Maximum = 100;
 		}
@@ -36,9 +61,16 @@ namespace MeshEditor.WinUI
 		/// <summary>
 		/// updatuje titulek v zahlavi
 		/// </summary>
-		private void updateCaption(int percent)
+		private void updateCaption()
 		{
-			this.Text = caption + " (" + percent + "%)";
+			this.Text = Caption;
+			if (percentIndicator > 0)
+				this.Text += " (" + percentIndicator + "%)";
+		}
+
+		private void updateOperationNameLabel()
+		{
+			labelOperationName.Text = operationName;
 		}
 
 		/// <summary>
@@ -47,8 +79,17 @@ namespace MeshEditor.WinUI
 		/// <param name="percent">pocet procent</param>
 		public void SetProgressState(int percent)
 		{
-			progressBar.Value = percent;
-			updateCaption(percent);
+			percentIndicator = percent;
+			if (percent < 0)
+			{
+				progressBar.Style = ProgressBarStyle.Marquee;
+			}
+			else
+			{
+				progressBar.Style = ProgressBarStyle.Continuous;
+				progressBar.Value = percent;
+			}
+			updateCaption();
 		}
 
 		/// <summary>
@@ -58,6 +99,7 @@ namespace MeshEditor.WinUI
 		{
 			if (Cancel != null)
 				Cancel(this, EventArgs.Empty);
+			buttonCancel.Enabled = false;
 		}
 
 	}

@@ -8,7 +8,7 @@ namespace MeshEditor.Data
 	/// <summary>
 	/// uzel site konecnych prvku (zaroven vrchol prvku, ploch a hran)
 	/// </summary>
-	public class Node : IItemWithSignificantPoint, ISelectable, IComparable
+	public class Node : IItemWithSignificantPoint, ISelectable, IComparable, IEquatable<Node>
 	{
 
 		#region Fields, Constructors
@@ -67,9 +67,10 @@ namespace MeshEditor.Data
 
 		public override bool Equals(object obj)
 		{
-			if (obj is Node)
-				return this.Equals((Node)obj);
-			return false;
+			Node other = obj as Node;
+			if (other == null)
+				return false;
+			return this.Equals(other);
 		}
 
 		public override int GetHashCode()
@@ -168,33 +169,6 @@ namespace MeshEditor.Data
 			set { addProperty(value); }
 		}
 
-		public bool ContainsMultipleProperties
-		{
-			get { return true; }
-		}
-
-		public void RemoveLastProperty()
-		{
-			if (properties == null)
-				return;
-			if (properties.Length == 0)
-			{
-				properties = null;
-				return;
-			}
-			if (properties[properties.Length - 1].EntityType == EntityType.Vertex)
-			{
-				if (properties.Length == 1)
-					this.properties = null;
-				else
-				{
-					PropertyEntityPair[] newarray = new PropertyEntityPair[properties.Length - 1];
-					Array.Copy(properties, newarray, properties.Length - 1);
-					this.properties = newarray;
-				}
-			}
-		}
-
 		#endregion
 
 		public PropertyEntityPair[] Properties
@@ -227,20 +201,28 @@ namespace MeshEditor.Data
 
 		private void addProperty(Property property)
 		{
+			addProperty(property, EntityType.Vertex);
+		}
+
+		private void addProperty(Property property, EntityType entityType)
+		{
 			// dulezite je, aby tato funkce pridala vlastnost na konec pole
 
 			if (this.properties == null)
 			{
-				this.properties = new PropertyEntityPair[] { new PropertyEntityPair(property, EntityType.Vertex) };
+				this.properties = new PropertyEntityPair[] { new PropertyEntityPair(property, entityType) };
 				return;
 			}
 
 			foreach (PropertyEntityPair pair in this.properties)
-				if (pair.EntityType == EntityType.Vertex && pair.Property == property)
+			{
+				if (pair.EntityType == entityType && pair.Property == property)
 					return; // uz je obsazena
+			}
 			PropertyEntityPair[] newArray = new PropertyEntityPair[this.properties.Length + 1];
 			Array.Copy(this.properties, newArray, this.properties.Length);
-			newArray[newArray.Length - 1] = new PropertyEntityPair(property, EntityType.Vertex);
+			newArray[newArray.Length - 1] = new PropertyEntityPair(property, entityType);
+			Array.Sort(newArray);
 			this.properties = newArray;
 		}
 
@@ -254,6 +236,45 @@ namespace MeshEditor.Data
 				if (pair.EntityType == EntityType.Vertex && pair.Property == property)
 					return true;
 			return false;
+		}
+
+		public void RebuildEdgeSurfaceRegionProperties(IEnumerable<Property> edgeProperties, IEnumerable<Property> surfaceProperties, IEnumerable<Property> regionProperties)
+		{
+			List<PropertyEntityPair> propertyList = new List<PropertyEntityPair>();
+			if (this.properties != null)
+			{
+				foreach (PropertyEntityPair pair in this.properties)
+				{
+					if (pair.EntityType != EntityType.Edge && pair.EntityType != EntityType.Surface && pair.EntityType != EntityType.Region)
+						propertyList.Add(pair); // copy all properties except those for edges, faces and elements
+				}
+			}
+			if (edgeProperties != null)
+			{
+				foreach (Property property in edgeProperties)
+				{
+					propertyList.Add(new PropertyEntityPair(property, EntityType.Edge));
+				}
+			}
+			if (surfaceProperties != null)
+			{
+				foreach (Property property in surfaceProperties)
+				{
+					propertyList.Add(new PropertyEntityPair(property, EntityType.Surface));
+				}
+			}
+			if (regionProperties != null)
+			{
+				foreach (Property property in regionProperties)
+				{
+					propertyList.Add(new PropertyEntityPair(property, EntityType.Region));
+				}
+			}
+
+			// sort properties
+			propertyList.Sort();
+
+			this.properties = propertyList.ToArray();
 		}
 
 		#endregion
