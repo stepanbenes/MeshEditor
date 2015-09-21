@@ -1677,9 +1677,11 @@ namespace MeshEditor.WinUI
 						imageFormat = System.Drawing.Imaging.ImageFormat.Bmp;
 						break;
 					case ".png":
-					default:
 						imageFormat = System.Drawing.Imaging.ImageFormat.Png;
 						break;
+					default:
+						MessageBox.Show("This file extension (image format) is not supported.", "Can't take screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						return;
 				}
 				using (Bitmap screenshot = activeControl.TakeScreenshot(width, height))
 				{
