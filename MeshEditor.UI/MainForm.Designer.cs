@@ -362,6 +362,8 @@
 			// takeScreenshotToolStripMenuItem
 			// 
 			this.takeScreenshotToolStripMenuItem.Name = "takeScreenshotToolStripMenuItem";
+			this.takeScreenshotToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
+            | System.Windows.Forms.Keys.S)));
 			this.takeScreenshotToolStripMenuItem.Size = new System.Drawing.Size(340, 22);
 			this.takeScreenshotToolStripMenuItem.Text = "Ta&ke screenshot";
 			this.takeScreenshotToolStripMenuItem.Click += new System.EventHandler(this.takeScreenshotToolStripMenuItem_Click);
@@ -885,7 +887,7 @@
             this.toolStripSeparator18,
             this.settingsToolStripMenuItem});
 			this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
+			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
 			this.toolsToolStripMenuItem.Text = "&TOOLS";
 			this.toolsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.toolsToolStripMenuItem_DropDownOpening);
 			// 

@@ -1651,13 +1651,20 @@ namespace MeshEditor.WinUI
 
 		private void takeScreenshotToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			// TODO: open screenshot options dialog
-			// TODO: two options: take whole screen or take selection window
+			// open screenshot options dialog which has two options: take whole screen or take selection window
 
-			SceneFacade.EditorMode = EditorMode.ScreenshotWindow;
-			
-			//saveScreenshot(_, Rectangle.Empty); // for whole screen
-			//saveScreenshot(_,new Rectangle(1000, 500, 500, 0)); // for selected window area
+			var screenshotOptionsForm = new ScreenshotOptionsForm();
+			if (screenshotOptionsForm.ShowDialog() == DialogResult.OK)
+			{
+				if (screenshotOptionsForm.UseSelectionArea)
+				{
+					SceneFacade.EditorMode = EditorMode.ScreenshotWindow;
+				}
+				else // take whole screen
+				{
+					saveScreenshot(activeControl, Rectangle.Empty);
+				}
+			}
 		}
 
 		private void saveScreenshot(OpenGLControl control, Rectangle screenshotWindow)
