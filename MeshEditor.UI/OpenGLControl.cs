@@ -53,7 +53,7 @@ namespace MeshEditor.WinUI
 
 		#region Constructors
 
-        /// <summary>
+		/// <summary>
 		/// Parameterless constructor, creates own object Scene
 		/// </summary>
 		private OpenGLControl(SceneFacade sceneToCopy, MouseEventHandler mouseDownHandler)
@@ -229,7 +229,7 @@ namespace MeshEditor.WinUI
 
 		void keyDown(object sender, KeyEventArgs e)
 		{
-			if(e.KeyCode == Keys.ControlKey)
+			if (e.KeyCode == Keys.ControlKey)
 			{
 				sceneFacade.ControlDown = true;
 				return;
@@ -304,11 +304,11 @@ namespace MeshEditor.WinUI
 				case Keys.D9:
 					action = AvailableAction.PointSmooth;
 					break;
-				
+
 				case Keys.D0:
-				    action = AvailableAction.EdgeLighting;
-				    break;
-				
+					action = AvailableAction.EdgeLighting;
+					break;
+
 				//case Keys.Insert:
 				//	action = AvailableAction.RestoreMesh;
 				//	break;
@@ -365,7 +365,7 @@ namespace MeshEditor.WinUI
 		private void swapPropertyColorMode(PropertyColorsMode singleMode)
 		{
 			object parameter = sceneFacade.GetValue(AvailableValue.ColorMode);
-			if(parameter == null)
+			if (parameter == null)
 				return;
 			PropertyColorsMode mode = (PropertyColorsMode)parameter;
 
@@ -516,7 +516,7 @@ namespace MeshEditor.WinUI
 		}
 
 		#endregion
-		
+
 		#region Loading file
 
 		public void LoadFiles(params string[] files)
@@ -556,14 +556,14 @@ namespace MeshEditor.WinUI
 		{
 			try
 			{
-				MeshIOEventHandler progressNotifier = delegate(object s, MeshIOEventArgs ea)
+				MeshIOEventHandler progressNotifier = delegate (object s, MeshIOEventArgs ea)
 				{
 					this.backgroundFileLoader.ReportProgress(ea.PercentDone);
 				};
 				YesNoQuestion cancelled = delegate { return backgroundFileLoader.CancellationPending; };
 
 				SceneFacade newScene = SceneFacade.GetEmptyScene();
-				
+
 				newScene.LoadMeshFromFiles(e.Argument as string[], progressNotifier, cancelled);
 				e.Result = newScene;
 			}
@@ -614,7 +614,7 @@ namespace MeshEditor.WinUI
 				mbox.ShowDialog();
 				AppSettings.Instance.ShowOpenGLLowVersionMessage = !mbox.IsChecked;
 			}
-			
+
 			this.Cursor = temp;
 
 			if (IOActionDone != null)
@@ -626,7 +626,7 @@ namespace MeshEditor.WinUI
 			object colorMode = sceneFacade.GetValue(AvailableValue.ColorMode);
 			object renderMode = sceneFacade.GetValue(AvailableValue.RenderMode);
 			SceneFacade = newSceneFacade; // dulezite je pouzit vlastnost, ne primo field (provadi se cinnost)
-			
+
 			sceneFacade.SetValue(AvailableValue.ColorMode, colorMode);
 			//sceneFacade.SetValue(AvailableValue.RenderMode, renderMode);
 		}
@@ -684,7 +684,7 @@ namespace MeshEditor.WinUI
 		{
 			try
 			{
-				MeshIOEventHandler progressNotifier = delegate(object s, MeshIOEventArgs ea)
+				MeshIOEventHandler progressNotifier = delegate (object s, MeshIOEventArgs ea)
 				{
 					this.backgroundFileSaver.ReportProgress(ea.PercentDone);
 				};
@@ -693,8 +693,8 @@ namespace MeshEditor.WinUI
 			}
 			catch (Exception ex)
 			{
-			    ioProcessError = true;
-			    e.Result = ex;
+				ioProcessError = true;
+				e.Result = ex;
 			}
 		}
 
@@ -731,7 +731,7 @@ namespace MeshEditor.WinUI
 		}
 
 		// ----------------------------------------------------------------------
-		
+
 		#endregion
 
 		#region Public methods
@@ -745,7 +745,7 @@ namespace MeshEditor.WinUI
 		{
 			float megaBytes = ((float)MemoryMeter.GetCurrentMemoryConsumption()) / 1048576f;
 			StringBuilder text = new StringBuilder();
-			
+
 			// memory consumption
 			text.Append("Current memory consumption: ");
 			text.Append(Math.Round(megaBytes, 2));
@@ -772,8 +772,8 @@ namespace MeshEditor.WinUI
 				description = "Nothing selected";
 			PropertyInputForm form = new PropertyInputForm("Insert property number", description, sceneFacade);
 			int value = 0;
-			
-			form.InputValueValidating += delegate(object sender, CancelEventArgs ea)
+
+			form.InputValueValidating += delegate (object sender, CancelEventArgs ea)
 			{
 				if (!int.TryParse(form.InputValue, out value))
 				{
@@ -798,9 +798,9 @@ namespace MeshEditor.WinUI
 		{
 			CheckedInputValueForm form = new CheckedInputValueForm("Insert property number", "Select " + itemsName + " by property:", "add to selection");
 			form.IsChecked = addToSelection;
-			
+
 			int value = 0;
-			form.InputValueValidating += delegate(object s, CancelEventArgs ea)
+			form.InputValueValidating += delegate (object s, CancelEventArgs ea)
 			{
 				if (!int.TryParse(form.InputValue, out value) || value < 0)
 				{
@@ -855,7 +855,7 @@ namespace MeshEditor.WinUI
 			InputValueForm form = new InputValueForm("Insert node ID", "Signal node(s) with ID(s):");
 			List<int> values = new List<int>();
 			char[] splitCharacters = { ',', ';', ' ', '\t' };
-			form.InputValueValidating += delegate(object s, CancelEventArgs ea)
+			form.InputValueValidating += delegate (object s, CancelEventArgs ea)
 			{
 				bool error = false;
 				string[] parts = form.InputValue.Split(splitCharacters, StringSplitOptions.RemoveEmptyEntries);
@@ -914,7 +914,7 @@ namespace MeshEditor.WinUI
 			InputValueForm form = new InputValueForm("Insert element ID", "Signal element with ID:");
 			int value = 0;
 
-			form.InputValueValidating += delegate(object s, CancelEventArgs ea)
+			form.InputValueValidating += delegate (object s, CancelEventArgs ea)
 			{
 				if (!int.TryParse(form.InputValue, out value))
 				{
@@ -942,17 +942,48 @@ namespace MeshEditor.WinUI
 		/// <summary>
 		/// Returns a System.Drawing.Bitmap with the contents of the current framebuffer.
 		/// </summary>
-		/// <param name="width">Screenshot width. Zero to keep current window width.</param>
-		/// <param name="height">Screenshot height. Zero to keep current window width.</param>
+		/// <param name="imageWidth">Screenshot width. Zero to keep current window width.</param>
+		/// <param name="imageHeight">Screenshot height. Zero to keep current window width.</param>
 		/// <returns>Bitmap object containing screenshot.</returns>
-		public Bitmap TakeScreenshot(int width, int height)
+		public Bitmap TakeScreenshot(int imageWidth, int imageHeight)
 		{
 			int tempWidth = Width;
 			int tempHeight = Height;
-			this.Width = (width <= 0) ? this.Width : width;
-			this.Height = (height <= 0) ? this.Height : height;
-
+			Width = (imageWidth <= 0) ? Width : imageWidth;
+			Height = (imageHeight <= 0) ? Height : imageHeight;
 			//draw(false); // draw model without calling SwapBuffers()
+			sceneFacade.DrawScene(isActive, false);
+			if (GraphicsContext.CurrentContext == null)
+			{
+				throw new GraphicsContextMissingException();
+			}
+			Bitmap bmp = new Bitmap(this.ClientSize.Width, this.ClientSize.Height);
+			System.Drawing.Imaging.BitmapData data = bmp.LockBits(this.ClientRectangle, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			//GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+			//GL.ReadBuffer(ReadBufferMode.Back);
+			GL.ReadPixels(0, 0, this.ClientSize.Width, this.ClientSize.Height, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0);
+			bmp.UnlockBits(data);
+			bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+			Width = tempWidth;
+			Height = tempHeight;
+			//draw(); // redraw
+			//sceneFacade.DrawScene(isActive, true);
+			return bmp;
+		}
+
+		public Bitmap TakeScreenshot()
+		{
+			return TakeScreenshot(Rectangle.Empty);
+		}
+
+		public Bitmap TakeScreenshot(Rectangle screenWindow)
+		{
+			Rectangle area = screenWindow;
+			if (area.IsEmpty)
+				area = ClientRectangle;
+			else
+				area.Intersect(ClientRectangle); // check bounds
+
 			sceneFacade.DrawScene(isActive, false);
 
 			if (GraphicsContext.CurrentContext == null)
@@ -960,20 +991,17 @@ namespace MeshEditor.WinUI
 				throw new GraphicsContextMissingException();
 			}
 
-			Bitmap bmp = new Bitmap(this.ClientSize.Width, this.ClientSize.Height);
-			System.Drawing.Imaging.BitmapData data = bmp.LockBits(this.ClientRectangle, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-			//GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
-			//GL.ReadBuffer(ReadBufferMode.Back);
-			GL.ReadPixels(0, 0, this.ClientSize.Width, this.ClientSize.Height, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0);
+			if (area.Width <= 0 || area.Height <= 0)
+			{
+				throw new ArgumentException("Screen window width and height must be non-zero.", "screenWindow");
+			}
+
+			Bitmap bmp = new Bitmap(area.Width, area.Height);
+			System.Drawing.Imaging.BitmapData data = bmp.LockBits(new Rectangle(0, 0, area.Width, area.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			GL.ReadPixels(area.Left, this.Height - area.Top - area.Height, area.Width, area.Height, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0);
 			bmp.UnlockBits(data);
 
 			bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-
-			Width = tempWidth;
-			Height = tempHeight;
-
-			//draw(); // redraw
-			//sceneFacade.DrawScene(isActive, true);
 
 			return bmp;
 		}
@@ -982,7 +1010,7 @@ namespace MeshEditor.WinUI
 		{
 			MessageBox.Show(message, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
-		
+
 		public void DisposeScene()
 		{
 			sceneFacade.DisposeScene();

@@ -59,7 +59,7 @@ namespace MeshEditor.WinUI
 		{
 			get { return longOpNotifier; }
 		}
-		
+
 
 		public MainForm(string[] args)
 		{
@@ -90,9 +90,9 @@ namespace MeshEditor.WinUI
 			// load window state settings
 			loadAppSettings();
 
-            this.centralPanel.Controls.Add(mainOpenGLControl);
-            mainOpenGLControl.MyContainer = this.centralPanel;
-            mainOpenGLControl.Dock = DockStyle.Fill;
+			this.centralPanel.Controls.Add(mainOpenGLControl);
+			mainOpenGLControl.MyContainer = this.centralPanel;
+			mainOpenGLControl.Dock = DockStyle.Fill;
 
 			registerNewControl(mainOpenGLControl);
 			activateControl(mainOpenGLControl); // zakladni opengl okno je nyni ulozeno v activeControl
@@ -189,9 +189,9 @@ namespace MeshEditor.WinUI
 			controlToSplit.MyContainer = newContainer.Panel1;
 
 			OpenGLControl newOpenGLControl = OpenGLControl.Create(controlToSplit.SceneFacade, openGLControl_MouseDown);
-			
+
 			newOpenGLControl.Dock = DockStyle.Fill;
-						
+
 			newContainer.Panel2.Controls.Add(newOpenGLControl);
 			newOpenGLControl.MyContainer = newContainer.Panel2;
 
@@ -213,7 +213,7 @@ namespace MeshEditor.WinUI
 			SplitContainer sc = (SplitContainer)sender;
 			/* This allows the splitter to be moved normally again */
 			sc.IsSplitterFixed = false;
-			
+
 			if (sc.SplitterDistance < PANEL_MINSIZE)
 			{
 				if (removePanel(sc.Panel1))
@@ -335,7 +335,7 @@ namespace MeshEditor.WinUI
 		{
 			Control content = panel.Controls[0];
 			Control parent = panel.Parent.Parent;
-			
+
 			panel.Controls.Clear();
 			parent.Controls.Clear();
 			parent.Controls.Add(content);
@@ -359,7 +359,7 @@ namespace MeshEditor.WinUI
 		}
 
 		#endregion
-        
+
 		#region UI command handlers (menu items)
 
 		private void editorModeChanged(object sender, EventArgs e)
@@ -485,11 +485,11 @@ namespace MeshEditor.WinUI
 			sf.ShowDialog();
 		}
 
-        private void meshInfoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+		private void meshInfoToolStripMenuItem_Click(object sender, EventArgs e)
+		{
 			MeshInfoForm sf = new MeshInfoForm(activeControl.SceneFacade, this.longOpNotifier);
 			sf.ShowDialog();
-        }
+		}
 
 		private void contextMenuStrip_Closed(object sender, ToolStripDropDownClosedEventArgs e)
 		{
@@ -544,7 +544,7 @@ namespace MeshEditor.WinUI
 		{
 			activeControl.SceneFacade.PerformAction(AvailableAction.InvertAllNormals);
 		}
-		
+
 		private void splitActiveWindowToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			splitWindowToolStripMenuItem_Click(sender, e);
@@ -617,7 +617,7 @@ namespace MeshEditor.WinUI
 					break;
 			}
 		}
-		
+
 		private void cameraToolStripMenuItem_DropDownOpened(object sender, EventArgs e)
 		{
 			uncheckAllCameraToolMenuItems();
@@ -642,7 +642,7 @@ namespace MeshEditor.WinUI
 
 			closeWindowToolStripMenuItem.Visible = activeWindowCanBeClosed();
 		}
-		
+
 		private void viewToolStripMenuItem_DropDownOpened(object sender, EventArgs e)
 		{
 			//axesToolStripMenuItem.Checked = nodeNumbersToolStripMenuItem.Checked = false;
@@ -664,7 +664,7 @@ namespace MeshEditor.WinUI
 
 			signalNodeToolStripMenuItem.Enabled = signalElementToolStripMenuItem.Enabled = activeControl.SceneFacade.ContainsMesh;
 		}
-		
+
 		private void setPropertyOfSelectedItemsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			activeControl.SetPropertyOfSelectedItems();
@@ -716,7 +716,7 @@ namespace MeshEditor.WinUI
 			string selectIncidingName, selectAllName;
 
 			string nameOfItemsToSelect = getNameOfItemsToSelectAcordingToEditorMode() ?? "elements";
-			
+
 			switch (SceneFacade.EditorMode)
 			{
 				case EditorMode.SelectElements:
@@ -758,7 +758,7 @@ namespace MeshEditor.WinUI
 				mode = RenderMode.AllLines;
 				toolStripButtonAllLines.Checked = true;
 			}
-			else if(sender == allLinesPointsToolStripMenuItem)
+			else if (sender == allLinesPointsToolStripMenuItem)
 			{
 				mode = RenderMode.LinesPoints;
 				toolStripButtonAllLines.Checked = toolStripButtonPoints.Checked = true;
@@ -786,7 +786,7 @@ namespace MeshEditor.WinUI
 			// -------------------------------------------------------------------
 			activeControl.SceneFacade.SetValue(AvailableValue.RenderMode, mode);
 		}
-		
+
 		private void propertyColors_DropDownOpening(object sender, EventArgs e)
 		{
 			updateColorModeButtons();
@@ -891,7 +891,7 @@ namespace MeshEditor.WinUI
 
 		private void removeActiveWindow()
 		{
-			if(!(activeControl.MyContainer is SplitterPanel))
+			if (!(activeControl.MyContainer is SplitterPanel))
 				return;
 			SplitContainer container = activeControl.MyContainer.Parent as SplitContainer;
 			if (container == null)
@@ -1030,7 +1030,7 @@ namespace MeshEditor.WinUI
 				drawGrid = !drawGrid; // switch value
 				dataVisualizerController.Settings.DrawGrid = drawGrid; // set it back
 				showgridToolStripMenuItem.Checked = drawGrid; // change button check state
-				//activeControl.SceneFacade.PerformAction(AvailableAction.Refresh); // refresh
+															  //activeControl.SceneFacade.PerformAction(AvailableAction.Refresh); // refresh
 			}
 		}
 
@@ -1105,7 +1105,7 @@ namespace MeshEditor.WinUI
 		private void askToSaveChanges(List<OpenGLControl> controls, bool canBeCancelled, CancelEventArgs e)
 		{
 			string caption = "Save changes?";
-			
+
 			HashSet<string> processedMeshes = new HashSet<string>();
 			// ----------------------------------------------------
 			// zajistit, ze se me to nebude ptat na site, ktere jsou jeste otevrene
@@ -1160,7 +1160,7 @@ namespace MeshEditor.WinUI
 					return;
 				}
 			}
-			
+
 		}
 
 		private void initLongOpNotifier()
@@ -1292,11 +1292,11 @@ namespace MeshEditor.WinUI
 					return null;
 			}
 		}
-		
+
 		private void registerNewControl(OpenGLControl openGLControl)
 		{
 			openGLControl.ContextMenuStrip = this.contextMenuStrip;
-			
+
 			//openGLControl.MouseDown += openGLControl_MouseDown; // uz se predava v konstruktoru OpenGLControl
 			openGLControl.IOActionDone += delegate
 			{
@@ -1369,7 +1369,7 @@ namespace MeshEditor.WinUI
 			// updatovat seznam viditelnych uzlu
 			activeControl.SceneFacade.PerformAction(AvailableAction.UpdateVisibleNodes);
 			activeControl.Refresh();
-			
+
 			foreach (OpenGLControl c in openGLControls)
 			{
 				if (c != activeControl && c.IsActive)
@@ -1379,20 +1379,20 @@ namespace MeshEditor.WinUI
 				}
 			}
 			activeControl.Focus(); // jeste mu dam fokus
-			
+
 			updateCaption();
 			updateStatus();
 			updateColorModeButtons();
 			updateRenderModeButtons();
 		}
-		
+
 		private void updateCaption()
 		{
 			this.Text = "Mesh Editor"; /**/
 			if (activeControl != null && activeControl.SceneFacade.MeshFilename != null)
 				this.Text += " - " + Path.GetFileName(activeControl.SceneFacade.MeshFilename);
 		}
-		
+
 		private void updateStatus()
 		{
 			string desc = (string)this.activeControl.SceneFacade.GetValue(AvailableValue.Status);
@@ -1435,7 +1435,7 @@ namespace MeshEditor.WinUI
 			if (controller != null)
 			{
 				showgridToolStripMenuItem.Checked = controller.Settings.DrawGrid; // implicitly not checked
-				// register handler for refreshing window
+																				  // register handler for refreshing window
 				controller.Settings.PropertyChanged += dataVisualizerSettings_PropertyChanged;
 			}
 
@@ -1647,6 +1647,12 @@ namespace MeshEditor.WinUI
 
 		private void takeScreenshotToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			saveScreenshot(Rectangle.Empty);
+			//saveScreenshot(new Rectangle(1000, 500, 500, 0));
+		}
+
+		private void saveScreenshot(Rectangle screenshotWindow)
+		{
 			SaveFileDialog dialog = new SaveFileDialog();
 			dialog.Filter = "PNG image format (*.png)|*.png|JPEG image format (*.jpg; *.jpeg)|*.jpg;*.jpeg|BMP image format (*.bmp)|*.bmp";
 			dialog.FilterIndex = this.takeScreenshotLastFilterIndex;
@@ -1664,8 +1670,6 @@ namespace MeshEditor.WinUI
 			}
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
-				int width = 0; // zero means "keep current window size"
-				int height = 0;
 				System.Drawing.Imaging.ImageFormat imageFormat;
 				switch (Path.GetExtension(dialog.FileName).ToLower())
 				{
@@ -1683,10 +1687,12 @@ namespace MeshEditor.WinUI
 						MessageBox.Show("This file extension (image format) is not supported.", "Can't take screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error);
 						return;
 				}
-				using (Bitmap screenshot = activeControl.TakeScreenshot(width, height))
+
+				using (Bitmap screenshot = activeControl.TakeScreenshot(screenshotWindow))
 				{
 					screenshot.Save(dialog.FileName, imageFormat); // image format must correspond to file extension (.png)
 				}
+
 				this.takeScreenshotLastFilterIndex = dialog.FilterIndex;
 				this.takeScreenshotLastFilename = Path.GetFileName(dialog.FileName);
 			}
