@@ -138,7 +138,7 @@
     <Compile Include="Graphics\RenderMode.cs" />
     <Compile Include="Graphics\RichVBO.cs" />
     <Compile Include="IO\MeshSavingException.cs" />
-    <Compile Include="CoreInterface\MeshNeedRefreshEvent.cs" />
+    <Compile Include="CoreInterface\SceneEventArgs.cs" />
     <Compile Include="Data\Selection.cs" />
     <Compile Include="IO\ElementDraft.cs" />
     <Compile Include="IO\MeshLoadingException.cs" />

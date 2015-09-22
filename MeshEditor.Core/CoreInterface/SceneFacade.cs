@@ -40,9 +40,10 @@ namespace MeshEditor.CoreInterface
 		
 		public static Color SELECTION_RECTANGLE_COLOR;
 		public static Color ZOOM_RECTANGLE_COLOR;
-		
+		public static Color SCREENSHOT_RECTANGLE_COLOR;
+
 		//=========================================================
-		
+
 		private static EditorMode editorMode;
 		private static EditorMode editorModeWithoutModificationKeys;
 
@@ -58,6 +59,7 @@ namespace MeshEditor.CoreInterface
 			
 			SELECTION_RECTANGLE_COLOR = Color.FromArgb(50, Color.Blue);
 			ZOOM_RECTANGLE_COLOR = Color.FromArgb(50, Color.Green);
+			SCREENSHOT_RECTANGLE_COLOR = Color.FromArgb(50, Color.Yellow);
 
 			editorMode = editorModeWithoutModificationKeys = EditorMode.Orbit;
 
@@ -76,11 +78,12 @@ namespace MeshEditor.CoreInterface
 		public event EventHandler RefreshNeeded;
 		public event EventHandler InvalidateNeeded;
 		public event EventHandler SwapBuffersNeeded;
-		public event MeshNeedRefreshEventHandler MeshNeedRefresh;
+		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler CutPlaneDefinitionPointsChanged;
 		public event EventHandler ActionPerformed;
 		public event EventHandler ColorModeChanged;
 		public event EventHandler RenderModeChanged;
+		public event EventHandler<ScreenshotNeededEventArgs> ScreenshotNeeded;
 
 		#endregion
 
@@ -932,6 +935,7 @@ namespace MeshEditor.CoreInterface
 					case EditorMode.SelectElements:
                     case EditorMode.SelectBeams:
 					case EditorMode.ZoomWindow:
+					case EditorMode.ScreenshotWindow:
 						// draw selection rectangle
 						if (pixelDistance(mouseDownLocation, location) > SceneFacade.CLICK_DISTANCE_TOLERANCE)
 							drawSelectionRectangleFlag = true;
@@ -1290,6 +1294,7 @@ namespace MeshEditor.CoreInterface
 						EditorMode = EditorMode.RotateZ;
 					break;
 				case EditorMode.ZoomWindow:
+				case EditorMode.ScreenshotWindow:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
 					else if (controlDown)
@@ -1350,6 +1355,14 @@ namespace MeshEditor.CoreInterface
                     break;
 				case EditorMode.ZoomWindow:
 					zoomWindow();
+					break;
+				case EditorMode.ScreenshotWindow:
+					{
+						var selectionRectangle = getSelectionRectangle();
+						RefreshNeeded?.Invoke(this, EventArgs.Empty);
+						ScreenshotNeeded?.Invoke(this, new ScreenshotNeededEventArgs(selectionRectangle));
+						EditorMode = EditorMode.None;
+					}
 					break;
 			}
 		}
@@ -1676,6 +1689,8 @@ namespace MeshEditor.CoreInterface
 			// pick color
 			if (editorMode == EditorMode.ZoomWindow)
 				GL.Color4(SceneFacade.ZOOM_RECTANGLE_COLOR);
+			else if (editorMode == EditorMode.ScreenshotWindow)
+				GL.Color4(SceneFacade.SCREENSHOT_RECTANGLE_COLOR);
 			else
 				GL.Color4(SceneFacade.SELECTION_RECTANGLE_COLOR);
 			// ----------

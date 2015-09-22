@@ -388,7 +388,7 @@ namespace MeshEditor.WinUI
 		{
 			foreach (OpenGLControl c in openGLControls)
 			{
-				if (c != sender && (string.IsNullOrEmpty(ea.MeshToRefresh) || c.SceneFacade.MeshFilename == ea.MeshToRefresh))
+				if (string.IsNullOrEmpty(ea.MeshToRefresh) || c.SceneFacade.MeshFilename == ea.MeshToRefresh)
 					c.Invalidate();
 			}
 		}
@@ -1319,6 +1319,10 @@ namespace MeshEditor.WinUI
 			{
 				updateRenderModeButtons();
 			};
+			openGLControl.ScreenshotNeeded += (sender, args) =>
+			{
+				saveScreenshot(sender as OpenGLControl, args.ScreenshotWindow);
+			};
 
 			this.openGLControls.Add(openGLControl);
 		}
@@ -1647,12 +1651,18 @@ namespace MeshEditor.WinUI
 
 		private void takeScreenshotToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			saveScreenshot(Rectangle.Empty);
-			//saveScreenshot(new Rectangle(1000, 500, 500, 0));
+			// TODO: open screenshot options dialog
+			// TODO: two options: take whole screen or take selection window
+
+			SceneFacade.EditorMode = EditorMode.ScreenshotWindow;
+			
+			//saveScreenshot(_, Rectangle.Empty); // for whole screen
+			//saveScreenshot(_,new Rectangle(1000, 500, 500, 0)); // for selected window area
 		}
 
-		private void saveScreenshot(Rectangle screenshotWindow)
+		private void saveScreenshot(OpenGLControl control, Rectangle screenshotWindow)
 		{
+			Debug.Assert(control != null);
 			SaveFileDialog dialog = new SaveFileDialog();
 			dialog.Filter = "PNG image format (*.png)|*.png|JPEG image format (*.jpg; *.jpeg)|*.jpg;*.jpeg|BMP image format (*.bmp)|*.bmp";
 			dialog.FilterIndex = this.takeScreenshotLastFilterIndex;
@@ -1662,10 +1672,10 @@ namespace MeshEditor.WinUI
 			}
 			else
 			{
-				if (activeControl.SceneFacade.ContainsMesh)
+				if (control.SceneFacade.ContainsMesh)
 				{
 					//dialog.InitialDirectory = Path.GetDirectoryName(activeControl.SceneFacade.MeshFilename);
-					dialog.FileName = Path.GetFileName(activeControl.SceneFacade.MeshFilename);
+					dialog.FileName = Path.GetFileName(control.SceneFacade.MeshFilename);
 				}
 			}
 			if (dialog.ShowDialog() == DialogResult.OK)
@@ -1688,7 +1698,7 @@ namespace MeshEditor.WinUI
 						return;
 				}
 
-				using (Bitmap screenshot = activeControl.TakeScreenshot(screenshotWindow))
+				using (Bitmap screenshot = control.TakeScreenshot(screenshotWindow))
 				{
 					screenshot.Save(dialog.FileName, imageFormat); // image format must correspond to file extension (.png)
 				}

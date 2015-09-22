@@ -30,10 +30,11 @@ namespace MeshEditor.WinUI
 
 		private Control myContainer;
 		private bool isActive;
-		public event MeshNeedRefreshEventHandler MeshNeedRefresh;
+		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler ActionPerformed;
 		public event EventHandler ColorModeChanged;
 		public event EventHandler RenderModeChanged;
+		public event EventHandler<ScreenshotNeededEventArgs> ScreenshotNeeded;
 
 		private SceneFacade sceneFacade;
 
@@ -416,6 +417,7 @@ namespace MeshEditor.WinUI
 			sceneFacade.ActionPerformed += sceneFacade_ActionPerformed;
 			sceneFacade.ColorModeChanged += sceneFacade_ColorModeChanged;
 			sceneFacade.RenderModeChanged += sceneFacade_RenderModeChanged;
+			sceneFacade.ScreenshotNeeded += sceneFacade_ScreenshotNeeded;
 		}
 
 		private void unhookSceneEvents()
@@ -429,30 +431,37 @@ namespace MeshEditor.WinUI
 			sceneFacade.ActionPerformed -= sceneFacade_ActionPerformed;
 			sceneFacade.ColorModeChanged -= sceneFacade_ColorModeChanged;
 			sceneFacade.RenderModeChanged -= sceneFacade_RenderModeChanged;
+			sceneFacade.ScreenshotNeeded -= sceneFacade_ScreenshotNeeded;
 		}
 
 		void sceneFacade_RenderModeChanged(object sender, EventArgs e)
 		{
 			if (RenderModeChanged != null)
-				RenderModeChanged(sender, e);
+				RenderModeChanged(this, e);
 		}
 
 		void sceneFacade_ColorModeChanged(object sender, EventArgs e)
 		{
 			if (ColorModeChanged != null)
-				ColorModeChanged(sender, e);
+				ColorModeChanged(this, e);
 		}
 
 		void sceneFacade_ActionPerformed(object sender, EventArgs e)
 		{
 			if (ActionPerformed != null)
-				ActionPerformed(sender, e);
+				ActionPerformed(this, e);
 		}
 
 		void sceneFacade_MeshNeedRefresh(object sender, MeshNeedRefreshEventArgs ea)
 		{
-			if (this.MeshNeedRefresh != null)
-				this.MeshNeedRefresh(sender, ea);
+			if (MeshNeedRefresh != null)
+				MeshNeedRefresh(this, ea);
+		}
+
+		private void sceneFacade_ScreenshotNeeded(object sender, ScreenshotNeededEventArgs e)
+		{
+			if (ScreenshotNeeded != null)
+				ScreenshotNeeded(this, e);
 		}
 
 		void sceneFacade_InvalidateNeeded(object sender, EventArgs e)
@@ -496,6 +505,7 @@ namespace MeshEditor.WinUI
 					this.Cursor = Cursors.NoMove2D;
 					break;
 				case EditorMode.ZoomWindow:
+				case EditorMode.ScreenshotWindow:
 					this.Cursor = Cursors.UpArrow;
 					break;
 				case EditorMode.RotateZ:
@@ -976,9 +986,9 @@ namespace MeshEditor.WinUI
 			return TakeScreenshot(Rectangle.Empty);
 		}
 
-		public Bitmap TakeScreenshot(Rectangle screenWindow)
+		public Bitmap TakeScreenshot(Rectangle screenCropWindow)
 		{
-			Rectangle area = screenWindow;
+			Rectangle area = screenCropWindow;
 			if (area.IsEmpty)
 				area = ClientRectangle;
 			else

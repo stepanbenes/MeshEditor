@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using MeshEditor.Data;
 
 namespace MeshEditor.CoreInterface
 {
-	/// <summary>
-	/// delegat oznamujici o skutecnosti, ze sit musi byt prekreslena
-	/// </summary>
-	public delegate void MeshNeedRefreshEventHandler(object sender, MeshNeedRefreshEventArgs ea);
-
 	/// <summary>
 	/// argument udalosti oznamujici, ze sit musi byt prekreslena
 	/// </summary>
@@ -25,6 +21,21 @@ namespace MeshEditor.CoreInterface
 		public MeshNeedRefreshEventArgs(string meshToRefresh)
 		{
 			this.meshToRefresh = meshToRefresh;
+		}
+	}
+
+	public class ScreenshotNeededEventArgs : EventArgs
+	{
+		private Rectangle screenshotWindow;
+
+		public Rectangle ScreenshotWindow
+		{
+			get	{ return screenshotWindow; }
+		}
+
+		public ScreenshotNeededEventArgs(Rectangle screenshotWindow)
+		{
+			this.screenshotWindow = screenshotWindow;
 		}
 	}
 }

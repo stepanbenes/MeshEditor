@@ -20,6 +20,7 @@ namespace MeshEditor.CoreInterface
 		LookAround,
 		ZoomWindow,
 		RotateZ,
-		PickCuttingPlanePoint
+		PickCuttingPlanePoint,
+		ScreenshotWindow
 	}
 }
