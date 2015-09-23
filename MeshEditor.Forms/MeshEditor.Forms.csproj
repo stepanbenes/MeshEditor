@@ -66,6 +66,12 @@
     <Compile Include="CheckMessageBox.Designer.cs">
       <DependentUpon>CheckMessageBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConfigurePropertyColorsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigurePropertyColorsForm.Designer.cs">
+      <DependentUpon>ConfigurePropertyColorsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CutEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -154,6 +160,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CheckMessageBox.resx">
       <DependentUpon>CheckMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfigurePropertyColorsForm.resx">
+      <DependentUpon>ConfigurePropertyColorsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CutEditorForm.resx">
       <DependentUpon>CutEditorForm.cs</DependentUpon>

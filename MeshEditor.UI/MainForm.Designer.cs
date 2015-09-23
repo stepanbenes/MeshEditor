@@ -187,6 +187,10 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+			this.configurePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
+			this.configurePropertyColorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -482,7 +486,9 @@
             this.nodePropertyColorsToolStripMenuItem,
             this.facePropertyColorsToolStripMenuItem,
             this.edgePropertyColorsToolStripMenuItem,
-            this.beamPropertyColorsToolStripMenuItem});
+            this.beamPropertyColorsToolStripMenuItem,
+            this.toolStripSeparator6,
+            this.configurePropertyColorsToolStripMenuItem});
 			this.propertyColorsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsToolStripMenuItem.Image")));
 			this.propertyColorsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
 			this.propertyColorsToolStripMenuItem.Name = "propertyColorsToolStripMenuItem";
@@ -493,35 +499,35 @@
 			// elementPropertyColorsToolStripMenuItem
 			// 
 			this.elementPropertyColorsToolStripMenuItem.Name = "elementPropertyColorsToolStripMenuItem";
-			this.elementPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.elementPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
 			this.elementPropertyColorsToolStripMenuItem.Text = "&Elements";
 			this.elementPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// nodePropertyColorsToolStripMenuItem
 			// 
 			this.nodePropertyColorsToolStripMenuItem.Name = "nodePropertyColorsToolStripMenuItem";
-			this.nodePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.nodePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
 			this.nodePropertyColorsToolStripMenuItem.Text = "&Nodes";
 			this.nodePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// facePropertyColorsToolStripMenuItem
 			// 
 			this.facePropertyColorsToolStripMenuItem.Name = "facePropertyColorsToolStripMenuItem";
-			this.facePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.facePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
 			this.facePropertyColorsToolStripMenuItem.Text = "&Faces";
 			this.facePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// edgePropertyColorsToolStripMenuItem
 			// 
 			this.edgePropertyColorsToolStripMenuItem.Name = "edgePropertyColorsToolStripMenuItem";
-			this.edgePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.edgePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
 			this.edgePropertyColorsToolStripMenuItem.Text = "Ed&ges";
 			this.edgePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// beamPropertyColorsToolStripMenuItem
 			// 
 			this.beamPropertyColorsToolStripMenuItem.Name = "beamPropertyColorsToolStripMenuItem";
-			this.beamPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.beamPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
 			this.beamPropertyColorsToolStripMenuItem.Text = "&Beams";
 			this.beamPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
@@ -887,7 +893,7 @@
             this.toolStripSeparator18,
             this.settingsToolStripMenuItem});
 			this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
+			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
 			this.toolsToolStripMenuItem.Text = "&TOOLS";
 			this.toolsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.toolsToolStripMenuItem_DropDownOpening);
 			// 
@@ -1290,7 +1296,9 @@
             this.nodePropertyColorsToolStripMenuItem2,
             this.facesPropertyColorsToolStripMenuItem2,
             this.edgesPropertyColorsToolStripMenuItem2,
-            this.beamsPropertyColorsToolStripMenuItem2});
+            this.beamsPropertyColorsToolStripMenuItem2,
+            this.toolStripSeparator25,
+            this.configurePropertyColorsToolStripMenuItem1});
 			this.propertyColorsTtoolStripDropDownButton.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
 			this.propertyColorsTtoolStripDropDownButton.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsTtoolStripDropDownButton.Image")));
 			this.propertyColorsTtoolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.White;
@@ -1623,6 +1631,30 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// toolStripSeparator6
+			// 
+			this.toolStripSeparator6.Name = "toolStripSeparator6";
+			this.toolStripSeparator6.Size = new System.Drawing.Size(207, 6);
+			// 
+			// configurePropertyColorsToolStripMenuItem
+			// 
+			this.configurePropertyColorsToolStripMenuItem.Name = "configurePropertyColorsToolStripMenuItem";
+			this.configurePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.configurePropertyColorsToolStripMenuItem.Text = "Configure";
+			this.configurePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator25
+			// 
+			this.toolStripSeparator25.Name = "toolStripSeparator25";
+			this.toolStripSeparator25.Size = new System.Drawing.Size(207, 6);
+			// 
+			// configurePropertyColorsToolStripMenuItem1
+			// 
+			this.configurePropertyColorsToolStripMenuItem1.Name = "configurePropertyColorsToolStripMenuItem1";
+			this.configurePropertyColorsToolStripMenuItem1.Size = new System.Drawing.Size(210, 22);
+			this.configurePropertyColorsToolStripMenuItem1.Text = "&Configure property colors";
+			this.configurePropertyColorsToolStripMenuItem1.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1809,6 +1841,10 @@
 		private System.Windows.Forms.ToolStripMenuItem signalDataMinimumToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem invisibleSelectEntitiesByPropertyAddToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem layersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+		private System.Windows.Forms.ToolStripMenuItem configurePropertyColorsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator25;
+		private System.Windows.Forms.ToolStripMenuItem configurePropertyColorsToolStripMenuItem1;
 	}
 }
 

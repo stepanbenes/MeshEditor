@@ -134,7 +134,7 @@ namespace MeshEditor.Data
 				entityTypeList.Add(entityType);
 
 			// set color for this property if not already done
-			PropertyColorProvider.SetPropertyColorIfNew(property);
+			PropertyColorProvider.ArrangeColorForProperty(property);
 		}
 
 		public void AddElementType(ElementType type)

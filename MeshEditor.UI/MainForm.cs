@@ -1667,6 +1667,18 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private void configurePropertyColorsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var configurePropertyColorsForm = new ConfigurePropertyColorsForm();
+			if (configurePropertyColorsForm.ShowDialog() == DialogResult.OK)
+			{
+				foreach (var control in openGLControls)
+				{
+					control.SceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
+				}
+			}
+		}
+
 		private void saveScreenshot(OpenGLControl control, Rectangle screenshotWindow)
 		{
 			Debug.Assert(control != null);

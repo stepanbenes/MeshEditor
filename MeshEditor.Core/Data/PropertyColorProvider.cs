@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using MeshEditor.Utilities;
+using System.Linq;
 
 using Utils = MeshEditor.Utilities.Functions;
 
@@ -32,6 +33,7 @@ namespace MeshEditor.Data
 		{
 			propertyColors = new Dictionary<Property, int>();
 			setZeroPropertyColor();
+			//loadPropertyColorsFromConfigFile();
 
 			startHue = 0.32f; // green
 			saturation = 1f;
@@ -49,9 +51,13 @@ namespace MeshEditor.Data
 		private static void setZeroPropertyColor()
 		{
 			propertyColors[Property.Zero] = Utils.ColorToRgba32(Color.White);
-			// ...
 		}
-		
+
+		private static void loadPropertyColorsFromConfigFile()
+		{
+			throw new NotImplementedException();
+		}
+
 		private static int getNewPropertyColor(Property property)
 		{
 			//return Utils.ColorToRgba32(Color.FromArgb(RandomNumber.GetRandomByte(), RandomNumber.GetRandomByte(), RandomNumber.GetRandomByte()));
@@ -76,9 +82,9 @@ namespace MeshEditor.Data
 
 		#region Public members
 
-		public static IEnumerable<Property> AllUsedProperties
+		public static IEnumerable<Property> GetAllUsedPropertiesSorted()
 		{
-			get { return propertyColors.Keys; }
+			return propertyColors.Keys.OrderBy(p => p.Value);
 		}
 
 		/// <summary>
@@ -95,7 +101,7 @@ namespace MeshEditor.Data
 
 		public static Color Get(Property property)
 		{
-			// ABGR -> ARGB
+			// parse RGBA in big endian
 			int color = GetRGBA32(property);
 			int a = (color >> 24) & 0x000000FF;
 			int b = (color >> 16) & 0x000000FF;
@@ -104,10 +110,27 @@ namespace MeshEditor.Data
 			return Color.FromArgb(a, r, g, b);
 		}
 
-		public static void SetPropertyColorIfNew(Property property)
+		public static void Set(Property property, Color color)
+		{
+			int rgba = 0;
+			rgba |= color.R;
+			rgba |= color.G << 8;
+			rgba |= color.B << 16;
+			rgba |= color.A << 24;
+			propertyColors[property] = rgba;
+		}
+
+		public static void ArrangeColorForProperty(Property property)
 		{
 			if (!propertyColors.ContainsKey(property))
+			{
 				propertyColors[property] = getNewPropertyColor(property);
+			}
+		}
+
+		public static void SavePropertyColorsToConfigFile()
+		{
+			throw new NotImplementedException();
 		}
 
 		#endregion
