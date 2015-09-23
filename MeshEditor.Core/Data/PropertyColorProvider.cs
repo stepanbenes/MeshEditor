@@ -32,8 +32,7 @@ namespace MeshEditor.Data
 		static PropertyColorProvider()
 		{
 			propertyColors = new Dictionary<Property, int>();
-			setZeroPropertyColor();
-			//loadPropertyColorsFromConfigFile();
+			LoadPropertyColorsFromConfigFile();
 
 			startHue = 0.32f; // green
 			saturation = 1f;
@@ -51,11 +50,6 @@ namespace MeshEditor.Data
 		private static void setZeroPropertyColor()
 		{
 			propertyColors[Property.Zero] = Utils.ColorToRgba32(Color.White);
-		}
-
-		private static void loadPropertyColorsFromConfigFile()
-		{
-			throw new NotImplementedException();
 		}
 
 		private static int getNewPropertyColor(Property property)
@@ -128,9 +122,17 @@ namespace MeshEditor.Data
 			}
 		}
 
+		public static void LoadPropertyColorsFromConfigFile()
+		{
+			propertyColors.Clear();
+			setZeroPropertyColor();
+
+			// TODO: implement this method
+		}
+
 		public static void SavePropertyColorsToConfigFile()
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		#endregion
