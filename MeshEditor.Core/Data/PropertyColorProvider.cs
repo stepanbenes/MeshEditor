@@ -32,25 +32,27 @@ namespace MeshEditor.Data
 
 		static PropertyColorProvider()
 		{
-			propertyColors = new Dictionary<Property, int>();
-			setZeroPropertyColor();
-
 			startHue = 0.32f; // green
 			saturation = 1f;
 			distinguishedHuesCount = 20;
 			availableLuminances = new float[] { 0.6f, 0.4f, 0.7f, 0.3f, 0.8f, 0.2f };
-			currentHue = startHue;
-			currentLuminanceIndex = 0;
-			currentLevelColorCount = 0;
+
+			propertyColors = new Dictionary<Property, int>();
+			initializeColorEngine();
 		}
 
 		#endregion
 
 		#region Private memebers
 
-		private static void setZeroPropertyColor()
+		private static void initializeColorEngine()
 		{
+			propertyColors.Clear();
 			propertyColors[Property.Zero] = Utils.ColorToRgba32(Color.White);
+
+			currentHue = startHue;
+			currentLuminanceIndex = 0;
+			currentLevelColorCount = 0;
 		}
 
 		private static int getNewPropertyColor(Property property)
@@ -77,9 +79,9 @@ namespace MeshEditor.Data
 
 		#region Public members
 
-		public static IEnumerable<Property> GetAllUsedPropertiesSorted()
+		public static Property[] GetAllUsedPropertiesSorted()
 		{
-			return propertyColors.Keys.OrderBy(p => p.Value);
+			return propertyColors.Keys.OrderBy(p => p.Value).ToArray();
 		}
 
 		/// <summary>
@@ -123,10 +125,9 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void LoadPropertyColors(Dictionary<Property, Color> newPropertyColors)
+		public static void LoadPropertyColors(IDictionary<Property, Color> newPropertyColors)
 		{
-			propertyColors.Clear();
-			setZeroPropertyColor();
+			initializeColorEngine();
 			foreach (var pair in newPropertyColors)
 			{
 				Set(pair.Key, pair.Value);
@@ -149,8 +150,7 @@ namespace MeshEditor.Data
 			{
 				XElement rootElement = XElement.Load(filename);
 
-				propertyColors.Clear();
-				setZeroPropertyColor();
+				initializeColorEngine();
 
 				foreach (var element in rootElement.Elements())
 				{
@@ -181,6 +181,18 @@ namespace MeshEditor.Data
 			catch (Exception) { }
 #endif
 			finally { }
+		}
+
+		public static void ResetToDefaults()
+		{
+			var allUsedProperties = GetAllUsedPropertiesSorted();
+
+			initializeColorEngine();
+
+			foreach (var property in allUsedProperties)
+			{
+				ArrangeColorForProperty(property);
+			}
 		}
 
 		#endregion

@@ -15,26 +15,26 @@ namespace MeshEditor.WinUI
 	{
 		IEnumerable<SceneFacade> scenes;
 		bool isDataDirty = false;
-		Dictionary<Property, Color> previousPropertyColors = new Dictionary<Property, Color>();
+		IDictionary<Property, Color> savedPropertyColors;
 
 		public ConfigurePropertyColorsForm(IEnumerable<SceneFacade> scenes)
 		{
 			InitializeComponent();
 
 			this.scenes = scenes;
+			savePropertyColors();
 			initPropertyPanel();
 		}
 
 		private void initPropertyPanel()
 		{
+			contentPanel.Controls.Clear();
 			int controlTop = 2;
 			foreach (Property property in PropertyColorProvider.GetAllUsedPropertiesSorted())
 			{
 				var color = PropertyColorProvider.Get(property);
 
-				previousPropertyColors[property] = color;
-
-                var propertyColorControl = new PropertyColorControl(property, color);
+				var propertyColorControl = new PropertyColorControl(property, color);
 				propertyColorControl.Top = controlTop;
 				propertyColorControl.ColorChanged += (sender, args) =>
 				{
@@ -51,6 +51,11 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private void savePropertyColors()
+		{
+			savedPropertyColors = PropertyColorProvider.GetAllPropertyColors();
+		}
+
 		private void updateColorBuffers()
 		{
 			Cursor = Cursors.WaitCursor;
@@ -65,7 +70,7 @@ namespace MeshEditor.WinUI
 		{
 			if (isDataDirty)
 			{
-				PropertyColorProvider.LoadPropertyColors(previousPropertyColors);
+				PropertyColorProvider.LoadPropertyColors(savedPropertyColors);
 				updateColorBuffers();
 			}
 		}
@@ -73,7 +78,16 @@ namespace MeshEditor.WinUI
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
 			PropertyColorProvider.SavePropertyColorsToFile(SceneFacade.PropertyColorsConfigFileName);
+			savePropertyColors();
 			isDataDirty = false;
+		}
+
+		private void buttonReset_Click(object sender, EventArgs e)
+		{
+			PropertyColorProvider.ResetToDefaults();
+			isDataDirty = true;
+			initPropertyPanel();
+			updateColorBuffers();
 		}
 	}
 }
