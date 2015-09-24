@@ -14,12 +14,41 @@ namespace MeshEditor.WinUI
 	public partial class ConfigurePropertyColorsForm : Form
 	{
 		IEnumerable<SceneFacade> scenes;
-		bool isDataDirty;
+		bool isDataDirty = false;
+		Dictionary<Property, Color> previousPropertyColors = new Dictionary<Property, Color>();
 
 		public ConfigurePropertyColorsForm(IEnumerable<SceneFacade> scenes)
 		{
 			InitializeComponent();
+
 			this.scenes = scenes;
+			initPropertyPanel();
+		}
+
+		private void initPropertyPanel()
+		{
+			int controlTop = 2;
+			foreach (Property property in PropertyColorProvider.GetAllUsedPropertiesSorted())
+			{
+				var color = PropertyColorProvider.Get(property);
+
+				previousPropertyColors[property] = color;
+
+                var propertyColorControl = new PropertyColorControl(property, color);
+				propertyColorControl.Top = controlTop;
+				propertyColorControl.ColorChanged += (sender, args) =>
+				{
+					var control = sender as PropertyColorControl;
+					if (control != null)
+					{
+						PropertyColorProvider.Set(control.Property, control.Color);
+						updateColorBuffers();
+						isDataDirty = true;
+					}
+				};
+				contentPanel.Controls.Add(propertyColorControl);
+				controlTop += propertyColorControl.Height;
+			}
 		}
 
 		private void updateColorBuffers()
@@ -36,7 +65,7 @@ namespace MeshEditor.WinUI
 		{
 			if (isDataDirty)
 			{
-				PropertyColorProvider.LoadPropertyColorsFromConfigFile();
+				PropertyColorProvider.LoadPropertyColors(previousPropertyColors);
 				updateColorBuffers();
 			}
 		}

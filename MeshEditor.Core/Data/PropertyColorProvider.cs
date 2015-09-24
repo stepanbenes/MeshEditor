@@ -122,6 +122,16 @@ namespace MeshEditor.Data
 			}
 		}
 
+		public static void LoadPropertyColors(Dictionary<Property, Color> newPropertyColors)
+		{
+			propertyColors.Clear();
+			setZeroPropertyColor();
+			foreach (var pair in newPropertyColors)
+			{
+				Set(pair.Key, pair.Value);
+			}
+		}
+
 		public static void LoadPropertyColorsFromConfigFile()
 		{
 			propertyColors.Clear();
