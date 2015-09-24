@@ -72,7 +72,7 @@ namespace MeshEditor.WinUI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			PropertyColorProvider.SavePropertyColorsToConfigFile();
+			PropertyColorProvider.SavePropertyColorsToFile(SceneFacade.PropertyColorsConfigFileName);
 			isDataDirty = false;
 		}
 	}

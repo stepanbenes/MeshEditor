@@ -29,7 +29,7 @@ namespace MeshEditor.CoreInterface
 
 		#region Static fields, static constructor
 
-		public static readonly string AppSettingsFilename, UserGuideFileName;
+		public static readonly string AppSettingsFilename, UserGuideFileName, PropertyColorsConfigFileName;
 
 		public static readonly int COLOR_BITS;
 		public static readonly int DEPTH_BITS;
@@ -65,6 +65,7 @@ namespace MeshEditor.CoreInterface
 
 			AppSettingsFilename = @"appSettings.conf";
 			UserGuideFileName = @"userGuide.pdf";
+			PropertyColorsConfigFileName = @"propertyColors.xml";
 		}
 
 		#endregion
@@ -177,20 +178,6 @@ namespace MeshEditor.CoreInterface
 
 		#endregion
 
-		#region Instance creators
-
-		public static SceneFacade GetEmptyScene()
-		{
-			return new SceneFacade();
-		}
-
-		public static SceneFacade GetCopyOf(SceneFacade sceneToCopy)
-		{
-			return new SceneFacade(sceneToCopy);
-		}
-
-		#endregion
-
 		#region Public Properties
 
 		public string MeshFilename
@@ -258,6 +245,108 @@ namespace MeshEditor.CoreInterface
 						handler(null, EventArgs.Empty);
 				}
 			}
+		}
+
+		public static string InputFileFormatFilter
+		{
+			get { return string.Format("All supported files (*{0}, *.msh, *.obj, *.ply)|*{0};*.msh;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+		}
+
+		public static string OutputFileFormatFilter
+		{
+			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+		}
+
+		#endregion
+
+		#region Public Static methods
+
+		#region Instance creators
+
+		public static SceneFacade GetEmptyScene()
+		{
+			return new SceneFacade();
+		}
+
+		public static SceneFacade GetCopyOf(SceneFacade sceneToCopy)
+		{
+			return new SceneFacade(sceneToCopy);
+		}
+
+		#endregion
+
+		public static void InitializeGL()
+		{
+			//GL.LoadAll();
+			//Glu.LoadAll();/**/
+
+			GL.ShadeModel(Scene.MeshShadingModel);                          // enable smooth shading
+			GL.ClearColor(Color.Black);                                     // white background
+			GL.ClearDepth(1.0);                                             // depth buffer setup
+			GL.Enable(EnableCap.DepthTest);                                 // enables depth testing
+			GL.DepthFunc(DepthFunction.Lequal);                             // type of depth test
+			GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest); // nice perspective calculations
+
+			GL.Disable(EnableCap.CullFace);
+			//GL.CullFace(CullFaceMode.Back);
+
+			// obe plochy, predni i zadni, zobrazovat stejne
+			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
+
+			// zadni plochu zobrazovat tmavou
+			GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
+
+			//GL.glLightModeli(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_FALSE);
+			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f); // ???
+
+			//// default materials
+			//float[] ambientMat = { 0.4f, 0.4f, 0.4f, 1 };
+			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT, ambientMat);
+			//float[] diffuseMat = { 0.6f, 0.6f, 0.6f, 1 };
+			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_DIFFUSE, diffuseMat);
+			//float[] specularMat = { 1.0f, 1.0f, 1.0f, 1 };
+			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_SPECULAR, specularMat);
+			//float shininess = 64;
+			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_SHININESS, ref shininess);
+
+			float[] ambient2 = { 0.2f, 0.2f, 0.2f, 1f };
+			float[] diffuse2 = { 0.9f, 0.9f, 0.9f, 1f };
+			float[] specular2 = { 0.7f, 0.7f, 0.7f, 1f };
+			float[] globalAmbient2 = { 0f, 0f, 0f, 1f };
+
+			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT, ambient2);
+			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, diffuse2);
+			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_SPECULAR, specular2);
+			//Gl.glLightModelfv(Gl.GL_LIGHT_MODEL_AMBIENT, globalAmbient2);
+
+			GL.Light(LightName.Light0, LightParameter.Ambient, ambient2);
+			GL.Light(LightName.Light0, LightParameter.Diffuse, diffuse2);
+			GL.Light(LightName.Light0, LightParameter.Specular, specular2);
+			GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient2);
+
+
+			// enable lights
+			GL.Enable(EnableCap.Light0);
+			GL.Enable(EnableCap.Lighting);
+
+			// color material
+			GL.Enable(EnableCap.ColorMaterial);
+			GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.AmbientAndDiffuse);
+
+			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+			//GL.Hint(HintTarget.PointSmoothHint, HintMode.Nicest);
+			GL.Hint(HintTarget.PointSmoothHint, HintMode.Fastest);
+			GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
+
+			// The surface normal, as the name indicates, has to be a normal or unit length vector, otherwise the lighting calculations won't work. If you use glScale anywhere, 
+			// surface normals may no longer be correct because the scaling will shorten or lengthen the vector. At startup, write 
+			//GL.Enable(EnableCap.Normalize); // I dont use GL.Scale anywhere for now...
+			// so OpenGL will check and if necessary renormalise all your surface normals. In Olden Times this could slow your program down significantly, but these days it doesn't matter.
+
+			//int depth;
+			//GL.GetInteger(GetPName.DepthBits, out depth);
+			//Console.WriteLine("Depth buffer size: " + depth);
+			//MessageBox.Show(depth.ToString(), "Buffer size");
 		}
 
 		#endregion
@@ -1034,96 +1123,6 @@ namespace MeshEditor.CoreInterface
 
 			if (EditorModeChanged != null)
 				EditorModeChanged(null, EventArgs.Empty);
-		}
-
-		public static void InitializeGL()
-		{
-			//GL.LoadAll();
-			//Glu.LoadAll();/**/
-
-			GL.ShadeModel(Scene.MeshShadingModel);							// enable smooth shading
-			GL.ClearColor(Color.Black);										// white background
-			GL.ClearDepth(1.0);												// depth buffer setup
-			GL.Enable(EnableCap.DepthTest);									// enables depth testing
-			GL.DepthFunc(DepthFunction.Lequal);								// type of depth test
-			GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);	// nice perspective calculations
-
-			GL.Disable(EnableCap.CullFace);
-			//GL.CullFace(CullFaceMode.Back);
-
-			// obe plochy, predni i zadni, zobrazovat stejne
-			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
-
-			// zadni plochu zobrazovat tmavou
-			GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
-
-			//GL.glLightModeli(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_FALSE);
-			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f); // ???
-
-			//// default materials
-			//float[] ambientMat = { 0.4f, 0.4f, 0.4f, 1 };
-			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT, ambientMat);
-			//float[] diffuseMat = { 0.6f, 0.6f, 0.6f, 1 };
-			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_DIFFUSE, diffuseMat);
-			//float[] specularMat = { 1.0f, 1.0f, 1.0f, 1 };
-			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_SPECULAR, specularMat);
-			//float shininess = 64;
-			//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_SHININESS, ref shininess);
-
-			float[] ambient2 = { 0.2f, 0.2f, 0.2f, 1f };
-			float[] diffuse2 = { 0.9f, 0.9f, 0.9f, 1f };
-			float[] specular2 = { 0.7f, 0.7f, 0.7f, 1f };
-			float[] globalAmbient2 = { 0f, 0f, 0f, 1f };
-
-			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT, ambient2);
-			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, diffuse2);
-			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_SPECULAR, specular2);
-			//Gl.glLightModelfv(Gl.GL_LIGHT_MODEL_AMBIENT, globalAmbient2);
-
-			GL.Light(LightName.Light0, LightParameter.Ambient, ambient2);
-			GL.Light(LightName.Light0, LightParameter.Diffuse, diffuse2);
-			GL.Light(LightName.Light0, LightParameter.Specular, specular2);
-			GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient2);
-
-
-			// enable lights
-			GL.Enable(EnableCap.Light0);
-			GL.Enable(EnableCap.Lighting);
-
-			// color material
-			GL.Enable(EnableCap.ColorMaterial);
-			GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.AmbientAndDiffuse);
-
-			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-			//GL.Hint(HintTarget.PointSmoothHint, HintMode.Nicest);
-			GL.Hint(HintTarget.PointSmoothHint, HintMode.Fastest);
-			GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
-
-			// The surface normal, as the name indicates, has to be a normal or unit length vector, otherwise the lighting calculations won't work. If you use glScale anywhere, 
-			// surface normals may no longer be correct because the scaling will shorten or lengthen the vector. At startup, write 
-			//GL.Enable(EnableCap.Normalize); // I dont use GL.Scale anywhere for now...
-			// so OpenGL will check and if necessary renormalise all your surface normals. In Olden Times this could slow your program down significantly, but these days it doesn't matter.
-
-			//int depth;
-			//GL.GetInteger(GetPName.DepthBits, out depth);
-            //Console.WriteLine("Depth buffer size: " + depth);
-			//MessageBox.Show(depth.ToString(), "Buffer size");
-		}
-
-		//public void LoadMeshFromFile(string filename)
-		//{
-		//    LoadMeshFromFile(filename, null, null);
-		//}
-
-		public static string InputFileFormatFilter
-		{
-			get { return string.Format("All supported files (*{0}, *.msh, *.obj, *.ply)|*{0};*.msh;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
-		}
-
-
-		public static string OutputFileFormatFilter
-		{
-			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
 		}
 
 		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)

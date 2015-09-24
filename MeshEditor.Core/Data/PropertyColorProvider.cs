@@ -6,6 +6,7 @@ using MeshEditor.Utilities;
 using System.Linq;
 
 using Utils = MeshEditor.Utilities.Functions;
+using System.Xml.Linq;
 
 namespace MeshEditor.Data
 {
@@ -20,7 +21,7 @@ namespace MeshEditor.Data
 		private static readonly Dictionary<Property, int> propertyColors;
 
 		private const float GOLDEN_RATIO_INV = 0.618033988749895f;
-		
+
 		private static readonly int distinguishedHuesCount;
 		private static readonly float startHue;
 		private static readonly float[] availableLuminances;
@@ -32,7 +33,7 @@ namespace MeshEditor.Data
 		static PropertyColorProvider()
 		{
 			propertyColors = new Dictionary<Property, int>();
-			LoadPropertyColorsFromConfigFile();
+			setZeroPropertyColor();
 
 			startHue = 0.32f; // green
 			saturation = 1f;
@@ -132,17 +133,54 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void LoadPropertyColorsFromConfigFile()
+		public static IDictionary<Property, Color> GetAllPropertyColors()
 		{
-			propertyColors.Clear();
-			setZeroPropertyColor();
-
-			// TODO: implement this method
+			Dictionary<Property, Color> result = new Dictionary<Property, Color>();
+			foreach (var kv in propertyColors)
+			{
+				result.Add(kv.Key, Get(kv.Key));
+			}
+			return result;
 		}
 
-		public static void SavePropertyColorsToConfigFile()
+		public static void LoadPropertyColorsFromFile(string filename)
 		{
-			// TODO: implement this method
+			try
+			{
+				XElement rootElement = XElement.Load(filename);
+
+				propertyColors.Clear();
+				setZeroPropertyColor();
+
+				foreach (var element in rootElement.Elements())
+				{
+					Property property = new Property((int)element.Attribute("id"));
+					int color = int.Parse(element.Value);
+					propertyColors[property] = color;
+				}
+			}
+#if !DEBUG
+			catch (Exception) { }
+#endif
+			finally { }
+		}
+
+		public static void SavePropertyColorsToFile(string filename)
+		{
+			try
+			{
+				XElement rootElement = new XElement("PropertyColors", propertyColors.Select(kv =>
+					{
+						var propertyElement = new XElement("Property", kv.Value);
+						propertyElement.SetAttributeValue("id", kv.Key);
+						return propertyElement;
+					}));
+				rootElement.Save(filename);
+			}
+#if !DEBUG
+			catch (Exception) { }
+#endif
+			finally { }
 		}
 
 		#endregion

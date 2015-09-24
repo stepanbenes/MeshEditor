@@ -42,7 +42,7 @@ namespace MeshEditor.WinUI
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
-		private string settingsFilePath, userGuidFilePath;
+		private string settingsFilePath, userGuideFilePath;
 
 		private string[] arguments;
 
@@ -68,7 +68,7 @@ namespace MeshEditor.WinUI
 			InitializeComponent();
 
 			this.settingsFilePath = Path.Combine(Application.StartupPath, SceneFacade.AppSettingsFilename);
-			this.userGuidFilePath = Path.Combine(Application.StartupPath, SceneFacade.UserGuideFileName);
+			this.userGuideFilePath = Path.Combine(Application.StartupPath, SceneFacade.UserGuideFileName);
 
 			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
 			SceneFacade.ShowError += new ShowErrorEventHandler(SceneFacade_ShowError);
@@ -86,6 +86,12 @@ namespace MeshEditor.WinUI
 
 			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
 			AppSettings.LoadFromFile(this.settingsFilePath);
+
+			// load property colors from config file
+			if (File.Exists(SceneFacade.PropertyColorsConfigFileName))
+			{
+				PropertyColorProvider.LoadPropertyColorsFromFile(SceneFacade.PropertyColorsConfigFileName);
+			}
 
 			// load window state settings
 			loadAppSettings();
@@ -850,21 +856,21 @@ namespace MeshEditor.WinUI
 
 		private void readDocumentationToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			if (!File.Exists(this.userGuidFilePath))
+			if (!File.Exists(this.userGuideFilePath))
 			{
-				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuidFilePath), "File " + Path.GetFileName(this.userGuidFilePath) + " in application directory does not exists.");
+				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuideFilePath), "File " + Path.GetFileName(this.userGuideFilePath) + " in application directory does not exists.");
 				return;
 			}
 
 			try
 			{
 				Process process = new Process();
-				process.StartInfo = new ProcessStartInfo(this.userGuidFilePath);
+				process.StartInfo = new ProcessStartInfo(this.userGuideFilePath);
 				process.Start();
 			}
 			catch (Exception ex)
 			{
-				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuidFilePath), ex.Message);
+				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuideFilePath), ex.Message);
 			}
 		}
 
