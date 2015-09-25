@@ -745,7 +745,8 @@ namespace MeshEditor.WinUI
 			selectIncidingItemsToolStripMenuItem.Text = prefix + selectIncidingName + suffixInciding;
 			selectAllToolStripMenuItem.Text = "Select all " + selectAllName;
 			selectItemsByPropertyToolStripMenuItem.Text = prefix + selectAllName + suffixByProperty;
-		}
+			takeScreenshotToolStripMenuItem.Enabled = activeControl.SceneFacade.ContainsMesh;
+        }
 
 		private void renderMode_item_click(object sender, EventArgs e)
 		{
