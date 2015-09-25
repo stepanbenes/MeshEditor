@@ -42,7 +42,7 @@ namespace MeshEditor.WinUI
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
-		private string settingsFilePath, userGuideFilePath;
+		private string settingsFilePath, userGuideFilePath, propertyColorsConfigFilePath;
 
 		private string[] arguments;
 
@@ -69,8 +69,9 @@ namespace MeshEditor.WinUI
 
 			this.settingsFilePath = Path.Combine(Application.StartupPath, SceneFacade.AppSettingsFilename);
 			this.userGuideFilePath = Path.Combine(Application.StartupPath, SceneFacade.UserGuideFileName);
+			this.propertyColorsConfigFilePath = Path.Combine(Application.StartupPath, SceneFacade.PropertyColorsConfigFileName);
 
-			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
+            SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
 			SceneFacade.ShowError += new ShowErrorEventHandler(SceneFacade_ShowError);
 
 			this.cutEditorForm = null;
@@ -88,9 +89,9 @@ namespace MeshEditor.WinUI
 			AppSettings.LoadFromFile(this.settingsFilePath);
 
 			// load property colors from config file
-			if (File.Exists(SceneFacade.PropertyColorsConfigFileName))
+			if (File.Exists(propertyColorsConfigFilePath))
 			{
-				PropertyColorProvider.LoadPropertyColorsFromFile(SceneFacade.PropertyColorsConfigFileName);
+				PropertyColorProvider.LoadPropertyColorsFromFile(propertyColorsConfigFilePath);
 			}
 
 			// load window state settings
@@ -1675,7 +1676,7 @@ namespace MeshEditor.WinUI
 
 		private void configurePropertyColorsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(openGLControls.Select(c => c.SceneFacade));
+			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(propertyColorsConfigFilePath, openGLControls.Select(c => c.SceneFacade));
 			configurePropertyColorsForm.ShowDialog();
 		}
 

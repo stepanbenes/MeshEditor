@@ -16,13 +16,16 @@ namespace MeshEditor.WinUI
 		IEnumerable<SceneFacade> scenes;
 		bool isDataDirty = false;
 		IDictionary<Property, Color> savedPropertyColors;
+		string propertyColorsConfigFilePath;
 
-		public ConfigurePropertyColorsForm(IEnumerable<SceneFacade> scenes)
+        public ConfigurePropertyColorsForm(string propertyColorsConfigFilePath, IEnumerable<SceneFacade> scenes)
 		{
 			InitializeComponent();
 
 			this.scenes = scenes;
-			savePropertyColors();
+			this.propertyColorsConfigFilePath = propertyColorsConfigFilePath;
+
+            savePropertyColors();
 			initPropertyPanel();
 		}
 
@@ -77,7 +80,7 @@ namespace MeshEditor.WinUI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			PropertyColorProvider.SavePropertyColorsToFile(SceneFacade.PropertyColorsConfigFileName);
+			PropertyColorProvider.SavePropertyColorsToFile(propertyColorsConfigFilePath);
 			savePropertyColors();
 			isDataDirty = false;
 		}
