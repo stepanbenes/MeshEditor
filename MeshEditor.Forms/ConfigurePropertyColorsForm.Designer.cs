@@ -38,7 +38,7 @@
 			// 
 			this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.buttonCancel.Location = new System.Drawing.Point(231, 334);
+			this.buttonCancel.Location = new System.Drawing.Point(212, 351);
 			this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
 			this.buttonCancel.Name = "buttonCancel";
 			this.buttonCancel.Size = new System.Drawing.Size(63, 28);
@@ -51,7 +51,7 @@
 			// 
 			this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.buttonOK.Location = new System.Drawing.Point(164, 334);
+			this.buttonOK.Location = new System.Drawing.Point(145, 351);
 			this.buttonOK.Margin = new System.Windows.Forms.Padding(2);
 			this.buttonOK.Name = "buttonOK";
 			this.buttonOK.Size = new System.Drawing.Size(63, 28);
@@ -69,16 +69,16 @@
 			this.contentPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.contentPanel.Location = new System.Drawing.Point(12, 12);
 			this.contentPanel.Name = "contentPanel";
-			this.contentPanel.Size = new System.Drawing.Size(282, 317);
+			this.contentPanel.Size = new System.Drawing.Size(263, 334);
 			this.contentPanel.TabIndex = 6;
 			// 
 			// buttonReset
 			// 
 			this.buttonReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.buttonReset.Location = new System.Drawing.Point(12, 334);
+			this.buttonReset.Location = new System.Drawing.Point(12, 351);
 			this.buttonReset.Margin = new System.Windows.Forms.Padding(2);
 			this.buttonReset.Name = "buttonReset";
-			this.buttonReset.Size = new System.Drawing.Size(119, 28);
+			this.buttonReset.Size = new System.Drawing.Size(105, 28);
 			this.buttonReset.TabIndex = 7;
 			this.buttonReset.Text = "Reset to Defaults";
 			this.buttonReset.UseVisualStyleBackColor = true;
@@ -90,7 +90,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(305, 373);
+			this.ClientSize = new System.Drawing.Size(286, 390);
 			this.Controls.Add(this.buttonReset);
 			this.Controls.Add(this.contentPanel);
 			this.Controls.Add(this.buttonCancel);
@@ -98,6 +98,7 @@
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
+			this.MinimumSize = new System.Drawing.Size(282, 169);
 			this.Name = "ConfigurePropertyColorsForm";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
