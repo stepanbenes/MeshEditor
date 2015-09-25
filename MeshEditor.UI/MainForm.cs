@@ -405,7 +405,7 @@ namespace MeshEditor.WinUI
 			restoreCuttedItemsToolStripMenuItem.Enabled = (bool)activeControl.SceneFacade.GetValue(AvailableValue.MeshHasHiddenElements);
 			closeActiveWindowToolStripMenuItem.Enabled = activeWindowCanBeClosed();
 			bool containsMesh = activeControl.SceneFacade.ContainsMesh;
-			listOfSelectedItemsToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = invertAllNormalsToolStripMenuItem.Enabled = containsMesh;
+			listOfSelectedItemsToolStripMenuItem.Enabled = layersToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = invertAllNormalsToolStripMenuItem.Enabled = containsMesh;
 		}
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -513,9 +513,12 @@ namespace MeshEditor.WinUI
 
 		private void showHideElementsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			this.showHideElementsForm = new ShowHideElementsForm(activeControl.SceneFacade, this.longOpNotifier);
-			this.showHideElementsForm.FormClosed += delegate { this.showHideElementsForm = null; };
-			this.showHideElementsForm.Show();
+			if (activeControl.SceneFacade.ContainsMesh)
+			{
+				this.showHideElementsForm = new ShowHideElementsForm(activeControl.SceneFacade, this.longOpNotifier);
+				this.showHideElementsForm.FormClosed += delegate { this.showHideElementsForm = null; };
+				this.showHideElementsForm.Show();
+			}
 		}
 
 		private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1087,6 +1090,9 @@ namespace MeshEditor.WinUI
 
 		private void layersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			if (!activeControl.SceneFacade.ContainsMesh)
+				return;
+
 			if (layersDialog == null)
 			{
 				IList<ILayer> layers = activeControl.SceneFacade.GetValue(AvailableValue.LayerList) as IList<ILayer>;
