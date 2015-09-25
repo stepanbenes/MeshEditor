@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Mesh Editor")]
 [assembly: AssemblyDescription("3D Graphical Editor of Finite Element Meshes")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Stepan Benes (benes.stepan@gmail.com)")]
+[assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("Mesh Editor")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.6.0.0")]
-[assembly: AssemblyFileVersion("1.6.0.0")]
+[assembly: AssemblyVersion("1.7.0.0")]
+[assembly: AssemblyFileVersion("1.7.0.0")]
