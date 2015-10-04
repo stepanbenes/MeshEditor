@@ -22,6 +22,8 @@ namespace MeshEditor.IO
 					return new GiDMshFileFormatParser(filename);
 				case ".obj":
 					return new OBJFileFormatParser(filename);
+				case ".vtu": // only serial UnstructuredGrid (.vtu) is supported
+					return new VTKXMLMeshParser(filename);
 				default:
 					return new DefaultFileFormatParser(filename);
 			}

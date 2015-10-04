@@ -249,7 +249,7 @@ namespace MeshEditor.CoreInterface
 
 		public static string InputFileFormatFilter
 		{
-			get { return string.Format("All supported files (*{0}, *.msh, *.obj, *.ply)|*{0};*.msh;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
 		}
 
 		public static string OutputFileFormatFilter

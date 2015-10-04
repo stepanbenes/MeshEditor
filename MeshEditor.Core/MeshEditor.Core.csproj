@@ -154,6 +154,7 @@
     <Compile Include="IO\PLYFileFormatParser.cs" />
     <Compile Include="IO\DefaultFileFormatParser.cs" />
     <Compile Include="Graphics\Camera.cs" />
+    <Compile Include="IO\VTKXMLMeshParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
