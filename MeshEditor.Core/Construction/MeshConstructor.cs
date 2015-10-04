@@ -199,16 +199,14 @@ namespace MeshEditor.Construction
 				// vrat mesh
 				return mesh;
 			}
-#if !DEBUG
 			catch (MeshConstructingException ex) // tohle je tu jen proto, abych pridal ke zprave cislo radku v souboru
 			{
 			    throw new MeshConstructingException(ex.Message + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex.InnerException);
 			}
-			catch (Exception ex) // nastala nejaka chyba, zmenim jeji typ, pridam cislo radku a pridam tuto chybu jako vnitrni vyjjimku
+			catch (Exception ex) // nastala nejaka chyba, zmenim jeji typ, pridam cislo radku a pridam tuto chybu jako vnitrni vyjimku
 			{
 			    throw new MeshConstructingException(ex.Message + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex);
 			}
-#endif
 			finally
 			{
 				nodes = null;
