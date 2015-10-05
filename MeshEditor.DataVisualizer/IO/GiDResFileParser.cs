@@ -10,7 +10,7 @@ using MeshEditor.IO;
 
 namespace MeshEditor.DataVisualizer.IO
 {
-	public class GiDResFileFormatParser : IDataFileParser
+	public class GiDResFileParser : IDataFileParser
 	{
 
 		#region Static members
@@ -25,8 +25,6 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#endregion
 
-		#region Fields, constructor, destructor
-
 		private enum State
 		{
 			Init = 0,
@@ -34,8 +32,10 @@ namespace MeshEditor.DataVisualizer.IO
 			GaussPointsGivenNaturalCoordinates,
 			ResultHeader,
 			ResultValues,
-            EOF
+			EOF
 		}
+
+		#region Fields, constructor, destructor
 
 		private string filename;
 		private int lineNumber;
@@ -50,7 +50,7 @@ namespace MeshEditor.DataVisualizer.IO
 
 		private long currentLineFilePosition;
 
-		public GiDResFileFormatParser(string filename, long fileStartPosition = 0)
+		public GiDResFileParser(string filename, long fileStartPosition = 0)
 		{
 			this.filename = filename;
 			this.currentLineFilePosition = fileStartPosition;
@@ -60,11 +60,6 @@ namespace MeshEditor.DataVisualizer.IO
 			TotalBytes = new FileInfo(filename).Length;
 
 			gaussPointsDescriptions = new Dictionary<string, GaussPointsInfo>();
-		}
-
-		~GiDResFileFormatParser()
-		{
-			Dispose(false);
 		}
 
 		#endregion
@@ -414,21 +409,10 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#endregion
 
-		#region IDisposable Members
+		#region IDisposable Support
 
 		public void Dispose()
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			//if (disposing)
-			//{
-			//    // Free other state (managed objects).
-			//}
-
 			if (input != null)
 			{
 				input.Dispose();

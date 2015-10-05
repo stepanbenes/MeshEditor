@@ -41,24 +41,23 @@ namespace MeshEditor.IO
 
 		#region static members
 
-		private static readonly char[] dataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
+		public static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
 
 		#endregion
 
 		#region Fields, constructor
 
 		private string filename;
-		private int currentLineNumber;
 
-		private XmlReader input;
+		private StreamReader streamReader;
+        private XmlReader input;
 
 		private bool nodesProcessed, elementsProcessed;
-		private int nodeCount, elementCount;
+		private int numberOfPoints, numberOfCells;
 
 		public VTKXMLMeshParser(string filename)
 		{
 			this.filename = filename;
-			currentLineNumber = -1;
 		}
 
 		#endregion
@@ -88,7 +87,7 @@ namespace MeshEditor.IO
 				{
 					initInput();
 				}
-				return nodeCount;
+				return numberOfPoints;
 			}
 		}
 
@@ -100,7 +99,7 @@ namespace MeshEditor.IO
 				{
 					initInput();
 				}
-				return elementCount;
+				return numberOfCells;
 			}
 		}
 
@@ -110,6 +109,7 @@ namespace MeshEditor.IO
 			{
 				initInput();
 			}
+
 			if (nodesProcessed)
 			{
 				throw new MeshLoadingException("Points were already processed.", CurrentLineNumber);
@@ -161,7 +161,7 @@ namespace MeshEditor.IO
 
 			float[] coordinates = parseFloat32AsciiDataArray(); // can't handle 64 precission anyway
 			{
-				int expectedDataArrayLength = nodeCount * numberOfComponents;
+				int expectedDataArrayLength = numberOfPoints * numberOfComponents;
 				if (coordinates.Length != expectedDataArrayLength)
 				{
 					throw new MeshLoadingException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", CurrentLineNumber);
@@ -171,7 +171,7 @@ namespace MeshEditor.IO
 			switch (numberOfComponents)
 			{
 				case 2:
-					for (int i = 0; i < nodeCount; i++)
+					for (int i = 0; i < numberOfPoints; i++)
 					{
 						OpenTK.Vector3 position = new OpenTK.Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], 0f);
 						Node node = new Node(i, position, properties: null);
@@ -179,7 +179,7 @@ namespace MeshEditor.IO
 					}
 					break;
 				case 3:
-					for (int i = 0; i < nodeCount; i++)
+					for (int i = 0; i < numberOfPoints; i++)
 					{
 						OpenTK.Vector3 position = new OpenTK.Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], coordinates[(i * numberOfComponents) + 2]);
 						Node node = new Node(i, position, properties: null);
@@ -199,6 +199,7 @@ namespace MeshEditor.IO
 			{
 				initInput();
 			}
+
 			if (elementsProcessed)
 			{
 				throw new MeshLoadingException("Cells were already processed.", CurrentLineNumber);
@@ -284,9 +285,10 @@ namespace MeshEditor.IO
 			}
 
 			int[] offsets = parseInt32AsciiDataArray();
-			if (offsets.Length != elementCount)
+
+			if (offsets.Length != numberOfCells)
 			{
-				throw new MeshLoadingException($"Unexpected length of offsets data array ({offsets.Length} instead of {elementCount}).", CurrentLineNumber);
+				throw new MeshLoadingException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", CurrentLineNumber);
 			}
 
 			// types array
@@ -328,9 +330,9 @@ namespace MeshEditor.IO
 
 			int[] types = parseInt32AsciiDataArray();
 
-			if (types.Length != elementCount)
+			if (types.Length != numberOfCells)
 			{
-				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {elementCount}).", CurrentLineNumber);
+				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {numberOfCells}).", CurrentLineNumber);
 			}
 
 			for (int elementIndex = 0, connectivityIndex = 0; elementIndex < types.Length; elementIndex++)
@@ -355,11 +357,11 @@ namespace MeshEditor.IO
 
 		public void Dispose()
 		{
-			disposeInput();
-		}
-
-		private void disposeInput()
-		{
+			if (streamReader != null)
+			{
+				streamReader.Dispose();
+				streamReader = null;
+			}
 			if (input != null)
 			{
 				((IDisposable)input).Dispose();
@@ -378,7 +380,8 @@ namespace MeshEditor.IO
 				throw new MeshLoadingException($"Mesh file can't be found. ({filename})");
 			}
 
-			input = XmlReader.Create(new StreamReader(filename));
+			streamReader = new StreamReader(filename);
+            input = XmlReader.Create(streamReader);
 
 			validateVTKFileType();
 
@@ -397,10 +400,10 @@ namespace MeshEditor.IO
 				switch (input.Name.ToLower())
 				{
 					case "numberofpoints":
-						nodeCount = parseInt32(input.Value);
+						numberOfPoints = parseInt32(input.Value);
 						break;
 					case "numberofcells":
-						elementCount = parseInt32(input.Value);
+						numberOfCells = parseInt32(input.Value);
 						break;
 				}
 			}
@@ -446,7 +449,7 @@ namespace MeshEditor.IO
 		{
 			string content = input.ReadElementContentAsString();
 			// TODO: for binary format use: input.ReadElementContentAsBase64(...)
-			string[] parts = content.Split(dataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
 			double[] result = new double[parts.Length];
 			for (int i = 0; i < parts.Length; i++)
 			{
@@ -458,7 +461,7 @@ namespace MeshEditor.IO
 		private float[] parseFloat32AsciiDataArray()
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(dataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
 			float[] result = new float[parts.Length];
 			for (int i = 0; i < parts.Length; i++)
 			{
@@ -470,7 +473,7 @@ namespace MeshEditor.IO
 		private int[] parseInt32AsciiDataArray()
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(dataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
 			int[] result = new int[parts.Length];
 			for (int i = 0; i < parts.Length; i++)
 			{
@@ -482,7 +485,7 @@ namespace MeshEditor.IO
 		private byte[] parseUInt8AsciiDataArray()
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(dataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
 			byte[] result = new byte[parts.Length];
 			for (int i = 0; i < parts.Length; i++)
 			{

@@ -18,7 +18,9 @@ namespace MeshEditor.DataVisualizer.IO
 			switch (Path.GetExtension(filename))
 			{
 				case ".res":
-					return new GiDResFileFormatParser(filename, fileStartPosition);
+					return new GiDResFileParser(filename, fileStartPosition);
+				case ".vtu":
+					return new VTKXMLDataFileParser(filename);
 				default:
 					throw new DataLoadingException("This data format is not supported.", filename);
 			}
