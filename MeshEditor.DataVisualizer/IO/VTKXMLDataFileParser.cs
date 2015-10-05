@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Xml;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.IO;
+using MeshEditor.Utilities;
 
 namespace MeshEditor.DataVisualizer.IO
 {
@@ -23,6 +25,8 @@ namespace MeshEditor.DataVisualizer.IO
 		private StreamReader streamReader;
 		private XmlReader input;
 		private int numberOfPoints, numberOfCells;
+		private Dictionary<string, DataType.CompoundTypes> dataNameMap;
+		private DataInfo currentDataInfo;
 
 		public VTKXMLDataFileParser(string filename)
 		{
@@ -59,12 +63,70 @@ namespace MeshEditor.DataVisualizer.IO
 
 		public DataInfo ReadNextResult()
 		{
-			throw new NotImplementedException();
+			if (input == null)
+			{
+				initInput();
+			}
+
+			Debug.Assert(dataNameMap != null);
+
+			if (!input.ReadToDescendant("DataArray") && !input.ReadToNextSibling("DataArray"))
+			{
+				return null; // end of PointData, no DataArray found in this element
+			}
+
+			string dataArrayName = null;
+			int numberOfComponents = 0;
+			while (input.MoveToNextAttribute())
+			{
+				switch (input.Name.ToLower())
+				{
+					case "type":
+						// ignore type, parse coordinates as Float64 values
+						break;
+					case "name":
+						dataArrayName = input.Value;
+						break;
+					case "numberofcomponents":
+						numberOfComponents = parseInt32(input.Value);
+						break;
+					case "format":
+						if (input.Value.ToLower() != "ascii")
+						{
+							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+						}
+						break;
+				}
+			}
+
+			input.MoveToElement(); // move attributes back to beginning of the DataArray element
+
+			DataType.CompoundTypes compoundType;
+			if (!dataNameMap.TryGetValue(dataArrayName, out compoundType))
+			{
+				throw new MeshLoadingException($"Data array with name '{dataArrayName}' was not found.", CurrentLineNumber);
+			}
+
+			DataType dataType = new DataType(dataArrayName, Filename, 0 /**/, compoundType, generateComponentNames(numberOfComponents));
+			currentDataInfo = new DataInfo(dataType, Path.GetFileNameWithoutExtension(Filename), 0.0 /**/, DataLocation.Nodes);
+			return currentDataInfo;
 		}
 
 		public IEnumerable<DataValue> ReadResultBlock()
 		{
-			throw new NotImplementedException();
+			if (currentDataInfo == null)
+			{
+				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
+			}
+
+			double[] values = parseFloat64AsciiDataArray();
+			int componentCount = currentDataInfo.DataType.ComponentCount;
+			Debug.Assert(values.Length % componentCount == 0);
+			for (int i = 0; i < values.Length; i += componentCount)
+			{
+				NodeValue nodeValue = new NodeValue(i, Functions.GetSliceOfArray(values, i, componentCount));
+				yield return nodeValue;
+			}
 		}
 
 		#endregion
@@ -106,10 +168,43 @@ namespace MeshEditor.DataVisualizer.IO
 				}
 			}
 
-			if (!input.MoveToElement())
+			if (!input.MoveToElement()) // move to start of Piece element
 			{
 				throwElementIsMissing("Piece");
 			}
+
+			if (!input.ReadToDescendant("PointData"))
+			{
+				throwElementIsMissing("PointData");
+			}
+
+			dataNameMap = new Dictionary<string, DataType.CompoundTypes>();
+			while (input.MoveToNextAttribute())
+			{
+				switch (input.Name.ToLower())
+				{
+					case "scalars":
+						foreach (string scalarName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						{
+							dataNameMap.Add(scalarName, DataType.CompoundTypes.Scalar);
+						}
+						break;
+					case "vectors":
+						foreach (string vectorName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						{
+							dataNameMap.Add(vectorName, DataType.CompoundTypes.Vector);
+						}
+						break;
+					case "tensors":
+						foreach (string tensorName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						{
+							dataNameMap.Add(tensorName, DataType.CompoundTypes.Matrix);
+						}
+						break;
+				}
+			}
+
+			input.MoveToElement(); // move from attribute back to Piece element
 		}
 
 		private void validateVTKFileType()
@@ -136,6 +231,12 @@ namespace MeshEditor.DataVisualizer.IO
 			{
 				throwElementIsMissing("VTKFile");
 			}
+		}
+
+		private string[] generateComponentNames(int numberOfComponents)
+		{
+			const string genericComponentName = "value";
+			return Enumerable.Range(1, numberOfComponents).Select(i => genericComponentName + i).ToArray();
 		}
 
 		private void throwElementIsMissing(string elementName)

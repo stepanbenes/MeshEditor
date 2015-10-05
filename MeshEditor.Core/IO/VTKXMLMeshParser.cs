@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using MeshEditor.Data;
+using MeshEditor.Utilities;
 
 namespace MeshEditor.IO
 {
@@ -341,7 +342,7 @@ namespace MeshEditor.IO
 				ElementType? elementType = mapVTKCellTypeToElementType((VTKCellType)types[elementIndex]);
 				if (elementType.HasValue) // ignore unsupported cell types (skip them)
 				{
-					int[] nodeIds = getSliceOfArray(connectivity, connectivityIndex, numberOfNodes);
+					int[] nodeIds = Functions.GetSliceOfArray(connectivity, connectivityIndex, numberOfNodes);
 					Debug.Assert(nodeIds.Length == Element.MapElementTypeToNodeCount(elementType.Value));
 					yield return new ElementDraft { ID = elementIndex, Type = elementType.Value, NodeIDs = nodeIds };
 				}
@@ -531,13 +532,6 @@ namespace MeshEditor.IO
 			{
 				throw new MeshLoadingException($"Floating-point number expected instead of '{text}'", CurrentLineNumber);
 			}
-			return result;
-		}
-
-		private T[] getSliceOfArray<T>(T[] array, int index, int length)
-		{
-			T[] result = new T[length];
-			Array.Copy(array, index, result, 0, length);
 			return result;
 		}
 

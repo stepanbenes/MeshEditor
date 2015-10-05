@@ -65,6 +65,20 @@ namespace MeshEditor.Utilities
 		}
 
 		/// <summary>
+		/// Return new array that is sub-array of array.
+		/// </summary>
+		/// <param name="array">Original array</param>
+		/// <param name="index">Start index of segment</param>
+		/// <param name="length">Length of segment to copy</param>
+		/// <returns></returns>
+		public static T[] GetSliceOfArray<T>(T[] array, int index, int length)
+		{
+			T[] result = new T[length];
+			Array.Copy(array, index, result, 0, length);
+			return result;
+		}
+
+		/// <summary>
 		/// Swaps values of two arguments.
 		/// </summary>
 		/// <param name="a">first argument</param>
