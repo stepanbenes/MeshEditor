@@ -335,15 +335,15 @@ namespace MeshEditor.IO
 
 			for (int elementIndex = 0, connectivityIndex = 0; elementIndex < types.Length; elementIndex++)
 			{
-				int nodeCount = offsets[elementIndex] - connectivityIndex;
+				int numberOfNodes = offsets[elementIndex] - connectivityIndex;
 				ElementType? elementType = mapVTKCellTypeToElementType((VTKCellType)types[elementIndex]);
 				if (elementType.HasValue) // ignore unsupported cell types (skip them)
 				{
-					int[] nodeIds = getSliceOfArray(connectivity, connectivityIndex, nodeCount);
+					int[] nodeIds = getSliceOfArray(connectivity, connectivityIndex, numberOfNodes);
 					Debug.Assert(nodeIds.Length == Element.MapElementTypeToNodeCount(elementType.Value));
 					yield return new ElementDraft { ID = elementIndex, Type = elementType.Value, NodeIDs = nodeIds };
 				}
-				connectivityIndex += nodeCount;
+				connectivityIndex += numberOfNodes;
 			}
 
 			elementsProcessed = true;
