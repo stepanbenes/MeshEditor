@@ -115,8 +115,15 @@ namespace MeshEditor.IO
 				throw new MeshLoadingException("Points were already processed.", CurrentLineNumber);
 			}
 
-			input.ReadToFollowing("Points");
-			input.ReadToDescendant("DataArray");
+			if (!input.ReadToFollowing("Points"))
+			{
+				throwElementIsMissing("Points");
+			}
+
+			if (!input.ReadToDescendant("DataArray"))
+			{
+				throwElementIsMissing("DataArray");
+            }
 
 			int numberOfComponents = 0;
 			while (input.MoveToNextAttribute())
@@ -141,12 +148,16 @@ namespace MeshEditor.IO
 						break;
 				}
 			}
+
 			if (numberOfComponents < 2 || numberOfComponents > 3)
 			{
 				throw new MeshLoadingException($"Unsupported number of components ({numberOfComponents}).", CurrentLineNumber);
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("DataArray");
+			}
 
 			float[] coordinates = parseFloat32AsciiDataArray(); // can't handle 64 precission anyway
 			{
@@ -193,10 +204,17 @@ namespace MeshEditor.IO
 				throw new MeshLoadingException("Cells were already processed.", CurrentLineNumber);
 			}
 
-			input.ReadToFollowing("Cells");
+			if (!input.ReadToFollowing("Cells"))
+			{
+				throwElementIsMissing("Cells");
+			}
 
 			// connectivity array
-			input.ReadToDescendant("DataArray");
+			if (!input.ReadToDescendant("DataArray"))
+			{
+				throwElementIsMissing("DataArray");
+			}
+
 			while (input.MoveToNextAttribute())
 			{
 				switch (input.Name.ToLower())
@@ -222,12 +240,19 @@ namespace MeshEditor.IO
 				}
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("DataArray");
+			}
 
 			int[] connectivity = parseInt32AsciiDataArray();
 
 			// offsets array
-			input.ReadToNextSibling("DataArray");
+			if (!input.ReadToNextSibling("DataArray"))
+			{
+				throwElementIsMissing("DataArray");
+			}
+
 			while (input.MoveToNextAttribute())
 			{
 				switch (input.Name.ToLower())
@@ -253,7 +278,10 @@ namespace MeshEditor.IO
 				}
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("DataArray");
+			}
 
 			int[] offsets = parseInt32AsciiDataArray();
 			if (offsets.Length != elementCount)
@@ -262,7 +290,11 @@ namespace MeshEditor.IO
 			}
 
 			// types array
-			input.ReadToNextSibling("DataArray");
+			if (!input.ReadToNextSibling("DataArray"))
+			{
+				throwElementIsMissing("DataArray");
+			}
+
 			while (input.MoveToNextAttribute())
 			{
 				switch (input.Name.ToLower())
@@ -289,9 +321,13 @@ namespace MeshEditor.IO
 				}
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("DataArray");
+			}
 
 			int[] types = parseInt32AsciiDataArray();
+
 			if (types.Length != elementCount)
 			{
 				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {elementCount}).", CurrentLineNumber);
@@ -346,16 +382,14 @@ namespace MeshEditor.IO
 
 			validateVTKFileType();
 
-			bool elementFound = input.ReadToDescendant("UnstructuredGrid");
-			if (!elementFound)
+			if (!input.ReadToDescendant("UnstructuredGrid"))
 			{
-				throw new MeshLoadingException("UnstructuredGrid element was not found.");
+				throwElementIsMissing("UnstructuredGrid");
 			}
 
-			elementFound = input.ReadToDescendant("Piece");
-			if (!elementFound)
+			if (!input.ReadToDescendant("Piece"))
 			{
-				throw new MeshLoadingException("Piece element was not found.");
+				throwElementIsMissing("Piece");
 			}
 
 			while (input.MoveToNextAttribute())
@@ -371,15 +405,17 @@ namespace MeshEditor.IO
 				}
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("Piece");
+			}
 		}
 
 		private void validateVTKFileType()
 		{
-			bool hasRootElement = input.ReadToDescendant("VTKFile");
-			if (!hasRootElement)
+			if (!input.ReadToDescendant("VTKFile"))
 			{
-				throw new MeshLoadingException("Root element (VTKFile) was not found.");
+				throwElementIsMissing("VTKFile");
 			}
 
 			while (input.MoveToNextAttribute())
@@ -395,7 +431,15 @@ namespace MeshEditor.IO
 				}
 			}
 
-			input.MoveToContent();
+			if (!input.MoveToElement())
+			{
+				throwElementIsMissing("VTKFile");
+			}
+		}
+
+		private void throwElementIsMissing(string elementName)
+		{
+			throw new MeshLoadingException($"{elementName} element was not found.");
 		}
 
 		private double[] parseFloat64AsciiDataArray()
