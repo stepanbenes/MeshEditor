@@ -54,6 +54,7 @@
     <Compile Include="Data\ScalarDataDisplayMethod.cs" />
     <Compile Include="Graphics\VectorField.cs" />
     <Compile Include="IO\DataParserFactory.cs" />
+    <Compile Include="IO\ParaViewDataFileParser.cs" />
     <Compile Include="IO\PositionAwareStreamReader.cs" />
     <Compile Include="IO\VTKXMLDataFileParser.cs" />
     <Compile Include="Layers\CrossSection.cs" />

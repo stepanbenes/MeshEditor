@@ -249,7 +249,7 @@ namespace MeshEditor.DataVisualizer.UI
 		private void buttonAddFiles_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dialog = new OpenFileDialog();
-			dialog.Filter = "All supported files (*.res, *.vtu)|*.res;*.vtu|GiD result files (*.res)|*.res|VTK XML unstructured grid result files (*.vtu)|*.vtu|All files (*.*)|*.*";
+			dialog.Filter = "All supported files (*.res, *.vtu, *.pvd)|*.res;*.vtu;*.pvd|GiD result files (*.res)|*.res|VTK XML unstructured grid result files (*.vtu)|*.vtu|ParaView Data files (*.pvd)|*.pvd|All files (*.*)|*.*";
 			dialog.FilterIndex = 0;
 			dialog.Multiselect = true;
 			if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)

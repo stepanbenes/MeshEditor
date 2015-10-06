@@ -40,7 +40,7 @@ namespace MeshEditor.IO
 			HexaQuadratic = 25,
 		}
 
-		#region static members
+		#region Static members
 
 		public static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
 
@@ -63,7 +63,7 @@ namespace MeshEditor.IO
 
 		#endregion
 
-		#region IMeshFileParser
+		#region IMeshFileParser members
 
 		public string Filename => filename;
 

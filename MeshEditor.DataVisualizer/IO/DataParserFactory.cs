@@ -13,14 +13,18 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			Debug.Assert(!string.IsNullOrEmpty(filename));
 			if (!File.Exists(filename))
+			{
 				throw new DataLoadingException(string.Format("Specified file path does not exists!"), filename);
+			}
 
 			switch (Path.GetExtension(filename))
 			{
 				case ".res":
 					return new GiDResFileParser(filename, fileStartPosition);
-				case ".vtu":
+				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
 					return new VTKXMLDataFileParser(filename, time: null);
+				case ".pvd": // ParaView Data file format, collection of pointers to VTK files
+					return new ParaViewDataFileParser(filename);
 				default:
 					throw new DataLoadingException("This data format is not supported.", filename);
 			}

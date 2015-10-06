@@ -16,14 +16,16 @@ namespace MeshEditor.IO
 			// pick the right loader according to filename extension
 			switch (Path.GetExtension(filename).ToLower())
 			{
+				case ".msh": // GiD mesh 
+					return new GiDMshFileFormatParser(filename);
+				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
+					return new VTKXMLMeshParser(filename);
+
 				case ".ply":
 					return new PLYFileFormatParser(filename);
-				case ".msh":
-					return new GiDMshFileFormatParser(filename);
 				case ".obj":
 					return new OBJFileFormatParser(filename);
-				case ".vtu": // only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXMLMeshParser(filename);
+
 				default:
 					return new DefaultFileFormatParser(filename);
 			}

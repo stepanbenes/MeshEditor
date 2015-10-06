@@ -43,7 +43,6 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			this.filename = filename;
 			this.time = time ?? tryGetOrdinalFromFileName(filename) ?? 0;
-			input = null;
 		}
 
 		#endregion
@@ -105,7 +104,7 @@ namespace MeshEditor.DataVisualizer.IO
 					case "format":
 						if (input.Value.ToLower() != "ascii")
 						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new DataLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", Filename, CurrentLineNumber);
 						}
 						break;
 				}
@@ -116,7 +115,7 @@ namespace MeshEditor.DataVisualizer.IO
 			DataType.CompoundTypes compoundType;
 			if (!dataNameMap.TryGetValue(dataArrayName, out compoundType))
 			{
-				throw new MeshLoadingException($"Data array with name '{dataArrayName}' was not found.", CurrentLineNumber);
+				throw new DataLoadingException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber);
 			}
 
 			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, generateComponentNames(numberOfComponents));
