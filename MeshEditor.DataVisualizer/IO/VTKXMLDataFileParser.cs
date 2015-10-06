@@ -17,20 +17,32 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#region Static members
 
+		private static int? tryGetOrdinalFromFileName(string filename)
+		{
+			string extension = Path.GetExtension(Path.GetFileNameWithoutExtension(filename)).TrimStart('.');
+			int ordinal;
+			if (int.TryParse(extension, out ordinal))
+				return ordinal;
+			return null;
+		}
+
 		#endregion
 
 		#region Fields, constructor
 
-		private string filename;
+		private readonly string filename;
+		private readonly double time;
+
 		private StreamReader streamReader;
 		private XmlReader input;
 		private int numberOfPoints, numberOfCells;
 		private Dictionary<string, DataType.CompoundTypes> dataNameMap;
 		private DataInfo currentDataInfo;
 
-		public VTKXMLDataFileParser(string filename)
+		public VTKXMLDataFileParser(string filename, double? time)
 		{
 			this.filename = filename;
+			this.time = time ?? tryGetOrdinalFromFileName(filename) ?? 0;
 			input = null;
 		}
 
@@ -107,8 +119,8 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new MeshLoadingException($"Data array with name '{dataArrayName}' was not found.", CurrentLineNumber);
 			}
 
-			DataType dataType = new DataType(dataArrayName, Filename, 0 /**/, compoundType, generateComponentNames(numberOfComponents));
-			currentDataInfo = new DataInfo(dataType, Path.GetFileNameWithoutExtension(Filename), 0.0 /**/, DataLocation.Nodes);
+			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, generateComponentNames(numberOfComponents));
+			currentDataInfo = new DataInfo(dataType, Path.GetFileNameWithoutExtension(Filename), time, DataLocation.Nodes);
 			return currentDataInfo;
 		}
 

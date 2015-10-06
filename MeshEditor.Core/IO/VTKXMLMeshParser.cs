@@ -48,7 +48,7 @@ namespace MeshEditor.IO
 
 		#region Fields, constructor
 
-		private string filename;
+		private readonly string filename;
 
 		private StreamReader streamReader;
         private XmlReader input;

@@ -20,7 +20,7 @@ namespace MeshEditor.DataVisualizer.IO
 				case ".res":
 					return new GiDResFileParser(filename, fileStartPosition);
 				case ".vtu":
-					return new VTKXMLDataFileParser(filename);
+					return new VTKXMLDataFileParser(filename, time: null);
 				default:
 					throw new DataLoadingException("This data format is not supported.", filename);
 			}
