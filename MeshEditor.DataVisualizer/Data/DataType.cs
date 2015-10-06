@@ -43,7 +43,8 @@ namespace MeshEditor.DataVisualizer.Data
 
 		public DataType(string name, string filename, long filePosition, CompoundTypes componentComposition, params string[] componentNames)
 		{
-			Debug.Assert(!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(filename));
+			Debug.Assert(!string.IsNullOrEmpty(name));
+			Debug.Assert(!string.IsNullOrEmpty(filename));
 
 			this.Name = name;
 			this.FileName = filename;
@@ -54,23 +55,21 @@ namespace MeshEditor.DataVisualizer.Data
 
         public void SetComponents(params string[] componentNames)
         {
-            this.Components = new Component[componentNames.Length];
+            Components = new Component[componentNames.Length];
             for (int i = 0; i < componentNames.Length; i++)
             {
-                this.Components[i] = new Component(componentNames[i]);
+                Components[i] = new Component(componentNames[i]);
             }
         }
 
 		public override string ToString()
 		{
-			return Name;
+			return Name ?? "";
 		}
 
 		public override int GetHashCode()
 		{
-			int hash1 = (Name != null) ? Name.GetHashCode() : 0;
-			int hash2 = (FileName != null) ? FileName.GetHashCode() : 0;
-			return hash1 ^ hash2;
+			return Name?.GetHashCode() ?? 0;
 		}
 
 		public override bool Equals(object obj)
@@ -82,7 +81,7 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			if (other == null)
 				return false;
-			return this.Name == other.Name && this.FileName == other.FileName;
+			return this.Name == other.Name;
 		}
 
 		public void AddGenericComponentNames()
@@ -90,22 +89,22 @@ namespace MeshEditor.DataVisualizer.Data
 			string[] names = null;
 			switch (CompoundType)
 			{
-				case DataType.CompoundTypes.Scalar:
+				case CompoundTypes.Scalar:
 					names = new[] { "value" };
 					break;
-				case DataType.CompoundTypes.Vector:
+				case CompoundTypes.Vector:
 					names = new[] {"X", "Y", "Z"}; // optional fourth component signed_module_value !!
 					break;
-				case DataType.CompoundTypes.Matrix:
+				case CompoundTypes.Matrix:
 					names = new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!
 					break;
-				case DataType.CompoundTypes.PlainDeformationMatrix:
+				case CompoundTypes.PlainDeformationMatrix:
 					names = new[] { "Sxx", "Syy", "Sxy", "Szz" };
 					break;
-				case DataType.CompoundTypes.MainMatrix:
+				case CompoundTypes.MainMatrix:
 					names = new[] { "Si", "Sii", "Siii", "Vix", "Viy", "Viz", "Viix", "Viiy", "Viiz", "Viiix", "Viiiy", "Viiiz" };
 					break;
-				case DataType.CompoundTypes.LocalAxes:
+				case CompoundTypes.LocalAxes:
 					names = new[] { "euler_ang_1", "euler_ang_2", "euler_ang_3" };
 					break;
 				default:
@@ -113,7 +112,9 @@ namespace MeshEditor.DataVisualizer.Data
 			}
 			Debug.Assert(names != null);
 			if (names != null)
+			{
 				SetComponents(names);
+			}
 		}
 	}
 }
