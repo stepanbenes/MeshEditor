@@ -121,10 +121,10 @@ namespace MeshEditor.DataVisualizer.IO
 
 			double[] values = parseFloat64AsciiDataArray();
 			int componentCount = currentDataInfo.DataType.ComponentCount;
-			Debug.Assert(values.Length % componentCount == 0);
-			for (int i = 0; i < values.Length; i += componentCount)
+			Debug.Assert(values.Length == numberOfPoints * componentCount);
+			for (int i = 0; i < numberOfPoints; i++)
 			{
-				NodeValue nodeValue = new NodeValue(i, Functions.GetSliceOfArray(values, i, componentCount));
+				NodeValue nodeValue = new NodeValue(i, Functions.GetSliceOfArray(values, i * componentCount, componentCount));
 				yield return nodeValue;
 			}
 		}
@@ -337,7 +337,6 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#region IDisposable Support
 
-		// This code added to correctly implement the disposable pattern.
 		public void Dispose()
 		{
 			if (streamReader != null)
