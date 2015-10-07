@@ -56,7 +56,7 @@
     <Compile Include="IO\DataParserFactory.cs" />
     <Compile Include="IO\ParaViewDataFileParser.cs" />
     <Compile Include="IO\PositionAwareStreamReader.cs" />
-    <Compile Include="IO\VTKXMLDataFileParser.cs" />
+    <Compile Include="IO\VTKXmlDataFileParser.cs" />
     <Compile Include="Layers\CrossSection.cs" />
     <Compile Include="Layers\IsoSurfaceSection.cs" />
     <Compile Include="DataVisualizers\ApproximationParameters.cs" />

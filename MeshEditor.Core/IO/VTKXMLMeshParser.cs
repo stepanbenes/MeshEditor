@@ -15,7 +15,7 @@ namespace MeshEditor.IO
 	/// VTK XML mesh definition parser.
 	/// Only serial UnstructuredGrid (.vtu) is supported.
 	/// </summary>
-	public class VTKXMLMeshParser : IMeshFileParser
+	public class VTKXmlMeshParser : VTKXmlFileParserBase, IMeshFileParser
 	{
 
 		private enum VTKCellType
@@ -40,54 +40,24 @@ namespace MeshEditor.IO
 			HexaQuadratic = 25,
 		}
 
-		#region Static members
-
-		public static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
-
-		#endregion
-
 		#region Fields, constructor
-
-		private readonly string filename;
-
-		private StreamReader streamReader;
-        private XmlReader input;
 
 		private bool nodesProcessed, elementsProcessed;
 		private int numberOfPoints, numberOfCells;
 
-		public VTKXMLMeshParser(string filename)
-		{
-			this.filename = filename;
-		}
+		public VTKXmlMeshParser(string filename)
+		: base(filename)
+		{ }
 
 		#endregion
 
 		#region IMeshFileParser members
 
-		public string Filename => filename;
-
-		public int CurrentLineNumber
-		{
-			get
-			{
-				IXmlLineInfo xmlInfo = input as IXmlLineInfo;
-				if (xmlInfo == null)
-				{
-					return -1;
-				}
-				return xmlInfo.LineNumber;
-			}
-		}
-
 		public int NodeCount
 		{
 			get
 			{
-				if (input == null)
-				{
-					initInput();
-				}
+				EnsureInputIsInitialized();
 				return numberOfPoints;
 			}
 		}
@@ -96,40 +66,34 @@ namespace MeshEditor.IO
 		{
 			get
 			{
-				if (input == null)
-				{
-					initInput();
-				}
+				EnsureInputIsInitialized();
 				return numberOfCells;
 			}
 		}
 
 		public IEnumerable<Node> ReadNodes()
 		{
-			if (input == null)
-			{
-				initInput();
-			}
+			EnsureInputIsInitialized();
 
 			if (nodesProcessed)
 			{
 				throw new MeshLoadingException("Points were already processed.", CurrentLineNumber);
 			}
 
-			if (!input.ReadToFollowing("Points"))
+			if (!Input.ReadToFollowing("Points"))
 			{
-				throwElementIsMissing("Points");
+				ThrowElementIsMissing("Points");
 			}
 
-			if (!input.ReadToDescendant("DataArray"))
+			if (!Input.ReadToDescendant("DataArray"))
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
             }
 
 			int numberOfComponents = 0;
-			while (input.MoveToNextAttribute())
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "type":
 						//if (input.Value.ToLower() != "float64")
@@ -139,12 +103,12 @@ namespace MeshEditor.IO
 						// ignore type, parse coordinates as Float32 values
 						break;
 					case "numberofcomponents":
-						numberOfComponents = parseInt32(input.Value);
+						numberOfComponents = ParseInt32(Input.Value);
 						break;
 					case "format":
-						if (input.Value.ToLower() != "ascii")
+						if (Input.Value.ToLower() != "ascii")
 						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 				}
@@ -155,12 +119,12 @@ namespace MeshEditor.IO
 				throw new MeshLoadingException($"Unsupported number of components ({numberOfComponents}).", CurrentLineNumber);
 			}
 
-			if (!input.MoveToElement())
+			if (!Input.MoveToElement())
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			float[] coordinates = parseFloat32AsciiDataArray(); // can't handle 64 precission anyway
+			float[] coordinates = ParseFloat32AsciiDataArray(); // can't handle 64 precission anyway
 			{
 				int expectedDataArrayLength = numberOfPoints * numberOfComponents;
 				if (coordinates.Length != expectedDataArrayLength)
@@ -196,96 +160,93 @@ namespace MeshEditor.IO
 
 		public IEnumerable<ElementDraft> ReadElements()
 		{
-			if (input == null)
-			{
-				initInput();
-			}
+			EnsureInputIsInitialized();
 
 			if (elementsProcessed)
 			{
 				throw new MeshLoadingException("Cells were already processed.", CurrentLineNumber);
 			}
 
-			if (!input.ReadToFollowing("Cells"))
+			if (!Input.ReadToFollowing("Cells"))
 			{
-				throwElementIsMissing("Cells");
+				ThrowElementIsMissing("Cells");
 			}
 
 			// connectivity array
-			if (!input.ReadToDescendant("DataArray"))
+			if (!Input.ReadToDescendant("DataArray"))
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			while (input.MoveToNextAttribute())
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "type":
-						if (input.Value.ToLower() != "int32")
+						if (Input.Value.ToLower() != "int32")
 						{
-							throw new MeshLoadingException($"Int32 connectivity data type was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Int32 connectivity data type was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 					case "name":
-						if (input.Value.ToLower() != "connectivity")
+						if (Input.Value.ToLower() != "connectivity")
 						{
-							throw new MeshLoadingException($"Connectivity data array was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Connectivity data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 					case "format":
-						if (input.Value.ToLower() != "ascii")
+						if (Input.Value.ToLower() != "ascii")
 						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 				}
 			}
 
-			if (!input.MoveToElement())
+			if (!Input.MoveToElement())
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			int[] connectivity = parseInt32AsciiDataArray();
+			int[] connectivity = ParseInt32AsciiDataArray();
 
 			// offsets array
-			if (!input.ReadToNextSibling("DataArray"))
+			if (!Input.ReadToNextSibling("DataArray"))
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			while (input.MoveToNextAttribute())
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "type":
-						if (input.Value.ToLower() != "int32")
+						if (Input.Value.ToLower() != "int32")
 						{
-							throw new MeshLoadingException($"Int32 offsets data type was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Int32 offsets data type was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 					case "name":
-						if (input.Value.ToLower() != "offsets")
+						if (Input.Value.ToLower() != "offsets")
 						{
-							throw new MeshLoadingException($"Offsets data array was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Offsets data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 					case "format":
-						if (input.Value.ToLower() != "ascii")
+						if (Input.Value.ToLower() != "ascii")
 						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 				}
 			}
 
-			if (!input.MoveToElement())
+			if (!Input.MoveToElement())
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			int[] offsets = parseInt32AsciiDataArray();
+			int[] offsets = ParseInt32AsciiDataArray();
 
 			if (offsets.Length != numberOfCells)
 			{
@@ -293,14 +254,14 @@ namespace MeshEditor.IO
 			}
 
 			// types array
-			if (!input.ReadToNextSibling("DataArray"))
+			if (!Input.ReadToNextSibling("DataArray"))
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			while (input.MoveToNextAttribute())
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "type":
 						//if (input.Value.ToLower() != "uint8")
@@ -310,26 +271,26 @@ namespace MeshEditor.IO
 						// ignore type, parse coordinates as Float32 values
 						break;
 					case "name":
-						if (input.Value.ToLower() != "types")
+						if (Input.Value.ToLower() != "types")
 						{
-							throw new MeshLoadingException($"Types data array was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Types data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 					case "format":
-						if (input.Value.ToLower() != "ascii")
+						if (Input.Value.ToLower() != "ascii")
 						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", CurrentLineNumber);
+							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
 						}
 						break;
 				}
 			}
 
-			if (!input.MoveToElement())
+			if (!Input.MoveToElement())
 			{
-				throwElementIsMissing("DataArray");
+				ThrowElementIsMissing("DataArray");
 			}
 
-			int[] types = parseInt32AsciiDataArray();
+			int[] types = ParseInt32AsciiDataArray();
 
 			if (types.Length != numberOfCells)
 			{
@@ -339,7 +300,7 @@ namespace MeshEditor.IO
 			for (int elementIndex = 0, connectivityIndex = 0; elementIndex < types.Length; elementIndex++)
 			{
 				int numberOfNodes = offsets[elementIndex] - connectivityIndex;
-				ElementType? elementType = mapVTKCellTypeToElementType((VTKCellType)types[elementIndex]);
+				ElementType? elementType = MapVTKCellTypeToElementType((VTKCellType)types[elementIndex]);
 				if (elementType.HasValue) // ignore unsupported cell types (skip them)
 				{
 					int[] nodeIds = Functions.GetSliceOfArray(connectivity, connectivityIndex, numberOfNodes);
@@ -354,188 +315,56 @@ namespace MeshEditor.IO
 
 		#endregion
 
-		#region IDisposable Support
-
-		public void Dispose()
-		{
-			if (streamReader != null)
-			{
-				streamReader.Dispose();
-				streamReader = null;
-			}
-			if (input != null)
-			{
-				((IDisposable)input).Dispose();
-				input = null;
-			}
-		}
-
-		#endregion
-
 		#region Private methods
 
-		private void initInput()
+		private void EnsureInputIsInitialized()
 		{
-			if (!File.Exists(filename))
+			if (!IsInputInitialized)
 			{
-				throw new MeshLoadingException($"Mesh file can't be found. ({filename})");
+				string fileType;
+				InitInput(out fileType);
+				if (fileType?.ToLower() != "unstructuredgrid")
+				{
+					throw new MeshLoadingException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", CurrentLineNumber);
+				}
+				ReadToPieceElement();
+			}
+			Debug.Assert(IsInputInitialized);
+			Debug.Assert(Input != null);
+		}
+
+		private void ReadToPieceElement()
+		{
+			if (!Input.ReadToDescendant("UnstructuredGrid"))
+			{
+				ThrowElementIsMissing("UnstructuredGrid");
 			}
 
-			streamReader = new StreamReader(filename);
-            input = XmlReader.Create(streamReader);
-
-			validateVTKFileType();
-
-			if (!input.ReadToDescendant("UnstructuredGrid"))
+			if (!Input.ReadToDescendant("Piece"))
 			{
-				throwElementIsMissing("UnstructuredGrid");
+				ThrowElementIsMissing("Piece");
 			}
 
-			if (!input.ReadToDescendant("Piece"))
+			while (Input.MoveToNextAttribute())
 			{
-				throwElementIsMissing("Piece");
-			}
-
-			while (input.MoveToNextAttribute())
-			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "numberofpoints":
-						numberOfPoints = parseInt32(input.Value);
+						numberOfPoints = ParseInt32(Input.Value);
 						break;
 					case "numberofcells":
-						numberOfCells = parseInt32(input.Value);
+						numberOfCells = ParseInt32(Input.Value);
 						break;
 				}
 			}
 
-			if (!input.MoveToElement())
+			if (!Input.MoveToElement())
 			{
-				throwElementIsMissing("Piece");
+				ThrowElementIsMissing("Piece");
 			}
 		}
 
-		private void validateVTKFileType()
-		{
-			if (!input.ReadToDescendant("VTKFile"))
-			{
-				throwElementIsMissing("VTKFile");
-			}
-
-			while (input.MoveToNextAttribute())
-			{
-				switch (input.Name.ToLower())
-				{
-					case "type":
-						if (input.Value.ToLower() != "unstructuredgrid")
-						{
-							throw new MeshLoadingException($"Type '{input.Value}' is not supported. Only 'UnstructuredGrid' is supported.", CurrentLineNumber);
-						}
-						break;
-				}
-			}
-
-			if (!input.MoveToElement())
-			{
-				throwElementIsMissing("VTKFile");
-			}
-		}
-
-		private void throwElementIsMissing(string elementName)
-		{
-			throw new MeshLoadingException($"{elementName} element was not found.");
-		}
-
-		private double[] parseFloat64AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			// TODO: for binary format use: input.ReadElementContentAsBase64(...)
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			double[] result = new double[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseFloat64(parts[i]);
-			}
-			return result;
-		}
-
-		private float[] parseFloat32AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			float[] result = new float[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseFloat32(parts[i]);
-			}
-			return result;
-		}
-
-		private int[] parseInt32AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			int[] result = new int[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseInt32(parts[i]);
-			}
-			return result;
-		}
-
-		private byte[] parseUInt8AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			byte[] result = new byte[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseUInt8(parts[i]);
-			}
-			return result;
-		}
-
-		private int parseInt32(string text)
-		{
-			int result;
-			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new MeshLoadingException($"32bit integer expected instead of '{text}'", CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private byte parseUInt8(string text)
-		{
-			byte result;
-			if (!byte.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new MeshLoadingException($"Unsigned 8bit integer expected instead of '{text}'", CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private double parseFloat64(string text)
-		{
-			double result;
-			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new MeshLoadingException($"Floating-point number expected instead of '{text}'", CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private float parseFloat32(string text)
-		{
-			float result;
-			if (!float.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new MeshLoadingException($"Floating-point number expected instead of '{text}'", CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private ElementType? mapVTKCellTypeToElementType(VTKCellType vtkCellType)
+		private ElementType? MapVTKCellTypeToElementType(VTKCellType vtkCellType)
 		{
 			switch (vtkCellType)
 			{

@@ -22,7 +22,7 @@ namespace MeshEditor.DataVisualizer.IO
 				case ".res":
 					return new GiDResFileParser(filename, fileStartPosition);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXMLDataFileParser(filename, time: null);
+					return new VTKXmlDataFileParser(filename, time: null);
 				case ".pvd": // ParaView Data file format, collection of pointers to VTK files
 					return new ParaViewDataFileParser(filename);
 				default:

@@ -12,7 +12,7 @@ using MeshEditor.Utilities;
 
 namespace MeshEditor.DataVisualizer.IO
 {
-	public class VTKXMLDataFileParser : IDataFileParser
+	public class VTKXmlDataFileParser : VTKXmlFileParserBase, IDataFileParser
 	{
 
 		#region Static members
@@ -30,18 +30,15 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#region Fields, constructor
 
-		private readonly string filename;
 		private readonly double time;
 
-		private StreamReader streamReader;
-		private XmlReader input;
 		private int numberOfPoints, numberOfCells;
 		private Dictionary<string, DataType.CompoundTypes> dataNameMap;
 		private DataInfo currentDataInfo;
 
-		public VTKXMLDataFileParser(string filename, double? time)
+		public VTKXmlDataFileParser(string filename, double? time)
+			: base(filename)
 		{
-			this.filename = filename;
 			this.time = time ?? tryGetOrdinalFromFileName(filename) ?? 0;
 		}
 
@@ -49,68 +46,40 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#region IDataFileParser members
 
-		public string Filename => filename;
-
-		public int CurrentLineNumber
-		{
-			get
-			{
-				IXmlLineInfo xmlInfo = input as IXmlLineInfo;
-				if (xmlInfo == null)
-				{
-					return -1;
-				}
-				return xmlInfo.LineNumber;
-			}
-		}
-
-		public double PercentageRead
-		{
-			get
-			{
-				return ((double)streamReader.BaseStream.Position / (double)streamReader.BaseStream.Length) * 100.0;
-			}
-		}
-
 		public DataInfo ReadNextResult()
 		{
-			if (input == null)
-			{
-				initInput();
-			}
+			EnsureInputIsInitialized();
 
-			Debug.Assert(dataNameMap != null);
-
-			if (!input.ReadToDescendant("DataArray") && !input.ReadToNextSibling("DataArray"))
+			if (!Input.ReadToDescendant("DataArray") && !Input.ReadToNextSibling("DataArray"))
 			{
 				return null; // end of PointData, no DataArray found in this element
 			}
 
 			string dataArrayName = null;
 			int numberOfComponents = 0;
-			while (input.MoveToNextAttribute())
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "type":
 						// ignore type, parse coordinates as Float64 values
 						break;
 					case "name":
-						dataArrayName = input.Value;
+						dataArrayName = Input.Value;
 						break;
 					case "numberofcomponents":
-						numberOfComponents = parseInt32(input.Value);
+						numberOfComponents = ParseInt32(Input.Value);
 						break;
 					case "format":
-						if (input.Value.ToLower() != "ascii")
+						if (Input.Value.ToLower() != "ascii")
 						{
-							throw new DataLoadingException($"Ascii data array format was expected instead of '{input.Value}'.", Filename, CurrentLineNumber);
+							throw new DataLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
 						}
 						break;
 				}
 			}
 
-			input.MoveToElement(); // move attributes back to beginning of the DataArray element
+			Input.MoveToElement(); // move attributes back to beginning of the DataArray element
 
 			DataType.CompoundTypes compoundType;
 			if (!dataNameMap.TryGetValue(dataArrayName, out compoundType))
@@ -118,7 +87,7 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new DataLoadingException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber);
 			}
 
-			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, generateComponentNames(numberOfComponents));
+			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, GenerateComponentNames(numberOfComponents));
 			currentDataInfo = new DataInfo(dataType, Path.GetFileNameWithoutExtension(Filename), time, DataLocation.Nodes);
 			return currentDataInfo;
 		}
@@ -130,7 +99,7 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
 			}
 
-			double[] values = parseFloat64AsciiDataArray();
+			double[] values = ParseFloat64AsciiDataArray();
 			int componentCount = currentDataInfo.DataType.ComponentCount;
 			Debug.Assert(values.Length == numberOfPoints * componentCount);
 			for (int i = 0; i < numberOfPoints; i++)
@@ -144,70 +113,78 @@ namespace MeshEditor.DataVisualizer.IO
 
 		#region Private methods
 
-		private void initInput()
+		private void EnsureInputIsInitialized()
 		{
-			if (!File.Exists(filename))
+			if (!IsInputInitialized)
 			{
-				throw new DataLoadingException($"Data file can't be found. ({filename})");
+				string fileType;
+				InitInput(out fileType);
+				if (fileType?.ToLower() != "unstructuredgrid")
+				{
+					throw new MeshLoadingException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", CurrentLineNumber);
+				}
+				ReadToUnstructuredGridElement();
+			}
+			Debug.Assert(IsInputInitialized);
+			Debug.Assert(Input != null);
+			Debug.Assert(dataNameMap != null);
+		}
+
+		private void ReadToUnstructuredGridElement()
+		{
+			if (!Input.ReadToDescendant("UnstructuredGrid"))
+			{
+				ThrowElementIsMissing("UnstructuredGrid");
 			}
 
-			streamReader = new StreamReader(filename);
-			input = XmlReader.Create(streamReader);
-
-			validateVTKFileType();
-
-			if (!input.ReadToDescendant("UnstructuredGrid"))
+			if (!Input.ReadToDescendant("Piece"))
 			{
-				throwElementIsMissing("UnstructuredGrid");
+				ThrowElementIsMissing("Piece");
 			}
 
-			if (!input.ReadToDescendant("Piece"))
+			while (Input.MoveToNextAttribute())
 			{
-				throwElementIsMissing("Piece");
-			}
-
-			while (input.MoveToNextAttribute())
-			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "numberofpoints":
-						numberOfPoints = parseInt32(input.Value);
+						numberOfPoints = ParseInt32(Input.Value);
 						break;
 					case "numberofcells":
-						numberOfCells = parseInt32(input.Value);
+						numberOfCells = ParseInt32(Input.Value);
 						break;
 				}
 			}
 
-			if (!input.MoveToElement()) // move to start of Piece element
+			if (!Input.MoveToElement()) // move to start of Piece element
 			{
-				throwElementIsMissing("Piece");
+				ThrowElementIsMissing("Piece");
 			}
 
-			if (!input.ReadToDescendant("PointData"))
+			if (!Input.ReadToDescendant("PointData"))
 			{
-				throwElementIsMissing("PointData");
+				ThrowElementIsMissing("PointData");
 			}
 
 			dataNameMap = new Dictionary<string, DataType.CompoundTypes>();
-			while (input.MoveToNextAttribute())
+
+			while (Input.MoveToNextAttribute())
 			{
-				switch (input.Name.ToLower())
+				switch (Input.Name.ToLower())
 				{
 					case "scalars":
-						foreach (string scalarName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						foreach (string scalarName in Input.Value.Split(VTKXmlMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
 						{
 							dataNameMap.Add(scalarName, DataType.CompoundTypes.Scalar);
 						}
 						break;
 					case "vectors":
-						foreach (string vectorName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						foreach (string vectorName in Input.Value.Split(VTKXmlMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
 						{
 							dataNameMap.Add(vectorName, DataType.CompoundTypes.Vector);
 						}
 						break;
 					case "tensors":
-						foreach (string tensorName in input.Value.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
+						foreach (string tensorName in Input.Value.Split(VTKXmlMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries))
 						{
 							dataNameMap.Add(tensorName, DataType.CompoundTypes.Matrix);
 						}
@@ -215,151 +192,13 @@ namespace MeshEditor.DataVisualizer.IO
 				}
 			}
 
-			input.MoveToElement(); // move from attribute back to Piece element
+			Input.MoveToElement(); // move from attribute back to Piece element
 		}
 
-		private void validateVTKFileType()
-		{
-			if (!input.ReadToDescendant("VTKFile"))
-			{
-				throwElementIsMissing("VTKFile");
-			}
-
-			while (input.MoveToNextAttribute())
-			{
-				switch (input.Name.ToLower())
-				{
-					case "type":
-						if (input.Value.ToLower() != "unstructuredgrid")
-						{
-							throw new DataLoadingException($"Type '{input.Value}' is not supported. Only 'UnstructuredGrid' is supported.", Filename, CurrentLineNumber);
-						}
-						break;
-				}
-			}
-
-			if (!input.MoveToElement())
-			{
-				throwElementIsMissing("VTKFile");
-			}
-		}
-
-		private string[] generateComponentNames(int numberOfComponents)
+		private string[] GenerateComponentNames(int numberOfComponents)
 		{
 			const string genericComponentName = "value";
 			return Enumerable.Range(1, numberOfComponents).Select(i => genericComponentName + i).ToArray();
-		}
-
-		private void throwElementIsMissing(string elementName)
-		{
-			throw new DataLoadingException($"{elementName} element was not found.", Filename, CurrentLineNumber);
-		}
-
-		private double[] parseFloat64AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			// TODO: for binary format use: input.ReadElementContentAsBase64(...)
-			string[] parts = content.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			double[] result = new double[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseFloat64(parts[i]);
-			}
-			return result;
-		}
-
-		private float[] parseFloat32AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			float[] result = new float[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseFloat32(parts[i]);
-			}
-			return result;
-		}
-
-		private int[] parseInt32AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			int[] result = new int[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseInt32(parts[i]);
-			}
-			return result;
-		}
-
-		private byte[] parseUInt8AsciiDataArray()
-		{
-			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(VTKXMLMeshParser.DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			byte[] result = new byte[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
-			{
-				result[i] = parseUInt8(parts[i]);
-			}
-			return result;
-		}
-
-		private int parseInt32(string text)
-		{
-			int result;
-			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new DataLoadingException($"32bit integer expected instead of '{text}'", Filename, CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private byte parseUInt8(string text)
-		{
-			byte result;
-			if (!byte.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new DataLoadingException($"Unsigned 8bit integer expected instead of '{text}'", Filename, CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private double parseFloat64(string text)
-		{
-			double result;
-			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new DataLoadingException($"Floating-point number expected instead of '{text}'", Filename, CurrentLineNumber);
-			}
-			return result;
-		}
-
-		private float parseFloat32(string text)
-		{
-			float result;
-			if (!float.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-			{
-				throw new DataLoadingException($"Floating-point number expected instead of '{text}'", Filename, CurrentLineNumber);
-			}
-			return result;
-		}
-
-		#endregion
-
-		#region IDisposable Support
-
-		public void Dispose()
-		{
-			if (streamReader != null)
-			{
-				streamReader.Dispose();
-				streamReader = null;
-			}
-			if (input != null)
-			{
-				((IDisposable)input).Dispose();
-				input = null;
-			}
 		}
 
 		#endregion

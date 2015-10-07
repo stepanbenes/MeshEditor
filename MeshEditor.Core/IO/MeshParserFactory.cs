@@ -19,7 +19,7 @@ namespace MeshEditor.IO
 				case ".msh": // GiD mesh 
 					return new GiDMshFileFormatParser(filename);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXMLMeshParser(filename);
+					return new VTKXmlMeshParser(filename);
 
 				case ".ply":
 					return new PLYFileFormatParser(filename);
