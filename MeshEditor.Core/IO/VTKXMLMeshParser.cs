@@ -88,28 +88,23 @@ namespace MeshEditor.IO
 			if (!Input.ReadToDescendant("DataArray"))
 			{
 				ThrowElementIsMissing("DataArray");
-            }
+			}
 
-			int numberOfComponents = 0;
+			int numberOfComponents = 1; // one component is default in case of missing attribute
+			DataArrayFormat? format = null;
+			DataArrayType? type = null;
 			while (Input.MoveToNextAttribute())
 			{
 				switch (Input.Name.ToLower())
 				{
 					case "type":
-						//if (input.Value.ToLower() != "float64")
-						//{
-						//	throw new MeshLoadingException($"Float64 coordinates data type was expected instead of '{input.Value}'.", CurrentLineNumber);
-						//}
-						// ignore type, parse coordinates as Float32 values
+						type = TryParseDataArrayType(Input.Value);
 						break;
 					case "numberofcomponents":
 						numberOfComponents = ParseInt32(Input.Value);
 						break;
 					case "format":
-						if (Input.Value.ToLower() != "ascii")
-						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
+						format = TryParseDataArrayFormat(Input.Value);
 						break;
 				}
 			}
@@ -119,18 +114,26 @@ namespace MeshEditor.IO
 				throw new MeshLoadingException($"Unsupported number of components ({numberOfComponents}).", CurrentLineNumber);
 			}
 
+			if (!type.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+			}
+
+			if (!format.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+			}
+
 			if (!Input.MoveToElement())
 			{
 				ThrowElementIsMissing("DataArray");
 			}
 
-			float[] coordinates = ParseFloat32AsciiDataArray(); // can't handle 64 precission anyway
+			float[] coordinates = ParseFloat32DataArray(format.Value, type.Value); // can't handle 64 precission anyway
+			int expectedDataArrayLength = numberOfPoints * numberOfComponents;
+			if (coordinates.Length != expectedDataArrayLength)
 			{
-				int expectedDataArrayLength = numberOfPoints * numberOfComponents;
-				if (coordinates.Length != expectedDataArrayLength)
-				{
-					throw new MeshLoadingException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", CurrentLineNumber);
-				}
+				throw new MeshLoadingException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", CurrentLineNumber);
 			}
 
 			switch (numberOfComponents)
@@ -172,130 +175,9 @@ namespace MeshEditor.IO
 				ThrowElementIsMissing("Cells");
 			}
 
-			// connectivity array
-			if (!Input.ReadToDescendant("DataArray"))
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			while (Input.MoveToNextAttribute())
-			{
-				switch (Input.Name.ToLower())
-				{
-					case "type":
-						if (Input.Value.ToLower() != "int32")
-						{
-							throw new MeshLoadingException($"Int32 connectivity data type was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-					case "name":
-						if (Input.Value.ToLower() != "connectivity")
-						{
-							throw new MeshLoadingException($"Connectivity data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-					case "format":
-						if (Input.Value.ToLower() != "ascii")
-						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-				}
-			}
-
-			if (!Input.MoveToElement())
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			int[] connectivity = ParseInt32AsciiDataArray();
-
-			// offsets array
-			if (!Input.ReadToNextSibling("DataArray"))
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			while (Input.MoveToNextAttribute())
-			{
-				switch (Input.Name.ToLower())
-				{
-					case "type":
-						if (Input.Value.ToLower() != "int32")
-						{
-							throw new MeshLoadingException($"Int32 offsets data type was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-					case "name":
-						if (Input.Value.ToLower() != "offsets")
-						{
-							throw new MeshLoadingException($"Offsets data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-					case "format":
-						if (Input.Value.ToLower() != "ascii")
-						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-				}
-			}
-
-			if (!Input.MoveToElement())
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			int[] offsets = ParseInt32AsciiDataArray();
-
-			if (offsets.Length != numberOfCells)
-			{
-				throw new MeshLoadingException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", CurrentLineNumber);
-			}
-
-			// types array
-			if (!Input.ReadToNextSibling("DataArray"))
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			while (Input.MoveToNextAttribute())
-			{
-				switch (Input.Name.ToLower())
-				{
-					case "type":
-						//if (input.Value.ToLower() != "uint8")
-						//{
-						//	throw new MeshLoadingException($"UInt8 offsets data type was expected instead of '{input.Value}'.", CurrentLineNumber);
-						//}
-						// ignore type, parse coordinates as Float32 values
-						break;
-					case "name":
-						if (Input.Value.ToLower() != "types")
-						{
-							throw new MeshLoadingException($"Types data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-					case "format":
-						if (Input.Value.ToLower() != "ascii")
-						{
-							throw new MeshLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", CurrentLineNumber);
-						}
-						break;
-				}
-			}
-
-			if (!Input.MoveToElement())
-			{
-				ThrowElementIsMissing("DataArray");
-			}
-
-			int[] types = ParseInt32AsciiDataArray();
-
-			if (types.Length != numberOfCells)
-			{
-				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {numberOfCells}).", CurrentLineNumber);
-			}
+			int[] connectivity = ReadConnectivityArray();
+			int[] offsets = ReadOffsetsArray();
+			int[] types = ReadTypesArray();
 
 			for (int elementIndex = 0, connectivityIndex = 0; elementIndex < types.Length; elementIndex++)
 			{
@@ -362,6 +244,158 @@ namespace MeshEditor.IO
 			{
 				ThrowElementIsMissing("Piece");
 			}
+		}
+
+		private int[] ReadConnectivityArray()
+		{
+			if (!Input.ReadToDescendant("DataArray"))
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			DataArrayFormat? connectivityArrayFormat = null;
+			DataArrayType? connectivityArrayType = null;
+			while (Input.MoveToNextAttribute())
+			{
+				switch (Input.Name.ToLower())
+				{
+					case "type":
+						connectivityArrayType = TryParseDataArrayType(Input.Value);
+						break;
+					case "name":
+						if (Input.Value.ToLower() != "connectivity")
+						{
+							throw new MeshLoadingException($"Connectivity data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+						}
+						break;
+					case "format":
+						connectivityArrayFormat = TryParseDataArrayFormat(Input.Value);
+						break;
+				}
+			}
+
+			if (!connectivityArrayType.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+			}
+
+			if (!connectivityArrayFormat.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+			}
+
+			if (!Input.MoveToElement())
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			return ParseInt32DataArray(connectivityArrayFormat.Value, connectivityArrayType.Value);
+		}
+
+		private int[] ReadOffsetsArray()
+		{
+			if (!Input.ReadToNextSibling("DataArray"))
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			DataArrayFormat? offsetsArrayFormat = null;
+			DataArrayType? offsetsArrayType = null;
+			while (Input.MoveToNextAttribute())
+			{
+				switch (Input.Name.ToLower())
+				{
+					case "type":
+						offsetsArrayType = TryParseDataArrayType(Input.Value);
+						break;
+					case "name":
+						if (Input.Value.ToLower() != "offsets")
+						{
+							throw new MeshLoadingException($"Offsets data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+						}
+						break;
+					case "format":
+						offsetsArrayFormat = TryParseDataArrayFormat(Input.Value);
+						break;
+				}
+			}
+
+			if (!offsetsArrayType.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+			}
+
+			if (!offsetsArrayFormat.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+			}
+
+			if (!Input.MoveToElement())
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			int[] offsets = ParseInt32DataArray(offsetsArrayFormat.Value, offsetsArrayType.Value);
+
+			if (offsets.Length != numberOfCells)
+			{
+				throw new MeshLoadingException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", CurrentLineNumber);
+			}
+
+			return offsets;
+		}
+
+		private int[] ReadTypesArray()
+		{
+			if (!Input.ReadToNextSibling("DataArray"))
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			DataArrayFormat? typesArrayFormat = null;
+			DataArrayType? typesArrayType = null;
+			while (Input.MoveToNextAttribute())
+			{
+				switch (Input.Name.ToLower())
+				{
+					case "type":
+						typesArrayType = TryParseDataArrayType(Input.Value);
+						break;
+					case "name":
+						if (Input.Value.ToLower() != "types")
+						{
+							throw new MeshLoadingException($"Types data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+						}
+						break;
+					case "format":
+						typesArrayFormat = TryParseDataArrayFormat(Input.Value);
+						break;
+				}
+			}
+
+			if (!typesArrayType.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+			}
+
+			if (!typesArrayFormat.HasValue)
+			{
+				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+			}
+
+			if (!Input.MoveToElement())
+			{
+				ThrowElementIsMissing("DataArray");
+			}
+
+			int[] types = ParseInt32DataArray(typesArrayFormat.Value, typesArrayType.Value);
+
+			if (types.Length != numberOfCells)
+			{
+				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {numberOfCells}).", CurrentLineNumber);
+			}
+
+			return types;
 		}
 
 		private ElementType? MapVTKCellTypeToElementType(VTKCellType vtkCellType)

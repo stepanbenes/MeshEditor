@@ -35,8 +35,10 @@ namespace MeshEditor.DataVisualizer.IO
 		private int numberOfPoints, numberOfCells;
 		private Dictionary<string, DataType.CompoundTypes> dataNameMap;
 		private DataInfo currentDataInfo;
+		DataArrayFormat? currentDataArrayFormat;
+		DataArrayType? currentDataArrayType;
 
-		public VTKXmlDataFileParser(string filename, double? time)
+        public VTKXmlDataFileParser(string filename, double? time)
 			: base(filename)
 		{
 			this.time = time ?? tryGetOrdinalFromFileName(filename) ?? 0;
@@ -56,13 +58,15 @@ namespace MeshEditor.DataVisualizer.IO
 			}
 
 			string dataArrayName = null;
-			int numberOfComponents = 0;
-			while (Input.MoveToNextAttribute())
+			int numberOfComponents = 1; // one component is default in case of missing attribute
+			currentDataArrayFormat = null;
+			currentDataArrayType = null;
+            while (Input.MoveToNextAttribute())
 			{
 				switch (Input.Name.ToLower())
 				{
 					case "type":
-						// ignore type, parse coordinates as Float64 values
+						currentDataArrayType = TryParseDataArrayType(Input.Value);
 						break;
 					case "name":
 						dataArrayName = Input.Value;
@@ -71,12 +75,19 @@ namespace MeshEditor.DataVisualizer.IO
 						numberOfComponents = ParseInt32(Input.Value);
 						break;
 					case "format":
-						if (Input.Value.ToLower() != "ascii")
-						{
-							throw new DataLoadingException($"Ascii data array format was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
-						}
+						currentDataArrayFormat = TryParseDataArrayFormat(Input.Value);
 						break;
 				}
+			}
+
+			if (!currentDataArrayType.HasValue)
+			{
+                throw new DataLoadingException("Unknown data type.", Filename, CurrentLineNumber);
+			}
+
+			if (!currentDataArrayFormat.HasValue)
+			{
+				throw new DataLoadingException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			Input.MoveToElement(); // move attributes back to beginning of the DataArray element
@@ -99,8 +110,13 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
 			}
 
-			double[] values = ParseFloat64AsciiDataArray();
+			Debug.Assert(currentDataArrayType.HasValue);
+			Debug.Assert(currentDataArrayFormat.HasValue);
+
 			int componentCount = currentDataInfo.DataType.ComponentCount;
+
+			double[] values = ParseFloat64DataArray(currentDataArrayFormat.Value, currentDataArrayType.Value);
+			
 			Debug.Assert(values.Length == numberOfPoints * componentCount);
 			for (int i = 0; i < numberOfPoints; i++)
 			{

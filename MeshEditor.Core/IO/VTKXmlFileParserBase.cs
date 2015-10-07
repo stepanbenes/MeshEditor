@@ -1,19 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using MeshEditor.Utilities;
 
 namespace MeshEditor.IO
 {
 	public abstract class VTKXmlFileParserBase : IDisposable
 	{
 
+		protected enum DataArrayFormat
+		{
+			Ascii,
+			Binary
+		}
+
+		protected enum DataArrayType
+		{
+			Float64,
+			Float32,
+			Int32,
+			UInt8
+		}
+
 		#region Static members
 
 		public static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
+
+		protected static DataArrayFormat? TryParseDataArrayFormat(string text)
+		{
+			switch (text?.ToLower())
+			{
+				case "ascii":
+					return DataArrayFormat.Ascii;
+				case "binary":
+					return DataArrayFormat.Binary;
+				default:
+					return null;
+			}
+		}
+
+		protected static DataArrayType? TryParseDataArrayType(string text)
+		{
+			switch (text?.ToLower())
+			{
+				case "float64":
+					return DataArrayType.Float64;
+				case "float32":
+					return DataArrayType.Float64;
+					return DataArrayType.Float64;
+				case "int32":
+					return DataArrayType.Float64;
+				case "uint8":
+					return DataArrayType.Float64;
+				default:
+					return null;
+			}
+		}
 
 		#endregion
 
@@ -95,6 +142,89 @@ namespace MeshEditor.IO
 			}
 		}
 
+		private double[] ConvertAsciiDataArrayToFloat64Array(string[] data)
+		{
+			Debug.Assert(data != null);
+			double[] result = new double[data.Length];
+			for (int i = 0; i < data.Length; i++)
+			{
+				result[i] = ParseFloat64(data[i]);
+			}
+			return result;
+		}
+
+		private float[] ConvertAsciiDataArrayToFloat32Array(string[] data)
+		{
+			Debug.Assert(data != null);
+			float[] result = new float[data.Length];
+			for (int i = 0; i < data.Length; i++)
+			{
+				result[i] = ParseFloat32(data[i]);
+			}
+			return result;
+		}
+
+		private int[] ConvertAsciiDataArrayToInt32Array(string[] data)
+		{
+			Debug.Assert(data != null);
+			int[] result = new int[data.Length];
+			for (int i = 0; i < data.Length; i++)
+			{
+				result[i] = ParseInt32(data[i]);
+			}
+			return result;
+		}
+
+		private byte[] ConvertAsciiDataArrayToUInt8Array(string[] data)
+		{
+			Debug.Assert(data != null);
+			byte[] result = new byte[data.Length];
+			for (int i = 0; i < data.Length; i++)
+			{
+				result[i] = ParseUInt8(data[i]);
+			}
+			return result;
+		}
+
+		private double[] ConvertByteArrayToFloat64Array(byte[] bytes)
+		{
+			Debug.Assert(bytes != null);
+			const int doubleByteCount = 8;
+			Debug.Assert(bytes.Length % doubleByteCount == 0);
+			double[] values = new double[bytes.Length / doubleByteCount];
+			for (int i = 0; i < values.Length; i++)
+			{
+				values[i] = BitConverter.ToDouble(bytes, i * doubleByteCount);
+			}
+			return values;
+		}
+
+		private float[] ConvertByteArrayToFloat32Array(byte[] bytes)
+		{
+			Debug.Assert(bytes != null);
+			const int singleByteCount = 4;
+			Debug.Assert(bytes.Length % singleByteCount == 0);
+			float[] values = new float[bytes.Length / singleByteCount];
+			for (int i = 0; i < values.Length; i++)
+			{
+				values[i] = BitConverter.ToSingle(bytes, i * singleByteCount);
+			}
+			return values;
+		}
+
+		private int[] ConvertByteArrayToInt32Array(byte[] bytes)
+		{
+			Debug.Assert(bytes != null);
+			const int int32ByteCount = 4;
+			Debug.Assert(bytes.Length % int32ByteCount == 0);
+			int[] values = new int[bytes.Length / int32ByteCount];
+			for (int i = 0; i < values.Length; i++)
+			{
+				values[i] = BitConverter.ToInt32(bytes, i * int32ByteCount);
+			}
+			return values;
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -108,7 +238,7 @@ namespace MeshEditor.IO
 
 			if (!File.Exists(filename))
 			{
-				throw new MeshLoadingException($"Mesh file can't be found. ({filename})");
+				throw new IOException($"Mesh file can't be found. ({filename})");
 			}
 
 			streamReader = new StreamReader(filename);
@@ -124,53 +254,83 @@ namespace MeshEditor.IO
 			throw new MeshLoadingException($"{elementName} element was not found.");
 		}
 
-		protected double[] ParseFloat64AsciiDataArray()
+		protected double[] ParseFloat64DataArray(DataArrayFormat format, DataArrayType actualType)
 		{
 			string content = input.ReadElementContentAsString();
-			// TODO: for binary format use: input.ReadElementContentAsBase64(...)
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			double[] result = new double[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
+			switch (format)
 			{
-				result[i] = ParseFloat64(parts[i]);
+				case DataArrayFormat.Ascii:
+					{
+						string[] data = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+						return ConvertAsciiDataArrayToFloat64Array(data);
+					}
+				//case DataArrayFormat.Binary: // In front of every binary blob, base64 or raw-binary, appended or not, there is an UInt32 length indicator. see: http://mathema.tician.de/what-they-dont-tell-you-about-vtk-xml-binary-formats/
+				//	{
+				//		byte[] data = Convert.FromBase64String(content);						
+				//		return ConvertByteArrayToFloat64Array(data);
+				//	}
+				default:
+					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
 			}
-			return result;
 		}
 
-		protected float[] ParseFloat32AsciiDataArray()
+		protected float[] ParseFloat32DataArray(DataArrayFormat format, DataArrayType actualType)
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			float[] result = new float[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
+			switch (format)
 			{
-				result[i] = ParseFloat32(parts[i]);
+				case DataArrayFormat.Ascii:
+					{
+						string[] data = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+						return ConvertAsciiDataArrayToFloat32Array(data);
+					}
+				//case DataArrayFormat.Binary: // In front of every binary blob, base64 or raw-binary, appended or not, there is an UInt32 length indicator. see: http://mathema.tician.de/what-they-dont-tell-you-about-vtk-xml-binary-formats/
+				//	{
+				//		byte[] data = Convert.FromBase64String(content);
+				//		return ConvertByteArrayToFloat32Array(data);
+				//	}
+				default:
+					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
 			}
-			return result;
 		}
 
-		protected int[] ParseInt32AsciiDataArray()
+		protected int[] ParseInt32DataArray(DataArrayFormat format, DataArrayType actualType)
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			int[] result = new int[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
+			switch (format)
 			{
-				result[i] = ParseInt32(parts[i]);
+				case DataArrayFormat.Ascii:
+					{
+						string[] data = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+						return ConvertAsciiDataArrayToInt32Array(data);
+					}
+				//case DataArrayFormat.Binary: // In front of every binary blob, base64 or raw-binary, appended or not, there is an UInt32 length indicator. see: http://mathema.tician.de/what-they-dont-tell-you-about-vtk-xml-binary-formats/
+				//	{
+				//		byte[] data = Convert.FromBase64String(content);
+				//		return ConvertByteArrayToInt32Array(data);
+				//	}
+				default:
+					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
 			}
-			return result;
 		}
 
-		protected byte[] ParseUInt8AsciiDataArray()
+		protected byte[] ParseUInt8DataArray(DataArrayFormat format, DataArrayType actualType)
 		{
 			string content = input.ReadElementContentAsString();
-			string[] parts = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
-			byte[] result = new byte[parts.Length];
-			for (int i = 0; i < parts.Length; i++)
+			switch (format)
 			{
-				result[i] = ParseUInt8(parts[i]);
+				case DataArrayFormat.Ascii:
+					{
+						string[] data = content.Split(DataArrayValueDelimiters, StringSplitOptions.RemoveEmptyEntries);
+						return ConvertAsciiDataArrayToUInt8Array(data);
+					}
+				//case DataArrayFormat.Binary: // In front of every binary blob, base64 or raw-binary, appended or not, there is an UInt32 length indicator. see: http://mathema.tician.de/what-they-dont-tell-you-about-vtk-xml-binary-formats/
+				//	{
+				//		return Convert.FromBase64String(content);
+				//	}
+				default:
+					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
 			}
-			return result;
 		}
 
 		protected int ParseInt32(string text)
