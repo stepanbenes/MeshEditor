@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MeshEditor.IO;
 
 namespace MeshEditor.DataVisualizer.IO
 {
@@ -14,10 +15,11 @@ namespace MeshEditor.DataVisualizer.IO
 			Debug.Assert(!string.IsNullOrEmpty(filename));
 			if (!File.Exists(filename))
 			{
-				throw new DataLoadingException(string.Format("Specified file path does not exists!"), filename);
+				throw new FileParserException(string.Format("Specified file path does not exists!"), filename);
 			}
 
-			switch (Path.GetExtension(filename))
+			string extension = Path.GetExtension(filename);
+			switch (extension)
 			{
 				case ".res":
 					return new GiDResFileParser(filename, fileStartPosition);
@@ -26,8 +28,8 @@ namespace MeshEditor.DataVisualizer.IO
 				case ".pvd": // ParaView Data file format, collection of pointers to VTK files
 					return new ParaViewDataFileParser(filename);
 				default:
-					throw new DataLoadingException("This data format is not supported.", filename);
-			}
+					throw new FileParserException($"This data format is not supported ({extension}).", filename);
+            }
 		}
 	}
 }

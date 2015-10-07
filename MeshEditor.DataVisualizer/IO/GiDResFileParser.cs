@@ -102,7 +102,7 @@ namespace MeshEditor.DataVisualizer.IO
                 return null; // End Of File was reached
 
 			if (state != State.Init)
-				throw new DataLoadingException("Can not read next result block. Previous result block was not processed entirely.", Filename, CurrentLineNumber);
+				throw new FileParserException("Can not read next result block. Previous result block was not processed entirely.", Filename, CurrentLineNumber);
 
 			string line;
             currentDataInfo = null;
@@ -157,7 +157,7 @@ namespace MeshEditor.DataVisualizer.IO
                                 }
                             }
                             else
-                                throw new DataLoadingException("Result block is not complete.", Filename, CurrentLineNumber);
+                                throw new FileParserException("Result block is not complete.", Filename, CurrentLineNumber);
                         }
                         break;
 					case State.GaussPointsDescription:
@@ -256,7 +256,7 @@ namespace MeshEditor.DataVisualizer.IO
 			//	yield break;
 
 			if (state != State.ResultValues || currentDataInfo == null)
-				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
+				throw new FileParserException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
 
 			//if (currentDataInfo.Location == DataLocation.GaussPoints)
 			//	throw new NotImplementedException("Gauss-points location is not implemented yet.");
@@ -348,7 +348,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			int result;
 			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new DataLoadingException("Integer expected instead of \"" + text + "\"", Filename, lineNumber);
+				throw new FileParserException("Integer expected instead of \"" + text + "\"", Filename, lineNumber);
 			return result;
 		}
 
@@ -356,7 +356,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			double result;
 			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new DataLoadingException("Floating-point number expected instead of \"" + text + "\"", Filename, lineNumber);
+				throw new FileParserException("Floating-point number expected instead of \"" + text + "\"", Filename, lineNumber);
 			return result;
 		}
 
@@ -366,7 +366,7 @@ namespace MeshEditor.DataVisualizer.IO
 
 			if (filename == null || !File.Exists(filename))
 			{
-				throw new DataLoadingException("Mesh file can't be found.", Filename);
+				throw new FileParserException("Mesh file can't be found.", Filename);
 			}
 
 			input = new PositionAwareStreamReader(filename); //File.OpenText(filename);
@@ -394,7 +394,7 @@ namespace MeshEditor.DataVisualizer.IO
 				case "ongausspoints": // OnGaussPoints
 					return DataLocation.GaussPoints;
 				default:
-					throw new DataLoadingException(string.Format("Unknown data location ({0})", locationString), Filename, CurrentLineNumber);
+					throw new FileParserException(string.Format("Unknown data location ({0})", locationString), Filename, CurrentLineNumber);
 			}
 		}
 

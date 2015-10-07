@@ -239,14 +239,14 @@ namespace MeshEditor.IO
 				if (pair.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase) && nodeNumber == Element.MapElementTypeToNodeCount(pair.Key))
 					return pair.Key;
 			}
-			throw new MeshLoadingException(string.Format("{0} element type with {1} nodes is not supported.", name, nodeNumber), currentLineNumber);
+			throw new FileParserException(string.Format("{0} element type with {1} nodes is not supported.", name, nodeNumber), filename, currentLineNumber);
 		}
 
 		private int parseInteger(string text)
 		{
 			int result;
 			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Integer expected instead of \"" + text + "\"", currentLineNumber);
+				throw new FileParserException("Integer expected instead of \"" + text + "\"", filename, currentLineNumber);
 			return result;
 		}
 
@@ -254,7 +254,7 @@ namespace MeshEditor.IO
 		{
 			double result;
 			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Floating-point number expected instead of \"" + text + "\"", currentLineNumber);
+				throw new FileParserException("Floating-point number expected instead of \"" + text + "\"", filename, currentLineNumber);
 			return result;
 		}
 

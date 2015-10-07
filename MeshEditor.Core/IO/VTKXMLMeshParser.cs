@@ -77,7 +77,7 @@ namespace MeshEditor.IO
 
 			if (nodesProcessed)
 			{
-				throw new MeshLoadingException("Points were already processed.", CurrentLineNumber);
+				throw new FileParserException("Points were already processed.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.ReadToFollowing("Points"))
@@ -111,17 +111,17 @@ namespace MeshEditor.IO
 
 			if (numberOfComponents < 2 || numberOfComponents > 3)
 			{
-				throw new MeshLoadingException($"Unsupported number of components ({numberOfComponents}).", CurrentLineNumber);
+				throw new FileParserException($"Unsupported number of components ({numberOfComponents}).", Filename, CurrentLineNumber);
 			}
 
 			if (!type.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
 			}
 
 			if (!format.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.MoveToElement())
@@ -133,7 +133,7 @@ namespace MeshEditor.IO
 			int expectedDataArrayLength = numberOfPoints * numberOfComponents;
 			if (coordinates.Length != expectedDataArrayLength)
 			{
-				throw new MeshLoadingException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", CurrentLineNumber);
+				throw new FileParserException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", Filename, CurrentLineNumber);
 			}
 
 			switch (numberOfComponents)
@@ -167,7 +167,7 @@ namespace MeshEditor.IO
 
 			if (elementsProcessed)
 			{
-				throw new MeshLoadingException("Cells were already processed.", CurrentLineNumber);
+				throw new FileParserException("Cells were already processed.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.ReadToFollowing("Cells"))
@@ -207,7 +207,7 @@ namespace MeshEditor.IO
 				InitInput(out fileType);
 				if (fileType?.ToLower() != "unstructuredgrid")
 				{
-					throw new MeshLoadingException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", CurrentLineNumber);
+					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber);
 				}
 				ReadToPieceElement();
 			}
@@ -265,7 +265,7 @@ namespace MeshEditor.IO
 					case "name":
 						if (Input.Value.ToLower() != "connectivity")
 						{
-							throw new MeshLoadingException($"Connectivity data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+							throw new FileParserException($"Connectivity data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
 						}
 						break;
 					case "format":
@@ -276,12 +276,12 @@ namespace MeshEditor.IO
 
 			if (!connectivityArrayType.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
 			}
 
 			if (!connectivityArrayFormat.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.MoveToElement())
@@ -311,7 +311,7 @@ namespace MeshEditor.IO
 					case "name":
 						if (Input.Value.ToLower() != "offsets")
 						{
-							throw new MeshLoadingException($"Offsets data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+							throw new FileParserException($"Offsets data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
 						}
 						break;
 					case "format":
@@ -322,12 +322,12 @@ namespace MeshEditor.IO
 
 			if (!offsetsArrayType.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
 			}
 
 			if (!offsetsArrayFormat.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.MoveToElement())
@@ -339,7 +339,7 @@ namespace MeshEditor.IO
 
 			if (offsets.Length != numberOfCells)
 			{
-				throw new MeshLoadingException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", CurrentLineNumber);
+				throw new FileParserException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", Filename, CurrentLineNumber);
 			}
 
 			return offsets;
@@ -364,7 +364,7 @@ namespace MeshEditor.IO
 					case "name":
 						if (Input.Value.ToLower() != "types")
 						{
-							throw new MeshLoadingException($"Types data array was expected instead of '{Input.Value}'.", CurrentLineNumber);
+							throw new FileParserException($"Types data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
 						}
 						break;
 					case "format":
@@ -375,12 +375,12 @@ namespace MeshEditor.IO
 
 			if (!typesArrayType.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data type", CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
 			}
 
 			if (!typesArrayFormat.HasValue)
 			{
-				throw new MeshLoadingException("Unknown data format.", CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			if (!Input.MoveToElement())
@@ -392,7 +392,7 @@ namespace MeshEditor.IO
 
 			if (types.Length != numberOfCells)
 			{
-				throw new MeshLoadingException($"Unexpected length of types data array ({types.Length} instead of {numberOfCells}).", CurrentLineNumber);
+				throw new FileParserException($"Unexpected length of types data array ({types.Length} instead of {numberOfCells}).", Filename, CurrentLineNumber);
 			}
 
 			return types;

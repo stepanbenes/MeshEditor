@@ -91,7 +91,7 @@ namespace MeshEditor.IO
 				IXmlLineInfo xmlInfo = input as IXmlLineInfo;
 				if (xmlInfo == null)
 				{
-					return -1;
+					return 0;
 				}
 				return xmlInfo.LineNumber;
 			}
@@ -233,12 +233,12 @@ namespace MeshEditor.IO
 		{
 			if (isInputInitialized)
 			{
-				throw new InvalidOperationException("Input was already initialized.");
+				throw new FileParserException("Input was already initialized.", Filename, CurrentLineNumber);
 			}
 
 			if (!File.Exists(filename))
 			{
-				throw new IOException($"Mesh file can't be found. ({filename})");
+				throw new FileParserException($"Mesh file can't be found. ({filename})", Filename, CurrentLineNumber);
 			}
 
 			streamReader = new StreamReader(filename);
@@ -251,7 +251,7 @@ namespace MeshEditor.IO
 
 		protected void ThrowElementIsMissing(string elementName)
 		{
-			throw new MeshLoadingException($"{elementName} element was not found.");
+			throw new FileParserException($"{elementName} element was not found.", Filename, CurrentLineNumber);
 		}
 
 		protected double[] ParseFloat64DataArray(DataArrayFormat format, DataArrayType actualType)
@@ -270,7 +270,7 @@ namespace MeshEditor.IO
 				//		return ConvertByteArrayToFloat64Array(data);
 				//	}
 				default:
-					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
+					throw new FileParserException($"{format.ToString()} data format is not supported.", Filename, CurrentLineNumber);
 			}
 		}
 
@@ -290,7 +290,7 @@ namespace MeshEditor.IO
 				//		return ConvertByteArrayToFloat32Array(data);
 				//	}
 				default:
-					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
+					throw new FileParserException($"{format.ToString()} data format is not supported.", Filename, CurrentLineNumber);
 			}
 		}
 
@@ -310,7 +310,7 @@ namespace MeshEditor.IO
 				//		return ConvertByteArrayToInt32Array(data);
 				//	}
 				default:
-					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
+					throw new FileParserException($"{format.ToString()} data format is not supported.", Filename, CurrentLineNumber);
 			}
 		}
 
@@ -329,7 +329,7 @@ namespace MeshEditor.IO
 				//		return Convert.FromBase64String(content);
 				//	}
 				default:
-					throw new NotSupportedException($"{format.ToString()} data format is not supported.");
+					throw new FileParserException($"{format.ToString()} data format is not supported.", Filename, CurrentLineNumber);
 			}
 		}
 
@@ -338,7 +338,7 @@ namespace MeshEditor.IO
 			int result;
 			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
 			{
-				throw new MeshLoadingException($"32bit integer expected instead of '{text}'", CurrentLineNumber);
+				throw new FileParserException($"32bit integer expected instead of '{text}'", Filename, CurrentLineNumber);
 			}
 			return result;
 		}
@@ -348,7 +348,7 @@ namespace MeshEditor.IO
 			byte result;
 			if (!byte.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
 			{
-				throw new MeshLoadingException($"Unsigned 8bit integer expected instead of '{text}'", CurrentLineNumber);
+				throw new FileParserException($"Unsigned 8bit integer expected instead of '{text}'", Filename, CurrentLineNumber);
 			}
 			return result;
 		}
@@ -358,7 +358,7 @@ namespace MeshEditor.IO
 			double result;
 			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
 			{
-				throw new MeshLoadingException($"Floating-point number expected instead of '{text}'", CurrentLineNumber);
+				throw new FileParserException($"Floating-point number expected instead of '{text}'", Filename, CurrentLineNumber);
 			}
 			return result;
 		}
@@ -368,7 +368,7 @@ namespace MeshEditor.IO
 			float result;
 			if (!float.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
 			{
-				throw new MeshLoadingException($"Floating-point number expected instead of '{text}'", CurrentLineNumber);
+				throw new FileParserException($"Floating-point number expected instead of '{text}'", Filename, CurrentLineNumber);
 			}
 			return result;
 		}

@@ -121,7 +121,7 @@ namespace MeshEditor.Construction
 
 				// vytvor kostru nove meshe
 				mesh = new Mesh(meshFileParser.Filename, loadedFromDefaultFileFormat, meshPositionOffset, meshResizeFactor);
-				
+
 				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
 				mesh.Statistics = statistics;
 
@@ -147,7 +147,7 @@ namespace MeshEditor.Construction
 					{
 						processFacePropertiesOfElement(draft, mesh.Statistics);
 					}
-										
+
 					processElement(newElement); // vytvor facy daneho prvku, postupne zjisti ktere jsou povrchove
 					mesh.PushElement(newElement); // vloz prvek do site
 					processedElements++;
@@ -164,9 +164,9 @@ namespace MeshEditor.Construction
 						}
 					}
 				}
-								
+
 				// ==================================================================
-                // nacti property ploch a hran, pokud to lze
+				// nacti property ploch a hran, pokud to lze
 				if (advancedFileParser != null) // pokud se jedna o format souboru obsahujici facy a hrany, tak...
 				{
 					/**/ // jeste tu chybi referovat o postupu v teto funkci
@@ -185,9 +185,9 @@ namespace MeshEditor.Construction
 				// vytvor povrchovou reprezentaci
 				Histogram edgeAnglesHistogram = new Histogram(0f, 180f, 1f);
 				createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, ioea, cancelled);
-				
+
 				// ==================================================================
-				
+
 				mesh.TotalNodeCount = nodes.Count;
 				mesh.InitializeMesh(edgeAnglesHistogram);
 
@@ -199,13 +199,13 @@ namespace MeshEditor.Construction
 				// vrat mesh
 				return mesh;
 			}
-			catch (MeshConstructingException ex) // tohle je tu jen proto, abych pridal ke zprave cislo radku v souboru
+			catch (FileParserException)
 			{
-			    throw new MeshConstructingException(ex.Message + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex.InnerException);
+				throw;
 			}
 			catch (Exception ex) // nastala nejaka chyba, zmenim jeji typ, pridam cislo radku a pridam tuto chybu jako vnitrni vyjimku
 			{
-			    throw new MeshConstructingException(ex.Message + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex);
+				throw new MeshConstructingException(ex.Message + Environment.NewLine + "(filename: " + meshFileParser.Filename + ")" + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex.InnerException);
 			}
 			finally
 			{

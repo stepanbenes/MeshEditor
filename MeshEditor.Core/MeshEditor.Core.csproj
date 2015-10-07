@@ -143,7 +143,7 @@
     <Compile Include="CoreInterface\SceneEventArgs.cs" />
     <Compile Include="Data\Selection.cs" />
     <Compile Include="IO\ElementDraft.cs" />
-    <Compile Include="IO\MeshLoadingException.cs" />
+    <Compile Include="IO\FileParserException.cs" />
     <Compile Include="Data\ElementTypes\Element.cs" />
     <Compile Include="Data\Mesh.cs" />
     <Compile Include="Data\Surface\QuadFaceOfElement3D.cs" />

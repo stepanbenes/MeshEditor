@@ -102,7 +102,7 @@ namespace MeshEditor.IO
 		public IEnumerable<ElementDraft> ReadElements()
 		{
 			if(!nodesWasRead)
-				throw new MeshLoadingException("All nodes must be processed first before loading elements.", lineNumber);
+				throw new FileParserException("All nodes must be processed first before loading elements.", filename, lineNumber);
 			string line;
 			for (int i = 0; i < elementCount; i++)
 			{
@@ -123,7 +123,7 @@ namespace MeshEditor.IO
 		private void initInputAndReadHeader()
 		{
 			if (filename == null || !File.Exists(filename))
-				throw new MeshLoadingException("Mesh file can't be found." + "(" + filename + ")");
+				throw new FileParserException("Mesh file can't be found.", filename);
 			input = File.OpenText(filename);
 			lineNumber = 0;
 			readHeader();
@@ -152,7 +152,7 @@ namespace MeshEditor.IO
 			} while (!line.ToLower().StartsWith(END_OF_HEADER_PATTERN));
 
 			if(!nodeCountLoaded || !elementCountLoaded)
-				throw new MeshLoadingException("Mesh file is not complete (wrong header).", lineNumber);
+				throw new FileParserException("Mesh file is not complete (wrong header).", filename, lineNumber);
 			
 			headerWasRead = true;
 		}
@@ -161,7 +161,7 @@ namespace MeshEditor.IO
 		{
 			string[] parts = formatline.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 			if(parts[0].ToLower() != ASCII_FORMAT_PATTERN)
-				throw new MeshLoadingException("This format of PLY file is not supported. It understands ascii format only.", lineNumber);
+				throw new FileParserException("This format of PLY file is not supported. It understands ascii format only.", filename, lineNumber);
 		}
 
 		private string getNextLineWithValue()
@@ -172,7 +172,7 @@ namespace MeshEditor.IO
 				line = input.ReadLine();
 				lineNumber++;
 				if (line == null)
-					throw new MeshLoadingException("Mesh file is not complete.", lineNumber);
+					throw new FileParserException("Mesh file is not complete.", filename, lineNumber);
 				line = line.Trim();
 			} while (line == string.Empty || line.ToLower().StartsWith(COMMENT_PATTERN));
 			return line;
@@ -182,7 +182,7 @@ namespace MeshEditor.IO
 		{
 			int result;
 			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Integer expected instead of \"" + text + "\"", lineNumber);
+				throw new FileParserException("Integer expected instead of \"" + text + "\"", filename, lineNumber);
 			return result;
 		}
 
@@ -190,7 +190,7 @@ namespace MeshEditor.IO
 		{
 			double result;
 			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Floating-point number expected instead of \"" + text + "\"", lineNumber);
+				throw new FileParserException("Floating-point number expected instead of \"" + text + "\"", filename, lineNumber);
 			return result;
 		}
 
@@ -207,13 +207,13 @@ namespace MeshEditor.IO
 				position.Y = (float)parseDouble(parts[1]); /**/ // casting !!!
 				position.Z = (float)parseDouble(parts[2]); /**/ // casting !!!
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 			return new Node(id, position, properties);
 		}
@@ -234,7 +234,7 @@ namespace MeshEditor.IO
 						e.Type = ElementType.QuadLinear;
 						break;
 					default:
-						throw new MeshLoadingException("This element type is not supported.", lineNumber);
+						throw new FileParserException("This element type is not supported.", filename, lineNumber);
 				}
 				int nodeCountOfElement = Element.MapElementTypeToNodeCount(e.Type);
 				e.NodeIDs = new int[nodeCountOfElement];
@@ -242,13 +242,13 @@ namespace MeshEditor.IO
 					e.NodeIDs[i] = parseInteger(parts[i + 1]);
 				e.Property = Property.Zero;
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 			return e;
 		}

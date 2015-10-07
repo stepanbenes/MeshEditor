@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using MeshEditor.IO;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -203,20 +204,25 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private static void reportError(Exception ex)
 		{
-			DataLoadingException dataEx = ex as DataLoadingException;
-			if (dataEx != null)
+			var dataException = ex as FileParserException;
+			if (dataException != null)
 			{
 				StringBuilder message = new StringBuilder();
-				message.AppendLine(dataEx.Message);
-				if (!string.IsNullOrEmpty(dataEx.Filename))
+				message.AppendLine(dataException.Message);
+				if (!string.IsNullOrEmpty(dataException.FileName))
 				{
 					message.AppendLine();
-					message.Append(string.Format("File name: \"{0}\"", System.IO.Path.GetFileName(dataEx.Filename)));
+					message.Append(string.Format("File name: \"{0}\"", System.IO.Path.GetFileName(dataException.FileName)));
 				}
-				if (dataEx.LineNumber > 0)
+				if (dataException.LineNumber > 0)
 				{
 					message.AppendLine();
-					message.Append(string.Format("Line number: {0}", dataEx.LineNumber));
+					message.Append(string.Format("Line number: {0}", dataException.LineNumber));
+				}
+				if (dataException.LinePosition > 0)
+				{
+					message.AppendLine();
+					message.Append(string.Format("Line position: {0}", dataException.LinePosition));
 				}
 				MessageBox.Show(message.ToString(), "Error while loading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}

@@ -607,15 +607,10 @@ namespace MeshEditor.WinUI
 
 			if (ioProcessError)
 			{
-				if (e.Result is MeshLoadingException)
+				Exception exception = e.Result as Exception;
+				if (exception != null)
 				{
-					MeshLoadingException ex = e.Result as MeshLoadingException;
-					ShowErrorMessage("Error while loading", ex.Message + Environment.NewLine + "(line number: " + ex.LineNumber + ")");
-				}
-				else if (e.Result is Exception)
-				{
-					Exception ex = e.Result as Exception;
-					ShowErrorMessage("Error while loading", ex.Message);
+					ShowErrorMessage("Error while loading mesh", buildExceptionMessage(exception));
 				}
 			}
 			else if (AppSettings.Instance.ShowOpenGLLowVersionMessage && sceneFacade.CheckIfVBOisNotSupported())
@@ -629,6 +624,37 @@ namespace MeshEditor.WinUI
 
 			if (IOActionDone != null)
 				IOActionDone(this, EventArgs.Empty);
+		}
+
+		private static string buildExceptionMessage(Exception exception)
+		{
+			Debug.Assert(exception != null);
+			FileParserException fileParserException = exception as FileParserException;
+			if (fileParserException != null)
+			{
+				StringBuilder message = new StringBuilder();
+				message.AppendLine(fileParserException.Message);
+				if (!string.IsNullOrEmpty(fileParserException.FileName))
+				{
+					message.AppendLine();
+					message.Append(string.Format("File name: \"{0}\"", System.IO.Path.GetFileName(fileParserException.FileName)));
+				}
+				if (fileParserException.LineNumber > 0)
+				{
+					message.AppendLine();
+					message.Append(string.Format("Line number: {0}", fileParserException.LineNumber));
+				}
+				if (fileParserException.LinePosition > 0)
+				{
+					message.AppendLine();
+					message.Append(string.Format("Line position: {0}", fileParserException.LinePosition));
+				}
+				return message.ToString();
+			}
+			else
+			{
+				return exception.Message;
+			}
 		}
 
 		private void setSceneFacade(SceneFacade newSceneFacade)

@@ -110,7 +110,7 @@ namespace MeshEditor.IO
 			get
 			{
 				if (!nodesWereProcessed)
-					throw new MeshLoadingException("All nodes must be processed before loading elements.", lineNumber);
+					throw new FileParserException("All nodes must be processed before loading elements.", filename, lineNumber);
 				return elementCount;
 			}
 		}
@@ -121,7 +121,7 @@ namespace MeshEditor.IO
 				yield break;
 
 			if (!nodesWereProcessed)
-				throw new MeshLoadingException("All nodes must be processed before loading elements.", lineNumber);
+				throw new FileParserException("All nodes must be processed before loading elements.", filename, lineNumber);
 
 			readToNextLineWithValue("Element count number missing");
 			// load and set element count
@@ -148,7 +148,7 @@ namespace MeshEditor.IO
 				yield break;
 
 			if (!elementsWereProcessed)
-				throw new MeshLoadingException("All nodes and elements must be processed before loading faces.", lineNumber);
+				throw new FileParserException("All nodes and elements must be processed before loading faces.", filename, lineNumber);
 
 
 			while (true)
@@ -196,7 +196,7 @@ namespace MeshEditor.IO
 		public IEnumerable<EdgeDraft> ReadEdges()
 		{
 			if (!facesWereProcessed)
-				throw new MeshLoadingException("All nodes and elements (and faces) must be processed before loading edges.", lineNumber);
+				throw new FileParserException("All nodes and elements (and faces) must be processed before loading edges.", filename, lineNumber);
 
 			if (!edgeCountLoaded)
 			{
@@ -270,7 +270,7 @@ namespace MeshEditor.IO
 		{
 			int result;
 			if (!int.TryParse(text, NumberStyles.Integer, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Integer expected instead of \"" + text + "\"", lineNumber);
+				throw new FileParserException("Integer expected instead of \"" + text + "\"", filename, lineNumber);
 			return result;
 		}
 
@@ -278,14 +278,14 @@ namespace MeshEditor.IO
 		{
 			double result;
 			if (!double.TryParse(text, NumberStyles.Float, CultureProvider.EnglishCulture.NumberFormat, out result))
-				throw new MeshLoadingException("Floating-point number expected instead of \"" + text + "\"", lineNumber);
+				throw new FileParserException("Floating-point number expected instead of \"" + text + "\"", filename, lineNumber);
 			return result;
 		}
 
 		private void initInput()
 		{
 			if (filename == null || !File.Exists(filename))
-				throw new MeshLoadingException("Mesh file can't be found." + "(" + filename + ")");
+				throw new FileParserException("Mesh file can't be found.", filename, lineNumber);
 			input = File.OpenText(filename);
 			lineNumber = 0;
 		}
@@ -325,13 +325,13 @@ namespace MeshEditor.IO
 					}
 				}
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 
 			return new Node(id, position, properties);
@@ -394,13 +394,13 @@ namespace MeshEditor.IO
 				else
 					e.Property = Property.Zero;
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 			return e;
 		}
@@ -417,13 +417,13 @@ namespace MeshEditor.IO
 					fd.NodeIDs[i] = parseInteger(parts[i + 1]);
 				fd.Property = new Property(parseInteger(parts[nodeCount + 1]));
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 			return fd;
 		}
@@ -438,13 +438,13 @@ namespace MeshEditor.IO
 				ed.Node2ID = parseInteger(parts[1]);
 				ed.Property = new Property(parseInteger(parts[2]));
 			}
-			catch (MeshLoadingException)
+			catch (FileParserException)
 			{
 				throw;
 			}
 			catch (Exception ex)
 			{
-				throw new MeshLoadingException("Wrong file format", lineNumber, ex);
+				throw new FileParserException("Wrong file format", filename, lineNumber, ex);
 			}
 			return ed;
 		}
@@ -456,7 +456,7 @@ namespace MeshEditor.IO
 				currentLine = input.ReadLine();
 				lineNumber++;
 				if (currentLine == null)
-					throw new MeshLoadingException("Mesh file is not complete (" + errorReason + ").", lineNumber);
+					throw new FileParserException("Mesh file is not complete (" + errorReason + ").", filename, lineNumber);
 				currentLine = currentLine.Trim();
 				if (currentLine != string.Empty && !currentLine.StartsWith(COMMENT_PATTERN))
 					break;

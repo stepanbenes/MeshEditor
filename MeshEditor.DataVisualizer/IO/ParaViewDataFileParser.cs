@@ -56,7 +56,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			if (currentFileParser == null)
 			{
-				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
+				throw new FileParserException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
 			}
 
 			return currentFileParser.ReadResultBlock();
@@ -74,7 +74,7 @@ namespace MeshEditor.DataVisualizer.IO
 				InitInput(out fileType);
 				if (fileType?.ToLower() != "collection")
 				{
-					throw new MeshLoadingException($"VTK file type '{fileType}' is not supported. Only 'Collection' type is supported.", CurrentLineNumber);
+					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'Collection' type is supported.", Filename, CurrentLineNumber);
 				}
 				ReadToCollectionElement();
 			}
@@ -120,12 +120,12 @@ namespace MeshEditor.DataVisualizer.IO
 
 				if (String.IsNullOrEmpty(dataFilename))
 				{
-					throw new DataLoadingException("Filename was not specified in DataSet element.", Filename, CurrentLineNumber);
+					throw new FileParserException("Filename was not specified in DataSet element.", Filename, CurrentLineNumber);
 				}
 
 				if (!timeStep.HasValue)
 				{
-					throw new DataLoadingException("Time was not specified in DataSet element.", Filename, CurrentLineNumber);
+					throw new FileParserException("Time was not specified in DataSet element.", Filename, CurrentLineNumber);
 				}
 
 				string rootedDataFilename = Path.IsPathRooted(dataFilename) ? dataFilename : Path.Combine(Path.GetDirectoryName(this.Filename), dataFilename);

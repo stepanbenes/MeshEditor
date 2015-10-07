@@ -82,12 +82,12 @@ namespace MeshEditor.DataVisualizer.IO
 
 			if (!currentDataArrayType.HasValue)
 			{
-                throw new DataLoadingException("Unknown data type.", Filename, CurrentLineNumber);
+                throw new FileParserException("Unknown data type.", Filename, CurrentLineNumber);
 			}
 
 			if (!currentDataArrayFormat.HasValue)
 			{
-				throw new DataLoadingException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
 			}
 
 			Input.MoveToElement(); // move attributes back to beginning of the DataArray element
@@ -95,7 +95,7 @@ namespace MeshEditor.DataVisualizer.IO
 			DataType.CompoundTypes compoundType;
 			if (!dataNameMap.TryGetValue(dataArrayName, out compoundType))
 			{
-				throw new DataLoadingException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber);
+				throw new FileParserException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber);
 			}
 
 			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, GenerateComponentNames(numberOfComponents));
@@ -107,7 +107,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			if (currentDataInfo == null)
 			{
-				throw new DataLoadingException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
+				throw new FileParserException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
 			}
 
 			Debug.Assert(currentDataArrayType.HasValue);
@@ -137,7 +137,7 @@ namespace MeshEditor.DataVisualizer.IO
 				InitInput(out fileType);
 				if (fileType?.ToLower() != "unstructuredgrid")
 				{
-					throw new MeshLoadingException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", CurrentLineNumber);
+					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber);
 				}
 				ReadToUnstructuredGridElement();
 			}
