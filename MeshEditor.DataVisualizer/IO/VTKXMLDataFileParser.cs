@@ -82,12 +82,17 @@ namespace MeshEditor.DataVisualizer.IO
 
 			if (!currentDataArrayType.HasValue)
 			{
-                throw new FileParserException("Unknown data type.", Filename, CurrentLineNumber);
+                throw new FileParserException("Unknown data type.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!currentDataArrayFormat.HasValue)
 			{
-				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber, CurrentLinePosition);
+			}
+
+			if (currentDataArrayFormat != DataArrayFormat.Ascii)
+			{
+				throw new FileParserException("Only Ascii data array format is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			Input.MoveToElement(); // move attributes back to beginning of the DataArray element
@@ -95,7 +100,7 @@ namespace MeshEditor.DataVisualizer.IO
 			DataType.CompoundTypes compoundType;
 			if (!dataNameMap.TryGetValue(dataArrayName, out compoundType))
 			{
-				throw new FileParserException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber);
+				throw new FileParserException($"Data array with name '{dataArrayName}' was not found.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			DataType dataType = new DataType(dataArrayName, Filename, 0 /*filePosition*/, compoundType, GenerateComponentNames(numberOfComponents));
@@ -107,7 +112,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			if (currentDataInfo == null)
 			{
-				throw new FileParserException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber);
+				throw new FileParserException("Can not read result block. Previous data was not processed entirely.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			Debug.Assert(currentDataArrayType.HasValue);
@@ -137,7 +142,7 @@ namespace MeshEditor.DataVisualizer.IO
 				InitInput(out fileType);
 				if (fileType?.ToLower() != "unstructuredgrid")
 				{
-					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber);
+					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 				}
 				ReadToUnstructuredGridElement();
 			}

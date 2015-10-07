@@ -77,7 +77,7 @@ namespace MeshEditor.IO
 
 			if (nodesProcessed)
 			{
-				throw new FileParserException("Points were already processed.", Filename, CurrentLineNumber);
+				throw new FileParserException("Points were already processed.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.ReadToFollowing("Points"))
@@ -111,17 +111,22 @@ namespace MeshEditor.IO
 
 			if (numberOfComponents < 2 || numberOfComponents > 3)
 			{
-				throw new FileParserException($"Unsupported number of components ({numberOfComponents}).", Filename, CurrentLineNumber);
+				throw new FileParserException($"Unsupported number of components ({numberOfComponents}).", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!type.HasValue)
 			{
-				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!format.HasValue)
 			{
-				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber, CurrentLinePosition);
+			}
+
+			if (format != DataArrayFormat.Ascii)
+			{
+				throw new FileParserException("Only Ascii data array format is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.MoveToElement())
@@ -133,7 +138,7 @@ namespace MeshEditor.IO
 			int expectedDataArrayLength = numberOfPoints * numberOfComponents;
 			if (coordinates.Length != expectedDataArrayLength)
 			{
-				throw new FileParserException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", Filename, CurrentLineNumber);
+				throw new FileParserException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			switch (numberOfComponents)
@@ -167,7 +172,7 @@ namespace MeshEditor.IO
 
 			if (elementsProcessed)
 			{
-				throw new FileParserException("Cells were already processed.", Filename, CurrentLineNumber);
+				throw new FileParserException("Cells were already processed.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.ReadToFollowing("Cells"))
@@ -207,7 +212,7 @@ namespace MeshEditor.IO
 				InitInput(out fileType);
 				if (fileType?.ToLower() != "unstructuredgrid")
 				{
-					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber);
+					throw new FileParserException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 				}
 				ReadToPieceElement();
 			}
@@ -265,7 +270,7 @@ namespace MeshEditor.IO
 					case "name":
 						if (Input.Value.ToLower() != "connectivity")
 						{
-							throw new FileParserException($"Connectivity data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
+							throw new FileParserException($"Connectivity data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber, CurrentLinePosition);
 						}
 						break;
 					case "format":
@@ -276,12 +281,17 @@ namespace MeshEditor.IO
 
 			if (!connectivityArrayType.HasValue)
 			{
-				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!connectivityArrayFormat.HasValue)
 			{
-				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber, CurrentLinePosition);
+			}
+
+			if (connectivityArrayFormat != DataArrayFormat.Ascii)
+			{
+				throw new FileParserException("Only Ascii data array format is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.MoveToElement())
@@ -322,12 +332,17 @@ namespace MeshEditor.IO
 
 			if (!offsetsArrayType.HasValue)
 			{
-				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!offsetsArrayFormat.HasValue)
 			{
-				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber, CurrentLinePosition);
+			}
+
+			if (offsetsArrayFormat != DataArrayFormat.Ascii)
+			{
+				throw new FileParserException("Only Ascii data array format is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.MoveToElement())
@@ -339,7 +354,7 @@ namespace MeshEditor.IO
 
 			if (offsets.Length != numberOfCells)
 			{
-				throw new FileParserException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", Filename, CurrentLineNumber);
+				throw new FileParserException($"Unexpected length of offsets data array ({offsets.Length} instead of {numberOfCells}).", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			return offsets;
@@ -364,7 +379,7 @@ namespace MeshEditor.IO
 					case "name":
 						if (Input.Value.ToLower() != "types")
 						{
-							throw new FileParserException($"Types data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber);
+							throw new FileParserException($"Types data array was expected instead of '{Input.Value}'.", Filename, CurrentLineNumber, CurrentLinePosition);
 						}
 						break;
 					case "format":
@@ -375,12 +390,17 @@ namespace MeshEditor.IO
 
 			if (!typesArrayType.HasValue)
 			{
-				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data type", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!typesArrayFormat.HasValue)
 			{
-				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber);
+				throw new FileParserException("Unknown data format.", Filename, CurrentLineNumber, CurrentLinePosition);
+			}
+
+			if (typesArrayFormat != DataArrayFormat.Ascii)
+			{
+				throw new FileParserException("Only Ascii data array format is supported.", Filename, CurrentLineNumber, CurrentLinePosition);
 			}
 
 			if (!Input.MoveToElement())
