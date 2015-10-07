@@ -54,12 +54,21 @@ namespace MeshEditor.Construction
 
 		public override bool Equals(object obj)
 		{
+			if (!(obj is QuadMark))
+				return false;
 			return this == (QuadMark)obj;
 		}
 
 		public override int GetHashCode()
 		{
-			return this.node1ID; /**/
+			unchecked // Overflow is fine, just wrap
+			{
+				int hash = 17;
+				hash = hash * 23 + node1ID.GetHashCode();
+				hash = hash * 23 + node2ID.GetHashCode();
+				hash = hash * 23 + node3ID.GetHashCode();
+				return hash;
+			}
 		}
 
 		#endregion

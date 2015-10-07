@@ -170,14 +170,23 @@ namespace MeshEditor.Data
 
 		public override bool Equals(object obj)
 		{
-			if (obj is WingedEdge)
-				return this.Equals((WingedEdge)obj);
+			WingedEdge other = obj as WingedEdge;
+			if (other != null)
+			{
+				return this.Equals(other);
+			}
 			return false;
 		}
 
 		public override int GetHashCode()
 		{
-			return beginNode.ID;
+			unchecked // Overflow is fine, just wrap
+			{
+				int hash = 17;
+				hash = hash * 23 + beginNode.GetHashCode();
+				hash = hash * 23 + endNode.GetHashCode();
+				return hash;
+			}
 		}
 
 		#endregion

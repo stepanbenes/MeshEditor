@@ -29,11 +29,15 @@ namespace MeshEditor.DataVisualizer.Data
 
 		public override int GetHashCode()
 		{
-			int hash1 = DataType.GetHashCode();
-			int hash2 = Time.GetHashCode();
-			//int hash3 = Location.GetHashCode();
-			//int hash4 = AnalysisName != null ? AnalysisName.GetHashCode() : 0;
-			return hash1 ^ hash2;
+			unchecked // Overflow is fine, just wrap
+			{
+				int hash = 17;
+				hash = hash * 23 + DataType.GetHashCode();
+				hash = hash * 23 + Time.GetHashCode();
+				//hash = hash * 23 + Location.GetHashCode();
+				//hash = hash * 23 + (AnalysisName?.GetHashCode() ?? 0);
+				return hash;
+			}
 		}
 
 		public override bool Equals(object obj)

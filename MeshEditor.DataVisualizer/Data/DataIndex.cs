@@ -56,8 +56,8 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			unchecked // Overflow is fine, just wrap
 			{
-				int hash = 17 * 23;
-				hash = hash + index;
+				int hash = 17;
+				hash = hash * 23 + index.GetHashCode();
 				hash = hash * 23 + time.GetHashCode();
 				return hash;
 			}

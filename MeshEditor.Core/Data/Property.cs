@@ -57,7 +57,7 @@ namespace MeshEditor.Data
 
 		public override int GetHashCode()
 		{
-			return this.value;
+			return this.value.GetHashCode();
 		}
 
 		#region IComparable Members

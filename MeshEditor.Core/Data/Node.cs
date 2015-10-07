@@ -75,7 +75,7 @@ namespace MeshEditor.Data
 
 		public override int GetHashCode()
 		{
-			return this.id;
+			return id.GetHashCode();
 		}
 
 		#endregion

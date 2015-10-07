@@ -9,21 +9,30 @@ namespace MeshEditor.Construction
 	/// </summary>
 	public struct EdgeMark
 	{
-		public int Node2ID;
-		public int Node1ID;
+		private int node1ID, node2ID;
 
 		public EdgeMark(int value1, int value2)
 		{
 			if (value1 < value2)
 			{
-				Node1ID = value1;
-				Node2ID = value2;
+				node1ID = value1;
+				node2ID = value2;
 			}
 			else
 			{
-				Node1ID = value2;
-				Node2ID = value1;
+				node1ID = value2;
+				node2ID = value1;
 			}
+		}
+
+		public int Node1ID
+		{
+			get { return node1ID; }
+		}
+
+		public int Node2ID
+		{
+			get { return node2ID; }
 		}
 
 		public bool Equals(EdgeMark value)
@@ -33,14 +42,20 @@ namespace MeshEditor.Construction
 
 		public override bool Equals(object obj)
 		{
-			if (obj == null || GetType() != obj.GetType())
+			if (!(obj is EdgeMark))
 				return false;
 			return this.Equals((EdgeMark)obj);
 		}
 
 		public override int GetHashCode()
 		{
-			return this.Node1ID; /**/
+			unchecked // Overflow is fine, just wrap
+			{
+				int hash = 17;
+				hash = hash * 23 + Node1ID.GetHashCode();
+				hash = hash * 23 + Node2ID.GetHashCode();
+				return hash;
+			}
 		}
 
 		public override string ToString()
