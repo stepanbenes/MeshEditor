@@ -656,8 +656,11 @@ namespace MeshEditor.Construction
 			Triangle triangle;
             if (triangleFaces.TryGetValue(mark, out triangle))
             {
-                additionalQuadraticNodes.Remove(triangle); /**/
-                triangleFaces.Remove(mark); // je to vnitrni plocha
+				if (face is IFaceOfElement3D)
+				{
+					additionalQuadraticNodes.Remove(triangle);
+					triangleFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
+				}
 				// pokud ma nenulovou vlastnost - tak ji uloz <!>
 				if (!triangle.Property.IsZero)
 				    hiddenItemsProperties.Add(ref mark, triangle.Property);
@@ -678,8 +681,11 @@ namespace MeshEditor.Construction
 			Quadrilateral quad;
             if (quadFaces.TryGetValue(mark, out quad))
             {
-                additionalQuadraticNodes.Remove(quad);
-                quadFaces.Remove(mark);
+				if (face is IFaceOfElement3D)
+				{
+					additionalQuadraticNodes.Remove(quad);
+					quadFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
+				}
 				// plocha je vnitrni, pokud ma nenulovou vlastnost - tak ji uloz <!>
 				if (!quad.Property.IsZero)
 					hiddenItemsProperties.Add(ref mark, quad.Property);
