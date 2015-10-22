@@ -137,7 +137,11 @@ namespace MeshEditor.IO
 
 		#region IProgressNotifier Members
 
-		public event MeshIOEventHandler Step;
+		public event MeshIOEventHandler Step
+		{
+			add { throw new NotSupportedException(); } // explicitly define event accessors to avoid warning, because this event is not used
+			remove { throw new NotSupportedException(); }
+		}
 
 		#endregion
 

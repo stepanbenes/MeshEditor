@@ -1145,10 +1145,10 @@ namespace MeshEditor.CoreInterface
 				result = meshCreator.CreateMesh(parser, cancelled);
 #if !DEBUG
 				}
-				catch (MeshLoadingException ex)
+				catch (FileParserException ex)
 				{
 					if (ShowError != null)
-						ShowError(this, new ShowErrorEventArgs("Error while loading mesh from file", ex.Message + Environment.NewLine + "(linenumber: " + ex.LineNumber + ")"));
+						ShowError(this, new ShowErrorEventArgs("Error while loading mesh from file", Utils.BuildErrorMessage(ex)));
 				}
 				catch (MeshConstructingException ex)
 				{
@@ -1176,14 +1176,14 @@ namespace MeshEditor.CoreInterface
 					meshSaver.Step += progressNotifier;
 				meshSaver.SaveMesh(scene.Mesh, filename, saveWithoutCuttedElements, cancelled);
 			}
-//#if !DEBUG
-//            }
-//            catch (MeshSavingException ex)
-//            {
-//                if (ShowError != null)
-//                    ShowError(this, new ShowErrorEventArgs("Error while saving mesh", ex.Message + Environment.NewLine + "(linenumber: " + ex.LineNumber + ")"));
-//            }
-//#endif
+			//#if !DEBUG
+			//            }
+			//            catch (MeshSavingException ex)
+			//            {
+			//                if (ShowError != null)
+			//                    ShowError(this, new ShowErrorEventArgs("Error while saving mesh", Utils.BuildErrorMessage(ex)));
+			//            }
+			//#endif
 		}
 
 		public void SetRenderModeAccordingToEditorMode()

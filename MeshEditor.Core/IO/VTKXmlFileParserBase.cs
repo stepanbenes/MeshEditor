@@ -51,12 +51,11 @@ namespace MeshEditor.IO
 				case "float64":
 					return DataArrayType.Float64;
 				case "float32":
-					return DataArrayType.Float64;
-					return DataArrayType.Float64;
+					return DataArrayType.Float32;
 				case "int32":
-					return DataArrayType.Float64;
+					return DataArrayType.Int32;
 				case "uint8":
-					return DataArrayType.Float64;
+					return DataArrayType.UInt8;
 				default:
 					return null;
 			}

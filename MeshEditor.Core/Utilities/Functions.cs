@@ -350,6 +350,38 @@ namespace MeshEditor.Utilities
 			}
 		}
 
+		public static string BuildErrorMessage(Exception ex)
+		{
+			Debug.Assert(ex != null);
+
+			var dataException = ex as IO.FileParserException;
+			if (dataException != null)
+			{
+				StringBuilder message = new StringBuilder();
+				message.AppendLine(dataException.Message);
+				if (!string.IsNullOrEmpty(dataException.FileName))
+				{
+					message.AppendLine();
+					message.Append(string.Format("File name: \"{0}\"", System.IO.Path.GetFileName(dataException.FileName)));
+				}
+				if (dataException.LineNumber > 0)
+				{
+					message.AppendLine();
+					message.Append(string.Format("Line number: {0}", dataException.LineNumber));
+				}
+				if (dataException.LinePosition > 0)
+				{
+					message.AppendLine();
+					message.Append(string.Format("Line position: {0}", dataException.LinePosition));
+				}
+				return message.ToString();
+			}
+			else
+			{
+				return ex.Message;
+			}
+		}
+
 		#endregion
 
 		#region Color manipulation

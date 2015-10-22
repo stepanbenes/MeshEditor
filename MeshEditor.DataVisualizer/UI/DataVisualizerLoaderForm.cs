@@ -204,32 +204,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private static void reportError(Exception ex)
 		{
-			var dataException = ex as FileParserException;
-			if (dataException != null)
-			{
-				StringBuilder message = new StringBuilder();
-				message.AppendLine(dataException.Message);
-				if (!string.IsNullOrEmpty(dataException.FileName))
-				{
-					message.AppendLine();
-					message.Append(string.Format("File name: \"{0}\"", System.IO.Path.GetFileName(dataException.FileName)));
-				}
-				if (dataException.LineNumber > 0)
-				{
-					message.AppendLine();
-					message.Append(string.Format("Line number: {0}", dataException.LineNumber));
-				}
-				if (dataException.LinePosition > 0)
-				{
-					message.AppendLine();
-					message.Append(string.Format("Line position: {0}", dataException.LinePosition));
-				}
-				MessageBox.Show(message.ToString(), "Error while loading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-			else if (ex != null)
-			{
-				MessageBox.Show(ex.Message, "Error while loading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
+			MessageBox.Show(Utilities.Functions.BuildErrorMessage(ex), "Error while loading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
 		private static IDataVisualizer dataVisualizerFactory(DataVisualizerTypes type)

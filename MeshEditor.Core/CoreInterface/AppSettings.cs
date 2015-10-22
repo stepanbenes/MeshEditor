@@ -152,7 +152,6 @@ namespace MeshEditor.CoreInterface
 		private string ioFileFormatExtension;
 		private bool showOpenGLLowVersionMessage;
 		private bool selectFacesOnCut;
-		private int undoOperationsMaxCount;
 		private float defaultFirstBorderAngleLimit, defaultSecondBorderAngleLimit;
 		private ColorScaleLegendPosition legendPosition;
 
