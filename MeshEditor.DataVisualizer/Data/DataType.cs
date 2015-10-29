@@ -31,7 +31,7 @@ namespace MeshEditor.DataVisualizer.Data
 				return Name;
 			}
 		}
-		
+
 		public string Name { get; private set; }
 		public int ComponentCount { get { return (Components != null) ? Components.Length : 0; } }
 		public Component[] Components { get; private set; }
@@ -50,17 +50,17 @@ namespace MeshEditor.DataVisualizer.Data
 			this.FileName = filename;
 			this.FilePosition = filePosition;
 			this.CompoundType = componentComposition;
-            SetComponents(componentNames);
+			SetComponents(componentNames);
 		}
 
-        public void SetComponents(params string[] componentNames)
-        {
-            Components = new Component[componentNames.Length];
-            for (int i = 0; i < componentNames.Length; i++)
-            {
-                Components[i] = new Component(componentNames[i]);
-            }
-        }
+		public void SetComponents(params string[] componentNames)
+		{
+			Components = new Component[componentNames.Length];
+			for (int i = 0; i < componentNames.Length; i++)
+			{
+				Components[i] = new Component(componentNames[i]);
+			}
+		}
 
 		public override string ToString()
 		{
@@ -93,7 +93,7 @@ namespace MeshEditor.DataVisualizer.Data
 					names = new[] { "value" };
 					break;
 				case CompoundTypes.Vector:
-					names = new[] {"X", "Y", "Z"}; // optional fourth component signed_module_value !!
+					names = new[] { "X", "Y", "Z" }; // optional fourth component signed_module_value !!
 					break;
 				case CompoundTypes.Matrix:
 					names = new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!

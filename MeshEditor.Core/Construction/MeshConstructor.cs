@@ -25,7 +25,7 @@ namespace MeshEditor.Construction
 		#region Fields, Constructor
 
 		private Dictionary<int, Node> nodes;
-		
+
 		private Dictionary<TriangleMark, Triangle> triangleFaces;
 		private Dictionary<QuadMark, Quadrilateral> quadFaces;
 		private Dictionary<EdgeMark, WingedEdge> edgeMarks;
@@ -42,7 +42,7 @@ namespace MeshEditor.Construction
 		public MeshConstructor()
 		{
 			this.nodes = new Dictionary<int, Node>();
-			
+
 			this.triangleFaces = new Dictionary<TriangleMark, Triangle>();
 			this.quadFaces = new Dictionary<QuadMark, Quadrilateral>();
 			this.edgeMarks = new Dictionary<EdgeMark, WingedEdge>();
@@ -232,7 +232,7 @@ namespace MeshEditor.Construction
 				return;
 
 			using (TextReader reader = new StreamReader(commandsFile))
-			{				
+			{
 				int lineNumber = 0;
 				try
 				{
@@ -418,7 +418,7 @@ namespace MeshEditor.Construction
 			}
 		}
 
-        private static void updateBounds(Vector3 point, ref Vector3 lowerBound, ref Vector3 upperBound)
+		private static void updateBounds(Vector3 point, ref Vector3 lowerBound, ref Vector3 upperBound)
 		{
 			if (point.X < lowerBound.X) // X
 				lowerBound.X = point.X;
@@ -470,8 +470,8 @@ namespace MeshEditor.Construction
 				else
 					throw new MeshConstructingException("Node " + draft.NodeIDs[i] + " in element " + draft.ID + " was not defined.");
 			}
-			
-			switch(draft.Type)
+
+			switch (draft.Type)
 			{
 				case ElementType.BeamLinear:
 					newElement = new Beam(draft.ID, elementType, nodesOfElement[0], nodesOfElement[1]);
@@ -570,11 +570,11 @@ namespace MeshEditor.Construction
 			}
 		}
 
-        private void processNode(Node n, MeshStatistics statistics)
-        {
+		private void processNode(Node n, MeshStatistics statistics)
+		{
 			// add to nodes dictionary
-            nodes.Add(n.ID, n);
-			
+			nodes.Add(n.ID, n);
+
 			// process properties
 			statistics.AddProperty(n.Property, EntityType.Vertex);
 			if (n.Properties != null)
@@ -582,7 +582,7 @@ namespace MeshEditor.Construction
 				foreach (PropertyEntityPair pair in n.Properties)
 					statistics.AddProperty(pair.Property, pair.EntityType);
 			}
-        }
+		}
 
 		private void processElement(Element e)
 		{
@@ -601,8 +601,8 @@ namespace MeshEditor.Construction
 			}
 			Beam b = e as Beam;
 			if (b != null)
-			{	// do nothing
-				return; 
+			{   // do nothing
+				return;
 			}
 			throw new ArgumentException("Unknown element type");
 		}
@@ -627,7 +627,7 @@ namespace MeshEditor.Construction
 			}
 			Beam b = e as Beam;
 			if (b != null)
-			{	// do nothing
+			{   // do nothing
 				return;
 			}
 			throw new ArgumentException("Unknown element type");
@@ -654,50 +654,60 @@ namespace MeshEditor.Construction
 		{
 			TriangleMark mark = new TriangleMark(face.Node1.ID, face.Node2.ID, face.Node3.ID);
 			Triangle triangle;
-            if (triangleFaces.TryGetValue(mark, out triangle))
-            {
+			if (triangleFaces.TryGetValue(mark, out triangle))
+			{
 				if (face is IFaceOfElement3D)
 				{
 					additionalQuadraticNodes.Remove(triangle);
 					triangleFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
+
+					// pokud ma nenulovou vlastnost - tak ji uloz <!>
+					if (!triangle.Property.IsZero)
+					{
+						hiddenItemsProperties.Add(ref mark, triangle.Property);
+					}
 				}
-				// pokud ma nenulovou vlastnost - tak ji uloz <!>
-				if (!triangle.Property.IsZero)
-				    hiddenItemsProperties.Add(ref mark, triangle.Property);
-            }
-            else
-            {
-                triangleFaces.Add(mark, face);
-                // priradit vlastnost <!>
+			}
+			else
+			{
+				triangleFaces.Add(mark, face);
+				// priradit vlastnost <!>
 				Property property;
 				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				{
 					face.Property = property;
-            }
+				}
+			}
 		}
 
 		private void processQuadFace(Quadrilateral face)
 		{
 			QuadMark mark = new QuadMark(face.Node1.ID, face.Node2.ID, face.Node3.ID, face.Node4.ID);
 			Quadrilateral quad;
-            if (quadFaces.TryGetValue(mark, out quad))
-            {
+			if (quadFaces.TryGetValue(mark, out quad))
+			{
 				if (face is IFaceOfElement3D)
 				{
 					additionalQuadraticNodes.Remove(quad);
 					quadFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
+
+					// plocha je vnitrni, pokud ma nenulovou vlastnost - tak ji uloz <!>
+					if (!quad.Property.IsZero)
+					{
+						hiddenItemsProperties.Add(ref mark, quad.Property);
+					}
 				}
-				// plocha je vnitrni, pokud ma nenulovou vlastnost - tak ji uloz <!>
-				if (!quad.Property.IsZero)
-					hiddenItemsProperties.Add(ref mark, quad.Property);
-            }
-            else
-            {
-                quadFaces.Add(mark, face);
-                // priradit vlastnost <!>
+			}
+			else
+			{
+				quadFaces.Add(mark, face);
+				// priradit vlastnost <!>
 				Property property;
 				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				{
 					face.Property = property;
-            }
+				}
+			}
 		}
 
 		/// <summary>
@@ -720,57 +730,57 @@ namespace MeshEditor.Construction
 		/// Creates collection of winged edges from collections of external faces - triangleFaces and quadFaces
 		/// </summary>
 		private void createSurfaceRepresentation(Mesh mesh, IEnumerable<Element2D> allFaces, ref Histogram edgeAnglesHistogram, MeshIOEventArgs ioea, YesNoQuestion cancelled)
-        {
-            Vector3 lowerBound = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            Vector3 upperBound = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+		{
+			Vector3 lowerBound = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+			Vector3 upperBound = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-            // pro kazde cislo uzlu, hrana ktera s nim inciduje
-            Dictionary<Node, List<WingedEdge>> nodesEdgesIncidence = mesh.NodesEdgesIncidence;
+			// pro kazde cislo uzlu, hrana ktera s nim inciduje
+			Dictionary<Node, List<WingedEdge>> nodesEdgesIncidence = mesh.NodesEdgesIncidence;
 
-            foreach (WingedEdge newEdge in generateAllDistinctEdgesOfAllFaces(mesh, allFaces, ioea, cancelled))
-            {
-                List<WingedEdge> edges1, edges2;
-                if (!nodesEdgesIncidence.TryGetValue(newEdge.BeginNode, out edges1) || edges1 == null)
-                    nodesEdgesIncidence[newEdge.BeginNode] = edges1 = new List<WingedEdge>(); /**/ // initial capacity 0 -> 4 -> 8 -> ...
-                if (!nodesEdgesIncidence.TryGetValue(newEdge.EndNode, out edges2) || edges2 == null)   // inicializuju druhy uzel
-                    nodesEdgesIncidence[newEdge.EndNode] = edges2 = new List<WingedEdge>(); /**/ // initial capacity 0 -> 4 -> 8 -> ...
+			foreach (WingedEdge newEdge in generateAllDistinctEdgesOfAllFaces(mesh, allFaces, ioea, cancelled))
+			{
+				List<WingedEdge> edges1, edges2;
+				if (!nodesEdgesIncidence.TryGetValue(newEdge.BeginNode, out edges1) || edges1 == null)
+					nodesEdgesIncidence[newEdge.BeginNode] = edges1 = new List<WingedEdge>(); /**/ // initial capacity 0 -> 4 -> 8 -> ...
+				if (!nodesEdgesIncidence.TryGetValue(newEdge.EndNode, out edges2) || edges2 == null)   // inicializuju druhy uzel
+					nodesEdgesIncidence[newEdge.EndNode] = edges2 = new List<WingedEdge>(); /**/ // initial capacity 0 -> 4 -> 8 -> ...
 
-                edges1.Add(newEdge); // pridam tuto hranu do seznamu incidence prvniho uzlu hrany
-                edges2.Add(newEdge);   // pridam tuto hranu do seznamu incidence druheho uzlu hrany
+				edges1.Add(newEdge); // pridam tuto hranu do seznamu incidence prvniho uzlu hrany
+				edges2.Add(newEdge);   // pridam tuto hranu do seznamu incidence druheho uzlu hrany
 
-                mesh.AddEdge(newEdge); // vloz hranu do site
+				mesh.AddEdge(newEdge); // vloz hranu do site
 
-                newEdge.BeginNeighbors = edges1;
-                newEdge.EndNeighbors = edges2;
-            }
+				newEdge.BeginNeighbors = edges1;
+				newEdge.EndNeighbors = edges2;
+			}
 
-            if (cancelled != null && cancelled())
-                return;
+			if (cancelled != null && cancelled())
+				return;
 
 			// naplnit histogram
 			foreach (WingedEdge edge in mesh.Edges)
 				edgeAnglesHistogram.AddValue(edge.FeatureAngle);
 
-            //    // oriznout seznamy sousedu hran
-            //    foreach (Node n in nodesEdgesIncidence.Keys)
-            //    {
-            //        List<WingedEdge> edgesOfn = nodesEdgesIncidence[n];
-            //        if (edgesOfn != null)
-            //            edgesOfn.TrimExcess(); // oriznout seznam sousedu hran, aby se setrilo mistem
-            //    }
+			//    // oriznout seznamy sousedu hran
+			//    foreach (Node n in nodesEdgesIncidence.Keys)
+			//    {
+			//        List<WingedEdge> edgesOfn = nodesEdgesIncidence[n];
+			//        if (edgesOfn != null)
+			//            edgesOfn.TrimExcess(); // oriznout seznam sousedu hran, aby se setrilo mistem
+			//    }
 
-            // spocitat meze obalky site (pro vypocet centra a polomeru site)
-            foreach (Node n in mesh.GetNodes(false))
-                updateBounds(n.Position, ref lowerBound, ref upperBound);
-            
-            // nastavit stred rotace site pro nastroj Orbit a radius viditelne site
-            mesh.CenterOfRotation = (nodesEdgesIncidence.Count > 0) ? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound) : /*Vector3.Zero*/ mesh.PositionOffset * -mesh.ResizeFactor;
-            mesh.Radius = (nodesEdgesIncidence.Count > 0) ? (lowerBound - upperBound).Length * 0.5f : 1f;
+			// spocitat meze obalky site (pro vypocet centra a polomeru site)
+			foreach (Node n in mesh.GetNodes(false))
+				updateBounds(n.Position, ref lowerBound, ref upperBound);
 
-            mesh.LowerBound = lowerBound;
-            mesh.UpperBound = upperBound;
-            // --------------------------------------------------------------------
-        }
+			// nastavit stred rotace site pro nastroj Orbit a radius viditelne site
+			mesh.CenterOfRotation = (nodesEdgesIncidence.Count > 0) ? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound) : /*Vector3.Zero*/ mesh.PositionOffset * -mesh.ResizeFactor;
+			mesh.Radius = (nodesEdgesIncidence.Count > 0) ? (lowerBound - upperBound).Length * 0.5f : 1f;
+
+			mesh.LowerBound = lowerBound;
+			mesh.UpperBound = upperBound;
+			// --------------------------------------------------------------------
+		}
 
 		private IEnumerable<WingedEdge> generateAllDistinctEdgesOfAllFaces(Mesh mesh, IEnumerable<Element2D> allFaces, MeshIOEventArgs ioea, YesNoQuestion cancelled)
 		{
@@ -896,16 +906,16 @@ namespace MeshEditor.Construction
 		{
 			//long mark = ((long)edge.BeginNode.ID << 32) + edge.EndNode.ID; /**/ // vypocitam znacku - je to slozenina indexu obou uzlu hrany
 			EdgeMark mark = new EdgeMark(edge.BeginNode.ID, edge.EndNode.ID);
-            
+
 			if (edgeMarks.TryGetValue(mark, out original)) // sesterska hrana jiz byla zpracovana, tuto tedy zahodim, ale jeste predtim ...
 			{
-                original.Face2 = edge.Face1; // priradim druhou plochu k predchozi hrane
+				original.Face2 = edge.Face1; // priradim druhou plochu k predchozi hrane
 				edgeMarks.Remove(mark); // odstranim tuto hranu, predpokladam, ze uz dalsi stejna nebude, setri to pamet
 				return false;
 			}
 			edgeMarks.Add(mark, edge); // pridej znacku
 			original = edge;
-            // priradit vlastnost <!>
+			// priradit vlastnost <!>
 			Property property;
 			if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
 				original.Property = property;
@@ -974,7 +984,7 @@ namespace MeshEditor.Construction
 			HashSet<ISelectable> facesOnCut = null;
 			IEnumerable<Element2D> oldFaces = mesh.Faces; // nejdriv ulozit plochy
 			Dictionary<Node, List<WingedEdge>> oldNodesEdgesIncidence = mesh.NodesEdgesIncidence;
-			
+
 
 			// projit vsechny hrany a ulozit jejich vlastnosti
 			foreach (WingedEdge edge in mesh.Edges)
@@ -1020,7 +1030,7 @@ namespace MeshEditor.Construction
 			if (allNodesOfCuttedElements.Count > 0)
 			{
 				Predicate<Element2D> faceCriterion;
-				faceCriterion = delegate(Element2D face)
+				faceCriterion = delegate (Element2D face)
 				{
 					return allNodesInSet(face.IterateThroughAllNodes(), allNodesOfCuttedElements);
 				};
@@ -1042,7 +1052,7 @@ namespace MeshEditor.Construction
 				}
 			}
 
-			
+
 
 			// ---------------------------------------
 			FacesOnCutComputer facesOnCutComputer = null;
@@ -1076,7 +1086,7 @@ namespace MeshEditor.Construction
 			cutOrRestoreBeams(mesh, elementHits, elementsToRestore);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
-			//Console.WriteLine(hiddenItemsProperties);
+								  //Console.WriteLine(hiddenItemsProperties);
 
 			// -------------------------------------------------------------
 			// pokud byly normaly puvodne otocene, tak je ted vratim zpet
@@ -1118,7 +1128,7 @@ namespace MeshEditor.Construction
 					mesh.PushBeam(b);
 			}
 		}
-		
+
 		private static bool notAllNodesInDictionary(IEnumerable<Node> test, Dictionary<Node, List<WingedEdge>> nodesEdgesIncidence)
 		{
 			foreach (Node n in test)
@@ -1126,7 +1136,7 @@ namespace MeshEditor.Construction
 					return true;
 			return false;
 		}
-		
+
 		public static bool allNodesInSet(IEnumerable<Node> test, HashSet<Node> nodes)
 		{
 			foreach (Node n in test)
