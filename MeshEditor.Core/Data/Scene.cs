@@ -1157,7 +1157,14 @@ namespace MeshEditor.Data
 				case SelectMode.Single:
 					newSelection = new HashSet<ISelectable>();
 					if (item != null)
+					{
 						newSelection.Add(item);
+						Element2D face = item as Element2D;
+						if (face != null && face.HasTwinElements)
+						{
+							addAllTwinElementsOfFaceToSet(face, newSelection);
+						}
+					}
 					break;
 				case SelectMode.NearSurface:
 				case SelectMode.ExtendedSurface:
@@ -1336,7 +1343,11 @@ namespace MeshEditor.Data
 			{
 				case ItemTypeToSelect.Face:
 					foreach (Element2D face in faces)
+					{
 						items.Add(face);
+						if (face.HasTwinElements)
+							addAllTwinElementsOfFaceToSet(face, items);
+					}
 					break;
 				case ItemTypeToSelect.Node:
 					foreach (Element2D face in faces)
@@ -1356,6 +1367,9 @@ namespace MeshEditor.Data
 							items.Add(faceOfElement.ParentElement);
 						else
 							items.Add(face); // je to 2D element, ne face
+
+						if (face.HasTwinElements)
+							addAllTwinElementsOfFaceToSet(face, items);
 					}
 					break;
 				default:
@@ -1935,7 +1949,9 @@ namespace MeshEditor.Data
 						{
 							int number = getNumberOfVisibleNodesFrom(new Node[] { edge.BeginNode, edge.EndNode }, visibleNodes);
 							if (number == 2 || (!allVerticesInArea && number > 0))
+							{
 								result.Add(edge);
+							}
 						}
 					}
 					break;
@@ -1943,12 +1959,20 @@ namespace MeshEditor.Data
 					foreach (Element2D face in pickedFaces)
 					{
 						if (!allVerticesInArea)
+						{
 							result.Add(face);
+							if (face.HasTwinElements)
+								addAllTwinElementsOfFaceToSet(face, result);
+						}
 						else
 						{
 							int number = getNumberOfVisibleNodesFrom(face.IterateThroughAllNodes(), visibleNodes);
 							if (number == face.NodeCount)
+							{
 								result.Add(face);
+								if (face.HasTwinElements)
+									addAllTwinElementsOfFaceToSet(face, result);
+							}
 						}
 					}
 					break;
@@ -1968,12 +1992,20 @@ namespace MeshEditor.Data
 							itemToAdd = face;
 						// --------------------------------------
 						if (!allVerticesInArea)
+						{
 							result.Add(itemToAdd);
+							if (face.HasTwinElements)
+								addAllTwinElementsOfFaceToSet(face, result);
+						}
 						else
 						{
 							int number = getNumberOfVisibleNodesFrom(face.IterateThroughAllNodes(), visibleNodes);
 							if (number == face.NodeCount)
+							{
 								result.Add(itemToAdd);
+								if (face.HasTwinElements)
+									addAllTwinElementsOfFaceToSet(face, result);
+							}
 						}
 					}
 					break;
@@ -1981,6 +2013,18 @@ namespace MeshEditor.Data
 					throw new NotSupportedException("This type of item is not supported for selection.");
 			}
 			return result;
+		}
+
+		private static void addAllTwinElementsOfFaceToSet(Element2D face, HashSet<ISelectable> selection)
+		{
+			Debug.Assert(selection != null);
+			Debug.Assert(face != null);
+			Debug.Assert(face.HasTwinElements);
+
+			foreach (var twinElement in face.GetTwinElements())
+			{
+				selection.Add(twinElement);
+			}
 		}
 
 		private bool frontFaceIsCloserToEye(Element2D frontFace, Element2D backFace)

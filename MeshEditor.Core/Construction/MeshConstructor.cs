@@ -205,7 +205,7 @@ namespace MeshEditor.Construction
 			}
 			catch (Exception ex) // nastala nejaka chyba, zmenim jeji typ, pridam cislo radku a pridam tuto chybu jako vnitrni vyjimku
 			{
-				throw new MeshConstructingException(ex.Message + Environment.NewLine + "(filename: " + meshFileParser.Filename + ")" + Environment.NewLine + "(line number: " + meshFileParser.CurrentLineNumber + ")", ex.InnerException);
+				throw new MeshConstructingException(ex.Message + Environment.NewLine + Environment.NewLine + "Filename: " + meshFileParser.Filename + Environment.NewLine + "Line number: " + meshFileParser.CurrentLineNumber, ex.InnerException);
 			}
 			finally
 			{
@@ -656,7 +656,10 @@ namespace MeshEditor.Construction
 			Triangle triangle;
 			if (triangleFaces.TryGetValue(mark, out triangle))
 			{
-				if (face is IFaceOfElement3D)
+				bool t1IsFaceOfElement3D = triangle is IFaceOfElement3D;
+				bool t2IsFaceOfElement3D = face is IFaceOfElement3D;
+
+				if (t1IsFaceOfElement3D & t2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
 					additionalQuadraticNodes.Remove(triangle);
 					triangleFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
@@ -667,15 +670,27 @@ namespace MeshEditor.Construction
 						hiddenItemsProperties.Add(ref mark, triangle.Property);
 					}
 				}
+				else if (t2IsFaceOfElement3D) // first is 2D element, second is face of 3D element
+				{
+					triangleFaces[mark] = face; // replace 2D element with face of 3D element
+					face.AddTwinElement(triangle); // add 2D element as twin element
+				}
+				else // second is 2D element
+				{
+					triangle.AddTwinElement(face);
+				}
 			}
 			else
 			{
 				triangleFaces.Add(mark, face);
 				// priradit vlastnost <!>
-				Property property;
-				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				if (face is IFaceOfElement3D)
 				{
-					face.Property = property;
+					Property property;
+					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+					{
+						face.Property = property;
+					}
 				}
 			}
 		}
@@ -686,7 +701,10 @@ namespace MeshEditor.Construction
 			Quadrilateral quad;
 			if (quadFaces.TryGetValue(mark, out quad))
 			{
-				if (face is IFaceOfElement3D)
+				bool q1IsFaceOfElement3D = quad is IFaceOfElement3D;
+				bool q2IsFaceOfElement3D = face is IFaceOfElement3D;
+
+				if (q1IsFaceOfElement3D & q2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
 					additionalQuadraticNodes.Remove(quad);
 					quadFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
@@ -697,15 +715,27 @@ namespace MeshEditor.Construction
 						hiddenItemsProperties.Add(ref mark, quad.Property);
 					}
 				}
+				else if (q2IsFaceOfElement3D) // first is 2D element, second is face of 3D element
+				{
+					quadFaces[mark] = face; // replace 2D element with face of 3D element
+					face.AddTwinElement(quad); // add 2D element as twin element
+				}
+				else // second is 2D element
+				{
+					quad.AddTwinElement(face);
+				}
 			}
 			else
 			{
 				quadFaces.Add(mark, face);
 				// priradit vlastnost <!>
-				Property property;
-				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				if (face is IFaceOfElement3D)
 				{
-					face.Property = property;
+					Property property;
+					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+					{
+						face.Property = property;
+					}
 				}
 			}
 		}
@@ -991,10 +1021,8 @@ namespace MeshEditor.Construction
 				if (!edge.Property.IsZero)
 					hiddenItemsProperties.AddEdgeProperty(edge);
 
-
-			// ====================
-			mesh.ClearSurface(); // smazat povrchovou reprezentaci a buffery
-			// ====================
+			// smazat povrchovou reprezentaci a buffery
+			mesh.ClearSurface();
 
 			// projit byvaly povrch a zpracovat plochy, co nejsou urizly
 			if (allNodesOfCuttedElements.Count > 0)
@@ -1024,7 +1052,6 @@ namespace MeshEditor.Construction
 				}
 			}
 
-			//oldFaces = null; // uz muzu zahodit
 			HashSet<Element> processedElements = new HashSet<Element>();
 			// projit prvky na hranici rezu a zpracovat jejich prislusne plochy
 			if (allNodesOfCuttedElements.Count > 0)
@@ -1034,6 +1061,9 @@ namespace MeshEditor.Construction
 				{
 					return allNodesInSet(face.IterateThroughAllNodes(), allNodesOfCuttedElements);
 				};
+
+				// TODO: fix following loop to handle twin 2D elements also (or rewrite cutting to create new surface representation from scratch each time)
+
 				foreach (Element e in mesh.Elements)
 				{
 					if (!elementHits.Contains(e) && !mesh.HiddenElements.Contains(e) && someNodesInSet(e.IterateThroughAllNodes(), allNodesOfCuttedElements))
@@ -1051,8 +1081,6 @@ namespace MeshEditor.Construction
 					}
 				}
 			}
-
-
 
 			// ---------------------------------------
 			FacesOnCutComputer facesOnCutComputer = null;
@@ -1086,7 +1114,6 @@ namespace MeshEditor.Construction
 			cutOrRestoreBeams(mesh, elementHits, elementsToRestore);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
-								  //Console.WriteLine(hiddenItemsProperties);
 
 			// -------------------------------------------------------------
 			// pokud byly normaly puvodne otocene, tak je ted vratim zpet

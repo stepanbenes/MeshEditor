@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using MeshEditor.Cuts;
+using System.Diagnostics;
+using System.Linq;
 
 namespace MeshEditor.Data
 {
@@ -15,6 +17,7 @@ namespace MeshEditor.Data
 		#region Field, Constructor, Property
 
 		protected Vector3 normal;
+		private Element2D[] twinElements;
 
 		public Element2D(int id, ElementType type)
 			: base(id, type)
@@ -46,7 +49,7 @@ namespace MeshEditor.Data
 		{
 			normal = -normal;
 		}
-		
+
 		public IEnumerable<Element2D> GetNeighbors(float borderAngleLimit)
 		{
 			foreach (WingedEdge edge in IterateThroughAllEdges())
@@ -108,7 +111,7 @@ namespace MeshEditor.Data
 					text.Append("Face");
 
 				text.Append(" | (Nodes: ");
-				
+
 				List<Node> allNodes = new List<Node>(IterateThroughAllNodesIncludingEdgeMiddleNodes());
 				for (int i = 0; i < allNodes.Count; i++)
 				{
@@ -138,6 +141,66 @@ namespace MeshEditor.Data
 				if (Utilities.Functions.LinePlaneIntersection(edge.BeginNode.Position, edge.EndNode.Position, ref planeNormal, planeOffset, out intersection))
 					yield return new EdgeIntersection(edge.BeginNode, edge.EndNode, intersection);
 			}
+		}
+
+		public bool HasTwinElements
+		{
+			get { return twinElements != null; }
+		}
+
+		public IEnumerable<Element2D> GetTwinElements()
+		{
+			return HasTwinElements ? twinElements : Enumerable.Empty<Element2D>();
+		}
+
+		public void AddTwinElement(Element2D twinElementToAdd)
+		{
+			if (twinElements == null)
+			{
+				twinElements = new Element2D[] { twinElementToAdd };
+			}
+			else
+			{
+				Array.Resize(ref twinElements, twinElements.Length + 1);
+				twinElements[twinElements.Length - 1] = twinElementToAdd;
+			}
+		}
+
+		public bool RemoveTwinElement(Element2D twinElementToRemove)
+		{
+			if (twinElements == null)
+			{
+				return false;
+			}
+
+			int index = Array.IndexOf(twinElements, twinElementToRemove);
+
+			if (index < 0)
+			{
+				return false;
+			}
+
+			if (twinElements.Length == 1)
+			{
+				Debug.Assert(index == 0);
+				twinElements = null;
+			}
+			else
+			{
+				Debug.Assert(twinElements.Length > 1);
+				Element2D[] newArray = new Element2D[twinElements.Length - 1];
+				if (index > 0)
+				{
+					Array.Copy(twinElements, 0, newArray, 0, index);
+				}
+				if (index < twinElements.Length - 1)
+				{
+					Array.Copy(twinElements, index + 1, newArray, index, twinElements.Length - index - 1);
+				}
+				twinElements = newArray;
+            }
+
+			return true;
 		}
 
 		#endregion
