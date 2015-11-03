@@ -7,6 +7,7 @@ using OpenTK;
 using System.Diagnostics;
 using MeshEditor.Utilities;
 using MeshEditor.CoreInterface;
+using System.Linq;
 
 namespace MeshEditor.Cuts
 {
@@ -261,41 +262,18 @@ namespace MeshEditor.Cuts
 			return true;
 		}
 
-		public static void RestoreElements(Mesh mesh, HashSet<Element> elementsToRestore)
+		public static void RestoreAllElements(Mesh mesh)
 		{
 			if (mesh == null)
 				return;
 
 			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-			mesh.HiddenElements.ExceptWith(elementsToRestore); // smazat obnovene prvky ze seznamu uriznutych prvku
-			
+			mesh.HiddenElements.Clear();
+
+			var elementsToShow = new HashSet<Element>(mesh.Elements);
+
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, new HashSet<Element>(), elementsToRestore, new HashSet<Node>(), false);
-		}
-
-		public static void HideRestoreElements(Mesh mesh, HashSet<Element> toHide, HashSet<Element> toRestore, bool selectFaces)
-		{
-			if (mesh == null)
-				return;
-
-			HashSet<Node> allNodesOfHiddenElements = new HashSet<Node>();
-			foreach (Element e in toHide)
-			{
-				allNodesOfHiddenElements.UnionWith(e.IterateThroughAllNodes());
-				mesh.HiddenElements.Add(e);
-			}
-			mesh.HiddenElements.ExceptWith(toRestore);
-
-			// odoznacit polozky
-			mesh.SelectedItems = new HashSet<ISelectable>();
-			MeshConstructor ctor = new MeshConstructor();
-			HashSet<ISelectable> facesOnCut = ctor.CutMesh(mesh, toHide, toRestore, allNodesOfHiddenElements, selectFaces);
-
-			if (selectFaces && facesOnCut != null)
-			{
-				mesh.SelectedItems = facesOnCut;
-				mesh.UpdateColors();
-			}
+			ctor.CutMesh(mesh, elementsToShow);
 		}
 
 		#endregion
@@ -442,52 +420,33 @@ namespace MeshEditor.Cuts
 		private static void setElementVisibility(Mesh mesh, ElementTest elementVisibilityTest)
 		{
 			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-
-			HashSet<Element> toCut = new HashSet<Element>();
-			HashSet<Element> toRestore = new HashSet<Element>();
-			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
-
+			HashSet<Element> elementsToShow = new HashSet<Element>();
+			mesh.HiddenElements.Clear();
 			foreach (Element e in mesh.Elements)
 			{
-				bool cutted = mesh.HiddenElements.Contains(e);
-				if (!elementVisibilityTest(e))
-				{
-					if (!cutted)
-					{
-						toCut.Add(e);
-						mesh.HiddenElements.Add(e);
-						allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
-					}
-				}
-				else if (cutted)
-				{
-					toRestore.Add(e);
-				}
+				if (elementVisibilityTest(e))
+					elementsToShow.Add(e);
+				else
+					mesh.HiddenElements.Add(e);
 			}
-
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, toCut, toRestore, allNodesOfCuttedElements, false);
-			mesh.HiddenElements.ExceptWith(toRestore); // uz nejsou zadne uriznute
+			ctor.CutMesh(mesh, elementsToShow);
 		}
 
 		private static void hideElements(Mesh mesh, HashSet<Element> toHide)
 		{
-			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
-			foreach(Element e in toHide)
-			{
-				allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
-				mesh.HiddenElements.Add(e);
-			}
-
 			if (toHide.Count == 0)
 				return;
 
 			// odoznacit polozky
 			mesh.SelectedItems = new HashSet<ISelectable>();
-			
-			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, toHide, new HashSet<Element>(), allNodesOfCuttedElements, false);
 
+			mesh.HiddenElements.UnionWith(toHide);
+			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
+			elementsToShow.ExceptWith(mesh.HiddenElements);
+
+			MeshConstructor ctor = new MeshConstructor();
+			ctor.CutMesh(mesh, elementsToShow);
 		}
 
 		private static void doCut(Mesh mesh, CutTest isToCut, CutInfo.ItemHitDecision hitDecision, bool transformCoordinates)
@@ -503,18 +462,15 @@ namespace MeshEditor.Cuts
 			else
 				throw new NotSupportedException(hitDecision.ToString() + " option is not supported");
 
-			HashSet<Node> allNodesOfCuttedElements = new HashSet<Node>();
-			foreach (Element e in elementHits)
-				allNodesOfCuttedElements.UnionWith(e.IterateThroughAllNodes());
-
-			mesh.HiddenElements.UnionWith(elementHits); // pridat do seznamu vymazanych
-
 			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
 
-			MeshConstructor ctor = new MeshConstructor();
-			HashSet<ISelectable> facesOnCut = ctor.CutMesh(mesh, elementHits, new HashSet<Element>(), allNodesOfCuttedElements, Scene.SelectFacesOnCut);
-			if (Scene.SelectFacesOnCut && facesOnCut != null)
-				mesh.SelectedItems = facesOnCut;
+			mesh.HiddenElements.Clear();
+			mesh.HiddenElements.UnionWith(elementHits);
+			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
+			elementsToShow.ExceptWith(elementHits);
+			
+            MeshConstructor ctor = new MeshConstructor();
+			ctor.CutMesh(mesh, elementsToShow);
 		}
 
 		private static IEnumerable<Node> getAllNodes(Mesh mesh)

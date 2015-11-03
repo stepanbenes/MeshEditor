@@ -13,6 +13,7 @@ using MeshEditor.CoreInterface;
 using System.Diagnostics;
 using MeshEditor.Cuts;
 using System.IO;
+using System.Linq;
 
 namespace MeshEditor.Construction
 {
@@ -607,32 +608,6 @@ namespace MeshEditor.Construction
 			throw new ArgumentException("Unknown element type");
 		}
 
-		private void processElement(Element e, Predicate<Element2D> faceCriterion)
-		{
-			//Scene.SetPropertyColorIfNew(e.Property);
-			Element3D e3D = e as Element3D;
-			if (e3D != null)
-			{
-				foreach (Element2D f in e3D.GenerateAllFaces(this.additionalQuadraticNodes)) // vygeneruju plochy tohoto prvku
-					if (faceCriterion(f))
-						processFace(f);
-				return;
-			}
-			Element2D e2D = e as Element2D;
-			if (e2D != null)
-			{
-				if (faceCriterion(e2D))
-					processFace(e2D); // zasadni okamzik - negeneruju novy objekt face ale predam rovnou tento 2D prvek
-				return;
-			}
-			Beam b = e as Beam;
-			if (b != null)
-			{   // do nothing
-				return;
-			}
-			throw new ArgumentException("Unknown element type");
-		}
-
 		private void processFace(Element2D face)
 		{
 			Triangle t = face as Triangle;
@@ -996,11 +971,8 @@ namespace MeshEditor.Construction
 
 		#region Cutting
 
-		public HashSet<ISelectable> CutMesh(Mesh mesh, HashSet<Element> elementHits, HashSet<Element> elementsToRestore, HashSet<Node> allNodesOfCuttedElements, bool returnFacesOnCut)
+		public void CutMesh(Mesh mesh, HashSet<Element> elementsToShow)
 		{
-			if (elementHits.Count == 0 && elementsToRestore.Count == 0) // pokud neni co na praci, tak koncim
-				return null;
-
 			this.hiddenItemsProperties = mesh.HiddenItemsProperties; // nastavit odkaz na skryte polozky s vlastnostmi
 
 			// -------------------------------------------------------------
@@ -1011,97 +983,35 @@ namespace MeshEditor.Construction
 				mesh.InvertAllNormals();
 			// -------------------------------------------------------------
 
-			HashSet<ISelectable> facesOnCut = null;
-			IEnumerable<Element2D> oldFaces = mesh.Faces; // nejdriv ulozit plochy
-			Dictionary<Node, List<WingedEdge>> oldNodesEdgesIncidence = mesh.NodesEdgesIncidence;
-
-
 			// projit vsechny hrany a ulozit jejich vlastnosti
 			foreach (WingedEdge edge in mesh.Edges)
+			{
 				if (!edge.Property.IsZero)
+				{
 					hiddenItemsProperties.AddEdgeProperty(edge);
+				}
+			}
 
 			// smazat povrchovou reprezentaci a buffery
 			mesh.ClearSurface();
 
-			// projit byvaly povrch a zpracovat plochy, co nejsou urizly
-			if (allNodesOfCuttedElements.Count > 0)
+			foreach (Element2D element2D in mesh.Elements.OfType<Element2D>())
 			{
-				foreach (Element2D face in oldFaces)
+				element2D.RemoveAllTwinElements();
+			}
+
+			foreach (Element e in mesh.Elements)
+			{
+				if (elementsToShow.Contains(e))
 				{
-					if (!allNodesInSet(face.IterateThroughAllNodes(), allNodesOfCuttedElements))
+					processElement(e);
+					// pokud to je kvadraticky 2D prvek, tak ho zpracovat
+					if (e.ApproximationIsQuadratic)
 					{
-						if (face.ApproximationIsQuadratic)
+						Element2D face = e as Element2D;
+						if (face != null)
 							processQuadraticNodesOfFace(face);
-						processFace(face); // tohle tu je kvuli vytvoreni znacek (triangle a quad marks)
 					}
-					else if (!face.Property.IsZero)
-					{
-						// pokud bude plocha znovu generovana, tak si nejdriv ulozit jeji vlastnost (pokud neni nulova)
-						hiddenItemsProperties.AddFaceProperty(face); // <!>
-					}
-				}
-			}
-			else
-			{
-				foreach (Element2D face in oldFaces) // zpracovat vsechny plochy, nic neni uriznuty
-				{
-					if (face.ApproximationIsQuadratic)
-						processQuadraticNodesOfFace(face);
-					processFace(face);
-				}
-			}
-
-			HashSet<Element> processedElements = new HashSet<Element>();
-			// projit prvky na hranici rezu a zpracovat jejich prislusne plochy
-			if (allNodesOfCuttedElements.Count > 0)
-			{
-				Predicate<Element2D> faceCriterion;
-				faceCriterion = delegate (Element2D face)
-				{
-					return allNodesInSet(face.IterateThroughAllNodes(), allNodesOfCuttedElements);
-				};
-
-				// TODO: fix following loop to handle twin 2D elements also (or rewrite cutting to create new surface representation from scratch each time)
-
-				foreach (Element e in mesh.Elements)
-				{
-					if (!elementHits.Contains(e) && !mesh.HiddenElements.Contains(e) && someNodesInSet(e.IterateThroughAllNodes(), allNodesOfCuttedElements))
-					{
-						processElement(e, faceCriterion);
-						// pokud to je kvadraticky 2D prvek, tak ho zpracovat
-						if (e.ApproximationIsQuadratic)
-						{
-							Element2D face = e as Element2D;
-							if (face != null)
-								processQuadraticNodesOfFace(face);
-						}
-						if (returnFacesOnCut)
-							processedElements.Add(e);
-					}
-				}
-			}
-
-			// ---------------------------------------
-			FacesOnCutComputer facesOnCutComputer = null;
-			if (returnFacesOnCut)
-			{
-				facesOnCutComputer = new FacesOnCutComputer();
-				facesOnCutComputer.Init(oldFaces, processedElements);
-				processedElements = null;
-			}
-			// ---------------------------------------
-
-			// zpracovat prvky, ktere se maji obnovit
-			foreach (Element e in elementsToRestore)
-			{
-				processElement(e);
-				// pokud to je kvadraticky 2D prvek, tak ho zpracovat
-				if (e.ApproximationIsQuadratic)
-				{
-					Element2D face = e as Element2D;
-					if (face != null)
-						processQuadraticNodesOfFace(face);
 				}
 			}
 
@@ -1111,7 +1021,7 @@ namespace MeshEditor.Construction
 			// doladit par detailu - pripravit sit pro zobrazeni
 			mesh.InitializeMesh(edgeAnglesHistogram);
 			// smazat nebo vratit beamy do seznamu beamu
-			cutOrRestoreBeams(mesh, elementHits, elementsToRestore);
+			cutOrRestoreBeams(mesh, elementsToShow);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
 
@@ -1120,13 +1030,6 @@ namespace MeshEditor.Construction
 			if (normalVectorsWereInverted)
 				mesh.InvertAllNormals();
 			// -------------------------------------------------------------
-
-			if (returnFacesOnCut) // najit plochy na rezu
-			{
-				facesOnCut = facesOnCutComputer.GetFacesOnCut(oldFaces, triangleFaces, quadFaces);
-			}
-
-			return facesOnCut;
 		}
 
 		private void processQuadraticNodesOfFace(Element2D face)
@@ -1135,24 +1038,15 @@ namespace MeshEditor.Construction
 			additionalQuadraticNodes[face] = middleNodes.ToArray();
 		}
 
-		private void cutOrRestoreBeams(Mesh mesh, HashSet<Element> elementHits, HashSet<Element> elementsToRestore)
+		private void cutOrRestoreBeams(Mesh mesh, HashSet<Element> elementsToShow)
 		{
-			List<Beam> beamBackup = new List<Beam>(mesh.Beams);
 			mesh.Beams.Clear();
 			mesh.ClearBeamNodesNotInFaces();
-			// smazat, ty co se maj uriznout
-			foreach (Beam b in beamBackup)
-			{
-				if (!elementHits.Contains(b))
-					mesh.PushBeam(b);
-			}
-			// pridat do site ty, co se maj obnovit
-			foreach (Element e in elementsToRestore)
+
+			foreach (Beam b in elementsToShow.OfType<Beam>())
 			{
 				// pridat do seznamu uzlu a jejich uzly zaradit do povrchove reprezentace
-				Beam b = e as Beam;
-				if (b != null)
-					mesh.PushBeam(b);
+				mesh.PushBeam(b);
 			}
 		}
 

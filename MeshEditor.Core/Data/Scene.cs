@@ -753,8 +753,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		private Element3D tempElementAddedToSurfaceRepresentation;
-		private MeshConstructor signalElementConstructor;
+		private bool tempElementAddedToSurfaceRepresentation;
 
 		private void setElementSignal(int? elementSignalToSet)
 		{
@@ -763,16 +762,14 @@ namespace MeshEditor.Data
 				if (mesh == null)
 					return;
 
-				if (tempElementAddedToSurfaceRepresentation != null)
+				if (tempElementAddedToSurfaceRepresentation)
 				{
-					Debug.Assert(signalElementConstructor != null);
-					HashSet<Element> elementsToRestore = new HashSet<Element>();
-					elementsToRestore.Add(tempElementAddedToSurfaceRepresentation);
+					var signalElementConstructor = new MeshConstructor();
+					HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
+					elementsToShow.ExceptWith(mesh.HiddenElements);
+					signalElementConstructor.CutMesh(mesh, elementsToShow); // remove signalled element from surface representation
 
-					signalElementConstructor.CutMesh(mesh, new HashSet<Element>(), elementsToRestore, new HashSet<Node>(), false); // remove signalled element from surface representation
-
-					tempElementAddedToSurfaceRepresentation = null;
-					signalElementConstructor = null;
+					tempElementAddedToSurfaceRepresentation = false;
 				}
 
 				if (elementSignalToSet == null)
@@ -792,9 +789,9 @@ namespace MeshEditor.Data
 						Element3D element3D = element as Element3D;
 						if (element3D != null)
 						{
-							signalElementConstructor = new MeshConstructor();
-							tempElementAddedToSurfaceRepresentation = element3D;
+							var signalElementConstructor = new MeshConstructor();
 							signalElementConstructor.AddSurfaceOfElement3DToMesh(mesh, element3D); // add element to surface representation
+							tempElementAddedToSurfaceRepresentation = true;
 						}
 						// ------------------------------------------------
 						HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
@@ -2293,8 +2290,7 @@ namespace MeshEditor.Data
 			// ----------------------------------
 			saveStateBeforeHideRestoreElements(false);
 			// ----------------------------------
-			HashSet<Element> toRestore = new HashSet<Element>(mesh.HiddenElements);
-			Cutter.RestoreElements(mesh, toRestore);
+			Cutter.RestoreAllElements(mesh);
 		}
 
 		#endregion

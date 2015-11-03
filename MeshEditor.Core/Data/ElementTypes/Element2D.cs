@@ -203,6 +203,11 @@ namespace MeshEditor.Data
 			return true;
 		}
 
+		public void RemoveAllTwinElements()
+		{
+			twinElements = null;
+		}
+
 		#endregion
 
 	}
