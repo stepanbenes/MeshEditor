@@ -266,12 +266,7 @@ namespace MeshEditor.Cuts
 		{
 			if (mesh == null)
 				return;
-
-			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-			mesh.HiddenElements.Clear();
-
 			var elementsToShow = new HashSet<Element>(mesh.Elements);
-
 			MeshConstructor ctor = new MeshConstructor();
 			ctor.CutMesh(mesh, elementsToShow);
 		}
@@ -419,16 +414,8 @@ namespace MeshEditor.Cuts
 
 		private static void setElementVisibility(Mesh mesh, ElementTest elementVisibilityTest)
 		{
-			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-			HashSet<Element> elementsToShow = new HashSet<Element>();
-			mesh.HiddenElements.Clear();
-			foreach (Element e in mesh.Elements)
-			{
-				if (elementVisibilityTest(e))
-					elementsToShow.Add(e);
-				else
-					mesh.HiddenElements.Add(e);
-			}
+			Debug.Assert(elementVisibilityTest != null);
+			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements.Where(e => elementVisibilityTest(e)));
 			MeshConstructor ctor = new MeshConstructor();
 			ctor.CutMesh(mesh, elementsToShow);
 		}
@@ -438,12 +425,9 @@ namespace MeshEditor.Cuts
 			if (toHide.Count == 0)
 				return;
 
-			// odoznacit polozky
-			mesh.SelectedItems = new HashSet<ISelectable>();
-
-			mesh.HiddenElements.UnionWith(toHide);
 			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
 			elementsToShow.ExceptWith(mesh.HiddenElements);
+			elementsToShow.ExceptWith(toHide);
 
 			MeshConstructor ctor = new MeshConstructor();
 			ctor.CutMesh(mesh, elementsToShow);
@@ -452,20 +436,15 @@ namespace MeshEditor.Cuts
 		private static void doCut(Mesh mesh, CutTest isToCut, CutInfo.ItemHitDecision hitDecision, bool transformCoordinates)
 		{
 			HashSet<Element> elementHits;
-			HashSet<Node> nodeHits;
-			//getHits(mesh, isToCut, transformCoordinates, hitDecision, out elementsHits, false, out nodeHits);
+			HashSet<Node> nodeHitsIgnored;
 
 			if (hitDecision == CutInfo.ItemHitDecision.AllNodes)
-				getHitsAllNodesInArea(mesh, isToCut, transformCoordinates, out elementHits, false, out nodeHits);
+				getHitsAllNodesInArea(mesh, isToCut, transformCoordinates, out elementHits, false, out nodeHitsIgnored);
 			else if (hitDecision == CutInfo.ItemHitDecision.SomeNodes)
-				getHitsSomeNodesInArea(mesh, isToCut, transformCoordinates, out elementHits, false, out nodeHits);
+				getHitsSomeNodesInArea(mesh, isToCut, transformCoordinates, out elementHits, false, out nodeHitsIgnored);
 			else
 				throw new NotSupportedException(hitDecision.ToString() + " option is not supported");
 
-			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-
-			mesh.HiddenElements.Clear();
-			mesh.HiddenElements.UnionWith(elementHits);
 			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
 			elementsToShow.ExceptWith(elementHits);
 			

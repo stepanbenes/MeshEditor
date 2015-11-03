@@ -973,6 +973,8 @@ namespace MeshEditor.Construction
 
 		public void CutMesh(Mesh mesh, HashSet<Element> elementsToShow)
 		{
+			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
+			
 			this.hiddenItemsProperties = mesh.HiddenItemsProperties; // nastavit odkaz na skryte polozky s vlastnostmi
 
 			// -------------------------------------------------------------
@@ -992,14 +994,16 @@ namespace MeshEditor.Construction
 				}
 			}
 
-			// smazat povrchovou reprezentaci a buffery
-			mesh.ClearSurface();
-
+			// remove all twin elements, they will be created in all-elements loop again
 			foreach (Element2D element2D in mesh.Elements.OfType<Element2D>())
 			{
 				element2D.RemoveAllTwinElements();
 			}
 
+			// smazat povrchovou reprezentaci a buffery
+			mesh.ClearSurface();
+			mesh.HiddenElements.Clear();
+			
 			foreach (Element e in mesh.Elements)
 			{
 				if (elementsToShow.Contains(e))
@@ -1012,6 +1016,10 @@ namespace MeshEditor.Construction
 						if (face != null)
 							processQuadraticNodesOfFace(face);
 					}
+				}
+				else
+				{
+					mesh.HiddenElements.Add(e);
 				}
 			}
 
