@@ -102,7 +102,6 @@ namespace MeshEditor.Data
 		public static bool EdgeLighting;
 		public static bool IncludeEdgeMiddleNodes;
 		public static int UndoOperationsMaxCount;
-		public static bool SelectFacesOnCut;
 		public static float DefaultFirstBorderAngleLimit;
 		public static float DefaultSecondBorderAngleLimit;
 
@@ -204,7 +203,6 @@ namespace MeshEditor.Data
 			DefaultFileformatExtension = ".top";
 			PropertyDescriptionFileExtension = ".prop";
 			UndoOperationsMaxCount = 20;
-			SelectFacesOnCut = true;
 
 			if (openGLIsInitialized)
 				MeshShadingModel = ShadingModel.Smooth;
@@ -2179,11 +2177,10 @@ namespace MeshEditor.Data
 				if (cutInfo.Action == CutInfo.ActionType.Cut) // cut
 				{
 					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements(Scene.SelectFacesOnCut);
+					saveStateBeforeHideRestoreElements();
 					// ------------------------------------------------------------------
 					Cutter.CutMeshByExpression(mesh, cutInfo);
-					if (Scene.SelectFacesOnCut)
-						mesh.UpdateFaceColors();
+					//mesh.UpdateFaceColors();
 				}
 				else // select
 				{
@@ -2199,18 +2196,16 @@ namespace MeshEditor.Data
 				if (cutInfo.Action == CutInfo.ActionType.Cut) // cut by planes
 				{
 					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements(Scene.SelectFacesOnCut);
+					saveStateBeforeHideRestoreElements();
 					// ------------------------------------------------------------------
 					Cutter.CutMeshByPlanes(mesh, cutPlanes, cutInfo);
-					if (Scene.SelectFacesOnCut)
-						mesh.UpdateFaceColors();
+					//mesh.UpdateFaceColors();
 				}
 				else if (cutInfo.Action == CutInfo.ActionType.ShowHideElements) // show/hide elements
 				{
 					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements(false);
+					saveStateBeforeHideRestoreElements();
 					// ------------------------------------------------------------------
-
 					Cutter.SetVisibility(mesh, cutInfo);
 				}
 				else // select by planes
@@ -2275,7 +2270,7 @@ namespace MeshEditor.Data
 			// remove element signal if exists
 			setElementSignal(null);
 			// ----------------------------------
-			saveStateBeforeHideRestoreElements(false);
+			saveStateBeforeHideRestoreElements();
 			// ----------------------------------
 			Cutter.HideSelectedElements(mesh);
 		}
@@ -2288,7 +2283,7 @@ namespace MeshEditor.Data
 			// remove element signal if exists
 			setElementSignal(null);
 			// ----------------------------------
-			saveStateBeforeHideRestoreElements(false);
+			saveStateBeforeHideRestoreElements();
 			// ----------------------------------
 			Cutter.RestoreAllElements(mesh);
 		}
@@ -2332,7 +2327,7 @@ namespace MeshEditor.Data
 			mesh.UnsavedChanges = true;
 		}
 
-		private void saveStateBeforeHideRestoreElements(bool selectFacesOnCut)
+		private void saveStateBeforeHideRestoreElements()
 		{
 			if (mesh == null)
 				return;

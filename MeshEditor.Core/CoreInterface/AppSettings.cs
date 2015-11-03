@@ -151,7 +151,6 @@ namespace MeshEditor.CoreInterface
 		private RenderMode defaultRenderMode;
 		private string ioFileFormatExtension;
 		private bool showOpenGLLowVersionMessage;
-		private bool selectFacesOnCut;
 		private float defaultFirstBorderAngleLimit, defaultSecondBorderAngleLimit;
 		private ColorScaleLegendPosition legendPosition;
 
@@ -188,8 +187,6 @@ namespace MeshEditor.CoreInterface
 			SelectedFaceColor = selectedFaceColor;
 			SelectedNodeColor = selectedNodeColor;
 			SelectedElementNumbersColor = selectedElementNumbersColor;
-
-			SelectFacesOnCut = selectFacesOnCut;
 
 			DefaultFirstBorderAngleLimit = defaultFirstBorderAngleLimit;
 			DefaultSecondBorderAngleLimit = defaultSecondBorderAngleLimit;
@@ -234,7 +231,6 @@ namespace MeshEditor.CoreInterface
 			selectedElementNumbersColor = SelectedElementNumbersColor;
 
 			showOpenGLLowVersionMessage = true;
-			selectFacesOnCut = SelectFacesOnCut;
 
 			defaultFirstBorderAngleLimit = DefaultFirstBorderAngleLimit;
 			defaultSecondBorderAngleLimit = DefaultSecondBorderAngleLimit;
@@ -371,14 +367,6 @@ namespace MeshEditor.CoreInterface
 		{
 			get { return Scene.DefaultCameraDistance; }
 			set { defaultCameraDistance = Scene.DefaultCameraDistance = value; }
-		}
-
-		[DisplayName("Select faces on cut"), Description("If true, faces on cut will be selected after cutting operation is performed")]
-		[DontRefresh]
-		public bool SelectFacesOnCut
-		{
-			get { return Scene.SelectFacesOnCut; }
-			set { selectFacesOnCut = Scene.SelectFacesOnCut = value; }
 		}
 
 		[DisplayName("Input file format ext"), Description("Extension of default input/output file format")]
