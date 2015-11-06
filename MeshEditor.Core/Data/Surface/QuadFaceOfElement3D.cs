@@ -18,11 +18,29 @@ namespace MeshEditor.Data
 			get { return parentElement; }
 		}
 
-		public QuadFaceOfElement3D(Element3D parentElement, Node n1, Node n2, Node n3, Node n4)
-			: base(parentElement.ID, parentElement.ElementType, n1, n2, n3, n4)
+		public QuadFaceOfElement3D(Element3D parentElement, int order, Node n1, Node n2, Node n3, Node n4)
+			: base(order, parentElement.ElementType, n1, n2, n3, n4)
 		{
 			this.parentElement = parentElement;
 		}
-		
+
+		public override bool Equals(object obj)
+		{
+			var other = obj as QuadFaceOfElement3D;
+			if (other == null)
+				return false;
+			return this.parentElement.ID == other.parentElement.ID && this.id == other.id;
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked // Overflow is fine, just wrap
+			{
+				int hash = 17;
+				hash = hash * 23 + parentElement.ID.GetHashCode();
+				hash = hash * 23 + id.GetHashCode();
+				return hash;
+			}
+		}
 	}
 }

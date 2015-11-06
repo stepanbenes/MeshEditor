@@ -20,35 +20,35 @@ namespace MeshEditor.Data
 			Element2D face;
 			bool quadratic = ApproximationIsQuadratic;
 			Vector3 center = GetCenter();
-			face = GenerateFaceWithNodes(ref center, nodes[0], nodes[3], nodes[2], nodes[1]);
+			face = GenerateFaceWithNodes(1, ref center, nodes[0], nodes[3], nodes[2], nodes[1]);
 			if (face != null)
 			{
 				if (quadratic)
 					additionalNodes[face] = new Node[] { nodes[8], nodes[7], nodes[6], nodes[5] };
 				yield return face;
 			}
-			face = GenerateFaceWithNodes(ref center, nodes[0], nodes[1], nodes[4]);
+			face = GenerateFaceWithNodes(2, ref center, nodes[0], nodes[1], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
 					additionalNodes[face] = new Node[] { nodes[5], nodes[10], nodes[9] };
 				yield return face;
 			}
-			face = GenerateFaceWithNodes(ref center, nodes[1], nodes[2], nodes[4]);
+			face = GenerateFaceWithNodes(3, ref center, nodes[1], nodes[2], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
 					additionalNodes[face] = new Node[] { nodes[6], nodes[11], nodes[10] };
 				yield return face;
 			}
-			face = GenerateFaceWithNodes(ref center, nodes[2], nodes[3], nodes[4]);
+			face = GenerateFaceWithNodes(4, ref center, nodes[2], nodes[3], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
 					additionalNodes[face] = new Node[] { nodes[7], nodes[12], nodes[11] };
 				yield return face;
 			}
-			face = GenerateFaceWithNodes(ref center, nodes[3], nodes[0], nodes[4]);
+			face = GenerateFaceWithNodes(5, ref center, nodes[3], nodes[0], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)

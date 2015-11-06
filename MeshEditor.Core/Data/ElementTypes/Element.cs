@@ -10,7 +10,7 @@ namespace MeshEditor.Data
 	/// <summary>
 	/// abstraktni bazova trida reprezentujici konecny prvek
 	/// </summary>
-	public abstract class Element : IItemWithSignificantPoint, ISelectable, IComparable
+	public abstract class Element : IItemWithSignificantPoint, ISelectable, IComparable, IComparable<Element>, IEquatable<Element>
 	{
 
 		#region Fields, constructor
@@ -477,7 +477,35 @@ namespace MeshEditor.Data
 
 		public int CompareTo(object obj)
 		{
-			return this.id - ((Element)obj).id;
+			return CompareTo(obj as Element);
+		}
+
+		public int CompareTo(Element other)
+		{
+			if (other == null)
+				return 1;
+			return this.id.CompareTo(other.id);
+		}
+
+		#endregion
+
+		#region Equality & Hashing
+
+		public bool Equals(Element other)
+		{
+			if (other == null)
+				return false;
+			return this.id == other.id;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return this.Equals(obj as Element);
+		}
+
+		public override int GetHashCode()
+		{
+			return id.GetHashCode();
 		}
 
 		#endregion

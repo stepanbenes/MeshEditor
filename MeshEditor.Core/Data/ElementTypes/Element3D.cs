@@ -49,7 +49,7 @@ namespace MeshEditor.Data
 			return center / nodes.Length;
 		}
 
-		protected Element2D GenerateFaceWithNodes(ref Vector3 centerOfElement, params Node[] nodesOfFace)
+		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, params Node[] nodesOfFace)
 		{
 			List<Node> distinctNodes = new List<Node>(nodesOfFace.Length);
 			distinctNodes.Add(nodesOfFace[0]); // predpokladam, ze tam alespon jeden prvek je
@@ -63,9 +63,9 @@ namespace MeshEditor.Data
 
 			Element2D result;
 			if (distinctNodes.Count == 3)
-				result = new TriangleFaceOfElement3D(this, distinctNodes[0], distinctNodes[1], distinctNodes[2]);
+				result = new TriangleFaceOfElement3D(this, order, distinctNodes[0], distinctNodes[1], distinctNodes[2]);
 			else if (distinctNodes.Count == 4)
-				result = new QuadFaceOfElement3D(this, distinctNodes[0], distinctNodes[1], distinctNodes[2], distinctNodes[3]);
+				result = new QuadFaceOfElement3D(this, order, distinctNodes[0], distinctNodes[1], distinctNodes[2], distinctNodes[3]);
 			else
 				throw new ArgumentException("Too much nodes for one face.");
 
