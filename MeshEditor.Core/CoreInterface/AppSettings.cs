@@ -149,7 +149,7 @@ namespace MeshEditor.CoreInterface
 		private Color activeBackColor, nonActiveBackColor, faceColor, ordinaryEdgeColor, firstBorderColor, secondBorderColor, selectedElementColor, selectedFaceColor, selectedEdgeColor, selectedNodeColor, selectedFaceAndElementColor, beamColor, selectedBeamColor, nodesColor, nodeNumbersColor, elementNumbersColor, selectedElementNumbersColor;
 		private ShadingModel shadingModel;
 		private RenderMode defaultRenderMode;
-		private string ioFileFormatExtension;
+		private string sifelFileFormatExtension;
 		private bool showOpenGLLowVersionMessage;
 		private float defaultFirstBorderAngleLimit, defaultSecondBorderAngleLimit;
 		private ColorScaleLegendPosition legendPosition;
@@ -168,7 +168,7 @@ namespace MeshEditor.CoreInterface
 			BeamWidth = beamWidth;
 			DefaultCameraDistance = defaultCameraDistance;
 			DefaultRenderMode = defaultRenderMode;
-			IOFileformatExtension = ioFileFormatExtension;
+			SifelFileformatExtension = sifelFileFormatExtension;
 
 			ActiveBackColor = activeBackColor;
 			NonActiveBackColor = nonActiveBackColor;
@@ -210,7 +210,7 @@ namespace MeshEditor.CoreInterface
 			beamWidth = BeamWidth;
 			defaultCameraDistance = DefaultCameraDistance;
 			defaultRenderMode = DefaultRenderMode;
-			ioFileFormatExtension = IOFileformatExtension;
+			sifelFileFormatExtension = SifelFileformatExtension;
 
 			activeBackColor = ActiveBackColor;
 			nonActiveBackColor = NonActiveBackColor;
@@ -369,16 +369,20 @@ namespace MeshEditor.CoreInterface
 			set { defaultCameraDistance = Scene.DefaultCameraDistance = value; }
 		}
 
-		[DisplayName("Input file format ext"), Description("Extension of default input/output file format")]
-		public string IOFileformatExtension
+		[DisplayName("SIFEL file format extension"), Description("Extension of default input/output file format used in SIFEL software")]
+		public string SifelFileformatExtension
 		{
-			get { return Scene.DefaultFileformatExtension; }
+			get { return Scene.SifelFileFormatExtension; }
 			set
 			{
-				string ext = value.Trim();
-				if (!ext.StartsWith("."))
-					ext = "." + ext;
-				ioFileFormatExtension = Scene.DefaultFileformatExtension = ext;
+				string ext = value?.Trim();
+				if (ext != null)
+				{
+					if (!ext.StartsWith("."))
+						ext = "." + ext;
+					Scene.SifelFileFormatExtension = ext;
+				}
+				sifelFileFormatExtension = Scene.SifelFileFormatExtension;
 			}
 		}
 

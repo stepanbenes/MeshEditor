@@ -76,7 +76,7 @@ namespace MeshEditor.Construction
 				Vector3 upperBound = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 				MeshStatistics statistics = new MeshStatistics();
 				// ====================================================================================
-				IDefaultFileFormatParser advancedFileParser = meshFileParser as IDefaultFileFormatParser;
+				ISifelFileFormatParser advancedFileParser = meshFileParser as ISifelFileFormatParser;
 				if (advancedFileParser != null) // zaregistrovat metodu pro nacitani vlastnosti
 				{
 					advancedFileParser.LineWasSkipped += delegate
@@ -118,10 +118,10 @@ namespace MeshEditor.Construction
 				float meshResizeFactor;
 				normalizeMesh(ref lowerBound, ref upperBound, out meshPositionOffset, out meshResizeFactor);
 
-				bool loadedFromDefaultFileFormat = meshFileParser is DefaultFileFormatParser;
+				bool loadedFromSifelFileFormat = meshFileParser is SifelFileFormatParser;
 
 				// vytvor kostru nove meshe
-				mesh = new Mesh(meshFileParser.Filename, loadedFromDefaultFileFormat, meshPositionOffset, meshResizeFactor);
+				mesh = new Mesh(meshFileParser.Filename, loadedFromSifelFileFormat, meshPositionOffset, meshResizeFactor);
 
 				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
 				mesh.Statistics = statistics;
@@ -246,18 +246,18 @@ namespace MeshEditor.Construction
 						if (string.IsNullOrEmpty(line))
 							continue;
 
-						int indexOfComment = line.IndexOf(DefaultFileFormatParser.COMMENT_PATTERN);
+						int indexOfComment = line.IndexOf(SifelFileFormatParser.COMMENT_PATTERN);
 						if (indexOfComment == 0) // if starts with comment skip line
 							continue;
 						if (indexOfComment > 0) // if comment is appended trim it
 							line = line.Substring(0, indexOfComment);
 
-						if (line.StartsWith(DefaultFileFormatParser.BEGIN_SECTION_PATTERN))
+						if (line.StartsWith(SifelFileFormatParser.BEGIN_SECTION_PATTERN))
 						{
 							currentSection = convertTextToPreprocessorSection(line);
 							continue;
 						}
-						else if (line.StartsWith(DefaultFileFormatParser.END_SECTION_PATTERN))
+						else if (line.StartsWith(SifelFileFormatParser.END_SECTION_PATTERN))
 						{
 							Debug.Assert(convertTextToPreprocessorSection(line) == currentSection);
 							continue;
@@ -314,10 +314,10 @@ namespace MeshEditor.Construction
 
 		private static PreprocessorSections convertTextToPreprocessorSection(string text)
 		{
-			if (text.StartsWith(DefaultFileFormatParser.BEGIN_SECTION_PATTERN))
-				text = text.Substring(DefaultFileFormatParser.BEGIN_SECTION_PATTERN.Length); // cut begin section token
-			else if (text.StartsWith(DefaultFileFormatParser.END_SECTION_PATTERN))
-				text = text.Substring(DefaultFileFormatParser.END_SECTION_PATTERN.Length); // cut end section token
+			if (text.StartsWith(SifelFileFormatParser.BEGIN_SECTION_PATTERN))
+				text = text.Substring(SifelFileFormatParser.BEGIN_SECTION_PATTERN.Length); // cut begin section token
+			else if (text.StartsWith(SifelFileFormatParser.END_SECTION_PATTERN))
+				text = text.Substring(SifelFileFormatParser.END_SECTION_PATTERN.Length); // cut end section token
 			else
 				throw new ArgumentException("Text does not match the pattern.");
 
@@ -332,10 +332,10 @@ namespace MeshEditor.Construction
 		//        section = PreprocessorSections.Unknown;
 		//        return false;
 		//    }
-		//    if (text.StartsWith(DefaultFileFormatParser.BEGIN_SECTION_PATTERN))
-		//        text = text.Substring(DefaultFileFormatParser.BEGIN_SECTION_PATTERN.Length);
-		//    else if (text.StartsWith(DefaultFileFormatParser.END_SECTION_PATTERN))
-		//        text = text.Substring(DefaultFileFormatParser.END_SECTION_PATTERN.Length);
+		//    if (text.StartsWith(SifelFileFormatParser.BEGIN_SECTION_PATTERN))
+		//        text = text.Substring(SifelFileFormatParser.BEGIN_SECTION_PATTERN.Length);
+		//    else if (text.StartsWith(SifelFileFormatParser.END_SECTION_PATTERN))
+		//        text = text.Substring(SifelFileFormatParser.END_SECTION_PATTERN.Length);
 
 		//    section = PreprocessorSections.Unknown;
 		//    try
@@ -349,7 +349,7 @@ namespace MeshEditor.Construction
 		//    return true;
 		//}
 
-		private void loadFaceAndEdgeProperties(IDefaultFileFormatParser advancedFileParser, MeshStatistics statistics)
+		private void loadFaceAndEdgeProperties(ISifelFileFormatParser advancedFileParser, MeshStatistics statistics)
 		{
 			// <!>
 			// postupne pri nacitani property budu kontrolovat jestli uz neni obsazeno v triangleFaces nebo quadFaces, pokud ano, tak nastavit property, pokud ne, tak ulozit do HiddenItemsProperties
@@ -396,22 +396,22 @@ namespace MeshEditor.Construction
 		{
 			line = line.Trim(); // oriznu prazdne znaky zepredu a zezadu
 
-			if (!string.IsNullOrEmpty(line) && line.StartsWith(DefaultFileFormatParser.COMMENT_PATTERN))
+			if (!string.IsNullOrEmpty(line) && line.StartsWith(SifelFileFormatParser.COMMENT_PATTERN))
 			{
 				// pokud komentar obsahuje komentar k vlastnosti tak ho nacist a ulozit tady
-				string comment = line.Substring(DefaultFileFormatParser.COMMENT_PATTERN.Length).TrimStart();
+				string comment = line.Substring(SifelFileFormatParser.COMMENT_PATTERN.Length).TrimStart();
 				string[] commentParts = comment.Split(new char[] { ' ', '\t', ':' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
 				if (commentParts != null && commentParts.Length > 1) // pokud jde o komentar k cislum vlastnosti
 				{
-					if (string.Compare(commentParts[0], DefaultFileFormatParser.PROPERTY_COMMENT_PATTERN, true) == 0) // property comment
+					if (string.Compare(commentParts[0], SifelFileFormatParser.PROPERTY_COMMENT_PATTERN, true) == 0) // property comment
 					{
 						string[] suffixParts = commentParts[1].Split(new char[] { ' ', '\t', ':' }, 2, StringSplitOptions.RemoveEmptyEntries);
 						int propertyNumber;
 						if (suffixParts.Length > 1 && int.TryParse(suffixParts[0], out propertyNumber))
 							statistics.PropertyComments[new Property(propertyNumber)] = suffixParts[1];
 					}
-					else if (string.Compare(commentParts[0], DefaultFileFormatParser.PROPERTY_DESCRIPTION_FILE_PATTERN, true) == 0) // property commands file path
+					else if (string.Compare(commentParts[0], SifelFileFormatParser.PROPERTY_DESCRIPTION_FILE_PATTERN, true) == 0) // property commands file path
 					{
 						statistics.PropertyCommandsFile = commentParts[1];
 					}

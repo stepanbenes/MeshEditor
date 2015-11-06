@@ -27,7 +27,7 @@ namespace MeshEditor.IO
 					return new OBJFileFormatParser(filename);
 
 				default:
-					return new DefaultFileFormatParser(filename);
+					return new SifelFileFormatParser(filename);
 			}
 		}
 

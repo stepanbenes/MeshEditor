@@ -108,7 +108,7 @@
     <Compile Include="Data\Surface\EdgeFacePropertySet.cs" />
     <Compile Include="Graphics\BeamVBO.cs" />
     <Compile Include="IO\CultureProvider.cs" />
-    <Compile Include="IO\DefaultFileFormatMeshSaver.cs" />
+    <Compile Include="IO\SifelFileFormatMeshSaver.cs" />
     <Compile Include="IO\EdgeDraft.cs" />
     <Compile Include="IO\FaceDraft.cs" />
     <Compile Include="IO\MeshIOInterfaces.cs" />
@@ -152,7 +152,7 @@
     <Compile Include="Data\Node.cs" />
     <Compile Include="IO\OBJFileFormatParser.cs" />
     <Compile Include="IO\PLYFileFormatParser.cs" />
-    <Compile Include="IO\DefaultFileFormatParser.cs" />
+    <Compile Include="IO\SifelFileFormatParser.cs" />
     <Compile Include="Graphics\Camera.cs" />
     <Compile Include="IO\VTKXmlFileParserBase.cs" />
     <Compile Include="IO\VTKXmlMeshParser.cs" />

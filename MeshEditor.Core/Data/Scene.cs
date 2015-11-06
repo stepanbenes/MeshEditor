@@ -108,7 +108,7 @@ namespace MeshEditor.Data
 		public static float DefaultSecondBorderAngleLimit;
 
 		public static RenderMode DefaultRenderMode;
-		public static string DefaultFileformatExtension, PropertyDescriptionFileExtension;
+		public static string SifelFileFormatExtension, PropertyDescriptionFileExtension;
 
 		public static bool XRayVision;
 		private static ShadingModel meshShadingModel;
@@ -202,7 +202,7 @@ namespace MeshEditor.Data
 																 //DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
-			DefaultFileformatExtension = ".top";
+			SifelFileFormatExtension = ".top";
 			PropertyDescriptionFileExtension = ".prop";
 			UndoOperationsMaxCount = 20;
 

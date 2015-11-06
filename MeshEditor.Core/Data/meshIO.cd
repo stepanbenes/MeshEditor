@@ -46,7 +46,7 @@
       <FileName>IO\MeshIOInterfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="MeshEditor.IO.IDefaultFileFormatParser">
+  <Interface Name="MeshEditor.IO.ISifelFileFormatParser">
     <Position X="0.5" Y="3.75" Width="2" />
     <Members>
       <Property Name="CurrentLine" Hidden="true" />

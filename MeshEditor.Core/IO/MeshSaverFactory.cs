@@ -21,7 +21,7 @@ namespace MeshEditor.IO
 				case ".vtk":
 					return new VTKFileFormatSaver();
 				default:
-					return new DefaultFileFormatMeshSaver();
+					return new SifelFileFormatMeshSaver();
 			}
 		}
 	}

@@ -12,7 +12,7 @@ namespace MeshEditor.IO
 	/// <summary>
 	/// trida obsahujici funkce pro cteni, parsovani standardniho vstupniho souboru
 	/// </summary>
-	public class DefaultFileFormatParser : IDefaultFileFormatParser
+	public class SifelFileFormatParser : ISifelFileFormatParser
 	{
 
 		#region Fields
@@ -42,7 +42,7 @@ namespace MeshEditor.IO
 		/// Parametric constructor
 		/// </summary>
 		/// <param name="filename">filepath containing mesh</param>
-		public DefaultFileFormatParser(string filename)
+		public SifelFileFormatParser(string filename)
 		{
 			this.filename = filename;
 			this.input = null;
@@ -59,7 +59,7 @@ namespace MeshEditor.IO
 		/// <summary>
 		/// Destructor
 		/// </summary>
-		~DefaultFileFormatParser()
+		~SifelFileFormatParser()
 		{
 			Dispose(false);
 		}

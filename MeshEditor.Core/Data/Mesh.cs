@@ -26,7 +26,7 @@ namespace MeshEditor.Data
 		#region Fields, Constructor
 
 		private string filename;
-		private bool loadedFromDefaultFileformat;
+		private bool loadedFromSifelFileFormat;
 		private PropertyColorsMode colorMode;
 		private int referenceCount;
 		
@@ -65,10 +65,10 @@ namespace MeshEditor.Data
 		// ======================================
 
 		// ==========================================
-		public Mesh(string sourceFilename, bool loadedFromDefaultFileformat, Vector3 meshPositionOffset, float meshResizeFactor)
+		public Mesh(string sourceFilename, bool loadedFromSifelFileFormat, Vector3 meshPositionOffset, float meshResizeFactor)
 		{
 			this.filename = sourceFilename;
-			this.loadedFromDefaultFileformat = loadedFromDefaultFileformat;
+			this.loadedFromSifelFileFormat = loadedFromSifelFileFormat;
 			this.positionOffset = meshPositionOffset;
 			this.resizeFactor = meshResizeFactor;
 
@@ -106,10 +106,10 @@ namespace MeshEditor.Data
 			set { unsavedChanges = value; }
 		}
 
-		public bool LoadedFromDefaultFileFormat
+		public bool LoadedFromSifelFileFormat
 		{
-			get { return loadedFromDefaultFileformat; }
-			set { loadedFromDefaultFileformat = value; }
+			get { return loadedFromSifelFileFormat; }
+			set { loadedFromSifelFileFormat = value; }
 		}
 
 		public bool BuffersAreReady

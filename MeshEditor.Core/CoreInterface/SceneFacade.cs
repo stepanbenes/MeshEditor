@@ -249,12 +249,12 @@ namespace MeshEditor.CoreInterface
 
 		public static string InputFileFormatFilter
 		{
-			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply|Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
 		}
 
 		public static string OutputFileFormatFilter
 		{
-			get { return string.Format("Default file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.IOFileformatExtension); }
+			get { return string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
 		}
 
 		#endregion
@@ -383,7 +383,7 @@ namespace MeshEditor.CoreInterface
 			{
 				if (entityType == ItemTypeToSelect.Face && entity is IFaceOfElement3D)
 				{
-					DefaultFileFormatMeshSaver.AppendDescriptionOfFace((Element2D)entity, text, showCompleteInfo);
+					SifelFileFormatMeshSaver.AppendDescriptionOfFace((Element2D)entity, text, showCompleteInfo);
 					text.AppendLine();
 				}
 				else if (entityType == ItemTypeToSelect.Element && entity is Element)
@@ -396,7 +396,7 @@ namespace MeshEditor.CoreInterface
 				}
 				else if (entityType == ItemTypeToSelect.Edge && entity is WingedEdge)
 				{
-					DefaultFileFormatMeshSaver.AppendDescriptionOfEdge((WingedEdge)entity, text, showCompleteInfo);
+					SifelFileFormatMeshSaver.AppendDescriptionOfEdge((WingedEdge)entity, text, showCompleteInfo);
 					text.AppendLine();
 				}
 			}
@@ -407,7 +407,7 @@ namespace MeshEditor.CoreInterface
 				foreach (Element e in elements)
 				{
 					if (showCompleteInfo)
-						DefaultFileFormatMeshSaver.AppendDescriptionOfElement(e, text);
+						SifelFileFormatMeshSaver.AppendDescriptionOfElement(e, text);
 					else
 						text.Append(e.ID);
 					text.AppendLine();
@@ -419,7 +419,7 @@ namespace MeshEditor.CoreInterface
 				foreach (Node n in nodes)
 				{
 					if (showCompleteInfo)
-						DefaultFileFormatMeshSaver.AppendDescriptionOfNode(n, text, scene.Mesh);
+						SifelFileFormatMeshSaver.AppendDescriptionOfNode(n, text, scene.Mesh);
 					else
 						text.Append(n.ID);
 					text.AppendLine();

@@ -86,9 +86,9 @@ namespace MeshEditor.IO
 	}
 
 	/// <summary>
-	/// interface for parsing default file format
+	/// interface for parsing SIFEL file format
 	/// </summary>
-	public interface IDefaultFileFormatParser : IMeshFileParser
+	public interface ISifelFileFormatParser : IMeshFileParser
 	{
 		/// <summary>
 		/// Gets number of faces in file

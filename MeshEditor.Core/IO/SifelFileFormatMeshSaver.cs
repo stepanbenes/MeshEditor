@@ -15,13 +15,13 @@ namespace MeshEditor.IO
 	/// <summary>
 	/// trida poskytujici funkce pro zapis site do souboru ve standardnim formatu
 	/// </summary>
-	public class DefaultFileFormatMeshSaver : IMeshSaver
+	public class SifelFileFormatMeshSaver : IMeshSaver
 	{
 		
 		#region Fields, contructor
 
 		private TextWriter output;
-		private IDefaultFileFormatParser sourceFileParser;
+		private ISifelFileFormatParser sourceFileParser;
 
 		private Mesh mesh;
 		private Dictionary<int, Node> nodeMap;
@@ -31,7 +31,7 @@ namespace MeshEditor.IO
 		private int itemsToWrite;
 		private MeshIOEventArgs ioea;
 
-		public DefaultFileFormatMeshSaver()
+		public SifelFileFormatMeshSaver()
 		{
 			this.sourceFileParser = null;
 			this.output = null;
@@ -57,9 +57,9 @@ namespace MeshEditor.IO
 			bool completed;
 			try
 			{
-				if (mesh.LoadedFromDefaultFileFormat && File.Exists(mesh.Filename))
+				if (mesh.LoadedFromSifelFileFormat && File.Exists(mesh.Filename))
 				{
-					sourceFileParser = new DefaultFileFormatParser(mesh.Filename);
+					sourceFileParser = new SifelFileFormatParser(mesh.Filename);
 					completed = saveMesh(mesh, saveWithoutHiddenElements, cancelled, rewriteNodeCoordinatesFromSource: true);
 				}
 				else
@@ -90,7 +90,7 @@ namespace MeshEditor.IO
 			{
 				replaceFile(destinationFile, filename);
 				mesh.Filename = filename;
-				mesh.LoadedFromDefaultFileFormat = true;
+				mesh.LoadedFromSifelFileFormat = true;
 				mesh.UnsavedChanges = false;
 			}
 		}
@@ -127,7 +127,7 @@ namespace MeshEditor.IO
 			using (TextWriter writer = new StreamWriter(destination))
 			{
 				string meshPathToWrite = rooted ? meshFilename : Path.GetFileName(meshFilename); // write absolute or relative according to property command file path
-				writer.WriteLine(DefaultFileFormatParser.COMMENT_PATTERN + " PREPROCESSOR COMMANDS FILE (linked to mesh \"" + meshPathToWrite + "\")");
+				writer.WriteLine(SifelFileFormatParser.COMMENT_PATTERN + " PREPROCESSOR COMMANDS FILE (linked to mesh \"" + meshPathToWrite + "\")");
 
 				// write property comments
 				SortedDictionary<Property, string> comments = new SortedDictionary<Property, string>();
@@ -149,7 +149,7 @@ namespace MeshEditor.IO
 				foreach (PreprocessorSections section in sections.Keys)
 				{
 					writer.WriteLine();
-					writer.WriteLine(DefaultFileFormatParser.BEGIN_SECTION_PATTERN + section.ToString());
+					writer.WriteLine(SifelFileFormatParser.BEGIN_SECTION_PATTERN + section.ToString());
 					foreach (PropertyCommand command in sections[section])
 					{
 						//// write comment if exists, in either case add new line
@@ -159,7 +159,7 @@ namespace MeshEditor.IO
 						// write command
 						writer.WriteLine(command.ToString());
 					}
-					writer.WriteLine(DefaultFileFormatParser.END_SECTION_PATTERN + section.ToString());
+					writer.WriteLine(SifelFileFormatParser.END_SECTION_PATTERN + section.ToString());
 				}
 			}
 		}
@@ -352,8 +352,8 @@ namespace MeshEditor.IO
 
 		private static void writePropertyComment(TextWriter writer, Property property, string comment)
 		{
-			writer.Write(DefaultFileFormatParser.COMMENT_PATTERN + " ");
-			writer.Write(DefaultFileFormatParser.PROPERTY_COMMENT_PATTERN);
+			writer.Write(SifelFileFormatParser.COMMENT_PATTERN + " ");
+			writer.Write(SifelFileFormatParser.PROPERTY_COMMENT_PATTERN);
 			writer.Write(" " + property + ": ");
 			writer.WriteLine(comment);
 		}
@@ -370,8 +370,8 @@ namespace MeshEditor.IO
 				if (Utilities.Functions.CheckIfFileIsInSameDirectory(mesh.Statistics.PropertyCommandsFile, Path.GetDirectoryName(mesh.Filename))) // if same directories
 					filename = Path.GetFileName(mesh.Statistics.PropertyCommandsFile); // make relative path
 
-				output.Write(DefaultFileFormatParser.COMMENT_PATTERN + " ");
-				output.Write(DefaultFileFormatParser.PROPERTY_DESCRIPTION_FILE_PATTERN + ": ");
+				output.Write(SifelFileFormatParser.COMMENT_PATTERN + " ");
+				output.Write(SifelFileFormatParser.PROPERTY_DESCRIPTION_FILE_PATTERN + ": ");
 				output.WriteLine(filename);
 				output.WriteLine();
 			}
