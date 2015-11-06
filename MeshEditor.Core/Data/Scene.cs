@@ -348,7 +348,7 @@ namespace MeshEditor.Data
 		{
 			if (mesh != null)
 			{
-				saveStateBeforeSettingProperty(property);
+				setUnsavedChangesFlag();
 
 				Dictionary<Node, HashSet<Property>> nodesEdgeProperties = new Dictionary<Node, HashSet<Property>>();
 				Dictionary<Node, HashSet<Property>> nodesSurfaceProperties = new Dictionary<Node, HashSet<Property>>();
@@ -493,8 +493,7 @@ namespace MeshEditor.Data
 		{
 			if (mesh == null)
 				return;
-			// ulozit do historie
-			saveStateBeforeAddingPropertyToSelectedNodes(property);
+			setUnsavedChangesFlag();
 			// ----------------------------------------------------
 			mesh.Statistics.AddProperty(property, EntityType.Vertex);
 			foreach (ISelectable item in mesh.SelectedItems)
@@ -509,8 +508,7 @@ namespace MeshEditor.Data
 		{
 			if (mesh == null)
 				return;
-			// ulozit do historie
-			saveStateBeforeRemovingPropertyFromSelectedNodes(property);
+			setUnsavedChangesFlag();
 			// --------------------------------------------------------
 			foreach (ISelectable item in mesh.SelectedItems)
 			{
@@ -2166,9 +2164,6 @@ namespace MeshEditor.Data
 			{
 				if (cutInfo.Action == CutInfo.ActionType.Cut) // cut
 				{
-					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements();
-					// ------------------------------------------------------------------
 					Cutter.CutMeshByExpression(mesh, cutInfo);
 					//mesh.UpdateFaceColors();
 				}
@@ -2185,17 +2180,11 @@ namespace MeshEditor.Data
 			{
 				if (cutInfo.Action == CutInfo.ActionType.Cut) // cut by planes
 				{
-					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements();
-					// ------------------------------------------------------------------
 					Cutter.CutMeshByPlanes(mesh, cutPlanes, cutInfo);
 					//mesh.UpdateFaceColors();
 				}
 				else if (cutInfo.Action == CutInfo.ActionType.ShowHideElements) // show/hide elements
 				{
-					// ------------------------------------------------------------------
-					saveStateBeforeHideRestoreElements();
-					// ------------------------------------------------------------------
 					Cutter.SetVisibility(mesh, cutInfo);
 				}
 				else // select by planes
@@ -2261,8 +2250,6 @@ namespace MeshEditor.Data
 			setElementSignal(null); // remove element signal if exists
 			mesh.SelectedItems = selectedItems;
 			// ----------------------------------
-			saveStateBeforeHideRestoreElements();
-			// ----------------------------------
 			Cutter.HideSelectedElements(mesh);
 		}
 
@@ -2273,8 +2260,6 @@ namespace MeshEditor.Data
 			// ----------------------------------
 			// remove element signal if exists
 			setElementSignal(null);
-			// ----------------------------------
-			saveStateBeforeHideRestoreElements();
 			// ----------------------------------
 			Cutter.RestoreAllElements(mesh);
 		}
@@ -2297,32 +2282,12 @@ namespace MeshEditor.Data
 			// no unsaved changes
 		}
 
-		private void saveStateBeforeSettingProperty(Property property)
+		private void setUnsavedChangesFlag()
 		{
-			if (mesh == null)
-				return;
-			mesh.UnsavedChanges = true;
-		}
-
-		private void saveStateBeforeAddingPropertyToSelectedNodes(Property property)
-		{
-			if (mesh == null)
-				return;
-			mesh.UnsavedChanges = true;
-		}
-
-		private void saveStateBeforeRemovingPropertyFromSelectedNodes(Property property)
-		{
-			if (mesh == null)
-				return;
-			mesh.UnsavedChanges = true;
-		}
-
-		private void saveStateBeforeHideRestoreElements()
-		{
-			if (mesh == null)
-				return;
-			mesh.UnsavedChanges = true;
+			if (mesh != null)
+			{
+				mesh.UnsavedChanges = true;
+			}
 		}
 
 		#endregion
