@@ -931,40 +931,50 @@ namespace MeshEditor.Construction
 
 		#region Signal element support
 
-		public void AddSurfaceOfElement3DToMesh(Mesh mesh, Element3D element)
+		public void SignalElement(Mesh mesh, Element element)
 		{
-			this.hiddenItemsProperties = new EdgeFacePropertySet(); // add temp object
-			List<Element2D> existingFacesOfElement = new List<Element2D>();
-			foreach (Element2D face in mesh.Faces)
+			Beam beam = element as Beam;
+			if (beam != null)
 			{
-				IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
-				if (faceOfElement == null || faceOfElement.ParentElement != element) // pokud plocha nepatri danemu prvku
-					continue;
-				processFace(face); // add mark of this face to face-list
-				existingFacesOfElement.Add(face);
+				if (!mesh.Beams.Contains(beam))
+					mesh.PushBeam(beam);
 			}
-
-			foreach (Element2D face in existingFacesOfElement)
+			else
 			{
-				foreach (WingedEdge edge in face.IterateThroughAllEdges())
+				if (element is Element2D)
 				{
-					EdgeMark mark = new EdgeMark(edge.BeginNode.ID, edge.EndNode.ID);
-					edgeMarks[mark] = new WingedEdge(edge.BeginNode, edge.EndNode, face); // create dummy edge for later comparing in createSurfaceRep...
+					if (!mesh.HiddenElements.Contains(element)) // if 2D element is not hidden, no need to recreate surface representation
+						return;
 				}
+				this.hiddenItemsProperties = new EdgeFacePropertySet(); // add temp object
+				List<Element2D> existingFacesOfElement = new List<Element2D>();
+				foreach (Element2D face in mesh.Faces)
+				{
+					if (face != element)
+					{
+						IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
+						if (faceOfElement == null || faceOfElement.ParentElement != element) // pokud plocha nepatri danemu prvku
+							continue;
+					}
+					processFace(face); // add mark of this face to face-list
+					existingFacesOfElement.Add(face);
+				}
+
+				foreach (Element2D face in existingFacesOfElement)
+				{
+					foreach (WingedEdge edge in face.IterateThroughAllEdges())
+					{
+						EdgeMark mark = new EdgeMark(edge.BeginNode.ID, edge.EndNode.ID);
+						edgeMarks[mark] = new WingedEdge(edge.BeginNode, edge.EndNode, face); // create dummy edge for later comparing in createSurfaceRep...
+					}
+				}
+
+				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
+				processElement(element); // add marks of all faces of this element to list - faces already contained in surface are preserved, others will be added
+				Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
+				createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
 			}
-
-			this.hiddenItemsProperties = mesh.HiddenItemsProperties;
-			processElement(element); // add marks of all faces of this element to list - faces already contained in surface are preserved, others will be added
-			Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
-			createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
 			mesh.CreateBuffers();
-
-			triangleFaces.Clear(); // clear all marks
-			quadFaces.Clear();
-			edgeMarks.Clear();
-
-			foreach (Element2D face in existingFacesOfElement) // add marks of preserved faces. in the next reuse of MeshConstructor (calling doCut), this faces will be preserved others will be removed
-				processFace(face);
 		}
 
 		#endregion
@@ -1026,10 +1036,10 @@ namespace MeshEditor.Construction
 			// vytvor povrchovou reprezentaci
 			Histogram edgeAnglesHistogram = new Histogram(0f, 180f, 1f);
 			createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
-			// doladit par detailu - pripravit sit pro zobrazeni
-			mesh.InitializeMesh(edgeAnglesHistogram);
 			// smazat nebo vratit beamy do seznamu beamu
 			cutOrRestoreBeams(mesh, elementsToShow);
+			// doladit par detailu - pripravit sit pro zobrazeni
+			mesh.InitializeMesh(edgeAnglesHistogram);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
 

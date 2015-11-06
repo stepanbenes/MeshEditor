@@ -45,6 +45,8 @@ namespace MeshEditor.Data
 
 		CutInfo lastUsedCutInfo;
 
+		private bool tempElementAddedToSurfaceRepresentation;
+
 		public Scene()
 		{
 			this.mesh = null;
@@ -93,7 +95,7 @@ namespace MeshEditor.Data
 		public static Color ElementNumbersColor;
 		public static Color SelectedFaceAndElementColor;
 		public static Color BeamColor;
-        public static Color SelectedBeamColor;
+		public static Color SelectedBeamColor;
 		public static Color NodesColor;
 		public static Color NodeNumbersColor;
 		public static bool LineSmooth;
@@ -179,7 +181,7 @@ namespace MeshEditor.Data
 			SelectedBeamColor = Color.Red;
 			NodesColor = Color.Black;
 			NodeNumbersColor = Color.DarkBlue;
-			
+
 
 			DefaultFirstBorderAngleLimit = 1f;
 			DefaultSecondBorderAngleLimit = 70f;
@@ -197,7 +199,7 @@ namespace MeshEditor.Data
 			DefaultCameraDistance = 2.5f;
 			XRayVision = false;
 			EnableSkipSelectionModeIfNothingNewSelected = false; /**/
-			//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
+																 //DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
 			DefaultFileformatExtension = ".top";
@@ -269,7 +271,7 @@ namespace MeshEditor.Data
 		public RenderMode RenderMode
 		{
 			get { return renderMode; }
-			set	{ renderMode = value; }
+			set { renderMode = value; }
 		}
 
 		public void SetMesh(Mesh newMesh)
@@ -403,7 +405,7 @@ namespace MeshEditor.Data
 				}
 				return;
 			}
-		
+
 			throw new NotSupportedException(); // unknown item type
 		}
 
@@ -477,7 +479,7 @@ namespace MeshEditor.Data
 			foreach (Node node in nodesRegionProperties.Keys)
 				affectedNodes.Add(node);
 
-			foreach(Node node in affectedNodes)
+			foreach (Node node in affectedNodes)
 			{
 				HashSet<Property> edgeProperties, surfaceProperties, regionProperties;
 				nodesEdgeProperties.TryGetValue(node, out edgeProperties);
@@ -539,14 +541,14 @@ namespace MeshEditor.Data
 		public Scene Copy()
 		{
 			Scene copy = new Scene();
-			copy.camera = this.camera.Clone();	// naklonuju kameru
-			
-			copy.mesh = this.mesh;				// zkopiruju jen odkaz na mesh
+			copy.camera = this.camera.Clone();  // naklonuju kameru
+
+			copy.mesh = this.mesh;              // zkopiruju jen odkaz na mesh
 			if (this.mesh != null)
 				this.mesh.ReferenceCount++;
 
 			//if (this.mesh == null)
-				copy.renderMode = DefaultRenderMode;
+			copy.renderMode = DefaultRenderMode;
 			//else
 			//	copy.renderMode = this.renderMode;
 			copy.drawAxesFlag = this.drawAxesFlag;
@@ -563,8 +565,8 @@ namespace MeshEditor.Data
 		public static void ExtractMatrices(out int[] viewport, out double[] modelview, out double[] projection)
 		{
 			viewport = new int[4];
-			modelview = new double[16];	// mptm modelovací matice
-			projection = new double[16];	// ptm projekční matice
+			modelview = new double[16]; // mptm modelovací matice
+			projection = new double[16];    // ptm projekční matice
 
 			GL.GetInteger(GetPName.Viewport, viewport);
 			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
@@ -587,8 +589,8 @@ namespace MeshEditor.Data
 		public static Vector3 ProjectWorldCoordToWindowCoords(Vector3 point)
 		{
 			int[] viewport = new int[4];
-			double[] modelview = new double[16];	// mptm modelovací matice
-			double[] projection = new double[16];	// ptm projekční matice
+			double[] modelview = new double[16];    // mptm modelovací matice
+			double[] projection = new double[16];   // ptm projekční matice
 
 			GL.GetInteger(GetPName.Viewport, viewport);
 			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
@@ -605,7 +607,7 @@ namespace MeshEditor.Data
 			double[] modelview;
 			double[] projection;
 			ExtractMatrices(out viewport, out modelview, out projection);
-			
+
 			Vector3 windowPos = new Vector3(x - viewport[0], viewport[3] - y - viewport[1], pixelDepth);
 
 			Vector3 position;
@@ -641,7 +643,7 @@ namespace MeshEditor.Data
 
 			pixelDepth = getPixelDepth(x, y, viewport);
 			Vector3 windowPos = new Vector3(x - viewport[0], viewport[3] - y - viewport[1], pixelDepth);
-			
+
 			Vector3 position;
 			Utils.GluUnProject(windowPos, modelview, projection, viewport, out position);
 
@@ -751,8 +753,6 @@ namespace MeshEditor.Data
 			}
 		}
 
-		private bool tempElementAddedToSurfaceRepresentation;
-
 		private void setElementSignal(int? elementSignalToSet)
 		{
 			try
@@ -777,34 +777,24 @@ namespace MeshEditor.Data
 
 				int elementID = elementSignalToSet.Value;
 
-				bool found = false;
-				foreach (Element element in mesh.Elements)
-				{ 
-					if (element.ID == elementID)
-					{
-						elementSignalPosition = element.GetCenter();
-						// ------------------------------------------------
-						Element3D element3D = element as Element3D;
-						if (element3D != null)
-						{
-							var signalElementConstructor = new MeshConstructor();
-							signalElementConstructor.AddSurfaceOfElement3DToMesh(mesh, element3D); // add element to surface representation
-							tempElementAddedToSurfaceRepresentation = true;
-						}
-						// ------------------------------------------------
-						HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
-						toSelect.Add(element);
-						selectItemsInSet(toSelect); // select signalled element
-						// ------------------------------------------------
-						found = true;
-						break;
-					}
-				}
-				if (!found)
+				Element element = mesh.Elements.FirstOrDefault(e => e.ID == elementID);
+				if (element != null)
 				{
-					//elementSignal = null;
-					Exception nullException = null;
-					throw new ArgumentOutOfRangeException("Element with ID " + elementID + " does not exist!", nullException);
+					elementSignalPosition = element.GetCenter();
+					// ------------------------------------------------
+					{
+						var signalElementConstructor = new MeshConstructor();
+						signalElementConstructor.SignalElement(mesh, element); // add element to surface representation
+						tempElementAddedToSurfaceRepresentation = true;
+					}
+					// ------------------------------------------------
+					HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
+					toSelect.Add(element);
+					selectItemsInSet(toSelect); // select signalled element
+				}
+				else
+				{
+					throw new ArgumentOutOfRangeException("Element with ID " + elementID + " does not exist!", innerException: null);
 				}
 			}
 			finally
@@ -855,7 +845,7 @@ namespace MeshEditor.Data
 			Vector3[] points = new Vector3[cutPlaneDefinitionNodes.Count];
 			for (int i = 0; i < cutPlaneDefinitionNodes.Count; i++)
 				points[i] = cutPlaneDefinitionNodes[i].Position;
-			
+
 			GL.Disable(EnableCap.Lighting);
 			CutPlane.DrawDefinitionPoints(points);
 			GL.Enable(EnableCap.Lighting);
@@ -867,7 +857,7 @@ namespace MeshEditor.Data
 			GL.Disable(EnableCap.Lighting);
 			GL.DepthMask(false);
 			GL.Enable(EnableCap.Blend);
-			
+
 			foreach (CutPlane plane in cutPlanes)
 				plane.Draw(camera.Eye);
 
@@ -895,13 +885,13 @@ namespace MeshEditor.Data
 
 			// kladne osy
 			GL.Begin(BeginMode.Lines);
-			GL.Color3(1.0, 0, 0);		// X
+			GL.Color3(1.0, 0, 0);       // X
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(AxisLength, 0, 0);
-			GL.Color3(0, 0, 1.0);		// Y
+			GL.Color3(0, 0, 1.0);       // Y
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, AxisLength, 0);
-			GL.Color3(0, 1.0, 0);		// Z
+			GL.Color3(0, 1.0, 0);       // Z
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, 0, AxisLength);
 			GL.End();
@@ -912,13 +902,13 @@ namespace MeshEditor.Data
 			GL.LineStipple(2, 52428);
 			// zaporne osy
 			GL.Begin(BeginMode.Lines);
-			GL.Color3(1.0, 0, 0);		// X
+			GL.Color3(1.0, 0, 0);       // X
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(-AxisLength, 0, 0);
-			GL.Color3(0, 0, 1.0);		// Y
+			GL.Color3(0, 0, 1.0);       // Y
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, -AxisLength, 0);
-			GL.Color3(0, 1.0, 0);		// Z
+			GL.Color3(0, 1.0, 0);       // Z
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, 0, -AxisLength);
 			GL.End();
@@ -951,7 +941,7 @@ namespace MeshEditor.Data
 			{
 				return getSelectionGroupSummary();
 			}
-			
+
 			// otherwise show single selected entity description
 			ISelectable item = getFirstSelectedItem();
 
@@ -985,7 +975,7 @@ namespace MeshEditor.Data
 			bool nodeOnly = true, edgeOnly = true, faceOnly = true, elementOnly = true;
 			HashSet<Property> properties = new HashSet<Property>();
 			HashSet<ElementType> elementTypes = new HashSet<ElementType>();
-			
+
 			IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
 			double dataValueMin = double.MaxValue, dataValueMax = double.MinValue;
 
@@ -1078,7 +1068,7 @@ namespace MeshEditor.Data
 			GL.PushMatrix();
 			GL.LoadIdentity();
 			camera.LookAt(); // nastavit kameru
-			// ------------------------------------------------
+							 // ------------------------------------------------
 
 			HashSet<ISelectable> newSelection;
 
@@ -1136,13 +1126,13 @@ namespace MeshEditor.Data
 			if (item == null && faceHit == null)
 				return new HashSet<ISelectable>();
 
-            if (itemType == ItemTypeToSelect.Beam)
-            {
-                newSelection = new HashSet<ISelectable>();
+			if (itemType == ItemTypeToSelect.Beam)
+			{
+				newSelection = new HashSet<ISelectable>();
 				if (item != null)
 					newSelection.Add(item);
-                return newSelection;
-            }
+				return newSelection;
+			}
 
 			switch (mode)
 			{
@@ -1225,7 +1215,7 @@ namespace MeshEditor.Data
 			switch (mode)
 			{
 				case SelectMode.NearSurface:
-					getNeighborsFun = delegate(WingedEdge e)
+					getNeighborsFun = delegate (WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
 						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
@@ -1244,7 +1234,7 @@ namespace MeshEditor.Data
 									neighbor = n;
 							}
 						}
-						if(count == 1 && neighbor != null)
+						if (count == 1 && neighbor != null)
 							neighbors.Add(neighbor);
 						count = 0;
 						neighbor = null;
@@ -1281,7 +1271,7 @@ namespace MeshEditor.Data
 						}
 					}
 					HashSet<Element2D> surface = selectWholeSurface(faceHit, this.mesh.HardBorderLimit);
-					getNeighborsFun = delegate(WingedEdge e)
+					getNeighborsFun = delegate (WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
 						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
@@ -1295,7 +1285,7 @@ namespace MeshEditor.Data
 					};
 					break;
 				case SelectMode.Object:
-					getNeighborsFun = delegate(WingedEdge e)
+					getNeighborsFun = delegate (WingedEdge e)
 					{
 						Vector3 unit = Vector3.Normalize(e.EndNode.Position - e.BeginNode.Position);
 						HashSet<WingedEdge> neighbors = new HashSet<WingedEdge>();
@@ -1324,7 +1314,7 @@ namespace MeshEditor.Data
 			while (expansion.Count > 0)
 			{
 				WingedEdge top = expansion.Pop();
-				foreach(WingedEdge neighbor in getNeighborsFun(top))
+				foreach (WingedEdge neighbor in getNeighborsFun(top))
 					if (selection.Add(neighbor))
 						expansion.Push(neighbor);
 			}
@@ -1426,43 +1416,43 @@ namespace MeshEditor.Data
 			}
 		}
 
-        private ISelectable getNearestBeam(int x, int y)
-        {
-            // ! V podstate kopie metody getNearestEdge, nepodarilo se mi najit efektivni zpusob, jak sloucit obe metody...
+		private ISelectable getNearestBeam(int x, int y)
+		{
+			// ! V podstate kopie metody getNearestEdge, nepodarilo se mi najit efektivni zpusob, jak sloucit obe metody...
 
-            int[] viewport;
-            double[] modelview;
-            double[] projection;
-            ExtractMatrices(out viewport, out modelview, out projection);
-            // ---------------------------------
-            Vector2 hitPoint2D = new Vector2(x, y);
-            float minDistance = float.MaxValue;
-            Beam result = null;
-            Vector3 planeNormal = camera.GetDirection();
-            Vector3 planePoint = camera.Eye + (planeNormal * (float)Z_NEAR_PARAM);
-            foreach (Beam beam in mesh.Beams)
-            {
-                Vector3 lineA = beam.BeginNode.Position;
-                Vector3 lineB = beam.EndNode.Position;
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			ExtractMatrices(out viewport, out modelview, out projection);
+			// ---------------------------------
+			Vector2 hitPoint2D = new Vector2(x, y);
+			float minDistance = float.MaxValue;
+			Beam result = null;
+			Vector3 planeNormal = camera.GetDirection();
+			Vector3 planePoint = camera.Eye + (planeNormal * (float)Z_NEAR_PARAM);
+			foreach (Beam beam in mesh.Beams)
+			{
+				Vector3 lineA = beam.BeginNode.Position;
+				Vector3 lineB = beam.EndNode.Position;
 
-                bool isCompletelyBehind;
-                Utils.TrimLineByPlane(ref lineA, ref lineB, planePoint, planeNormal, out isCompletelyBehind); // pokud hrana prochazi obrazovkou, tak ji pred testem oriznout, spatne by se to jinak promitlo
+				bool isCompletelyBehind;
+				Utils.TrimLineByPlane(ref lineA, ref lineB, planePoint, planeNormal, out isCompletelyBehind); // pokud hrana prochazi obrazovkou, tak ji pred testem oriznout, spatne by se to jinak promitlo
 
-                if (isCompletelyBehind) // pokud je hrana uplne za mnou, tak ji vynecham
-                    continue;
+				if (isCompletelyBehind) // pokud je hrana uplne za mnou, tak ji vynecham
+					continue;
 
-                Vector3 projA, projB;
-                Utils.GluProject(lineA, modelview, projection, viewport, out projA); // promitni hranu do obrazovky
-                Utils.GluProject(lineB, modelview, projection, viewport, out projB);
-                float dist;
-                if (Utils.LineHit(projA.Xy, projB.Xy, hitPoint2D, EDGE_SELECTION_TOLERANCE_DISTANCE, out dist) && dist < minDistance)
-                {
-                    minDistance = dist;
-                    result = beam;
-                }
-            }
-            return result;
-        }
+				Vector3 projA, projB;
+				Utils.GluProject(lineA, modelview, projection, viewport, out projA); // promitni hranu do obrazovky
+				Utils.GluProject(lineB, modelview, projection, viewport, out projB);
+				float dist;
+				if (Utils.LineHit(projA.Xy, projB.Xy, hitPoint2D, EDGE_SELECTION_TOLERANCE_DISTANCE, out dist) && dist < minDistance)
+				{
+					minDistance = dist;
+					result = beam;
+				}
+			}
+			return result;
+		}
 
 		private ISelectable getNearestEdge(int x, int y, IEnumerable<WingedEdge> edges)
 		{
@@ -1480,10 +1470,10 @@ namespace MeshEditor.Data
 			{
 				Vector3 lineA = edge.BeginNode.Position;
 				Vector3 lineB = edge.EndNode.Position;
-				
+
 				bool isCompletelyBehind;
 				Utils.TrimLineByPlane(ref lineA, ref lineB, planePoint, planeNormal, out isCompletelyBehind); // pokud hrana prochazi obrazovkou, tak ji pred testem oriznout, spatne by se to jinak promitlo
-				
+
 				if (isCompletelyBehind) // pokud je hrana uplne za mnou, tak ji vynecham
 					continue;
 
@@ -1688,7 +1678,7 @@ namespace MeshEditor.Data
 
 			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
 			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
-			
+
 			switch (SceneFacade.EditorMode)
 			{
 				case EditorMode.SelectElements:
@@ -1801,7 +1791,7 @@ namespace MeshEditor.Data
 			Element2D frontChoose = null;
 			Element2D backChoose = null;
 			float angleSum, bestFrontAngleSum = float.MinValue, bestBackAngleSum = float.MinValue;
-			foreach(Element2D face in allFaces)
+			foreach (Element2D face in allFaces)
 			{
 				if (pointIsInsideFace(hitPoint, face, out angleSum))
 				{
@@ -1860,21 +1850,21 @@ namespace MeshEditor.Data
 			}
 			else if (itemType == ItemTypeToSelect.Beam)
 			{
-                foreach (Beam b in mesh.Beams)
-                {
-                    int number = getNumberOfVisibleNodesFrom(new Node[] { b.BeginNode, b.EndNode }, visibleNodes);
-                    if (number == 2 || (!allVerticesInArea && number > 0))
-                        result.Add(b);
-                }
-                return result;
+				foreach (Beam b in mesh.Beams)
+				{
+					int number = getNumberOfVisibleNodesFrom(new Node[] { b.BeginNode, b.EndNode }, visibleNodes);
+					if (number == 2 || (!allVerticesInArea && number > 0))
+						result.Add(b);
+				}
+				return result;
 			}
-            // hrany timto zpusobem nevybiram, nejdriv najdu viditelne plochy, jinak bych totiz vybral i hrany, co maj sice videt jeden uzel, ale jinak jsou skryty
-			
-            // ---------------------------------------
+			// hrany timto zpusobem nevybiram, nejdriv najdu viditelne plochy, jinak bych totiz vybral i hrany, co maj sice videt jeden uzel, ale jinak jsou skryty
+
+			// ---------------------------------------
 			HashSet<Element2D> pickedFaces = new HashSet<Element2D>();
 
 			// najdi pickedfaces
-			foreach(Node node in visibleNodes)
+			foreach (Node node in visibleNodes)
 			{
 				if (Scene.XRayVision)
 				{
@@ -1919,7 +1909,7 @@ namespace MeshEditor.Data
 						}
 					}
 				}
-				
+
 				// =========
 				if (frontOne == null)
 					pickedFaces.UnionWith(backFaces);
@@ -2117,7 +2107,7 @@ namespace MeshEditor.Data
 					foreach (Beam b in mesh.Beams)
 						if (b.Property == property)
 							newSelection.Add(b);
-					break;				
+					break;
 			}
 			// --------------------------------------------
 			updateColorBuffers(oldSelection, newSelection);
@@ -2245,7 +2235,7 @@ namespace MeshEditor.Data
 		{
 			if (cutPlaneDefinitionNodes.Count < 2) // musi byt alespon 2 body
 				return;
-				//throw new Exception("You must specify at least 2 plane-definition points.");
+			//throw new Exception("You must specify at least 2 plane-definition points.");
 			if (cutPlaneDefinitionNodes.Count == 2)
 				cutPlanes.Add(new CutPlane(cutPlaneDefinitionNodes[0].Position, cutPlaneDefinitionNodes[1].Position, mesh.CenterOfRotation, mesh.Radius, mesh.LowerBound, mesh.UpperBound, mesh.MinimalElementRadius, mesh.ResizeFactor, mesh.PositionOffset));
 			else
@@ -2267,8 +2257,9 @@ namespace MeshEditor.Data
 			if (mesh == null)
 				return;
 			// ----------------------------------
-			// remove element signal if exists
-			setElementSignal(null);
+			var selectedItems = new HashSet<ISelectable>(mesh.SelectedItems);
+			setElementSignal(null); // remove element signal if exists
+			mesh.SelectedItems = selectedItems;
 			// ----------------------------------
 			saveStateBeforeHideRestoreElements();
 			// ----------------------------------
@@ -2335,6 +2326,6 @@ namespace MeshEditor.Data
 		}
 
 		#endregion
-		
+
 	}
 }
