@@ -266,9 +266,9 @@ namespace MeshEditor.Cuts
 		{
 			if (mesh == null)
 				return;
-			var elementsToShow = new HashSet<Element>(mesh.Elements);
+			var visibleElements = new HashSet<Element>(mesh.Elements);
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, elementsToShow);
+			ctor.CutMesh(mesh, visibleElements);
 		}
 
 		#endregion
@@ -415,9 +415,9 @@ namespace MeshEditor.Cuts
 		private static void setElementVisibility(Mesh mesh, ElementTest elementVisibilityTest)
 		{
 			Debug.Assert(elementVisibilityTest != null);
-			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements.Where(e => elementVisibilityTest(e)));
+			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements.Where(e => elementVisibilityTest(e)));
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, elementsToShow);
+			ctor.CutMesh(mesh, visibleElements);
 		}
 
 		private static void hideElements(Mesh mesh, HashSet<Element> toHide)
@@ -425,12 +425,12 @@ namespace MeshEditor.Cuts
 			if (toHide.Count == 0)
 				return;
 
-			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
-			elementsToShow.ExceptWith(mesh.HiddenElements);
-			elementsToShow.ExceptWith(toHide);
+			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
+			visibleElements.ExceptWith(mesh.HiddenElements);
+			visibleElements.ExceptWith(toHide);
 
 			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, elementsToShow);
+			ctor.CutMesh(mesh, visibleElements);
 		}
 
 		private static void doCut(Mesh mesh, CutTest isToCut, CutInfo.ItemHitDecision hitDecision, bool transformCoordinates)
@@ -445,11 +445,11 @@ namespace MeshEditor.Cuts
 			else
 				throw new NotSupportedException(hitDecision.ToString() + " option is not supported");
 
-			HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
-			elementsToShow.ExceptWith(elementHits);
+			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
+			visibleElements.ExceptWith(elementHits);
 			
             MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, elementsToShow);
+			ctor.CutMesh(mesh, visibleElements);
 		}
 
 		private static IEnumerable<Node> getAllNodes(Mesh mesh)

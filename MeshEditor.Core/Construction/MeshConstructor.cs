@@ -981,7 +981,7 @@ namespace MeshEditor.Construction
 
 		#region Cutting
 
-		public void CutMesh(Mesh mesh, HashSet<Element> elementsToShow)
+		public void CutMesh(Mesh mesh, HashSet<Element> visibleElements)
 		{
 			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
 			
@@ -1016,7 +1016,7 @@ namespace MeshEditor.Construction
 			
 			foreach (Element e in mesh.Elements)
 			{
-				if (elementsToShow.Contains(e))
+				if (visibleElements.Contains(e))
 				{
 					processElement(e);
 					// pokud to je kvadraticky 2D prvek, tak ho zpracovat
@@ -1037,7 +1037,7 @@ namespace MeshEditor.Construction
 			Histogram edgeAnglesHistogram = new Histogram(0f, 180f, 1f);
 			createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
 			// smazat nebo vratit beamy do seznamu beamu
-			cutOrRestoreBeams(mesh, elementsToShow);
+			cutOrRestoreBeams(mesh, visibleElements);
 			// doladit par detailu - pripravit sit pro zobrazeni
 			mesh.InitializeMesh(edgeAnglesHistogram);
 			// vytvorit buffery

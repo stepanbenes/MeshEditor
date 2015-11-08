@@ -761,9 +761,9 @@ namespace MeshEditor.Data
 				if (tempElementAddedToSurfaceRepresentation)
 				{
 					var signalElementConstructor = new MeshConstructor();
-					HashSet<Element> elementsToShow = new HashSet<Element>(mesh.Elements);
-					elementsToShow.ExceptWith(mesh.HiddenElements);
-					signalElementConstructor.CutMesh(mesh, elementsToShow); // remove signalled element from surface representation
+					HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
+					visibleElements.ExceptWith(mesh.HiddenElements);
+					signalElementConstructor.CutMesh(mesh, visibleElements); // remove signalled element from surface representation
 
 					tempElementAddedToSurfaceRepresentation = false;
 				}
