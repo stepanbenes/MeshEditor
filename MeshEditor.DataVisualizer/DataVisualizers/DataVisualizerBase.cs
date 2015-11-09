@@ -134,7 +134,7 @@ namespace MeshEditor.DataVisualizer
 				initIsoAreasShader();
 				if (isoAreasShader.IsReady)
 				{
-					isoAreasShader.LightingEnabled = false; // lightingEnabled; // lighting of iso surfaces is broken on Marketa's notebook :(
+					isoAreasShader.LightingEnabled = lightingEnabled;
 					isoAreasShader.Use(settings.IsoAreasSubIntervalNumber, settings.ColorScale);
 				}
 			}
