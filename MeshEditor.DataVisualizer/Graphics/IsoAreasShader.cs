@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using MeshEditor.Graphics;
 
 namespace MeshEditor.DataVisualizer.Graphics
 {
@@ -401,6 +402,5 @@ void main()
 		{
 			GL.UseProgram(0);
 		}
-
 	}
 }

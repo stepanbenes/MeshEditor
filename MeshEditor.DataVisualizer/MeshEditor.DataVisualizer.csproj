@@ -71,7 +71,6 @@
     <Compile Include="Data\VisualizerSettings.cs" />
     <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
     <Compile Include="Graphics\IsoAreasShader.cs" />
-    <Compile Include="Graphics\ShaderHolder.cs" />
     <Compile Include="IO\GiDResFileParser.cs" />
     <Compile Include="IO\IDataFileParser.cs" />
     <Compile Include="Data\DataInfo.cs" />

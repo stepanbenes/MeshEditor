@@ -6,14 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MeshEditor.DataVisualizer.Graphics
+namespace MeshEditor.Graphics
 {
 	public abstract class ShaderHolder : IDisposable
 	{
 		protected List<int> vertexShaderId;
 		protected List<int> fragmentShaderId;
 
-		protected int programShaderId;
+		private int programShaderId;
 
 		private int activeVertexShaderIndex, activeFragmentShaderIndex;
 
@@ -27,7 +27,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 			activeVertexShaderIndex = activeFragmentShaderIndex = -1;
 		}
 
-		public int Program
+		protected int Program
 		{
 			get { return programShaderId; }
 		}
@@ -190,10 +190,9 @@ namespace MeshEditor.DataVisualizer.Graphics
 			{
 				string infoLog;
 				GL.GetShaderInfoLog(shaderId, out infoLog);
-				System.Windows.Forms.MessageBox.Show(infoLog);
+				Debug.WriteLine(infoLog);
 				return false;
 			}
-
 			return true;
 		}
 
@@ -205,10 +204,9 @@ namespace MeshEditor.DataVisualizer.Graphics
 			{
 				string infoLog;
 				GL.GetProgramInfoLog(programId, out infoLog);
-				System.Windows.Forms.MessageBox.Show(infoLog);
+				Debug.WriteLine(infoLog);
 				return false;
 			}
-
 			return true;
 		}
 
@@ -217,7 +215,6 @@ namespace MeshEditor.DataVisualizer.Graphics
 		public void Dispose()
 		{
 			// get rid of resources
-
 			if (programShaderId != -1)
 			{
 				if (activeVertexShaderIndex >= 0)

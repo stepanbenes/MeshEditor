@@ -93,7 +93,9 @@
     <Compile Include="Cuts\EdgeIntersection.cs" />
     <Compile Include="Cuts\FacesOnCutComputer.cs" />
     <Compile Include="Data\PropertyCommand.cs" />
+    <Compile Include="Graphics\CrossHatchShader.cs" />
     <Compile Include="Graphics\IVertexBufferObject.cs" />
+    <Compile Include="Graphics\ShaderHolder.cs" />
     <Compile Include="Graphics\VBO.cs" />
     <Compile Include="IO\GiDMshFileFormatParser.cs" />
     <Compile Include="IO\GiDMshFileFormatSaver.cs" />
