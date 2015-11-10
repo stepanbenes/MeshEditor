@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using System.Diagnostics;
+using System.Linq;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -628,7 +629,7 @@ namespace MeshEditor.Data
 					if (!faceIs2DElement)
 						containsParentElement = selected.Contains(faceOfElement.ParentElement);
 
-					if (containsParentElement && containsFace)
+					if (containsParentElement & containsFace)
 						faceColor = Utils.ColorToRgba32(Scene.SelectedFaceAndElementColor);
 					else if (containsParentElement)
 						faceColor = Utils.ColorToRgba32(Scene.SelectedElementColor);
@@ -639,15 +640,15 @@ namespace MeshEditor.Data
 						else
 							faceColor = Utils.ColorToRgba32(Scene.SelectedFaceColor);
 					}
-					else if (elementPropertyColors && faceOfElement != null)
-						faceColor = PropertyColorProvider.GetRGBA32(faceOfElement.ParentElement.Property);
-					else if (facePropertyColors || (elementPropertyColors && faceOfElement == null))
-						faceColor = PropertyColorProvider.GetRGBA32(face.Property);
+					else if (elementPropertyColors & faceOfElement != null)
+						faceColor = getRGBA32ColorForFace(face, faceOfElement.ParentElement.Property);
+					else if (facePropertyColors | (elementPropertyColors & faceOfElement == null))
+						faceColor = getRGBA32ColorForFace(face, face.Property);
 					else
 						faceColor = ordinaryFaceColor;
 					// ------------------------------------------
 
-					bool drawData = dataVisualizer != null && dataVisualizer.DisplayColors && !elementPropertyColors && !facePropertyColors;
+					bool drawData = (dataVisualizer != null && dataVisualizer.DisplayColors) & !elementPropertyColors & !facePropertyColors;
 
 					if (drawData)
 					{
@@ -655,7 +656,7 @@ namespace MeshEditor.Data
 						foreach (Node node in face.IterateThroughAllNodes())
 						{
 							int dataColor = dataVisualizer.GetDataColor(node, element);
-							if (containsFace || containsParentElement) // if face is selected, invert color
+							if (containsFace | containsParentElement) // if face is selected, invert color
 								dataColor = Utils.InvertColor(dataColor) & 0x00FFFFFF; // zero alpha byte to mark color to be handled special in iso-areas shader
 							items[index++] = dataColor;
 						}
@@ -1034,6 +1035,8 @@ namespace MeshEditor.Data
 
 		private void drawBeamNumbers(HashSet<ISelectable> selectedItems)
 		{
+			// TODO: fix this
+
 			//if (beams.Count == 0)
 			//    return;
 			//int[] viewport;
@@ -1061,6 +1064,19 @@ namespace MeshEditor.Data
 			//    //}
 			//}
 			//textPrinter.End(); // restores projection matrix
+		}
+
+		private static int getRGBA32ColorForFace(Element2D face, Property baseProperty)
+		{
+			int color = PropertyColorProvider.GetRGBA32(baseProperty);
+			if (face.HasTwinElements)
+			{
+				// indicate multiple properties
+				color &= 0x00FFFFFF;
+				int alpha = face.GetTwinElements().First().Property.Value << 24;
+				color |= alpha;
+			}
+			return color;
 		}
 
 		#endregion

@@ -37,6 +37,8 @@ namespace MeshEditor.Construction
 
 		private Dictionary<EdgeMark, Property[]> edgeProperties;
 
+		private bool meshHasTwinElements;
+
 		private const float NODE_WORK_RATIO = 0.21f;
 		private const float ELEMENT_WORK_RATIO = 0.73f;
 
@@ -190,7 +192,7 @@ namespace MeshEditor.Construction
 				// ==================================================================
 
 				mesh.TotalNodeCount = nodes.Count;
-				mesh.InitializeMesh(edgeAnglesHistogram);
+				mesh.InitializeMesh(edgeAnglesHistogram, meshHasTwinElements);
 
 				if (cancelled != null && cancelled())
 					return null;
@@ -649,10 +651,12 @@ namespace MeshEditor.Construction
 				{
 					triangleFaces[mark] = face; // replace 2D element with face of 3D element
 					face.AddTwinElement(triangle); // add 2D element as twin element
+					meshHasTwinElements = true;
 				}
 				else // second is 2D element
 				{
 					triangle.AddTwinElement(face);
+					meshHasTwinElements = true;
 				}
 			}
 			else
@@ -694,10 +698,12 @@ namespace MeshEditor.Construction
 				{
 					quadFaces[mark] = face; // replace 2D element with face of 3D element
 					face.AddTwinElement(quad); // add 2D element as twin element
+					meshHasTwinElements = true;
 				}
 				else // second is 2D element
 				{
 					quad.AddTwinElement(face);
+					meshHasTwinElements = true;
 				}
 			}
 			else
@@ -1013,6 +1019,7 @@ namespace MeshEditor.Construction
 			// smazat povrchovou reprezentaci a buffery
 			mesh.ClearSurface();
 			mesh.HiddenElements.Clear();
+			meshHasTwinElements = false; // warning: set this to false only if the cutting algoritm will recreate the whole mesh
 			
 			foreach (Element e in mesh.Elements)
 			{
@@ -1039,7 +1046,7 @@ namespace MeshEditor.Construction
 			// smazat nebo vratit beamy do seznamu beamu
 			cutOrRestoreBeams(mesh, visibleElements);
 			// doladit par detailu - pripravit sit pro zobrazeni
-			mesh.InitializeMesh(edgeAnglesHistogram);
+			mesh.InitializeMesh(edgeAnglesHistogram, meshHasTwinElements);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
 

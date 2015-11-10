@@ -11,7 +11,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 {
 	public class IsoAreasShader : ShaderHolder
 	{
-		private string vertexShaderLightingString =
+		private readonly string vertexShaderLightingString =
 @"
 
 varying vec4 color;
@@ -38,7 +38,7 @@ void main()
 }
 ";
 
-		private string fragmentShaderLightingString =
+		private readonly string fragmentShaderLightingString =
 @"
 
 uniform int subIntervalNumber;
@@ -190,7 +190,7 @@ void main()
 
 		#region Non-lighting shaders
 
-		private string vertexShaderString =
+		private readonly string vertexShaderString =
 @"
 
 varying vec4 color;
@@ -202,7 +202,7 @@ void main()
 }
 ";
 
-		private string fragmentShaderString =
+		private readonly string fragmentShaderString =
 @"
 
 uniform int subIntervalNumber;
@@ -326,13 +326,29 @@ void main()
 
 		#endregion
 
-		public bool IsReady { get; private set; }
+		#region Fields, constructor
 
 		int subIntervalNumberLocation;
 		int controlPointCountLocation;
 		int controlPointsLocation;
 
 		bool lightingEnabled;
+
+		public IsoAreasShader(bool lighting)
+		{
+			IsReady = LoadShaderStrings(new[] { vertexShaderLightingString, vertexShaderString }, new[] { fragmentShaderLightingString, fragmentShaderString });
+			if (IsReady)
+			{
+				this.lightingEnabled = lighting;
+				setupAppropriateShaders();
+			}
+		}
+
+		#endregion
+
+		#region Properties
+
+		public bool IsReady { get; private set; }
 
 		public bool LightingEnabled
 		{
@@ -341,30 +357,15 @@ void main()
 			{
 				if (lightingEnabled != value)
 				{
-					setupAppropriateShaders(value);
+					this.lightingEnabled = value;
+					setupAppropriateShaders();
 				}
 			}
 		}
 
-		private void setupAppropriateShaders(bool lighting)
-		{
-			this.lightingEnabled = lighting;
-			int index = lighting ? 0 : 1;
-			SetActiveShaders(vertexShaderIndex: index, fragmentShaderIndex: index);
+		#endregion
 
-			subIntervalNumberLocation = GL.GetUniformLocation(Program, "subIntervalNumber");
-			controlPointCountLocation = GL.GetUniformLocation(Program, "controlPointCount");
-			controlPointsLocation = GL.GetUniformLocation(Program, "controlPoints");
-		}
-
-		public IsoAreasShader(bool lighting)
-		{
-			IsReady = LoadShaderStrings(new[] { vertexShaderLightingString, vertexShaderString }, new[] { fragmentShaderLightingString, fragmentShaderString });
-			if (IsReady)
-			{
-				setupAppropriateShaders(lighting);
-			}
-		}
+		#region Public methods
 
 		public void Use(int subIntervalNumber, ColorScale colorScale)
 		{
@@ -402,5 +403,22 @@ void main()
 		{
 			GL.UseProgram(0);
 		}
+
+		#endregion
+
+		#region Private methods
+
+		private void setupAppropriateShaders()
+		{
+			int index = lightingEnabled ? 0 : 1;
+			SetActiveShaders(vertexShaderIndex: index, fragmentShaderIndex: index);
+
+			subIntervalNumberLocation = GL.GetUniformLocation(Program, "subIntervalNumber");
+			controlPointCountLocation = GL.GetUniformLocation(Program, "controlPointCount");
+			controlPointsLocation = GL.GetUniformLocation(Program, "controlPoints");
+		}
+
+		#endregion
+
 	}
 }

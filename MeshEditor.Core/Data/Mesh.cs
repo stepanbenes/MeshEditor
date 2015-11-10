@@ -14,6 +14,8 @@ using MeshEditor.Utilities;
 using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.CoreInterface;
 using MeshEditor.Cuts;
+using System.Diagnostics;
+using System.Linq;
 
 namespace MeshEditor.Data
 {
@@ -41,8 +43,10 @@ namespace MeshEditor.Data
 
 		private bool unsavedChanges;
 
+		private bool hasTwinElements;
+
 		// -------------------------------
-		
+		private CrossHatchShader crossHatchShader;
 		// -------------------------------
 		// -- parametry noveho souradneho systemu site
 		private Vector3 positionOffset;
@@ -287,6 +291,11 @@ namespace MeshEditor.Data
 			get { return layers; }
 		}
 
+		public bool HasTwinElements
+		{
+			get	{ return hasTwinElements; }
+		}
+
 		#endregion
 
 		#region Public methods
@@ -313,16 +322,14 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void InitializeMesh(Histogram edgeAnglesHistogram)
+		public void InitializeMesh(Histogram edgeAnglesHistogram, bool hasTwinElements)
 		{
 			this.statistics.EdgeAnglesHistogram = edgeAnglesHistogram;
+			this.hasTwinElements = hasTwinElements;
 
 			content.TrimExcessMemory();
 
 			//computeInitialBorderLimitsFromHistogram();
-
-			// create vertex buffer object for whole mesh and index buffer objects for each surface object
-			//CreateBuffers();
 		}
 
 		public void ClearHiddenElements()
@@ -393,6 +400,9 @@ namespace MeshEditor.Data
 			content.BeamNodesNotInFaces.Clear();
 		}
 
+		/// <summary>
+		/// Create vertex buffer object for whole mesh and index buffer objects for each surface object.
+		/// </summary>
 		public void CreateBuffers()
 		{
 			this.buffersAreReady = content.CreateBuffers(this.colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
@@ -488,7 +498,7 @@ namespace MeshEditor.Data
 			bool beamPropertyColors = (colorMode & PropertyColorsMode.Beams) != 0;
 
 			//bool numbersAreOK = !optimizeForMoving && content.VisibleNodesReady;// && (Scene.AlwaysShowNumbers || !optimizeForSelecting);
-			bool showNumbers = drawElementNumbers && !optimizeForMoving;
+			bool showNumbers = drawElementNumbers & !optimizeForMoving;
 
 			foreach (ILayer layer in layers)
 			{
@@ -511,17 +521,26 @@ namespace MeshEditor.Data
 				else
 					GL.Disable(EnableCap.Lighting);
 
-				bool drawData = content.DataVisualizer != null && !facePropertyColors && !elementPropertyColors;
+				bool drawData = content.DataVisualizer != null & !facePropertyColors & !elementPropertyColors;
+				bool userCrossHatching = HasTwinElements & (elementPropertyColors | facePropertyColors);
 
-				// data visualizer begin draw
-				if (drawData)
+				if (drawData) // iso-areas shader
+				{
 					content.DataVisualizer.BeginDraw(Scene.FaceLighting);
+				}
+				else if (userCrossHatching)
+				{
+					initializeCrossHatchShader(); // multiple property colors hatching shader
+					crossHatchShader.Use(getPropertyColorsOfTwinElements());
+				}
 
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, showNumbers, camera);
 
-				// data visualizer end draw
+				// turn off shaders
 				if (drawData)
 					content.DataVisualizer.EndDraw();
+				else if (userCrossHatching)
+					crossHatchShader.Unuse();
 
 				if (!Scene.FaceLighting)
 					GL.Enable(EnableCap.Lighting);
@@ -588,7 +607,7 @@ namespace MeshEditor.Data
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
 
-				bool drawData = content.DataVisualizer != null && !beamPropertyColors;
+				bool drawData = content.DataVisualizer != null & !beamPropertyColors;
 
 				// data visualizer begin draw
 				if (drawData)
@@ -612,13 +631,13 @@ namespace MeshEditor.Data
 				GL.PointSize(Scene.PointSize);
 				GL.Disable(EnableCap.Lighting);
 
-				if (Scene.PointSmooth && !(optimizeForMoving || optimizeForSelecting))
+				if (Scene.PointSmooth & !(optimizeForMoving || optimizeForSelecting))
 				{
 					GL.Enable(EnableCap.PointSmooth);
 					GL.Enable(EnableCap.Blend);
 				}
 
-				if (!optimizeForMoving && content.VisibleNodesReady)
+				if (!optimizeForMoving & content.VisibleNodesReady)
 				{
 					if (renderMode != RenderMode.Points) // pokud se kresli body, tak nechat zapnuty depth test - kvuli reznym plocham
 						GL.Disable(EnableCap.DepthTest);
@@ -630,7 +649,7 @@ namespace MeshEditor.Data
 				{
 					content.DrawNodes(selectedItems, nodePropertyColors, Scene.IncludeEdgeMiddleNodes);
 				}
-				if (Scene.PointSmooth && !(optimizeForMoving || optimizeForSelecting))
+				if (Scene.PointSmooth & !(optimizeForMoving || optimizeForSelecting))
 				{
 					GL.Disable(EnableCap.Blend);
 					GL.Disable(EnableCap.PointSmooth);
@@ -792,6 +811,12 @@ namespace MeshEditor.Data
 			{
 				content.DataVisualizer.Dispose();
 				content.DataVisualizer = null;
+			}
+
+			if (crossHatchShader != null)
+			{
+				crossHatchShader.Dispose();
+				crossHatchShader = null;
 			}
 		}
 
@@ -985,6 +1010,22 @@ namespace MeshEditor.Data
 		public void InvertAllNormals()
 		{
 			content.InvertAllNormals();
+		}
+
+		public IEnumerable<Node> GetNodes(bool includeMiddleNodes)
+		{
+			if (includeMiddleNodes && content.EdgeMiddleNodes.Count > 0)
+				return content.GetAllExternalNodes();
+			if (content.BeamNodesNotInFaces.Count > 0)
+				return content.GetSimpleExternalNodes();
+			return content.NodesEdgesIncidence.Keys;
+		}
+
+		public bool IsNodeClearlyVisible(Node node)
+		{
+			if (!content.VisibleNodesReady)
+				return false;
+			return content.VisibleNodes.Contains(node) && !content.StickyNodes.Contains(node);
 		}
 
 		#endregion
@@ -1211,21 +1252,30 @@ namespace MeshEditor.Data
 				maxBound.Y = winPos.Y;
 		}
 
-		public IEnumerable<Node> GetNodes(bool includeMiddleNodes)
+		private void initializeCrossHatchShader()
 		{
-			if (includeMiddleNodes && content.EdgeMiddleNodes.Count > 0)
-				return content.GetAllExternalNodes();
-			if (content.BeamNodesNotInFaces.Count > 0)
-				return content.GetSimpleExternalNodes();
-			return content.NodesEdgesIncidence.Keys;
+			if (crossHatchShader == null)
+			{
+				crossHatchShader = new CrossHatchShader(Scene.FaceLighting);
+				Debug.Assert(crossHatchShader.IsReady);
+			}
+			crossHatchShader.LightingEnabled = Scene.FaceLighting;
 		}
 
-		public bool IsNodeClearlyVisible(Node node)
+		private int[] getPropertyColorsOfTwinElements()
 		{
-			if (!content.VisibleNodesReady)
-				return false;
-			return content.VisibleNodes.Contains(node) && !content.StickyNodes.Contains(node);
-		}
+			throw new NotImplementedException();
+
+			int[] result = Enumerable.Range(0, 255).Select(i => Utilities.Functions.ColorToRgba32(Color.Black)).ToArray();
+			foreach (Property property in PropertyColorProvider.GetAllUsedPropertiesSorted())
+			{
+				if (property.Value >= 0 && property.Value < 255)
+				{
+					result[property.Value] = PropertyColorProvider.GetRGBA32(property);
+				}
+			}
+			return result;
+        }
 
 		#endregion
 

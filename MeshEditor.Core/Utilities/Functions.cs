@@ -404,6 +404,11 @@ namespace MeshEditor.Utilities
 			return ((int)alpha << 24) | ((int)blue << 16) | ((int)green << 8) | (int)red;
 		}
 
+		public static int ColorToRgba32(Color c, byte alpha)
+		{
+			return ColorToRgba32(c.R, c.G, c.B, alpha);
+		}
+
 		/// <summary>
 		/// Get byte components of color in RGBA 32bit format
 		/// </summary>

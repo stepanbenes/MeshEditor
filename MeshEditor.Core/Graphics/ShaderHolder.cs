@@ -32,31 +32,6 @@ namespace MeshEditor.Graphics
 			get { return programShaderId; }
 		}
 
-		//public bool LoadShaderFiles(string[] vertexShaderFiles, string[] fragmentShaderFiles)
-		//{
-		//	const int badResult = -1;
-
-		//	if (vertexShaderFiles != null)
-		//	{
-		//		foreach (string vs in vertexShaderFiles)
-		//		{
-		//			if (AddVertexShaderFile(vs) == badResult)
-		//				return false;
-		//		}
-		//	}
-
-		//	if (fragmentShaderFiles != null)
-		//	{
-		//		foreach (string fs in fragmentShaderFiles)
-		//		{
-		//			if (AddFragmentShaderFile(fs) == badResult)
-		//				return false;
-		//		}
-		//	}
-
-		//	return true;
-		//}
-
 		protected bool LoadShaderStrings(string[] vertexShaderStrings, string[] fragmentShaderStrings)
 		{
 			const int badResult = -1;
@@ -82,29 +57,6 @@ namespace MeshEditor.Graphics
 			return true;
 		}
 
-		//private string getString(string filename)
-		//{
-		//	if (!File.Exists(filename))
-		//	{
-		//		System.Windows.Forms.MessageBox.Show("file " + filename + " does not exist");
-		//		return null;
-		//	}
-			
-		//	string shaderString = null;
-		//	using (StreamReader reader = File.OpenText(filename))
-		//	{
-		//		shaderString = reader.ReadToEnd();
-		//	}
-
-		//	return shaderString;
-		//}
-
-		//private int AddVertexShaderFile(string filename)
-		//{
-		//	string vertexShaderString = getString(filename);
-		//	return AddVertexShaderString(vertexShaderString);
-		//}
-
 		private int AddVertexShaderString(string vertexShaderString)
 		{
 			int vId = CreateVertexShader(vertexShaderString);
@@ -114,12 +66,6 @@ namespace MeshEditor.Graphics
 			vertexShaderId.Add(vId);
 			return vId;
 		}
-
-		//private int AddFragmentShaderFile(string filename)
-		//{
-		//	string fragmentShaderString = getString(filename);
-		//	return AddFragmentShaderString(fragmentShaderString);
-		//}
 
 		private int AddFragmentShaderString(string fragmentShaderString)
 		{

@@ -148,6 +148,11 @@ namespace MeshEditor.Data
 			get { return twinElements != null; }
 		}
 
+		public int NumberOfTwinElements
+		{
+			get { return HasTwinElements ? twinElements.Length : 0; }
+		}
+
 		public IEnumerable<Element2D> GetTwinElements()
 		{
 			return HasTwinElements ? twinElements : Enumerable.Empty<Element2D>();
