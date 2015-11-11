@@ -18,7 +18,8 @@ namespace MeshEditor.Data
 
 		#region Fields, Constructor
 
-		private static readonly Dictionary<Property, int> propertyColors;
+		private static readonly List<int> colorPalette;
+		private static readonly Dictionary<Property, int> colorIndices;
 
 		private const float GOLDEN_RATIO_INV = 0.618033988749895f;
 
@@ -37,7 +38,8 @@ namespace MeshEditor.Data
 			distinguishedHuesCount = 20;
 			availableLuminances = new float[] { 0.6f, 0.4f, 0.7f, 0.3f, 0.8f, 0.2f };
 
-			propertyColors = new Dictionary<Property, int>();
+			colorPalette = new List<int>();
+			colorIndices = new Dictionary<Property, int>();
 			initializeColorEngine();
 		}
 
@@ -47,9 +49,11 @@ namespace MeshEditor.Data
 
 		private static void initializeColorEngine()
 		{
-			propertyColors.Clear();
-			propertyColors[Property.Zero] = Utils.ColorToRgba32(Color.White);
-
+			colorPalette.Clear();
+			colorIndices.Clear();
+			colorIndices[Property.Zero] = colorPalette.Count;
+			colorPalette.Add(Utils.ColorToRgba32(Color.White));
+			
 			currentHue = startHue;
 			currentLuminanceIndex = 0;
 			currentLevelColorCount = 0;
@@ -81,7 +85,17 @@ namespace MeshEditor.Data
 
 		public static Property[] GetAllUsedPropertiesSorted()
 		{
-			return propertyColors.Keys.OrderBy(p => p.Value).ToArray();
+			return colorIndices.Keys.OrderBy(p => p.Value).ToArray();
+		}
+
+		public static int[] GetColorPalette()
+		{
+			return colorPalette.ToArray();
+		}
+
+		public static int GetIndexInColorPalette(Property property)
+		{
+			return colorIndices[property];
 		}
 
 		/// <summary>
@@ -89,11 +103,7 @@ namespace MeshEditor.Data
 		/// </summary>
 		public static int GetRGBA32(Property property)
 		{
-			//int result;
-			//if (!propertyColors.TryGetValue(property, out result))
-			//    result = propertyColors[property] = getNewPropertyColor(property);
-			//return result;
-			return propertyColors[property];
+			return colorPalette[colorIndices[property]];
 		}
 
 		public static Color Get(Property property)
@@ -114,14 +124,16 @@ namespace MeshEditor.Data
 			rgba |= color.G << 8;
 			rgba |= color.B << 16;
 			rgba |= color.A << 24;
-			propertyColors[property] = rgba;
+			colorIndices[property] = colorPalette.Count;
+			colorPalette.Add(rgba);
 		}
 
 		public static void ArrangeColorForProperty(Property property)
 		{
-			if (!propertyColors.ContainsKey(property))
+			if (!colorIndices.ContainsKey(property))
 			{
-				propertyColors[property] = getNewPropertyColor(property);
+				colorIndices[property] = colorPalette.Count;
+				colorPalette.Add(getNewPropertyColor(property));
 			}
 		}
 
@@ -137,9 +149,9 @@ namespace MeshEditor.Data
 		public static IDictionary<Property, Color> GetAllPropertyColors()
 		{
 			Dictionary<Property, Color> result = new Dictionary<Property, Color>();
-			foreach (var kv in propertyColors)
+			foreach (Property property in colorIndices.Keys)
 			{
-				result.Add(kv.Key, Get(kv.Key));
+				result.Add(property, Get(property));
 			}
 			return result;
 		}
@@ -156,7 +168,8 @@ namespace MeshEditor.Data
 				{
 					Property property = new Property((int)element.Attribute("id"));
 					int color = int.Parse(element.Value);
-					propertyColors[property] = color;
+					colorIndices[property] = colorPalette.Count;
+					colorPalette.Add(color);
 				}
 			}
 #if !DEBUG
@@ -169,9 +182,9 @@ namespace MeshEditor.Data
 		{
 			try
 			{
-				XElement rootElement = new XElement("PropertyColors", propertyColors.Select(kv =>
+				XElement rootElement = new XElement("PropertyColors", colorIndices.Select(kv =>
 					{
-						var propertyElement = new XElement("Property", kv.Value);
+						var propertyElement = new XElement("Property", colorPalette[kv.Value]);
 						propertyElement.SetAttributeValue("id", kv.Key);
 						return propertyElement;
 					}));

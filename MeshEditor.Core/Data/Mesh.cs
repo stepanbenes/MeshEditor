@@ -531,7 +531,7 @@ namespace MeshEditor.Data
 				else if (userCrossHatching)
 				{
 					initializeCrossHatchShader(); // multiple property colors hatching shader
-					crossHatchShader.Use(getPropertyColorsOfTwinElements());
+					crossHatchShader.Use(PropertyColorProvider.GetColorPalette());
 				}
 
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, showNumbers, camera);
@@ -1261,21 +1261,6 @@ namespace MeshEditor.Data
 			}
 			crossHatchShader.LightingEnabled = Scene.FaceLighting;
 		}
-
-		private int[] getPropertyColorsOfTwinElements()
-		{
-			throw new NotImplementedException();
-
-			int[] result = Enumerable.Range(0, 255).Select(i => Utilities.Functions.ColorToRgba32(Color.Black)).ToArray();
-			foreach (Property property in PropertyColorProvider.GetAllUsedPropertiesSorted())
-			{
-				if (property.Value >= 0 && property.Value < 255)
-				{
-					result[property.Value] = PropertyColorProvider.GetRGBA32(property);
-				}
-			}
-			return result;
-        }
 
 		#endregion
 

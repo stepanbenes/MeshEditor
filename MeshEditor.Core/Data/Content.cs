@@ -1068,15 +1068,38 @@ namespace MeshEditor.Data
 
 		private static int getRGBA32ColorForFace(Element2D face, Property baseProperty)
 		{
-			int color = PropertyColorProvider.GetRGBA32(baseProperty);
-			if (face.HasTwinElements)
+            if (face.HasTwinElements)
 			{
-				// indicate multiple properties
-				color &= 0x00FFFFFF;
-				int alpha = face.GetTwinElements().First().Property.Value << 24;
-				color |= alpha;
+				int colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(baseProperty);
+				if (colorPaletteIndex > 254) // color is out of palette
+				{
+					return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
+				}
+				int shift = 24;
+				int color = colorPaletteIndex << shift;
+				foreach (Element2D twin in face.GetTwinElements())
+				{
+					colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(twin.Property);
+					if (colorPaletteIndex > 254) // color is out of palette
+					{
+						return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
+					}
+					if (colorPaletteIndex != 0) // ignore zero property
+					{
+						shift -= 8;
+						if (shift < 0) // exceeded limit of 4 representable colors
+						{
+							return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
+						}
+						color |= colorPaletteIndex << shift;
+					}
+				}
+				return color;
 			}
-			return color;
+			else
+			{
+				return PropertyColorProvider.GetRGBA32(baseProperty); // | unchecked((int)0xFF000000);
+			}
 		}
 
 		#endregion

@@ -27,26 +27,67 @@ void main()
 		private readonly string fragmentShaderString =
 @"
 
-uniform vec3 propertyColors[255];
+uniform vec4 propertyColors[255];
 varying vec4 color;
 
 void main()
 {
-	int alpha = int(color.a * 256.0);
-	if (alpha < 255)
+	int alphaIndex = int(color.a * 256.0);
+	if (alphaIndex < 255)
 	{
-		int xCoordinate = int(gl_FragCoord.x);
-		int yCoordinate = int(gl_FragCoord.y);
-		if (mod(xCoordinate + yCoordinate, 20) >= 10)
+		if (alphaIndex > 0)
 		{
-			//gl_FragColor = vec4(1, 1, 1, 1); // white
-			gl_FragColor.rgb = propertyColors[alpha];
-			gl_FragColor.a = 1.0;
-			return;
+			int blueIndex = int(color.b * 256.0);
+			int greenIndex = int(color.g * 256.0);
+			int redIndex = int(color.r * 256.0);
+			float bandwidth = 10.0;
+			if (blueIndex > 0)
+			{
+				bandwidth += 10.0;
+				if (greenIndex > 0)
+				{
+					bandwidth += 10.0;
+					if (redIndex > 0)
+					{
+						bandwidth += 10.0;
+					}
+				}
+			}
+			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
+			if (modulo40 < 10.0)
+			{
+				gl_FragColor = propertyColors[alphaIndex];
+			}
+			else if (modulo40 < 20.0)
+			{
+				gl_FragColor = propertyColors[blueIndex];
+			}
+			else if (modulo40 < 30.0)
+			{
+				gl_FragColor = propertyColors[greenIndex];
+			}
+			else
+			{
+				gl_FragColor = propertyColors[redIndex];
+			}
+		}
+		else
+		{
+			float modulo20 = mod(gl_FragCoord.x + gl_FragCoord.y, 20.0);
+			if (modulo20 < 10.0)
+			{
+				gl_FragColor = color;
+			}
+			else
+			{
+				gl_FragColor = vec4(0, 0, 0, 0); // black
+			}
 		}
 	}
-	gl_FragColor.rgb = color.rgb;
-	gl_FragColor.a = 1.0;
+	else
+	{
+		gl_FragColor = color;
+	}
 }
 ";
 
@@ -69,7 +110,7 @@ void main()
 		private readonly string fragmentShaderLightingString =
 @"
 
-uniform vec3 propertyColors[255];
+uniform vec4 propertyColors[255];
 varying vec4 color;
 
 void main()
@@ -118,27 +159,29 @@ void main()
 
 		#region Public methods
 
-		public void Use(int[] propertyColorsOfTwinElements)
+		public void Use(int[] colorPalette)
 		{
+			Debug.Assert(colorPalette != null && colorPalette.Length > 0);
+
 			if (!IsReady)
 				return;
 
-			Debug.Assert(propertyColorsOfTwinElements != null && propertyColorsOfTwinElements.Length <= 255);
-
 			GL.UseProgram(Program);
 
-			float[] colorComponents = new float[propertyColorsOfTwinElements.Length * 3];
+			int propertyColorsArrayLength = Math.Min(colorPalette.Length, 255);
+			float[] colorComponents = new float[propertyColorsArrayLength * 4];
 
-			for (int i = 0; i < propertyColorsOfTwinElements.Length; i++)
+			for (int i = 0; i < propertyColorsArrayLength; i++)
 			{
-				float r, g, b;
-				Utilities.Functions.GetColorComponents(propertyColorsOfTwinElements[i], out r, out g, out b);
-				colorComponents[i * 3] = r;
-				colorComponents[i * 3 + 1] = g;
-				colorComponents[i * 3 + 2] = b;
+				float red, green, blue;
+				Utilities.Functions.GetColorComponents(colorPalette[i], out red, out green, out blue);
+				colorComponents[i * 4] = red;
+				colorComponents[i * 4 + 1] = green;
+				colorComponents[i * 4 + 2] = blue;
+				colorComponents[i * 4 + 3] = 1.0f; // alpha
 			}
 
-			GL.Uniform3(propertyColorsArrayLocation, propertyColorsOfTwinElements.Length, colorComponents);
+			GL.Uniform4(propertyColorsArrayLocation, propertyColorsArrayLength, colorComponents);
 		}
 
 		public void Unuse()
