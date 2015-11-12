@@ -49,33 +49,39 @@ namespace MeshEditor.Data
 			return center / nodes.Length;
 		}
 
-		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, params Node[] nodesOfFace)
+		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, Node node1, Node node2, Node node3)
 		{
-			List<Node> distinctNodes = new List<Node>(nodesOfFace.Length);
-			distinctNodes.Add(nodesOfFace[0]); // predpokladam, ze tam alespon jeden prvek je
-			for (int i = 1; i < nodesOfFace.Length; i++)
-			{
-				if(!distinctNodes.Contains(nodesOfFace[i]))
-					distinctNodes.Add(nodesOfFace[i]);
-			}
-			if (distinctNodes.Count <= 2)
+			if (node1 == node2 || node1 == node3 || node2 == node3)
 				return null;
 
-			Element2D result;
-			if (distinctNodes.Count == 3)
-				result = new TriangleFaceOfElement3D(this, order, distinctNodes[0], distinctNodes[1], distinctNodes[2]);
-			else if (distinctNodes.Count == 4)
-				result = new QuadFaceOfElement3D(this, order, distinctNodes[0], distinctNodes[1], distinctNodes[2], distinctNodes[3]);
-			else
-				throw new ArgumentException("Too much nodes for one face.");
+			Element2D result = new TriangleFaceOfElement3D(this, order, node1, node2, node3);
 
 			// jeste spravne natocim normalu, pokud smeruje dovnitr prvku
-			if (Vector3.Dot(centerOfElement - distinctNodes[0].Position, result.NormalVector) > 0)
+			if (Vector3.Dot(centerOfElement - node1.Position, result.NormalVector) > 0)
 			{
 				result.InvertNormalVector();
 				result.ReverseNodeOrder();
 			}
+			return result;
+		}
 
+		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, Node node1, Node node2, Node node3, Node node4)
+		{
+			if (node1 == node2 || node1 == node3 || node1 == node4)
+				return GenerateFaceWithNodes(order, ref centerOfElement, node2, node3, node4);
+			if (node2 == node3 || node2 == node4)
+				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node3, node4);
+			if (node3 == node4)
+				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node2, node4);
+
+			Element2D result = new QuadFaceOfElement3D(this, order, node1, node2, node3, node4);
+
+			// jeste spravne natocim normalu, pokud smeruje dovnitr prvku
+			if (Vector3.Dot(centerOfElement - node1.Position, result.NormalVector) > 0)
+			{
+				result.InvertNormalVector();
+				result.ReverseNodeOrder();
+			}
 			return result;
 		}
 
