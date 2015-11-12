@@ -51,7 +51,7 @@ namespace MeshEditor.Data
 
 		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, Node node1, Node node2, Node node3)
 		{
-			if (node1 == node2 || node1 == node3 || node2 == node3)
+			if (node1 == node2 || node1 == node3 || node2 == node3) // face is collapsed to line, discard it
 				return null;
 
 			Element2D result = new TriangleFaceOfElement3D(this, order, node1, node2, node3);
@@ -68,11 +68,11 @@ namespace MeshEditor.Data
 		protected Element2D GenerateFaceWithNodes(int order, ref Vector3 centerOfElement, Node node1, Node node2, Node node3, Node node4)
 		{
 			if (node1 == node2 || node1 == node3 || node1 == node4)
-				return GenerateFaceWithNodes(order, ref centerOfElement, node2, node3, node4);
+				return GenerateFaceWithNodes(order, ref centerOfElement, node2, node3, node4); // face is collapsed to triangle
 			if (node2 == node3 || node2 == node4)
-				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node3, node4);
+				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node3, node4); // face is collapsed to triangle
 			if (node3 == node4)
-				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node2, node4);
+				return GenerateFaceWithNodes(order, ref centerOfElement, node1, node2, node4); // face is collapsed to triangle
 
 			Element2D result = new QuadFaceOfElement3D(this, order, node1, node2, node3, node4);
 

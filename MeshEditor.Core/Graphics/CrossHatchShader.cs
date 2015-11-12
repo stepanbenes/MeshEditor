@@ -14,7 +14,6 @@ namespace MeshEditor.Graphics
 
 		private readonly string vertexShaderString =
 @"
-
 varying vec4 color;
 
 void main()
@@ -26,8 +25,8 @@ void main()
 
 		private readonly string fragmentShaderString =
 @"
-
 uniform vec4 propertyColors[255];
+
 varying vec4 color;
 
 void main()
@@ -94,11 +93,15 @@ void main()
 
 		private readonly string vertexShaderLightingString =
 @"
-
 varying vec4 color;
+varying float NdotL;
 
 void main()
 {
+	vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+	vec4 position = gl_ModelViewMatrix * gl_Vertex;
+	vec3 lightVector = normalize(gl_LightSource[0].position.xyz - position.xyz);
+	NdotL = abs(dot(normal, lightVector.xyz));
 	color = gl_Color;
 	gl_Position = ftransform();
 }
@@ -106,17 +109,113 @@ void main()
 
 		private readonly string fragmentShaderLightingString =
 @"
-
 uniform vec4 propertyColors[255];
+
 varying vec4 color;
+varying float NdotL;
 
 void main()
 {
+	vec4 finalColor;
 
+	int alphaIndex = int(color.a * 256.0);
+	if (alphaIndex < 255)
+	{
+		if (alphaIndex > 0)
+		{
+			int greenIndex = int(color.g * 256.0);
+			int redIndex = int(color.r * 256.0);
+			float bandwidth = 20.0;
+			if (greenIndex > 0)
+			{
+				bandwidth += 10.0;
+				if (redIndex > 0)
+				{
+					bandwidth += 10.0;
+				}
+			}
+
+			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
+			if (modulo40 < 10.0)
+			{
+				finalColor = propertyColors[alphaIndex];
+			}
+			else if (modulo40 < 20.0)
+			{
+				int blueIndex = int(color.b * 256.0);
+				finalColor = propertyColors[blueIndex];
+			}
+			else if (modulo40 < 30.0)
+			{
+				finalColor = propertyColors[greenIndex];
+			}
+			else
+			{
+				finalColor = propertyColors[redIndex];
+			}
+		}
+		else
+		{
+			float modulo20 = mod(gl_FragCoord.x + gl_FragCoord.y, 20.0);
+			if (modulo20 < 10.0)
+			{
+				finalColor = color;
+			}
+			else
+			{
+				finalColor = vec4(0, 0, 0, 0); // black
+			}
+		}
+	}
+	else
+	{
+		finalColor = color;
+	}
+
+	vec4 diffuse = finalColor * gl_LightSource[0].diffuse;
+	vec4 ambient = finalColor * gl_LightSource[0].ambient + finalColor * gl_LightModel.ambient;
+
+	gl_FragColor = ambient + NdotL * diffuse;
 }
 ";
 
 		#endregion
+
+//		#region Per-vertex lighting shaders
+
+//		private readonly string perVertexLightingVertexShaderString =
+//@"
+
+//varying vec4 color;
+
+//void main()
+//{
+//	vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+//	vec4 position = gl_ModelViewMatrix * gl_Vertex;
+//	vec3 lightVector = normalize(gl_LightSource[0].position.xyz - position.xyz);
+//	float df = abs(dot(normal, lightVector.xyz));
+	
+//	vec4 diffuse = gl_Color * gl_LightSource[0].diffuse;
+//	vec4 ambient = gl_Color * gl_LightSource[0].ambient + gl_Color * gl_LightModel.ambient;
+
+//	color = ambient + df * diffuse;
+//	gl_Position = ftransform();
+//}
+//";
+
+//		private readonly string perVertexLightingFragmentShaderString =
+//@"
+
+//uniform vec4 propertyColors[255];
+//varying vec4 color;
+
+//void main()
+//{
+//	gl_FragColor = color;
+//}
+//";
+
+//		#endregion
 
 		#region Fields, constructor
 

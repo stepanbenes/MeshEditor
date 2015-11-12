@@ -11,188 +11,11 @@ namespace MeshEditor.DataVisualizer.Graphics
 {
 	public class IsoAreasShader : ShaderHolder
 	{
-		private readonly string vertexShaderLightingString =
-@"
-
-varying vec4 color;
-
-varying vec4 diffuse, ambient;
-varying vec3 normal, halfVector;
-
-void main()
-{
-	/* first transform the normal into eye space and
-	normalize the result */
-	normal = normalize(gl_NormalMatrix * gl_Normal);
- 
-	/* pass the halfVector to the fragment shader */
-	halfVector = gl_LightSource[0].halfVector.xyz;
- 
-	/* Compute the diffuse, ambient and globalAmbient terms */
-	diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
-	ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;
-	ambient += gl_LightModel.ambient * gl_FrontMaterial.ambient;
-
-	color = gl_Color;
-	gl_Position = ftransform();
-}
-";
-
-		private readonly string fragmentShaderLightingString =
-@"
-
-uniform int subIntervalNumber;
-uniform int controlPointCount;
-uniform vec3 controlPoints[5];
-
-varying vec4 color;
-
-varying vec4 diffuse, ambient;
-varying vec3 normal, halfVector;
-
-void main()
-{
-	// LIGHTING ----------------------------------------------
-	vec3 n, halfV, lightDir;
-	float NdotL, NdotHV;
- 
-	lightDir = vec3(gl_LightSource[0].position);
- 
-	/* The ambient term will always be present */
-	vec4 lightColor = ambient;
-	/* a fragment shader can't write a varying variable, hence we need
-	a new variable to store the normalized interpolated normal */
-	n = normalize(normal);
-	/* compute the dot product between normal and ldir */
- 
-	/* for ONE-SIDED Lighting:
-	NdotL = max(dot(n, lightDir), 0.0);
-	if (NdotL > 0.0)
-	{
-	    lightColor += diffuse * NdotL;
-	    halfV = normalize(halfVector);
-	    NdotHV = max(dot(n, halfV), 0.0);
-	    lightColor += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
-	}
-	*/
-
-	NdotL = abs(dot(n, lightDir));
-
-	lightColor += diffuse * NdotL;
-	halfV = normalize(halfVector);
-	NdotHV = abs(dot(n, halfV));
-	lightColor += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
-
-	gl_FragColor = lightColor * 2.0;
-
-	// -------------------------------------------------------
-
-	if (color.a < 0.999) // special color - undefined value, out-of-range value, selection
-	{
-		gl_FragColor *= color;
-		return;
-	}
-
-	vec3 first, second;
-	vec3 u, v;
-	float minDistance = 1e20; // initial big number
-	float crossLength, uLength, distance;
-
-	// compute distance of color from interval
-	
-	// 0 - 1
-	u = controlPoints[1] - controlPoints[0];
-	v = color.rgb - controlPoints[0];
-	crossLength = length(cross(u, v));
-	uLength = length(u);
-	distance = crossLength / uLength;
-	if (distance < minDistance)
-	{
-		minDistance = distance;
-		first = controlPoints[0];
-		second = controlPoints[1];
-	}
-
-	// 1 - 2
-	if (controlPointCount > 2)
-	{
-		u = controlPoints[2] - controlPoints[1];
-		v = color.rgb - controlPoints[1];
-		crossLength = length(cross(u, v));
-		uLength = length(u);
-		distance = crossLength / uLength;
-		if (distance < minDistance)
-		{
-			minDistance = distance;
-			first = controlPoints[1];
-			second = controlPoints[2];
-		}
-
-		// 2 - 3
-		if (controlPointCount > 3)
-		{
-			u = controlPoints[3] - controlPoints[2];
-			v = color.rgb - controlPoints[2];
-			crossLength = length(cross(u, v));
-			uLength = length(u);
-			distance = crossLength / uLength;
-			if (distance < minDistance)
-			{
-				minDistance = distance;
-				first = controlPoints[2];
-				second = controlPoints[3];
-			}
-
-			// 3 - 4
-			if (controlPointCount > 4)
-			{
-				u = controlPoints[4] - controlPoints[3];
-				v = color.rgb - controlPoints[3];
-				crossLength = length(cross(u, v));
-				uLength = length(u);
-				distance = crossLength / uLength;
-				if (distance < minDistance)
-				{
-					minDistance = distance;
-					first = controlPoints[3];
-					second = controlPoints[4];
-				}
-			}
-		}
-	}
-
-	// -----------------------------------
-
-	vec3 interval = second - first;
-	float projection;
-
-	if (subIntervalNumber > 1)
-	{
-		// compute projection of color to interval
-		vec3 div = color.rgb - first;
-		float intervalLength = length(interval);
-		projection = dot(div, interval) / (intervalLength * intervalLength);
-
-		// restrict to sub-interval
-		float step = 1.0 / float(subIntervalNumber - 1);
-		projection = step * floor(projection / step + 0.5);
-	}
-	else
-	{
-		projection = 0.5;
-	}
-
-	// set color
-	gl_FragColor.rgb *= interval * projection + first; // interpolate
-	//gl_FragColor.a = color.a;
-}
-";
 
 		#region Non-lighting shaders
 
 		private readonly string vertexShaderString =
 @"
-
 varying vec4 color;
 
 void main()
@@ -204,7 +27,6 @@ void main()
 
 		private readonly string fragmentShaderString =
 @"
-
 uniform int subIntervalNumber;
 uniform int controlPointCount;
 uniform vec3 controlPoints[5];
@@ -321,6 +143,145 @@ void main()
 	// set color
 	gl_FragColor.rgb = interval * projection + first; // interpolate
 	gl_FragColor.a = color.a;
+}
+";
+
+		#endregion
+
+		#region Lighting shaders
+
+		private readonly string vertexShaderLightingString =
+@"
+varying vec4 color;
+varying float NdotL;
+
+void main()
+{
+	vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+	vec4 position = gl_ModelViewMatrix * gl_Vertex;
+	vec3 lightVector = normalize(gl_LightSource[0].position.xyz - position.xyz);
+	NdotL = abs(dot(normal, lightVector.xyz));
+	color = gl_Color;
+	gl_Position = ftransform();
+}
+";
+
+		private readonly string fragmentShaderLightingString =
+@"
+uniform int subIntervalNumber;
+uniform int controlPointCount;
+uniform vec3 controlPoints[5];
+
+varying vec4 color;
+varying float NdotL;
+
+void main()
+{
+	vec4 finalColor;
+
+	if (color.a < 0.999) // special color - undefined value, out-of-range value, selection
+	{
+		finalColor = color;
+	}
+	else
+	{
+		vec3 first, second;
+		vec3 u, v;
+		float minDistance = 1e20; // initial big number
+		float crossLength, uLength, distance;
+
+		// compute distance of color from interval
+		
+		// 0 - 1
+		u = controlPoints[1] - controlPoints[0];
+		v = color.rgb - controlPoints[0];
+		crossLength = length(cross(u, v));
+		uLength = length(u);
+		distance = crossLength / uLength;
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			first = controlPoints[0];
+			second = controlPoints[1];
+		}
+
+		// 1 - 2
+		if (controlPointCount > 2)
+		{
+			u = controlPoints[2] - controlPoints[1];
+			v = color.rgb - controlPoints[1];
+			crossLength = length(cross(u, v));
+			uLength = length(u);
+			distance = crossLength / uLength;
+			if (distance < minDistance)
+			{
+				minDistance = distance;
+				first = controlPoints[1];
+				second = controlPoints[2];
+			}
+
+			// 2 - 3
+			if (controlPointCount > 3)
+			{
+				u = controlPoints[3] - controlPoints[2];
+				v = color.rgb - controlPoints[2];
+				crossLength = length(cross(u, v));
+				uLength = length(u);
+				distance = crossLength / uLength;
+				if (distance < minDistance)
+				{
+					minDistance = distance;
+					first = controlPoints[2];
+					second = controlPoints[3];
+				}
+
+				// 3 - 4
+				if (controlPointCount > 4)
+				{
+					u = controlPoints[4] - controlPoints[3];
+					v = color.rgb - controlPoints[3];
+					crossLength = length(cross(u, v));
+					uLength = length(u);
+					distance = crossLength / uLength;
+					if (distance < minDistance)
+					{
+						minDistance = distance;
+						first = controlPoints[3];
+						second = controlPoints[4];
+					}
+				}
+			}
+		}
+
+		// -----------------------------------
+
+		vec3 interval = second - first;
+		float projection;
+
+		if (subIntervalNumber > 1)
+		{
+			// compute projection of color to interval
+			vec3 div = color.rgb - first;
+			float intervalLength = length(interval);
+			projection = dot(div, interval) / (intervalLength * intervalLength);
+
+			// restrict to sub-interval
+			float step = 1.0 / float(subIntervalNumber - 1);
+			projection = step * floor(projection / step + 0.5);
+		}
+		else
+		{
+			projection = 0.5;
+		}
+
+		// set color
+		finalColor = vec4(interval * projection + first, color.a);
+	}
+
+	vec4 diffuse = finalColor * gl_LightSource[0].diffuse;
+	vec4 ambient = finalColor * gl_LightSource[0].ambient + finalColor * gl_LightModel.ambient;
+
+	gl_FragColor = ambient + NdotL * diffuse;
 }
 ";
 
