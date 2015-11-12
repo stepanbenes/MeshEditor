@@ -37,22 +37,18 @@ void main()
 	{
 		if (alphaIndex > 0)
 		{
-			int blueIndex = int(color.b * 256.0);
 			int greenIndex = int(color.g * 256.0);
 			int redIndex = int(color.r * 256.0);
-			float bandwidth = 10.0;
-			if (blueIndex > 0)
+			float bandwidth = 20.0;
+			if (greenIndex > 0)
 			{
 				bandwidth += 10.0;
-				if (greenIndex > 0)
+				if (redIndex > 0)
 				{
 					bandwidth += 10.0;
-					if (redIndex > 0)
-					{
-						bandwidth += 10.0;
-					}
 				}
 			}
+
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
 			if (modulo40 < 10.0)
 			{
@@ -60,6 +56,7 @@ void main()
 			}
 			else if (modulo40 < 20.0)
 			{
+				int blueIndex = int(color.b * 256.0);
 				gl_FragColor = propertyColors[blueIndex];
 			}
 			else if (modulo40 < 30.0)
