@@ -25,7 +25,7 @@ void main()
 
 		private readonly string fragmentShaderString =
 @"
-uniform vec4 propertyColors[255];
+uniform vec4 propertyColors[254];
 
 varying vec4 color;
 
@@ -51,20 +51,20 @@ void main()
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
 			if (modulo40 < 10.0)
 			{
-				gl_FragColor = propertyColors[alphaIndex];
+				gl_FragColor = propertyColors[alphaIndex - 1];
 			}
 			else if (modulo40 < 20.0)
 			{
 				int blueIndex = int(color.b * 256.0);
-				gl_FragColor = propertyColors[blueIndex];
+				gl_FragColor = propertyColors[blueIndex - 1];
 			}
 			else if (modulo40 < 30.0)
 			{
-				gl_FragColor = propertyColors[greenIndex];
+				gl_FragColor = propertyColors[greenIndex - 1];
 			}
 			else
 			{
-				gl_FragColor = propertyColors[redIndex];
+				gl_FragColor = propertyColors[redIndex - 1];
 			}
 		}
 		else
@@ -109,7 +109,7 @@ void main()
 
 		private readonly string fragmentShaderLightingString =
 @"
-uniform vec4 propertyColors[255];
+uniform vec4 propertyColors[254];
 
 varying vec4 color;
 varying float NdotL;
@@ -138,20 +138,20 @@ void main()
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
 			if (modulo40 < 10.0)
 			{
-				fragmentColorWithoutLight = propertyColors[alphaIndex];
+				fragmentColorWithoutLight = propertyColors[alphaIndex - 1];
 			}
 			else if (modulo40 < 20.0)
 			{
 				int blueIndex = int(color.b * 256.0);
-				fragmentColorWithoutLight = propertyColors[blueIndex];
+				fragmentColorWithoutLight = propertyColors[blueIndex - 1];
 			}
 			else if (modulo40 < 30.0)
 			{
-				fragmentColorWithoutLight = propertyColors[greenIndex];
+				fragmentColorWithoutLight = propertyColors[greenIndex - 1];
 			}
 			else
 			{
-				fragmentColorWithoutLight = propertyColors[redIndex];
+				fragmentColorWithoutLight = propertyColors[redIndex - 1];
 			}
 		}
 		else
@@ -264,7 +264,7 @@ void main()
 
 			GL.UseProgram(Program);
 
-			int propertyColorsArrayLength = Math.Min(colorPalette.Length, 255);
+			int propertyColorsArrayLength = Math.Min(colorPalette.Length, 254);
 			float[] colorComponents = new float[propertyColorsArrayLength * 4];
 
 			for (int i = 0; i < propertyColorsArrayLength; i++)

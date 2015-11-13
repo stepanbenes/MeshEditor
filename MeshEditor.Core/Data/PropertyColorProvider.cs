@@ -7,6 +7,7 @@ using System.Linq;
 
 using Utils = MeshEditor.Utilities.Functions;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace MeshEditor.Data
 {
@@ -17,6 +18,8 @@ namespace MeshEditor.Data
 	{
 
 		#region Fields, Constructor
+
+		private static readonly Dictionary<Property, int> defaultColors;
 
 		private static readonly List<int> colorPalette;
 		private static readonly Dictionary<Property, int> colorIndices;
@@ -38,8 +41,11 @@ namespace MeshEditor.Data
 			distinguishedHuesCount = 20;
 			availableLuminances = new float[] { 0.6f, 0.4f, 0.7f, 0.3f, 0.8f, 0.2f };
 
+			defaultColors = new Dictionary<Property, int>();
+
 			colorPalette = new List<int>();
 			colorIndices = new Dictionary<Property, int>();
+
 			initializeColorEngine();
 		}
 
@@ -49,11 +55,6 @@ namespace MeshEditor.Data
 
 		private static void initializeColorEngine()
 		{
-			colorPalette.Clear();
-			colorIndices.Clear();
-			colorIndices[Property.Zero] = colorPalette.Count;
-			colorPalette.Add(Utils.ColorToRgba32(Color.White));
-			
 			currentHue = startHue;
 			currentLuminanceIndex = 0;
 			currentLevelColorCount = 0;
@@ -61,8 +62,14 @@ namespace MeshEditor.Data
 
 		private static int getNewPropertyColor(Property property)
 		{
+			if (property.IsZero)
+			{
+				return Utils.ColorToRgba32(Color.White);
+			}
+
 			//return Utils.ColorToRgba32(Color.FromArgb(RandomNumber.GetRandomByte(), RandomNumber.GetRandomByte(), RandomNumber.GetRandomByte()));
 			//Console.WriteLine("hue: " + currentHue);
+
 			int result = Utils.HslToRgba32(currentHue, saturation, availableLuminances[currentLuminanceIndex]);
 			currentLevelColorCount++;
 			if (currentLevelColorCount >= distinguishedHuesCount)
@@ -108,6 +115,7 @@ namespace MeshEditor.Data
 
 		public static Color Get(Property property)
 		{
+			Debug.Assert(colorIndices.ContainsKey(property));
 			// parse RGBA in big endian
 			int color = GetRGBA32(property);
 			int a = (color >> 24) & 0x000000FF;
@@ -119,30 +127,29 @@ namespace MeshEditor.Data
 
 		public static void Set(Property property, Color color)
 		{
+			Debug.Assert(colorIndices.ContainsKey(property));
 			int rgba = 0;
 			rgba |= color.R;
 			rgba |= color.G << 8;
 			rgba |= color.B << 16;
 			rgba |= color.A << 24;
-			colorIndices[property] = colorPalette.Count;
-			colorPalette.Add(rgba);
+			int index = colorIndices[property];
+			colorPalette[index] = rgba;
 		}
 
 		public static void ArrangeColorForProperty(Property property)
 		{
 			if (!colorIndices.ContainsKey(property))
 			{
-				colorIndices[property] = colorPalette.Count;
-				colorPalette.Add(getNewPropertyColor(property));
-			}
-		}
+				int color;
+				if (!defaultColors.TryGetValue(property, out color)) // try get color from cache
+				{
+					color = getNewPropertyColor(property);
+					defaultColors[property] = color;
+				}
 
-		public static void LoadPropertyColors(IDictionary<Property, Color> newPropertyColors)
-		{
-			initializeColorEngine();
-			foreach (var pair in newPropertyColors)
-			{
-				Set(pair.Key, pair.Value);
+				colorIndices[property] = colorPalette.Count;
+				colorPalette.Add(color);
 			}
 		}
 
@@ -156,20 +163,29 @@ namespace MeshEditor.Data
 			return result;
 		}
 
+		#region Serialization of default property colors
+
+		public static void LoadPropertyColors(IDictionary<Property, Color> newPropertyColors)
+		{
+			foreach (var pair in newPropertyColors)
+			{
+				if (colorIndices.ContainsKey(pair.Key))
+				{
+					Set(pair.Key, pair.Value);
+				}
+			}
+		}
+
 		public static void LoadPropertyColorsFromFile(string filename)
 		{
 			try
 			{
 				XElement rootElement = XElement.Load(filename);
-
-				initializeColorEngine();
-
 				foreach (var element in rootElement.Elements())
 				{
 					Property property = new Property((int)element.Attribute("id"));
 					int color = int.Parse(element.Value);
-					colorIndices[property] = colorPalette.Count;
-					colorPalette.Add(color);
+					defaultColors[property] = color;
 				}
 			}
 #if !DEBUG
@@ -182,12 +198,12 @@ namespace MeshEditor.Data
 		{
 			try
 			{
-				XElement rootElement = new XElement("PropertyColors", colorIndices.Select(kv =>
-					{
-						var propertyElement = new XElement("Property", colorPalette[kv.Value]);
-						propertyElement.SetAttributeValue("id", kv.Key);
-						return propertyElement;
-					}));
+				XElement rootElement = new XElement("PropertyColors", defaultColors.Select(kv =>
+				{
+					var propertyElement = new XElement("Property", kv.Value);
+					propertyElement.SetAttributeValue("id", kv.Key);
+					return propertyElement;
+				}));
 				rootElement.Save(filename);
 			}
 #if !DEBUG
@@ -198,15 +214,14 @@ namespace MeshEditor.Data
 
 		public static void ResetToDefaults()
 		{
-			var allUsedProperties = GetAllUsedPropertiesSorted();
-
 			initializeColorEngine();
-
-			foreach (var property in allUsedProperties)
+			foreach (Property property in colorIndices.Keys)
 			{
-				ArrangeColorForProperty(property);
+				colorPalette[colorIndices[property]] = getNewPropertyColor(property);
 			}
 		}
+
+		#endregion
 
 		#endregion
 

@@ -1070,35 +1070,36 @@ namespace MeshEditor.Data
 		{
             if (face.HasTwinElements)
 			{
+				// value 0 and 255 have special meaning. 0 means no color in this slot, 255 in alpha slot means no twin elements, other number is 1-based index to color palette
 				int colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(baseProperty);
-				if (colorPaletteIndex > 254) // color is out of palette
+				if (colorPaletteIndex > 253) // color is out of palette
 				{
 					return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
 				}
 				int shift = 24;
-				int color = colorPaletteIndex << shift;
+				int color = (colorPaletteIndex + 1) << shift; // indexes are 1-based
 				foreach (Element2D twin in face.GetTwinElements())
 				{
 					colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(twin.Property);
-					if (colorPaletteIndex > 254) // color is out of palette
+					if (colorPaletteIndex > 253) // color is out of palette
 					{
 						return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
 					}
-					if (colorPaletteIndex != 0) // ignore zero property
+					if (!twin.Property.IsZero) // ignore zero property
 					{
 						shift -= 8;
 						if (shift < 0) // exceeded limit of 4 representable colors
 						{
 							return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
 						}
-						color |= colorPaletteIndex << shift;
+						color |= (colorPaletteIndex + 1) << shift; // indexes are 1-based
 					}
 				}
 				return color;
 			}
 			else
 			{
-				return PropertyColorProvider.GetRGBA32(baseProperty); // | unchecked((int)0xFF000000);
+				return PropertyColorProvider.GetRGBA32(baseProperty) | unchecked((int)0xFF000000);
 			}
 		}
 

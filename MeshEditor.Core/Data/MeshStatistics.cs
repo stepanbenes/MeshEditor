@@ -119,7 +119,10 @@ namespace MeshEditor.Data
 		public void AddProperty(Property property, EntityType targetEntityType)
 		{
 			if (property == Property.Zero) // zero means no property, do not add to dictionary
+			{
+				PropertyColorProvider.ArrangeColorForProperty(property);
 				return;
+			}
 			if (allUsedProperties == null)
 				allUsedProperties = new Dictionary<Property, List<EntityType>>();
 			List<EntityType> entityTypeList;
