@@ -177,11 +177,11 @@ varying float NdotL;
 
 void main()
 {
-	vec4 finalColor;
+	vec4 fragmentColorWithoutLight;
 
 	if (color.a < 0.999) // special color - undefined value, out-of-range value, selection
 	{
-		finalColor = color;
+		fragmentColorWithoutLight = color;
 	}
 	else
 	{
@@ -275,11 +275,11 @@ void main()
 		}
 
 		// set color
-		finalColor = vec4(interval * projection + first, color.a);
+		fragmentColorWithoutLight = vec4(interval * projection + first, color.a);
 	}
 
-	vec4 diffuse = finalColor * gl_LightSource[0].diffuse;
-	vec4 ambient = finalColor * gl_LightSource[0].ambient + finalColor * gl_LightModel.ambient;
+	vec4 diffuse = fragmentColorWithoutLight * gl_LightSource[0].diffuse;
+	vec4 ambient = fragmentColorWithoutLight * gl_LightSource[0].ambient + fragmentColorWithoutLight * gl_LightModel.ambient;
 
 	gl_FragColor = ambient + NdotL * diffuse;
 }

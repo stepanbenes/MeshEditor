@@ -116,7 +116,7 @@ varying float NdotL;
 
 void main()
 {
-	vec4 finalColor;
+	vec4 fragmentColorWithoutLight;
 
 	int alphaIndex = int(color.a * 256.0);
 	if (alphaIndex < 255)
@@ -138,20 +138,20 @@ void main()
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
 			if (modulo40 < 10.0)
 			{
-				finalColor = propertyColors[alphaIndex];
+				fragmentColorWithoutLight = propertyColors[alphaIndex];
 			}
 			else if (modulo40 < 20.0)
 			{
 				int blueIndex = int(color.b * 256.0);
-				finalColor = propertyColors[blueIndex];
+				fragmentColorWithoutLight = propertyColors[blueIndex];
 			}
 			else if (modulo40 < 30.0)
 			{
-				finalColor = propertyColors[greenIndex];
+				fragmentColorWithoutLight = propertyColors[greenIndex];
 			}
 			else
 			{
-				finalColor = propertyColors[redIndex];
+				fragmentColorWithoutLight = propertyColors[redIndex];
 			}
 		}
 		else
@@ -159,21 +159,21 @@ void main()
 			float modulo20 = mod(gl_FragCoord.x + gl_FragCoord.y, 20.0);
 			if (modulo20 < 10.0)
 			{
-				finalColor = color;
+				fragmentColorWithoutLight = color;
 			}
 			else
 			{
-				finalColor = vec4(0, 0, 0, 0); // black
+				fragmentColorWithoutLight = vec4(0, 0, 0, 0); // black
 			}
 		}
 	}
 	else
 	{
-		finalColor = color;
+		fragmentColorWithoutLight = color;
 	}
 
-	vec4 diffuse = finalColor * gl_LightSource[0].diffuse;
-	vec4 ambient = finalColor * gl_LightSource[0].ambient + finalColor * gl_LightModel.ambient;
+	vec4 diffuse = fragmentColorWithoutLight * gl_LightSource[0].diffuse;
+	vec4 ambient = fragmentColorWithoutLight * gl_LightSource[0].ambient + fragmentColorWithoutLight * gl_LightModel.ambient;
 
 	gl_FragColor = ambient + NdotL * diffuse;
 }
