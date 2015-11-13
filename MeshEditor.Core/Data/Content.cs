@@ -1070,21 +1070,17 @@ namespace MeshEditor.Data
 		{
             if (face.HasTwinElements)
 			{
+				if (baseProperty.IsZero)
+				{
+					return PropertyColorProvider.ZeroColor_RGBA32 & 0x00FFFFFF; // return zero color, set alpha to zero
+				}
 				// value 0 and 255 have special meaning. 0 means no color in this slot, 255 in alpha slot means no twin elements, other number is 1-based index to color palette
 				int colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(baseProperty);
-				if (colorPaletteIndex > 253) // color is out of palette
-				{
-					return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
-				}
 				int shift = 24;
 				int color = (colorPaletteIndex + 1) << shift; // indexes are 1-based
 				foreach (Element2D twin in face.GetTwinElements())
 				{
 					colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(twin.Property);
-					if (colorPaletteIndex > 253) // color is out of palette
-					{
-						return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
-					}
 					if (!twin.Property.IsZero) // ignore zero property of twin elements (zero base property is not ignored)
 					{
 						shift -= 8;

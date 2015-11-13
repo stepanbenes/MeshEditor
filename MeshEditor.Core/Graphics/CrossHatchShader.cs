@@ -257,17 +257,16 @@ void main()
 
 		public void Use(int[] colorPalette)
 		{
-			Debug.Assert(colorPalette != null && colorPalette.Length > 0);
+			Debug.Assert(colorPalette != null && colorPalette.Length == 254);
 
 			if (!IsReady)
 				return;
 
 			GL.UseProgram(Program);
 
-			int propertyColorsArrayLength = Math.Min(colorPalette.Length, 254);
-			float[] colorComponents = new float[propertyColorsArrayLength * 4];
+			float[] colorComponents = new float[colorPalette.Length * 4];
 
-			for (int i = 0; i < propertyColorsArrayLength; i++)
+			for (int i = 0; i < colorPalette.Length; i++)
 			{
 				float red, green, blue;
 				Utilities.Functions.GetColorComponents(colorPalette[i], out red, out green, out blue);
@@ -277,7 +276,7 @@ void main()
 				colorComponents[i * 4 + 3] = 1.0f; // alpha
 			}
 
-			GL.Uniform4(propertyColorsArrayLocation, propertyColorsArrayLength, colorComponents);
+			GL.Uniform4(propertyColorsArrayLocation, colorPalette.Length, colorComponents);
 		}
 
 		public void Unuse()

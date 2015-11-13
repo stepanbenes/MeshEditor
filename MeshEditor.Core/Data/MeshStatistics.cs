@@ -120,7 +120,7 @@ namespace MeshEditor.Data
 		{
 			if (property == Property.Zero) // zero means no property, do not add to dictionary
 			{
-				PropertyColorProvider.ArrangeColorForProperty(property);
+				PropertyColorProvider.AddProperty(property);
 				return;
 			}
 			if (allUsedProperties == null)
@@ -137,7 +137,7 @@ namespace MeshEditor.Data
 				entityTypeList.Add(entityType);
 
 			// set color for this property if not already done
-			PropertyColorProvider.ArrangeColorForProperty(property);
+			PropertyColorProvider.AddProperty(property);
 		}
 
 		public void AddElementType(ElementType type)
