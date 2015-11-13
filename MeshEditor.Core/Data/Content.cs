@@ -1085,7 +1085,7 @@ namespace MeshEditor.Data
 					{
 						return PropertyColorProvider.GetRGBA32(baseProperty) & 0x00FFFFFF; // return original color, set alpha to zero
 					}
-					if (!twin.Property.IsZero) // ignore zero property
+					if (!twin.Property.IsZero) // ignore zero property of twin elements (zero base property is not ignored)
 					{
 						shift -= 8;
 						if (shift < 0) // exceeded limit of 4 representable colors
@@ -1099,7 +1099,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				return PropertyColorProvider.GetRGBA32(baseProperty) | unchecked((int)0xFF000000);
+				return PropertyColorProvider.GetRGBA32(baseProperty) | unchecked((int)0xFF000000); // return original color with alpha set to 255
 			}
 		}
 

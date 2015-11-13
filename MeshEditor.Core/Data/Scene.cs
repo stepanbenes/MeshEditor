@@ -1142,10 +1142,9 @@ namespace MeshEditor.Data
 					if (item != null)
 					{
 						newSelection.Add(item);
-						Element2D face = item as Element2D;
-						if (face != null && face.HasTwinElements)
+						if (faceHit != null && faceHit.HasTwinElements)
 						{
-							addAllTwinElementsOfFaceToSet(face, newSelection);
+							addAllTwinElementsOfFaceToSet(faceHit, newSelection);
 						}
 					}
 					break;
