@@ -255,18 +255,19 @@ void main()
 
 		#region Public methods
 
-		public void Use(int[] colorPalette)
+		public void Use(/*TODO: IReadOnlyList<int>*/ IList<int> colorPalette)
 		{
-			Debug.Assert(colorPalette != null && colorPalette.Length == 254);
+			Debug.Assert(colorPalette != null && colorPalette.Count > 0);
 
 			if (!IsReady)
 				return;
 
 			GL.UseProgram(Program);
 
-			float[] colorComponents = new float[colorPalette.Length * 4];
+			int propertyColorsArrayLength = Math.Min(colorPalette.Count, 254);
+			float[] colorComponents = new float[propertyColorsArrayLength * 4];
 
-			for (int i = 0; i < colorPalette.Length; i++)
+			for (int i = 0; i < propertyColorsArrayLength; i++)
 			{
 				float red, green, blue;
 				Utilities.Functions.GetColorComponents(colorPalette[i], out red, out green, out blue);
@@ -276,7 +277,7 @@ void main()
 				colorComponents[i * 4 + 3] = 1.0f; // alpha
 			}
 
-			GL.Uniform4(propertyColorsArrayLocation, colorPalette.Length, colorComponents);
+			GL.Uniform4(propertyColorsArrayLocation, propertyColorsArrayLength, colorComponents);
 		}
 
 		public void Unuse()

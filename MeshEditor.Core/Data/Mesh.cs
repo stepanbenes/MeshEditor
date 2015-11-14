@@ -83,7 +83,7 @@ namespace MeshEditor.Data
             this.colorMode = PropertyColorsMode.None;
 
 			this.totalNodeCount = 0;
-			this.content = new Content();
+			this.content = new Content(parentMesh: this);
 			this.hiddenItemsProperties = new EdgeFacePropertySet();
 
             this.buffersAreReady = false;
@@ -531,7 +531,7 @@ namespace MeshEditor.Data
 				else if (userCrossHatching)
 				{
 					initializeCrossHatchShader(); // multiple property colors hatching shader
-					crossHatchShader.Use(PropertyColorProvider.GetColorPalette());
+					crossHatchShader.Use(statistics.GetElementPropertyColorsPalette());
 				}
 
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, showNumbers, camera);

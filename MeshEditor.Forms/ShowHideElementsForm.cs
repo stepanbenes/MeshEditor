@@ -102,8 +102,8 @@ namespace MeshEditor.WinUI
 				if (statistics.PropertyComments.TryGetValue(property, out description))
 					item.SubItems.Add(description);
 				// --------------------------------------------------
-				//item.Checked = allProperties[property];
-				item.Checked = (lastUsedCutInfo == null || lastUsedCutInfo.ElementPropertiesToShow == null || lastUsedCutInfo.ElementPropertiesToShow.Contains(property));
+				item.Checked = allProperties[property];
+				//item.Checked = (lastUsedCutInfo == null || lastUsedCutInfo.ElementPropertiesToShow == null || lastUsedCutInfo.ElementPropertiesToShow.Contains(property));
 				// --------------------------------------------------
 				// set property color as background
 				item.BackColor = PropertyColorProvider.Get(property);

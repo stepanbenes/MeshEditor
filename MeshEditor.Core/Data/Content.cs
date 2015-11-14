@@ -25,11 +25,12 @@ namespace MeshEditor.Data
 	/// </summary>
 	public class Content
 	{
-		
+
 		#region Fields
 
 		// ---------------------------------------------------------------
-		
+		private readonly Mesh parentMesh;
+
 		private List<Element> elements;
 		private List<Beam> beams;
 		private List<Element2D> faces;
@@ -78,8 +79,10 @@ namespace MeshEditor.Data
 
 		#region Constructor, initialization
 
-		public Content()
+		public Content(Mesh parentMesh)
 		{
+			this.parentMesh = parentMesh;
+
 			this.elements = new List<Element>();
 			this.beams = new List<Beam>();
 			this.faces = new List<Element2D>();
@@ -1066,21 +1069,21 @@ namespace MeshEditor.Data
 			//textPrinter.End(); // restores projection matrix
 		}
 
-		private static int getRGBA32ColorForFace(Element2D face, Property baseProperty)
+		private int getRGBA32ColorForFace(Element2D face, Property baseProperty)
 		{
             if (face.HasTwinElements)
 			{
-				if (baseProperty.IsZero)
-				{
-					return PropertyColorProvider.ZeroColor_RGBA32 & 0x00FFFFFF; // return zero color, set alpha to zero
-				}
+				//if (baseProperty.IsZero)
+				//{
+				//	return PropertyColorProvider.ZeroColor_RGBA32 & 0x00FFFFFF; // return zero color, set alpha to zero
+				//}
 				// value 0 and 255 have special meaning. 0 means no color in this slot, 255 in alpha slot means no twin elements, other number is 1-based index to color palette
-				int colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(baseProperty);
+				int colorPaletteIndex = parentMesh.Statistics.GetIndexOfPropertyInElementPropertyColorsPalette(baseProperty);
 				int shift = 24;
 				int color = (colorPaletteIndex + 1) << shift; // indexes are 1-based
 				foreach (Element2D twin in face.GetTwinElements())
 				{
-					colorPaletteIndex = PropertyColorProvider.GetIndexInColorPalette(twin.Property);
+					colorPaletteIndex = parentMesh.Statistics.GetIndexOfPropertyInElementPropertyColorsPalette(twin.Property);
 					if (!twin.Property.IsZero) // ignore zero property of twin elements (zero base property is not ignored)
 					{
 						shift -= 8;

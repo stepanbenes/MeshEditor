@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Graphics;
 using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace MeshEditor.Data
 {
@@ -16,7 +17,7 @@ namespace MeshEditor.Data
 
 		#region Fields, constructor
 
-		private Dictionary<Property, List<EntityType>> allUsedProperties;
+		private Dictionary<EntityType, HashSet<Property>> allUsedProperties;
 		private HashSet<ElementType> includedElementTypes;
 		private Dictionary<Property, string> propertyComments;
 		private Dictionary<PropertyEntityPair, List<PropertyCommand>> propertyCommands;
@@ -30,25 +31,23 @@ namespace MeshEditor.Data
 
 		private string propertyCommandsFile;
 
-		//public event EventHandler RecreateBuffersNeeded;
+		private Dictionary<Property, int> regionPropertyColorsPaletteIndexMap;
 
 		public MeshStatistics()
 		{
-			this.allUsedProperties = null;
+			this.allUsedProperties = new Dictionary<EntityType, HashSet<Property>>();
 			this.includedElementTypes = new HashSet<ElementType>();
 			this.propertyComments = new Dictionary<Property, string>();
 			this.propertyCommands = new Dictionary<PropertyEntityPair, List<PropertyCommand>>();
 
-			edgeAnglesHistogram = null;
+			this.edgeAnglesHistogram = null;
 			this.softBorderLimit = Scene.DefaultFirstBorderAngleLimit;
 			this.hardBorderLimit = Scene.DefaultSecondBorderAngleLimit;
 
 			this.minimalElementRadius = 0f;
 			this.minimalElementRadiusWasSetFlag = false;
 
-			// ================================================
-			// !!!
-			//propertyDescriptions[new Property(4)] = "ctyrka je nejlepsi";
+			this.regionPropertyColorsPaletteIndexMap = new Dictionary<Property, int>();
 		}
 
 		#endregion
@@ -108,36 +107,32 @@ namespace MeshEditor.Data
 
 		#region Public methods
 
-		//public void AddProperty(Property property, bool isElementProperty)
-		//{
-		//    if (!propertyDescriptions.ContainsKey(property))
-		//        propertyDescriptions[property] = string.Empty;
-		//    if (isElementProperty)
-		//        includedElementProperties.Add(property);
-		//}
-
 		public void AddProperty(Property property, EntityType targetEntityType)
 		{
-			if (property == Property.Zero) // zero means no property, do not add to dictionary
-			{
-				PropertyColorProvider.AddProperty(property);
-				return;
-			}
-			if (allUsedProperties == null)
-				allUsedProperties = new Dictionary<Property, List<EntityType>>();
-			List<EntityType> entityTypeList;
-			if (!allUsedProperties.TryGetValue(property, out entityTypeList))
-				entityTypeList = allUsedProperties[property] = new List<EntityType>();
-
 			EntityType entityType = targetEntityType;
 			if (targetEntityType == EntityType.Patch || targetEntityType == EntityType.Shell) // I suppose that SURFACE is equal to PATCH is equal to SHELL
+			{
 				entityType = EntityType.Surface;
+			}
 
-			if (!entityTypeList.Contains(entityType))
-				entityTypeList.Add(entityType);
+			if (!property.IsZero) // zero means no property, do not add to dictionary
+			{
+				HashSet<Property> propertyList;
+				if (!allUsedProperties.TryGetValue(entityType, out propertyList))
+				{
+					propertyList = allUsedProperties[entityType] = new HashSet<Property>();
+				}
+				propertyList.Add(property);
+			}
 
 			// set color for this property if not already done
-			PropertyColorProvider.AddProperty(property);
+			PropertyColorProvider.ArrangeColorForProperty(property);
+
+			if (entityType == EntityType.Region && !regionPropertyColorsPaletteIndexMap.ContainsKey(property))
+			{
+				int index = regionPropertyColorsPaletteIndexMap.Count;
+				regionPropertyColorsPaletteIndexMap.Add(property, index);
+			}
 		}
 
 		public void AddElementType(ElementType type)
@@ -149,8 +144,6 @@ namespace MeshEditor.Data
 		{
 			this.softBorderLimit = soft;
 			this.hardBorderLimit = hard;
-			//if (RecreateBuffersNeeded != null)
-			//    RecreateBuffersNeeded(this, EventArgs.Empty);
 		}
 
 		public ElementType[] GetIncludedElementTypesArray()
@@ -162,11 +155,36 @@ namespace MeshEditor.Data
 
 		public IEnumerable<PropertyEntityPair> GetAllPropertyEntityPairs()
 		{
-			if (allUsedProperties == null)
-				yield break;
-			foreach (Property property in allUsedProperties.Keys)
-				foreach (EntityType entityType in allUsedProperties[property])
+			foreach (EntityType entityType in allUsedProperties.Keys)
+			{
+				foreach (Property property in allUsedProperties[entityType])
+				{
 					yield return new PropertyEntityPair(property, entityType);
+				}
+			}
+		}
+
+		public /*TODO: IReadOnlyCollection<Property>*/ ICollection<Property> GetPropertiesOFEntityType(EntityType entityType)
+		{
+			HashSet<Property> properties;
+			if (!allUsedProperties.TryGetValue(entityType, out properties))
+				return new Collection<Property>();
+			return properties;
+		}
+
+		public /*TODO: IReadOnlyList<int>*/ IList<int> GetElementPropertyColorsPalette()
+		{
+			int[] colorPalette = new int[regionPropertyColorsPaletteIndexMap.Count];
+			foreach (var propertyIndex in regionPropertyColorsPaletteIndexMap)
+			{
+				colorPalette[propertyIndex.Value] = PropertyColorProvider.GetRGBA32(propertyIndex.Key);
+			}
+			return colorPalette;
+		}
+
+		public int GetIndexOfPropertyInElementPropertyColorsPalette(Property property)
+		{
+			return regionPropertyColorsPaletteIndexMap[property];
 		}
 
 		#endregion
