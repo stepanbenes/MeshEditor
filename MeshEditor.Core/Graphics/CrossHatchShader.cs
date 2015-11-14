@@ -49,16 +49,16 @@ void main()
 			}
 
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
-			if (modulo40 < 10.0)
+			if (modulo40 <= 10.0)
 			{
 				gl_FragColor = propertyColors[alphaIndex - 1];
 			}
-			else if (modulo40 < 20.0)
+			else if (modulo40 <= 20.0)
 			{
 				int blueIndex = int(color.b * 256.0);
 				gl_FragColor = propertyColors[blueIndex - 1];
 			}
-			else if (modulo40 < 30.0)
+			else if (modulo40 <= 30.0)
 			{
 				gl_FragColor = propertyColors[greenIndex - 1];
 			}
@@ -70,7 +70,7 @@ void main()
 		else
 		{
 			float modulo20 = mod(gl_FragCoord.x + gl_FragCoord.y, 20.0);
-			if (modulo20 < 10.0)
+			if (modulo20 <= 10.0)
 			{
 				gl_FragColor = color;
 			}
@@ -136,16 +136,16 @@ void main()
 			}
 
 			float modulo40 = mod(gl_FragCoord.x + gl_FragCoord.y, bandwidth);
-			if (modulo40 < 10.0)
+			if (modulo40 <= 10.0)
 			{
 				fragmentColorWithoutLight = propertyColors[alphaIndex - 1];
 			}
-			else if (modulo40 < 20.0)
+			else if (modulo40 <= 20.0)
 			{
 				int blueIndex = int(color.b * 256.0);
 				fragmentColorWithoutLight = propertyColors[blueIndex - 1];
 			}
-			else if (modulo40 < 30.0)
+			else if (modulo40 <= 30.0)
 			{
 				fragmentColorWithoutLight = propertyColors[greenIndex - 1];
 			}
@@ -157,7 +157,7 @@ void main()
 		else
 		{
 			float modulo20 = mod(gl_FragCoord.x + gl_FragCoord.y, 20.0);
-			if (modulo20 < 10.0)
+			if (modulo20 <= 10.0)
 			{
 				fragmentColorWithoutLight = color;
 			}
