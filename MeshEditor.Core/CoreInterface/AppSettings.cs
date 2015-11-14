@@ -387,7 +387,7 @@ namespace MeshEditor.CoreInterface
 		}
 
 		[ReadOnly(true)]
-		[DisplayName("OpenGL version support"), Description("Supported OpenGL version by your graphics card (for smooth run is recommended version 1.5+)")]
+		[DisplayName("OpenGL version support"), Description("Supported OpenGL version by your graphics card (version 2.0+ is recommended)")]
 		public string OpenGLVersion
 		{
 			get { return Utilities.Functions.GetOpenGLVersionString(); }

@@ -1209,14 +1209,11 @@ namespace MeshEditor.CoreInterface
 			SetValue(AvailableValue.RenderMode, mode);
 		}
 		
-		public bool CheckIfVBOisNotSupported()
+		public bool CheckOpenGLVersion()
 		{
-			if (scene.Mesh == null)
-				return false;
-			if (RichVBO.IsSupported/* && scene.Mesh.BuffersAreReady*/)
-				return false;
-			// nejsou buffery
-			return true;
+			int major, minor;
+			Utilities.Functions.GetOpenGLVersion(out major, out minor);
+			return major >= 2;
 		}
 
 		#endregion
