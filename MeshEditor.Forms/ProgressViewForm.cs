@@ -40,6 +40,7 @@ namespace MeshEditor.WinUI
 
 		string caption, operationName;
 		int percentIndicator;
+		bool quitRequested;
 
 		/// <summary>
 		/// udalost informujici o tom ze uzivatel stiskl tlacitko Cancel - zrusil prubeh procesu
@@ -102,5 +103,18 @@ namespace MeshEditor.WinUI
 			buttonCancel.Enabled = false;
 		}
 
+		public void Quit()
+		{
+			quitRequested = true;
+			this.Close();
+		}
+
+		protected override void OnClosing(CancelEventArgs e)
+		{
+			if (!quitRequested)
+			{
+				e.Cancel = true;
+			}
+		}
 	}
 }

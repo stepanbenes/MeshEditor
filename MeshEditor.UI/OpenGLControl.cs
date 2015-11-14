@@ -599,7 +599,7 @@ namespace MeshEditor.WinUI
 			}
 			if (progressViewForm != null)
 			{
-				progressViewForm.Close();
+				progressViewForm.Quit();
 				progressViewForm = null;
 			}
 
@@ -646,7 +646,7 @@ namespace MeshEditor.WinUI
 				progressViewForm.SetProgressState(e.ProgressPercentage);
 				if (e.ProgressPercentage >= 100)
 				{
-					progressViewForm.Close();
+					progressViewForm.Quit();
 					progressViewForm = null;
 				}
 			}
@@ -707,7 +707,7 @@ namespace MeshEditor.WinUI
 		{
 			if (progressViewForm != null)
 			{
-				progressViewForm.Close();
+				progressViewForm.Quit();
 				progressViewForm = null;
 			}
 			GC.Collect();

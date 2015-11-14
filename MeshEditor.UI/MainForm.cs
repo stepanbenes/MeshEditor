@@ -1199,7 +1199,7 @@ namespace MeshEditor.WinUI
 				updateStatus();
 				if (progressViewForm != null)
 				{
-					progressViewForm.Close();
+					progressViewForm.Quit();
 					progressViewForm = null;
 				}
 			};
