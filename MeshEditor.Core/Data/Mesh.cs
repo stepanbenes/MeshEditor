@@ -80,7 +80,7 @@ namespace MeshEditor.Data
 
 			this.selectedItems = new HashSet<ISelectable>();
 
-            this.colorMode = PropertyColorsMode.None;
+			this.colorMode = PropertyColorsMode.Elements | PropertyColorsMode.Beams;
 
 			this.totalNodeCount = 0;
 			this.content = new Content(parentMesh: this);
