@@ -121,8 +121,7 @@ namespace MeshEditor.Data
 		{
 			if (!colorPalette.ContainsKey(property))
 			{
-				int color = getNewPropertyColor(property);
-				colorPalette[property] = color;
+				colorPalette[property] = getNewPropertyColor(property);
 			}
 		}
 
@@ -137,17 +136,6 @@ namespace MeshEditor.Data
 			foreach (Property property in colorPalette.Keys)
 			{
 				result.Add(property, Get(property));
-			}
-			return result;
-		}
-
-		public static int[] GetColorPaletteForProperties(/*TODO: IReadOnlyList<Property>*/ IList<Property> properties)
-		{
-			Debug.Assert(properties != null);
-			int[] result = new int[properties.Count];
-			for (int i = 0; i < properties.Count; i++)
-			{
-				result[i] = GetRGBA32(properties[i]);
 			}
 			return result;
 		}
@@ -173,7 +161,7 @@ namespace MeshEditor.Data
 				foreach (var element in rootElement.Elements())
 				{
 					Property property = new Property((int)element.Attribute("propertyId"));
-					int color = int.Parse(element.Value);
+					int color = int.Parse(element.Value, System.Globalization.NumberStyles.HexNumber);
 					colorPalette[property] = color;
 				}
 			}
@@ -187,10 +175,10 @@ namespace MeshEditor.Data
 		{
 			try
 			{
-				XElement rootElement = new XElement("PropertyColors", colorPalette.Select(kv =>
+				XElement rootElement = new XElement("PropertyColors", GetAllUsedPropertiesSorted().Select(property =>
 				{
-					var propertyElement = new XElement("Color", kv.Value);
-					propertyElement.SetAttributeValue("propertyId", kv.Key);
+					var propertyElement = new XElement("Color", colorPalette[property].ToString("X8"));
+					propertyElement.SetAttributeValue("propertyId", property.Value.ToString());
 					return propertyElement;
 				}));
 				rootElement.Save(filename);
