@@ -26,6 +26,7 @@ namespace MeshEditor.CoreInterface
 		SelectedItemsDescription, // string
 		MinimalElementRadius, // int
 		MeshElementPropertiesSorted, // Property[] //(Sorted array)
+		AllMeshPropertiesSorted, // Property[] //(Sorted array)
 		RenderMode, // PropertyColorsMode
 		ColorMode, // RenderMode
 		Status, // string

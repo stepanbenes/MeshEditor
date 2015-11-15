@@ -821,6 +821,10 @@ namespace MeshEditor.CoreInterface
 					return scene.GetSelectedItemsDescription();
 				case AvailableValue.MeshElementPropertiesSorted:
 					return scene.GetElementPropertiesSorted();
+				case AvailableValue.AllMeshPropertiesSorted:
+					if (scene.Mesh == null)
+						return null;
+					return scene.Mesh.Statistics.GetAllPropertiesSorted();
 				case AvailableValue.RenderMode:
 					return scene.RenderMode;
 				case AvailableValue.ColorMode:

@@ -1683,7 +1683,7 @@ namespace MeshEditor.WinUI
 
 		private void configurePropertyColorsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(propertyColorsConfigFilePath, openGLControls.Select(c => c.SceneFacade));
+			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(propertyColorsConfigFilePath, openGLControls.Select(c => c.SceneFacade), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
 			configurePropertyColorsForm.ShowDialog();
 		}
 

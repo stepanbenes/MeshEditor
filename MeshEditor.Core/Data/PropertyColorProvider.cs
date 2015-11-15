@@ -142,10 +142,11 @@ namespace MeshEditor.Data
 
 		#region Serialization of default property colors
 
-		public static void LoadPropertyColors(/*TODO: IReadOnlyDictionary<TKey, TValue>*/ IDictionary<Property, Color> newPropertyColors)
+		public static void UpdatePropertyColors(/*TODO: IReadOnlyDictionary<TKey, TValue>*/ IDictionary<Property, Color> propertyColorsToUpdate)
 		{
-			foreach (var pair in newPropertyColors)
+			foreach (var pair in propertyColorsToUpdate)
 			{
+				Debug.Assert(colorPalette.ContainsKey(pair.Key));
 				if (colorPalette.ContainsKey(pair.Key))
 				{
 					Set(pair.Key, pair.Value);
@@ -192,7 +193,7 @@ namespace MeshEditor.Data
 		public static void ResetToDefaults()
 		{
 			initializeColorEngine();
-			foreach (Property property in colorPalette.Keys.ToArray())
+			foreach (Property property in GetAllUsedPropertiesSorted().ToArray())
 			{
 				colorPalette[property] = getNewPropertyColor(property);
 			}

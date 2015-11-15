@@ -15,13 +15,16 @@ namespace MeshEditor.WinUI
 	{
 		IEnumerable<SceneFacade> scenes;
 		bool isDataDirty = false;
-		IDictionary<Property, Color> savedPropertyColors;
+		IEnumerable<Property> propertiesToShow;
+        IDictionary<Property, Color> savedPropertyColors;
+
 		string propertyColorsConfigFilePath;
 
-        public ConfigurePropertyColorsForm(string propertyColorsConfigFilePath, IEnumerable<SceneFacade> scenes)
+        public ConfigurePropertyColorsForm(string propertyColorsConfigFilePath, IEnumerable<SceneFacade> scenes, IEnumerable<Property> propertiesToShow)
 		{
 			InitializeComponent();
 
+			this.propertiesToShow = propertiesToShow ?? PropertyColorProvider.GetAllUsedPropertiesSorted();
 			this.scenes = scenes;
 			this.propertyColorsConfigFilePath = propertyColorsConfigFilePath;
 
@@ -33,7 +36,7 @@ namespace MeshEditor.WinUI
 		{
 			contentPanel.Controls.Clear();
 			int controlTop = 2;
-			foreach (Property property in PropertyColorProvider.GetAllUsedPropertiesSorted())
+			foreach (Property property in propertiesToShow)
 			{
 				var color = PropertyColorProvider.Get(property);
 
@@ -73,7 +76,7 @@ namespace MeshEditor.WinUI
 		{
 			if (isDataDirty)
 			{
-				PropertyColorProvider.LoadPropertyColors(savedPropertyColors);
+				PropertyColorProvider.UpdatePropertyColors(savedPropertyColors);
 				updateColorBuffers();
 			}
 		}

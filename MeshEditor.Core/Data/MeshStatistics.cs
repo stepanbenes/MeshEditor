@@ -164,6 +164,11 @@ namespace MeshEditor.Data
 			}
 		}
 
+		public IEnumerable<Property> GetAllPropertiesSorted()
+		{
+			return allUsedProperties.SelectMany(pair => pair.Value).OrderBy(p => p.Value).Distinct();
+		}
+
 		public /*TODO: IReadOnlyCollection<Property>*/ ICollection<Property> GetPropertiesOFEntityType(EntityType entityType)
 		{
 			HashSet<Property> properties;
