@@ -213,10 +213,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Resources\porshe.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\help32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hinkley.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
