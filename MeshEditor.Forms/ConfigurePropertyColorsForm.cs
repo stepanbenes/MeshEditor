@@ -16,7 +16,7 @@ namespace MeshEditor.WinUI
 		IEnumerable<SceneFacade> scenes;
 		bool isDataDirty = false;
 		IEnumerable<Property> propertiesToShow;
-        IDictionary<Property, Color> savedPropertyColors;
+        IReadOnlyDictionary<Property, Color> savedPropertyColors;
 
 		string propertyColorsConfigFilePath;
 

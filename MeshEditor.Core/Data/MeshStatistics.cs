@@ -169,7 +169,7 @@ namespace MeshEditor.Data
 			return allUsedProperties.SelectMany(pair => pair.Value).OrderBy(p => p.Value).Distinct();
 		}
 
-		public /*TODO: IReadOnlyCollection<Property>*/ ICollection<Property> GetPropertiesOFEntityType(EntityType entityType)
+		public /*TODO: .NET4.6+ IReadOnlyCollection<Property>*/ ICollection<Property> GetPropertiesOFEntityType(EntityType entityType)
 		{
 			HashSet<Property> properties;
 			if (!allUsedProperties.TryGetValue(entityType, out properties))
@@ -177,7 +177,7 @@ namespace MeshEditor.Data
 			return properties;
 		}
 
-		public /*TODO: IReadOnlyList<int>*/ IList<int> GetElementPropertyColorsPalette()
+		public IReadOnlyList<int> GetElementPropertyColorsPalette()
 		{
 			int[] colorPalette = new int[regionPropertyColorsPaletteIndexMap.Count];
 			foreach (var propertyIndex in regionPropertyColorsPaletteIndexMap)

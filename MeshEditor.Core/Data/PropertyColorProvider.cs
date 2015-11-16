@@ -130,7 +130,7 @@ namespace MeshEditor.Data
 			return colorPalette.Keys.OrderBy(p => p.Value);
 		}
 
-		public static /*TODO: IReadOnlyDictionary<TKey, TValue>*/ IDictionary<Property, Color> GetAllPropertyColors()
+		public static IReadOnlyDictionary<Property, Color> GetAllPropertyColors()
 		{
 			Dictionary<Property, Color> result = new Dictionary<Property, Color>();
 			foreach (Property property in colorPalette.Keys)
@@ -142,7 +142,7 @@ namespace MeshEditor.Data
 
 		#region Serialization of default property colors
 
-		public static void UpdatePropertyColors(/*TODO: IReadOnlyDictionary<TKey, TValue>*/ IDictionary<Property, Color> propertyColorsToUpdate)
+		public static void UpdatePropertyColors(IReadOnlyDictionary<Property, Color> propertyColorsToUpdate)
 		{
 			foreach (var pair in propertyColorsToUpdate)
 			{

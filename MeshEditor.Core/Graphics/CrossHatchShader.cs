@@ -255,7 +255,7 @@ void main()
 
 		#region Public methods
 
-		public void Use(/*TODO: IReadOnlyList<int>*/ IList<int> colorPalette)
+		public void Use(IReadOnlyList<int> colorPalette)
 		{
 			Debug.Assert(colorPalette != null && colorPalette.Count > 0);
 
