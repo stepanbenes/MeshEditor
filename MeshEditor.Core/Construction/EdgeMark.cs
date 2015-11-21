@@ -11,17 +11,17 @@ namespace MeshEditor.Construction
 	{
 		private int node1ID, node2ID;
 
-		public EdgeMark(int value1, int value2)
+		public EdgeMark(int node1ID, int node2ID)
 		{
-			if (value1 < value2)
+			if (node1ID < node2ID)
 			{
-				node1ID = value1;
-				node2ID = value2;
+				this.node1ID = node1ID;
+				this.node2ID = node2ID;
 			}
 			else
 			{
-				node1ID = value2;
-				node2ID = value1;
+				this.node1ID = node2ID;
+				this.node2ID = node1ID;
 			}
 		}
 

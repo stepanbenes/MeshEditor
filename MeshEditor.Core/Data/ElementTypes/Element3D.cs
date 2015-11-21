@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using MeshEditor.Cuts;
+using MeshEditor.Construction;
 
 namespace MeshEditor.Data
 {
@@ -39,7 +40,7 @@ namespace MeshEditor.Data
 			get { return nodes.Length; }
 		}
 
-		public abstract IEnumerable<Element2D> GenerateAllFaces(Dictionary<Element2D, Node[]> additionalNodes);
+		public abstract IEnumerable<Element2D> GenerateAllFaces(Dictionary<EdgeMark, Node> quadraticNodesCache);
 
 		public override Vector3 GetCenter()
 		{

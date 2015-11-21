@@ -48,7 +48,7 @@ namespace MeshEditor.Data
 		{
 			get
 			{ 
-				return elementType != 0 && ((int)elementType % 2 == 0);
+				return (int)elementType % 2 == 0; // WARNING: dependency on exact values of ElementType's options; ElementType with value 0 leads to quadratic approximation
 			}
 		}
 

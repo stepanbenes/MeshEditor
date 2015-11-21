@@ -33,7 +33,7 @@ namespace MeshEditor.Construction
 		private EdgeFacePropertySet hiddenItemsProperties;
 
 		private List<Beam> oneDimensionalElements;
-		private Dictionary<Element2D, Node[]> additionalQuadraticNodes;
+		private Dictionary<EdgeMark, Node> quadraticNodesCache;
 
 		private Dictionary<EdgeMark, Property[]> edgeProperties;
 
@@ -52,7 +52,7 @@ namespace MeshEditor.Construction
 			this.hiddenItemsProperties = null;
 
 			this.oneDimensionalElements = new List<Beam>();
-			this.additionalQuadraticNodes = new Dictionary<Element2D, Node[]>();
+			this.quadraticNodesCache = new Dictionary<EdgeMark, Node>();
 
 			this.edgeProperties = new Dictionary<EdgeMark, Property[]>();
 		}
@@ -219,7 +219,7 @@ namespace MeshEditor.Construction
 				edgeMarks = null;
 				hiddenItemsProperties = null;
 				oneDimensionalElements = null;
-				additionalQuadraticNodes = null;
+				quadraticNodesCache = null;
 			}
 		}
 
@@ -488,14 +488,19 @@ namespace MeshEditor.Construction
 					break;
 				case ElementType.TriangleQuadratic:
 					newElement = new Triangle(draft.ID, elementType, nodesOfElement[0], nodesOfElement[1], nodesOfElement[2]);
-					additionalQuadraticNodes[(Element2D)newElement] = new Node[] { nodesOfElement[3], nodesOfElement[4], nodesOfElement[5] };
+					quadraticNodesCache[new EdgeMark(nodesOfElement[0].ID, nodesOfElement[1].ID)] = nodesOfElement[3];
+					quadraticNodesCache[new EdgeMark(nodesOfElement[1].ID, nodesOfElement[2].ID)] = nodesOfElement[4];
+					quadraticNodesCache[new EdgeMark(nodesOfElement[2].ID, nodesOfElement[0].ID)] = nodesOfElement[5];
 					break;
 				case ElementType.QuadLinear:
 					newElement = new Quadrilateral(draft.ID, elementType, nodesOfElement[0], nodesOfElement[1], nodesOfElement[2], nodesOfElement[3]);
 					break;
 				case ElementType.QuadQuadratic:
 					newElement = new Quadrilateral(draft.ID, elementType, nodesOfElement[0], nodesOfElement[1], nodesOfElement[2], nodesOfElement[3]);
-					additionalQuadraticNodes[(Element2D)newElement] = new Node[] { nodesOfElement[4], nodesOfElement[5], nodesOfElement[6], nodesOfElement[7] };
+					quadraticNodesCache[new EdgeMark(nodesOfElement[0].ID, nodesOfElement[1].ID)] = nodesOfElement[4];
+					quadraticNodesCache[new EdgeMark(nodesOfElement[1].ID, nodesOfElement[2].ID)] = nodesOfElement[5];
+					quadraticNodesCache[new EdgeMark(nodesOfElement[2].ID, nodesOfElement[3].ID)] = nodesOfElement[6];
+					quadraticNodesCache[new EdgeMark(nodesOfElement[3].ID, nodesOfElement[0].ID)] = nodesOfElement[7];
 					break;
 				case ElementType.TetrahedronLinear:
 				case ElementType.TetrahedronQuadratic:
@@ -593,8 +598,10 @@ namespace MeshEditor.Construction
 			Element3D e3D = e as Element3D;
 			if (e3D != null)
 			{
-				foreach (Element2D f in e3D.GenerateAllFaces(this.additionalQuadraticNodes/*do toho se zapisuje, necte se*/)) // vygeneruju plochy tohoto prvku
+				foreach (Element2D f in e3D.GenerateAllFaces(this.quadraticNodesCache/*do toho se zapisuje, necte se*/)) // vygeneruju plochy tohoto prvku
+				{
 					processFace(f);
+				}
 				return;
 			}
 			Element2D e2D = e as Element2D;
@@ -647,7 +654,6 @@ namespace MeshEditor.Construction
 					}
 					else
 					{
-						additionalQuadraticNodes.Remove(currentTriangle);
 						triangleFaces.Remove(mark); // it is internal face, remove it from surface representation
 					}
 
@@ -675,7 +681,6 @@ namespace MeshEditor.Construction
 						}
 						else
 						{
-							additionalQuadraticNodes.Remove(currentTriangle);
 							triangleFaces.Remove(mark); // remove it from surface representation
 						}
 					}
@@ -736,7 +741,6 @@ namespace MeshEditor.Construction
 					}
 					else
 					{
-						additionalQuadraticNodes.Remove(currentQuad);
 						quadFaces.Remove(mark); // it is internal face, remove it from surface representation
 					}
 
@@ -764,7 +768,6 @@ namespace MeshEditor.Construction
 						}
 						else
 						{
-							additionalQuadraticNodes.Remove(currentQuad);
 							quadFaces.Remove(mark); // remove it from surface representation
 						}
 					}
@@ -964,9 +967,9 @@ namespace MeshEditor.Construction
 			{
 				switch (rank)
 				{
-					case 0: return new QuadraticEdge(t.Node1, t.Node2, additionalQuadraticNodes[t][rank], t);
-					case 1: return new QuadraticEdge(t.Node2, t.Node3, additionalQuadraticNodes[t][rank], t);
-					case 2: return new QuadraticEdge(t.Node3, t.Node1, additionalQuadraticNodes[t][rank], t);
+					case 0: return new QuadraticEdge(t.Node1, t.Node2, quadraticNodesCache[new EdgeMark(t.Node1.ID, t.Node2.ID)], t);
+					case 1: return new QuadraticEdge(t.Node2, t.Node3, quadraticNodesCache[new EdgeMark(t.Node2.ID, t.Node3.ID)], t);
+					case 2: return new QuadraticEdge(t.Node3, t.Node1, quadraticNodesCache[new EdgeMark(t.Node3.ID, t.Node1.ID)], t);
 					default: throw new ArgumentException();
 				}
 			}
@@ -989,10 +992,10 @@ namespace MeshEditor.Construction
 			{
 				switch (rank)
 				{
-					case 0: return new QuadraticEdge(q.Node1, q.Node2, additionalQuadraticNodes[q][rank], q);
-					case 1: return new QuadraticEdge(q.Node2, q.Node3, additionalQuadraticNodes[q][rank], q);
-					case 2: return new QuadraticEdge(q.Node3, q.Node4, additionalQuadraticNodes[q][rank], q);
-					case 3: return new QuadraticEdge(q.Node4, q.Node1, additionalQuadraticNodes[q][rank], q);
+					case 0: return new QuadraticEdge(q.Node1, q.Node2, quadraticNodesCache[new EdgeMark(q.Node1.ID, q.Node2.ID)], q);
+					case 1: return new QuadraticEdge(q.Node2, q.Node3, quadraticNodesCache[new EdgeMark(q.Node2.ID, q.Node3.ID)], q);
+					case 2: return new QuadraticEdge(q.Node3, q.Node4, quadraticNodesCache[new EdgeMark(q.Node3.ID, q.Node4.ID)], q);
+					case 3: return new QuadraticEdge(q.Node4, q.Node1, quadraticNodesCache[new EdgeMark(q.Node4.ID, q.Node1.ID)], q);
 					default: throw new ArgumentException();
 				}
 			}
@@ -1131,24 +1134,6 @@ namespace MeshEditor.Construction
 			mesh.ClearSurface();
 			this.meshHasTwinElements = mesh.HasTwinElements;
 
-			//foreach (Element e in mesh.Elements)
-			//{
-			//	if (visibleElements.Contains(e))
-			//	{
-			//		processElement(e);
-			//		// pokud to je kvadraticky 2D prvek, tak ho zpracovat
-			//		if (e.ApproximationIsQuadratic)
-			//		{
-			//			Element2D face = e as Element2D;
-			//			if (face != null)
-			//				processQuadraticNodesOfFace(face);
-			//		}
-			//	}
-			//	else
-			//	{
-			//		mesh.HiddenElements.Add(e);
-			//	}
-			//}
 
 			foreach (Element elementToShow in elementsToShow)
 			{
@@ -1181,7 +1166,11 @@ namespace MeshEditor.Construction
 
 		private void processQuadraticNodesOfFace(Element2D face)
 		{
-			additionalQuadraticNodes[face] = face.IterateThroughAllEdgeMiddleNodes().ToArray();
+			Debug.Assert(face.ApproximationIsQuadratic);
+			foreach (QuadraticEdge edge in face.IterateThroughAllEdges())
+			{
+				quadraticNodesCache[new EdgeMark(edge.BeginNode.ID, edge.EndNode.ID)] = edge.MiddleNode;
+			}
 		}
 
 		private void cutOrRestoreBeams(Mesh mesh, HashSet<Element> elementsToShow)

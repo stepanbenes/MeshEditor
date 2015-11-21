@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using MeshEditor.Cuts;
+using MeshEditor.Construction;
 
 namespace MeshEditor.Data
 {
@@ -15,7 +16,7 @@ namespace MeshEditor.Data
 			: base(id, type, nodes)
 		{ }
 
-		public override IEnumerable<Element2D> GenerateAllFaces(Dictionary<Element2D, Node[]> additionalNodes)
+		public override IEnumerable<Element2D> GenerateAllFaces(Dictionary<EdgeMark, Node> quadraticNodesCache)
 		{
 			Element2D face;
 			bool quadratic = ApproximationIsQuadratic;
@@ -24,35 +25,57 @@ namespace MeshEditor.Data
 			if (face != null)
 			{
 				if (quadratic)
-					additionalNodes[face] = new Node[] { nodes[8], nodes[7], nodes[6], nodes[5] };
+				{
+					quadraticNodesCache[new EdgeMark(nodes[0].ID, nodes[3].ID)] = nodes[8];
+					quadraticNodesCache[new EdgeMark(nodes[3].ID, nodes[2].ID)] = nodes[7];
+					quadraticNodesCache[new EdgeMark(nodes[2].ID, nodes[1].ID)] = nodes[6];
+					quadraticNodesCache[new EdgeMark(nodes[1].ID, nodes[0].ID)] = nodes[5];
+				}
 				yield return face;
 			}
 			face = GenerateFaceWithNodes(2, ref center, nodes[0], nodes[1], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
-					additionalNodes[face] = new Node[] { nodes[5], nodes[10], nodes[9] };
+				{
+					quadraticNodesCache[new EdgeMark(nodes[0].ID, nodes[1].ID)] = nodes[5];
+					quadraticNodesCache[new EdgeMark(nodes[1].ID, nodes[4].ID)] = nodes[10];
+					quadraticNodesCache[new EdgeMark(nodes[4].ID, nodes[0].ID)] = nodes[9];
+				}
 				yield return face;
 			}
 			face = GenerateFaceWithNodes(3, ref center, nodes[1], nodes[2], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
-					additionalNodes[face] = new Node[] { nodes[6], nodes[11], nodes[10] };
+				{
+					//additionalNodes[face] = new Node[] { nodes[6], nodes[11], nodes[10] };
+					quadraticNodesCache[new EdgeMark(nodes[1].ID, nodes[2].ID)] = nodes[6];
+					quadraticNodesCache[new EdgeMark(nodes[2].ID, nodes[4].ID)] = nodes[11];
+					quadraticNodesCache[new EdgeMark(nodes[4].ID, nodes[1].ID)] = nodes[10];
+				}
 				yield return face;
 			}
 			face = GenerateFaceWithNodes(4, ref center, nodes[2], nodes[3], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
-					additionalNodes[face] = new Node[] { nodes[7], nodes[12], nodes[11] };
+				{
+					quadraticNodesCache[new EdgeMark(nodes[2].ID, nodes[3].ID)] = nodes[7];
+					quadraticNodesCache[new EdgeMark(nodes[3].ID, nodes[4].ID)] = nodes[12];
+					quadraticNodesCache[new EdgeMark(nodes[4].ID, nodes[2].ID)] = nodes[11];
+				}
 				yield return face;
 			}
 			face = GenerateFaceWithNodes(5, ref center, nodes[3], nodes[0], nodes[4]);
 			if (face != null)
 			{
 				if (quadratic)
-					additionalNodes[face] = new Node[] { nodes[8], nodes[9], nodes[12] };
+				{
+					quadraticNodesCache[new EdgeMark(nodes[3].ID, nodes[0].ID)] = nodes[8];
+					quadraticNodesCache[new EdgeMark(nodes[0].ID, nodes[4].ID)] = nodes[9];
+					quadraticNodesCache[new EdgeMark(nodes[4].ID, nodes[3].ID)] = nodes[12];
+				}
 				yield return face;
 			}
 
