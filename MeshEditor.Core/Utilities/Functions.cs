@@ -120,6 +120,54 @@ namespace MeshEditor.Utilities
 			array[oldLength] = item;
 		}
 
+		/// <summary>
+		/// Returns true if array is ascendingly ordered.
+		/// </summary>
+		public static bool CheckIfArrayIsSorted<T>(T[] array) where T : IComparable<T>
+		{
+			if (array == null)
+				return true;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (array[i - 1].CompareTo(array[i]) > 0)
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Returns true if values in array create strictly increasing ordered set.
+		/// </summary>
+		public static bool CheckIfArrayIsStrictlyIncreasing<T>(T[] array) where T : IComparable<T>
+		{
+			if (array == null)
+				return true;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (array[i - 1].CompareTo(array[i]) >= 0)
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Returns true if array has no two equal items.
+		/// </summary>
+		public static bool CheckIfArrayContainsDistictItems<T>(T[] array) where T : IEquatable<T>
+		{
+			if (array == null)
+				return true;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (!array[i - 1].Equals(array[i]))
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Get vector of values which are absolute values of component of original vector.
+		/// </summary>
 		public static Vector3 Abs(Vector3 vector)
 		{
 			return new Vector3(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));

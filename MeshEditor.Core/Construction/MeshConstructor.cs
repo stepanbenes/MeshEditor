@@ -127,6 +127,7 @@ namespace MeshEditor.Construction
 
 				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
 				mesh.Statistics = statistics;
+				meshHasTwinElements = false;
 
 				// nacti prvky
 				//HashSet<Property> elementProperties = new HashSet<Property>();
@@ -627,95 +628,179 @@ namespace MeshEditor.Construction
 			throw new ArgumentException("Unknown face type");
 		}
 
-		private void processTriangleFace(Triangle face)
+		private void processTriangleFace(Triangle newTriangle)
 		{
-			TriangleMark mark = new TriangleMark(face.Node1.ID, face.Node2.ID, face.Node3.ID);
-			Triangle triangle;
-			if (triangleFaces.TryGetValue(mark, out triangle))
+			TriangleMark mark = new TriangleMark(newTriangle.Node1.ID, newTriangle.Node2.ID, newTriangle.Node3.ID);
+			Triangle currentTriangle;
+			if (triangleFaces.TryGetValue(mark, out currentTriangle)) // face match !
 			{
-				bool t1IsFaceOfElement3D = triangle is IFaceOfElement3D;
-				bool t2IsFaceOfElement3D = face is IFaceOfElement3D;
+				bool t1IsFaceOfElement3D = currentTriangle is IFaceOfElement3D;
+				bool t2IsFaceOfElement3D = newTriangle is IFaceOfElement3D;
 
 				if (t1IsFaceOfElement3D & t2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
-					additionalQuadraticNodes.Remove(triangle);
-					triangleFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
-
-					// pokud ma nenulovou vlastnost - tak ji uloz <!>
-					if (!triangle.Property.IsZero)
+					if (currentTriangle.HasTwinElements)
 					{
-						hiddenItemsProperties.Add(ref mark, triangle.Property);
+						Element2D firstTwinElement = currentTriangle.PopFirstTwinElement();
+						currentTriangle.MoveTwinElementsTo(firstTwinElement);
+						triangleFaces[mark] = (Triangle)firstTwinElement; // replace face of 3D element with first 2D twin element
+					}
+					else
+					{
+						additionalQuadraticNodes.Remove(currentTriangle);
+						triangleFaces.Remove(mark); // it is internal face, remove it from surface representation
+					}
+
+					if (!currentTriangle.Property.IsZero) // face is going to be hidden, save its property if it is non-zero
+					{
+						hiddenItemsProperties.Add(ref mark, currentTriangle.Property);
 					}
 				}
-				else if (t2IsFaceOfElement3D) // first is 2D element, second is face of 3D element
+				else if (t2IsFaceOfElement3D) // current is 2D element, new one is face of 3D element
 				{
-					triangleFaces[mark] = face; // replace 2D element with face of 3D element
-					face.AddTwinElement(triangle); // add 2D element as twin element
+					currentTriangle.MoveTwinElementsTo(newTriangle);
+					newTriangle.AddTwinElement(currentTriangle); // add 2D element as twin element
+					triangleFaces[mark] = newTriangle; // replace 2D element with face of 3D element
 					meshHasTwinElements = true;
 				}
-				else // second is 2D element
+				else // new one is 2D element
 				{
-					triangle.AddTwinElement(face);
-					meshHasTwinElements = true;
+					if (currentTriangle.Equals(newTriangle))
+					{
+						if (currentTriangle.HasTwinElements)
+						{
+							Element2D firstTwinElement = currentTriangle.PopFirstTwinElement();
+							currentTriangle.MoveTwinElementsTo(firstTwinElement);
+							triangleFaces[mark] = (Triangle)firstTwinElement; // replace with first twin element
+						}
+						else
+						{
+							additionalQuadraticNodes.Remove(currentTriangle);
+							triangleFaces.Remove(mark); // remove it from surface representation
+						}
+					}
+					else
+					{
+						if (currentTriangle.ContainsTwinElement(newTriangle)) // if already present remove it because we are in CUT mode
+						{
+							currentTriangle.RemoveTwinElement(newTriangle);
+						}
+						else
+						{
+							if (newTriangle.CompareTo(currentTriangle) > 0)
+							{
+								currentTriangle.AddTwinElement(newTriangle);
+							}
+							else
+							{
+								currentTriangle.MoveTwinElementsTo(newTriangle);
+								newTriangle.AddTwinElement(currentTriangle);
+								triangleFaces[mark] = newTriangle; // swap triangles
+							}
+							meshHasTwinElements = true;
+						}
+					}
 				}
 			}
-			else
+			else // face do not match
 			{
-				triangleFaces.Add(mark, face);
-				// priradit vlastnost <!>
-				if (face is IFaceOfElement3D)
+				triangleFaces.Add(mark, newTriangle);
+				// try to assign property if it was hidden previously
+				if (newTriangle is IFaceOfElement3D)
 				{
 					Property property;
 					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
 					{
-						face.Property = property;
+						newTriangle.Property = property;
 					}
 				}
 			}
 		}
 
-		private void processQuadFace(Quadrilateral face)
+		private void processQuadFace(Quadrilateral newQuad)
 		{
-			QuadMark mark = new QuadMark(face.Node1.ID, face.Node2.ID, face.Node3.ID, face.Node4.ID);
-			Quadrilateral quad;
-			if (quadFaces.TryGetValue(mark, out quad))
+			QuadMark mark = new QuadMark(newQuad.Node1.ID, newQuad.Node2.ID, newQuad.Node3.ID, newQuad.Node4.ID);
+			Quadrilateral currentQuad;
+			if (quadFaces.TryGetValue(mark, out currentQuad)) // face match !
 			{
-				bool q1IsFaceOfElement3D = quad is IFaceOfElement3D;
-				bool q2IsFaceOfElement3D = face is IFaceOfElement3D;
+				bool t1IsFaceOfElement3D = currentQuad is IFaceOfElement3D;
+				bool t2IsFaceOfElement3D = newQuad is IFaceOfElement3D;
 
-				if (q1IsFaceOfElement3D & q2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
+				if (t1IsFaceOfElement3D & t2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
-					additionalQuadraticNodes.Remove(quad);
-					quadFaces.Remove(mark); // je to vnitrni plocha, odstran ji z povrchove reprezentace
-
-					// plocha je vnitrni, pokud ma nenulovou vlastnost - tak ji uloz <!>
-					if (!quad.Property.IsZero)
+					if (currentQuad.HasTwinElements)
 					{
-						hiddenItemsProperties.Add(ref mark, quad.Property);
+						Element2D firstTwinElement = currentQuad.PopFirstTwinElement();
+						currentQuad.MoveTwinElementsTo(firstTwinElement);
+						quadFaces[mark] = (Quadrilateral)firstTwinElement; // replace face of 3D element with first 2D twin element
+					}
+					else
+					{
+						additionalQuadraticNodes.Remove(currentQuad);
+						quadFaces.Remove(mark); // it is internal face, remove it from surface representation
+					}
+
+					if (!currentQuad.Property.IsZero) // face is going to be hidden, save its property if it is non-zero
+					{
+						hiddenItemsProperties.Add(ref mark, currentQuad.Property);
 					}
 				}
-				else if (q2IsFaceOfElement3D) // first is 2D element, second is face of 3D element
+				else if (t2IsFaceOfElement3D) // current is 2D element, new one is face of 3D element
 				{
-					quadFaces[mark] = face; // replace 2D element with face of 3D element
-					face.AddTwinElement(quad); // add 2D element as twin element
+					currentQuad.MoveTwinElementsTo(newQuad);
+					newQuad.AddTwinElement(currentQuad); // add 2D element as twin element
+					quadFaces[mark] = newQuad; // replace 2D element with face of 3D element
 					meshHasTwinElements = true;
 				}
-				else // second is 2D element
+				else // new one is 2D element
 				{
-					quad.AddTwinElement(face);
-					meshHasTwinElements = true;
+					if (currentQuad.Equals(newQuad))
+					{
+						if (currentQuad.HasTwinElements)
+						{
+							Element2D firstTwinElement = currentQuad.PopFirstTwinElement();
+							currentQuad.MoveTwinElementsTo(firstTwinElement);
+							quadFaces[mark] = (Quadrilateral)firstTwinElement; // replace with first twin element
+						}
+						else
+						{
+							additionalQuadraticNodes.Remove(currentQuad);
+							quadFaces.Remove(mark); // remove it from surface representation
+						}
+					}
+					else
+					{
+						if (currentQuad.ContainsTwinElement(newQuad)) // if already present remove it because we are in CUT mode
+						{
+							currentQuad.RemoveTwinElement(newQuad);
+						}
+						else
+						{
+							if (newQuad.CompareTo(currentQuad) > 0)
+							{
+								currentQuad.AddTwinElement(newQuad);
+							}
+							else
+							{
+								currentQuad.MoveTwinElementsTo(newQuad);
+								newQuad.AddTwinElement(currentQuad);
+								quadFaces[mark] = newQuad; // swap triangles
+							}
+							meshHasTwinElements = true;
+						}
+					}
 				}
 			}
-			else
+			else // face do not match
 			{
-				quadFaces.Add(mark, face);
-				// priradit vlastnost <!>
-				if (face is IFaceOfElement3D)
+				quadFaces.Add(mark, newQuad);
+				// try to assign property if it was hidden previously
+				if (newQuad is IFaceOfElement3D)
 				{
 					Property property;
 					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
 					{
-						face.Property = property;
+						newQuad.Property = property;
 					}
 				}
 			}
@@ -989,8 +1074,29 @@ namespace MeshEditor.Construction
 
 		public void CutMesh(Mesh mesh, HashSet<Element> visibleElements)
 		{
-			mesh.SelectedItems = new HashSet<ISelectable>(); // odoznacit polozky
-			
+			mesh.SelectedItems = new HashSet<ISelectable>(); // unselect all items
+
+			HashSet<Element> elementsToShow = new HashSet<Element>();
+			HashSet<Element> elementsToHide = new HashSet<Element>();
+			foreach (Element e in mesh.Elements)
+			{
+				bool willBeVisible = visibleElements.Contains(e);
+				bool wasHidden = mesh.HiddenElements.Contains(e);
+				if (willBeVisible & wasHidden)
+				{
+					elementsToShow.Add(e);
+				}
+				else if (!willBeVisible & !wasHidden)
+				{
+					elementsToHide.Add(e);
+				}
+			}
+
+			if (elementsToShow.Count == 0 && elementsToHide.Count == 0)
+			{
+				return; // Nothing to do, quit
+			}
+
 			this.hiddenItemsProperties = mesh.HiddenItemsProperties; // nastavit odkaz na skryte polozky s vlastnostmi
 
 			// -------------------------------------------------------------
@@ -1010,34 +1116,50 @@ namespace MeshEditor.Construction
 				}
 			}
 
-			// remove all twin elements, they will be created in all-elements loop again
-			foreach (Element2D element2D in mesh.Elements.OfType<Element2D>())
+			// loop through old surface and create marks
+			// TODO: cache old marks from previous surface creation
+			foreach (Element2D face in mesh.Faces)
 			{
-				element2D.RemoveAllTwinElements();
+				processFace(face);
+				if (face.ApproximationIsQuadratic)
+				{
+					processQuadraticNodesOfFace(face);
+				}
 			}
 
 			// smazat povrchovou reprezentaci a buffery
 			mesh.ClearSurface();
-			mesh.HiddenElements.Clear();
-			meshHasTwinElements = false; // warning: set this to false only if the cutting algoritm will recreate the whole mesh
-			
-			foreach (Element e in mesh.Elements)
+			this.meshHasTwinElements = mesh.HasTwinElements;
+
+			//foreach (Element e in mesh.Elements)
+			//{
+			//	if (visibleElements.Contains(e))
+			//	{
+			//		processElement(e);
+			//		// pokud to je kvadraticky 2D prvek, tak ho zpracovat
+			//		if (e.ApproximationIsQuadratic)
+			//		{
+			//			Element2D face = e as Element2D;
+			//			if (face != null)
+			//				processQuadraticNodesOfFace(face);
+			//		}
+			//	}
+			//	else
+			//	{
+			//		mesh.HiddenElements.Add(e);
+			//	}
+			//}
+
+			foreach (Element elementToShow in elementsToShow)
 			{
-				if (visibleElements.Contains(e))
-				{
-					processElement(e);
-					// pokud to je kvadraticky 2D prvek, tak ho zpracovat
-					if (e.ApproximationIsQuadratic)
-					{
-						Element2D face = e as Element2D;
-						if (face != null)
-							processQuadraticNodesOfFace(face);
-					}
-				}
-				else
-				{
-					mesh.HiddenElements.Add(e);
-				}
+				processElement(elementToShow);
+				mesh.HiddenElements.Remove(elementToShow);
+			}
+
+			foreach (Element elementToHide in elementsToHide)
+			{
+				processElement(elementToHide);
+				mesh.HiddenElements.Add(elementToHide);
 			}
 
 			// vytvor povrchovou reprezentaci
@@ -1046,7 +1168,7 @@ namespace MeshEditor.Construction
 			// smazat nebo vratit beamy do seznamu beamu
 			cutOrRestoreBeams(mesh, visibleElements);
 			// doladit par detailu - pripravit sit pro zobrazeni
-			mesh.InitializeMesh(edgeAnglesHistogram, meshHasTwinElements);
+			mesh.InitializeMesh(edgeAnglesHistogram, this.meshHasTwinElements);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
 
@@ -1059,8 +1181,7 @@ namespace MeshEditor.Construction
 
 		private void processQuadraticNodesOfFace(Element2D face)
 		{
-			List<Node> middleNodes = new List<Node>(face.IterateThroughAllEdgeMiddleNodes());
-			additionalQuadraticNodes[face] = middleNodes.ToArray();
+			additionalQuadraticNodes[face] = face.IterateThroughAllEdgeMiddleNodes().ToArray();
 		}
 
 		private void cutOrRestoreBeams(Mesh mesh, HashSet<Element> elementsToShow)

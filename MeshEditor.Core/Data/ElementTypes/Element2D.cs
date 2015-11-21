@@ -143,6 +143,8 @@ namespace MeshEditor.Data
 			}
 		}
 
+		#region Twin elements operations
+
 		public bool HasTwinElements
 		{
 			get { return twinElements != null; }
@@ -158,21 +160,75 @@ namespace MeshEditor.Data
 			return HasTwinElements ? twinElements : Enumerable.Empty<Element2D>();
 		}
 
+		public Element2D PopFirstTwinElement()
+		{
+			Debug.Assert(HasTwinElements);
+			Element2D firstTwinElement = twinElements[0];
+			RemoveTwinElement(firstTwinElement);
+			return firstTwinElement;
+		}
+
+		public void MoveTwinElementsTo(Element2D other)
+		{
+			Debug.Assert(other != null);
+			Debug.Assert(!other.HasTwinElements);
+			other.twinElements = this.twinElements;
+			this.twinElements = null;
+		}
+
+		public bool ContainsTwinElement(Element2D twinElementToTest)
+		{
+			Debug.Assert(twinElementToTest != null);
+			if (twinElements == null)
+				return false;
+
+			for (int i = 0; i < twinElements.Length; i++)
+			{
+				if (twinElements[i].Equals(twinElementToTest))
+					return true;
+			}
+			return false;
+		}
+
 		public void AddTwinElement(Element2D twinElementToAdd)
 		{
+			Debug.Assert(twinElementToAdd != null);
+			Debug.Assert(twinElementToAdd.CompareTo(this) > 0);
+
 			if (twinElements == null)
 			{
 				twinElements = new Element2D[] { twinElementToAdd };
 			}
 			else
 			{
-				Array.Resize(ref twinElements, twinElements.Length + 1);
-				twinElements[twinElements.Length - 1] = twinElementToAdd;
+				//Array.Resize(ref twinElements, twinElements.Length + 1);
+				//twinElements[twinElements.Length - 1] = twinElementToAdd;
+
+				Element2D[] newArray = new Element2D[twinElements.Length + 1];
+				newArray[twinElements.Length] = twinElementToAdd;
+				for (int i = 0; i < twinElements.Length; i++)
+				{
+					int comparison = twinElementToAdd.CompareTo(twinElements[i]);
+					Debug.Assert(comparison != 0);
+					if (comparison > 0)
+					{
+						newArray[i] = twinElements[i];
+					}
+					else
+					{
+						newArray[i] = twinElementToAdd;
+						Array.Copy(twinElements, i, newArray, i + 1, twinElements.Length - i);
+						break;
+					}
+				}
+				Debug.Assert(Utilities.Functions.CheckIfArrayIsStrictlyIncreasing(newArray));
+				twinElements = newArray;
 			}
 		}
 
 		public bool RemoveTwinElement(Element2D twinElementToRemove)
 		{
+			Debug.Assert(twinElementToRemove != null);
 			if (twinElements == null)
 			{
 				return false;
@@ -202,16 +258,14 @@ namespace MeshEditor.Data
 				{
 					Array.Copy(twinElements, index + 1, newArray, index, twinElements.Length - index - 1);
 				}
+				Debug.Assert(Utilities.Functions.CheckIfArrayIsStrictlyIncreasing(newArray));
 				twinElements = newArray;
             }
 
 			return true;
 		}
 
-		public void RemoveAllTwinElements()
-		{
-			twinElements = null;
-		}
+		#endregion
 
 		#endregion
 
