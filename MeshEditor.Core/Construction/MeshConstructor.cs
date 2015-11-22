@@ -1087,9 +1087,11 @@ namespace MeshEditor.Construction
 				if (t != null)
 				{
 					TriangleMark mark = new TriangleMark(t.Node1.ID, t.Node2.ID, t.Node3.ID);
-					if (triangleFaces.ContainsKey(mark))
+					Triangle previous;
+					if (triangleFaces.TryGetValue(mark, out previous))
 					{
-						triangleFaces.Remove(mark);
+						if (!previous.HasTwinElements)
+							triangleFaces.Remove(mark);
 					}
 					else
 					{
@@ -1103,9 +1105,11 @@ namespace MeshEditor.Construction
 					if (q != null)
 					{
 						QuadMark mark = new QuadMark(q.Node1.ID, q.Node2.ID, q.Node3.ID, q.Node4.ID);
-						if (quadFaces.ContainsKey(mark))
+						Quadrilateral previous;
+						if (quadFaces.TryGetValue(mark, out previous))
 						{
-							quadFaces.Remove(mark);
+							if (!previous.HasTwinElements)
+								quadFaces.Remove(mark);
 						}
 						else
 						{
