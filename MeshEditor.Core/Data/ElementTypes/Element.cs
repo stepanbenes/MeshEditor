@@ -96,15 +96,6 @@ namespace MeshEditor.Data
 			return center / (float)NodeCount;
 		}
 
-		public bool ContainsNodes(params Node[] nodes)
-		{
-			HashSet<Node> allNodes = new HashSet<Node>(IterateThroughAllNodes());
-			foreach (Node n in nodes)
-				if (!allNodes.Contains(n))
-					return false;
-			return true;
-		}
-
 		public override string ToString()
 		{
 			StringBuilder text = new StringBuilder();

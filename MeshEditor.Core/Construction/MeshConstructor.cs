@@ -593,13 +593,17 @@ namespace MeshEditor.Construction
 			}
 		}
 
-		private void processElement(Element e)
+		private void processElement(Element e, Action<IFaceOfElement3D> darkSideTurner = null)
 		{
 			Element3D e3D = e as Element3D;
 			if (e3D != null)
 			{
 				foreach (Element2D f in e3D.GenerateAllFaces(this.quadraticNodesCache/*do toho se zapisuje, necte se*/)) // vygeneruju plochy tohoto prvku
 				{
+					if (darkSideTurner != null)
+					{
+						darkSideTurner((IFaceOfElement3D)f);
+					}
 					processFace(f);
 				}
 				return;
@@ -1134,17 +1138,62 @@ namespace MeshEditor.Construction
 			mesh.ClearSurface();
 			this.meshHasTwinElements = mesh.HasTwinElements;
 
-
+			// process elements that shoud be made visible
 			foreach (Element elementToShow in elementsToShow)
 			{
 				processElement(elementToShow);
 				mesh.HiddenElements.Remove(elementToShow);
 			}
 
-			foreach (Element elementToHide in elementsToHide)
+			if (elementsToHide.Count > 0)
 			{
-				processElement(elementToHide);
-				mesh.HiddenElements.Add(elementToHide);
+				HashSet<Node> borderNodes = null;
+				if (elementsToHide.Count < visibleElements.Count)
+				{
+					borderNodes = new HashSet<Node>(elementsToHide.OfType<Element3D>().SelectMany(e => e.IterateThroughAllNodes()));
+					borderNodes.IntersectWith(visibleElements.OfType<Element3D>().SelectMany(e => e.IterateThroughAllNodes()));
+				}
+				else
+				{
+					borderNodes = new HashSet<Node>(visibleElements.OfType<Element3D>().SelectMany(e => e.IterateThroughAllNodes()));
+					borderNodes.IntersectWith(elementsToHide.OfType<Element3D>().SelectMany(e => e.IterateThroughAllNodes()));
+				}
+
+				ILookup<Node, Element3D> nodeElementIncidence = (from element in visibleElements.OfType<Element3D>()
+																 from node in element.IterateThroughAllNodes()
+																 where borderNodes.Contains(node)
+																 select new KeyValuePair<Node, Element3D>(node, element)).ToLookup(pair => pair.Key, pair => pair.Value);
+				borderNodes = null;
+
+				Action<IFaceOfElement3D> darkSideTurner = face =>
+					{
+						Element2D element2D = (Element2D)face;
+						HashSet<Element3D> candidates = null;
+						foreach (Node node in element2D.IterateThroughAllNodes())
+						{
+							if (candidates == null)
+							{
+								candidates = new HashSet<Element3D>(nodeElementIncidence[node]);
+							}
+							else
+							{
+								candidates.IntersectWith(nodeElementIncidence[node]);
+							}
+						}
+						Debug.Assert(candidates != null);
+						Debug.Assert(candidates.Count <= 1);
+						if (candidates.Count == 1)
+						{
+							face.ChangeParentElement(candidates.First());
+						}
+					};
+
+				// process all elements that shoud be made hidden
+				foreach (Element elementToHide in elementsToHide)
+				{
+					processElement(elementToHide, darkSideTurner);
+					mesh.HiddenElements.Add(elementToHide);
+				}
 			}
 
 			// vytvor povrchovou reprezentaci

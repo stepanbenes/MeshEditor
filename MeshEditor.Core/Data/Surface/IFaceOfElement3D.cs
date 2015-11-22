@@ -12,5 +12,7 @@ namespace MeshEditor.Data
 		Property Property { get; }
 
 		Element3D ParentElement { get; }
+
+		void ChangeParentElement(Element3D newParentElement);
 	}
 }

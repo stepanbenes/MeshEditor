@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -26,10 +27,7 @@ namespace MeshEditor.Data
 
 		public override bool Equals(object obj)
 		{
-			var other = obj as TriangleFaceOfElement3D;
-			if (other == null)
-				return false;
-			return this.parentElement.ID == other.parentElement.ID && this.id == other.id;
+			return ReferenceEquals(this, obj); // two faces can have same id (face order) and parentElement.ID (if ChangeParentElement is called)
 		}
 
 		public override int GetHashCode()
@@ -41,6 +39,14 @@ namespace MeshEditor.Data
 				hash = hash * 23 + id.GetHashCode();
 				return hash;
 			}
+		}
+
+		public void ChangeParentElement(Element3D newParentElement)
+		{
+			Debug.Assert(newParentElement != null);
+			Debug.Assert(!parentElement.Equals(newParentElement));
+
+			parentElement = newParentElement;
 		}
 	}
 }
