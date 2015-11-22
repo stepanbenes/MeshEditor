@@ -45,7 +45,7 @@ namespace MeshEditor.Data
 
 		CutInfo lastUsedCutInfo;
 
-		private bool tempElementAddedToSurfaceRepresentation;
+		private Element3D tempElement3DAddedToSurfaceRepresentation;
 
 		public Scene()
 		{
@@ -756,35 +756,29 @@ namespace MeshEditor.Data
 			try
 			{
 				if (mesh == null)
-					return;
-
-				if (tempElementAddedToSurfaceRepresentation)
 				{
-					var signalElementConstructor = new MeshConstructor();
-					HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
-					visibleElements.ExceptWith(mesh.HiddenElements);
-					signalElementConstructor.CutMesh(mesh, visibleElements); // remove signalled element from surface representation
+					return; // goto finally
+				}
 
-					tempElementAddedToSurfaceRepresentation = false;
+				if (tempElement3DAddedToSurfaceRepresentation != null)
+				{
+					new MeshConstructor().RemoveSignal(mesh, tempElement3DAddedToSurfaceRepresentation);
+					tempElement3DAddedToSurfaceRepresentation = null;
 				}
 
 				if (elementSignalToSet == null)
 				{
-					return;
+					return; // goto finally
 				}
 
 				int elementID = elementSignalToSet.Value;
-
 				Element element = mesh.Elements.FirstOrDefault(e => e.ID == elementID);
 				if (element != null)
 				{
 					elementSignalPosition = element.GetCenter();
 					// ------------------------------------------------
-					{
-						var signalElementConstructor = new MeshConstructor();
-						signalElementConstructor.SignalElement(mesh, element); // add element to surface representation
-						tempElementAddedToSurfaceRepresentation = true;
-					}
+					new MeshConstructor().SignalElement(mesh, element); // add element to surface representation
+					tempElement3DAddedToSurfaceRepresentation = element as Element3D;
 					// ------------------------------------------------
 					HashSet<ISelectable> toSelect = new HashSet<ISelectable>();
 					toSelect.Add(element);

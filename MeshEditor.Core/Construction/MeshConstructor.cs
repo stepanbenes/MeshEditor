@@ -1034,44 +1034,90 @@ namespace MeshEditor.Construction
 			Beam beam = element as Beam;
 			if (beam != null)
 			{
-				if (!mesh.Beams.Contains(beam))
+				if (mesh.HiddenElements.Contains(beam))
+				{
 					mesh.PushBeam(beam);
+					mesh.HiddenElements.Remove(beam);
+				}
 			}
 			else
 			{
-				if (element is Element2D)
+				Element2D element2D = element as Element2D;
+				if (element2D != null)
 				{
-					if (!mesh.HiddenElements.Contains(element)) // if 2D element is not hidden, no need to recreate surface representation
-						return;
-				}
-				this.hiddenItemsProperties = new EdgeFacePropertySet(); // add temp object
-				List<Element2D> existingFacesOfElement = new List<Element2D>();
-				foreach (Element2D face in mesh.Faces)
-				{
-					if (face != element)
+					if (mesh.HiddenElements.Contains(element))
 					{
-						IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
-						if (faceOfElement == null || faceOfElement.ParentElement != element) // pokud plocha nepatri danemu prvku
-							continue;
-					}
-					processFace(face); // add mark of this face to face-list
-					existingFacesOfElement.Add(face);
-				}
-
-				foreach (Element2D face in existingFacesOfElement)
-				{
-					foreach (WingedEdge edge in face.IterateThroughAllEdges())
-					{
-						EdgeMark mark = new EdgeMark(edge.BeginNode.ID, edge.EndNode.ID);
-						edgeMarks[mark] = new WingedEdge(edge.BeginNode, edge.EndNode, face); // create dummy edge for later comparing in createSurfaceRep...
+						HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements.Where(e => !mesh.HiddenElements.Contains(e)));
+						visibleElements.Add(element);
+						CutMesh(mesh, visibleElements);
 					}
 				}
+				else
+				{
+					Element3D element3D = element as Element3D;
+					if (element3D != null)
+					{
+						this.hiddenItemsProperties = new EdgeFacePropertySet();
 
-				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
-				processElement(element); // add marks of all faces of this element to list - faces already contained in surface are preserved, others will be added
-				Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
-				createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
+						var faces = mesh.Faces.Concat(element3D.GenerateAllFaces(this.quadraticNodesCache)).ToList();
+						
+						mesh.ClearSurface();
+						Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
+						createSurfaceRepresentation(mesh, faces, ref edgeAnglesHistogram, null, null);
+					}
+					else
+					{
+						throw new NotSupportedException();
+					}
+				}
 			}
+			mesh.CreateBuffers();
+		}
+
+		public void RemoveSignal(Mesh mesh, Element3D element3D)
+		{
+			Debug.Assert(mesh != null);
+			Debug.Assert(element3D != null);
+
+			this.hiddenItemsProperties = new EdgeFacePropertySet();
+
+			foreach (Element2D face in mesh.Faces.Concat(element3D.GenerateAllFaces(this.quadraticNodesCache)))
+			{
+				Triangle t = face as Triangle;
+				if (t != null)
+				{
+					TriangleMark mark = new TriangleMark(t.Node1.ID, t.Node2.ID, t.Node3.ID);
+					if (triangleFaces.ContainsKey(mark))
+					{
+						triangleFaces.Remove(mark);
+					}
+					else
+					{
+						triangleFaces.Add(mark, t);
+					}
+				}
+				else
+				{
+					Quadrilateral q = face as Quadrilateral;
+					Debug.Assert(q != null);
+					if (q != null)
+					{
+						QuadMark mark = new QuadMark(q.Node1.ID, q.Node2.ID, q.Node3.ID, q.Node4.ID);
+						if (quadFaces.ContainsKey(mark))
+						{
+							quadFaces.Remove(mark);
+						}
+						else
+						{
+							quadFaces.Add(mark, q);
+						}
+					}
+				}
+			}
+
+			mesh.ClearSurface();
+			Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
+			createSurfaceRepresentation(mesh, iterateThroughAllFaces(), ref edgeAnglesHistogram, null, null);
 			mesh.CreateBuffers();
 		}
 
@@ -1124,7 +1170,6 @@ namespace MeshEditor.Construction
 			}
 
 			// loop through old surface and create marks
-			// TODO: cache old marks from previous surface creation
 			foreach (Element2D face in mesh.Faces)
 			{
 				processFace(face);

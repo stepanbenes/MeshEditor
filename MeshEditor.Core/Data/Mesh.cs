@@ -482,7 +482,9 @@ namespace MeshEditor.Data
 				content.BeamNodesNotInFaces.Add(b.EndNode);
 			QuadraticBeam q = b as QuadraticBeam;
 			if (q != null)
-				content.EdgeMiddleNodes.Add(q.MiddleNode);
+			{
+				content.BeamNodesNotInFaces.Add(q.MiddleNode);
+			}
 		}
 
 		/// <summary>
