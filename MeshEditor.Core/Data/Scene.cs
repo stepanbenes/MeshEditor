@@ -1322,7 +1322,7 @@ namespace MeshEditor.Data
 				case SelectMode.NearSurface:
 				case SelectMode.ExtendedSurface:
 				case SelectMode.Object:
-					if (!itemHit.Property.IsZero && itemTypeToSelectMatchesCurrentPropertyColorsMode(itemType))
+					if (itemHit != null && !itemHit.Property.IsZero && itemTypeToSelectMatchesCurrentPropertyColorsMode(itemType))
 					{
 						newSelection = getAllItemsToSelect(itemType, filter: itemToSelect => itemToSelect.Property == itemHit.Property);
 					}
