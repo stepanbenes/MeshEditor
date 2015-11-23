@@ -198,7 +198,7 @@ namespace MeshEditor.Data
 			BeamWidth = 2f;
 			DefaultCameraDistance = 2.5f;
 			XRayVision = false;
-			EnableSkipSelectionModeIfNothingNewSelected = false; /**/
+			EnableSkipSelectionModeIfNothingNewSelected = true; /**/
 																//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
@@ -974,7 +974,7 @@ namespace MeshEditor.Data
 			HashSet<ISelectable> newSelection;
 
 			if (area.Size == Size.Empty)
-				newSelection = getPointSelection(area.X, area.Y, mode, itemType); /**/
+				newSelection = getPointSelection(area.X, area.Y, mode, itemType);
 			else if (area.Width == 0 || area.Height == 0) // neni to ramecek, ma sirku nebo dylku 0, takze nic nedelam
 				return;
 			else
@@ -1041,7 +1041,7 @@ namespace MeshEditor.Data
 			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
 
 			HashSet<ISelectable> temp = mesh.SelectedItems;
-			mesh.SelectedItems = getAllItemsToSelect(itemType);
+			mesh.SelectedItems = getAllItemsToSelect(itemType, filter: null);
 			updateColorBuffers(temp, mesh.SelectedItems);
 		}
 
@@ -1172,49 +1172,12 @@ namespace MeshEditor.Data
 			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
 
 			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
-			HashSet<ISelectable> newSelection = addToSelection ? new HashSet<ISelectable>(oldSelection) : new HashSet<ISelectable>();
-			mesh.SelectedItems = newSelection;
-			// --------------------------------------------
-			switch (itemType)
+			HashSet<ISelectable> newSelection = getAllItemsToSelect(itemType, filter: item => item.Property == property);
+			if (addToSelection)
 			{
-				case ItemTypeToSelect.Element:
-					foreach (Element e in mesh.Elements) // neuriznuty prvky
-					{
-						if (!mesh.HiddenElements.Contains(e) && !(e is Beam))
-						{
-							if (e.Property == property)
-								newSelection.Add(e);
-						}
-					}
-					break;
-				case ItemTypeToSelect.Node:
-					foreach (Element e in mesh.Elements) // uzly vsech neuriznutych prvku
-					{
-						if (!mesh.HiddenElements.Contains(e))
-						{
-							foreach (Node n in e.IterateThroughAllNodesIncludingEdgeMiddleNodes()) // uzly
-								if (n.ContainsProperty(property))
-									newSelection.Add(n);
-						}
-					}
-					break;
-				case ItemTypeToSelect.Face:
-					foreach (Element2D face in mesh.Faces) // plochy na povrchu
-						if (face.Property == property)
-							newSelection.Add(face);
-					break;
-				case ItemTypeToSelect.Edge:
-					foreach (WingedEdge edge in mesh.Edges) // hrany na povrchu
-						if (edge.Property == property)
-							newSelection.Add(edge);
-					break;
-				case ItemTypeToSelect.Beam:
-					foreach (Beam b in mesh.Beams)
-						if (b.Property == property)
-							newSelection.Add(b);
-					break;
+				newSelection.UnionWith(oldSelection);
 			}
-			// --------------------------------------------
+			mesh.SelectedItems = newSelection;
 			updateColorBuffers(oldSelection, newSelection);
 		}
 
@@ -1328,16 +1291,15 @@ namespace MeshEditor.Data
 			HashSet<ISelectable> newSelection;
 			// Select single face first
 			Element2D faceHit;
-			ItemTypeToSelect typeToSelect = (mode > SelectMode.Single && itemType == ItemTypeToSelect.Node) ? ItemTypeToSelect.Edge : itemType;
-			ISelectable item = getSingleEntityOnLocation(x, y, typeToSelect, out faceHit);
-			if (item == null && faceHit == null)
+			ISelectable itemHit = getSingleEntityOnLocation(x, y, itemType, out faceHit);
+			if (itemHit == null && faceHit == null)
 				return new HashSet<ISelectable>();
 
 			if (itemType == ItemTypeToSelect.Beam)
 			{
 				newSelection = new HashSet<ISelectable>();
-				if (item != null)
-					newSelection.Add(item);
+				if (itemHit != null)
+					newSelection.Add(itemHit);
 				return newSelection;
 			}
 
@@ -1348,9 +1310,9 @@ namespace MeshEditor.Data
 					break;
 				case SelectMode.Single:
 					newSelection = new HashSet<ISelectable>();
-					if (item != null)
+					if (itemHit != null)
 					{
-						newSelection.Add(item);
+						newSelection.Add(itemHit);
 						if (faceHit != null && faceHit.HasTwinElements)
 						{
 							addAllTwinElementsOfFaceToSet(faceHit, newSelection);
@@ -1360,10 +1322,23 @@ namespace MeshEditor.Data
 				case SelectMode.NearSurface:
 				case SelectMode.ExtendedSurface:
 				case SelectMode.Object:
-					do
+					if (!itemHit.Property.IsZero && itemTypeToSelectMatchesCurrentPropertyColorsMode(itemType))
 					{
-						newSelection = advancedPointSelection(mode, itemType, faceHit, item);
-					} while (EnableSkipSelectionModeIfNothingNewSelected && (itemType == ItemTypeToSelect.Face || itemType == ItemTypeToSelect.Element) && newSelection.Count == 1 && ++mode < SelectMode.Object);
+						newSelection = getAllItemsToSelect(itemType, filter: itemToSelect => itemToSelect.Property == itemHit.Property);
+					}
+					else
+					{
+						ISelectable advancedItemHit = itemHit;
+						if (itemType == ItemTypeToSelect.Node)
+						{
+							advancedItemHit = getSingleEntityOnLocation(x, y, ItemTypeToSelect.Edge, out faceHit);
+							Debug.Assert(advancedItemHit == null || advancedItemHit is WingedEdge);
+						}
+						do
+						{
+							newSelection = advancedPointSelection(mode, itemType, faceHit, advancedItemHit);
+						} while (EnableSkipSelectionModeIfNothingNewSelected && (itemType == ItemTypeToSelect.Face || itemType == ItemTypeToSelect.Element) && newSelection.Count == 1 && ++mode < SelectMode.Object);
+					}
 					break;
 				default:
 					throw new NotSupportedException("This select mode is not supported.");
@@ -1372,24 +1347,47 @@ namespace MeshEditor.Data
 			return newSelection;
 		}
 
+		private bool itemTypeToSelectMatchesCurrentPropertyColorsMode(ItemTypeToSelect itemType)
+		{
+            var colorMode = mesh.ColorMode;
+			switch (itemType)
+			{
+				case ItemTypeToSelect.Node:
+					return (colorMode & PropertyColorsMode.Nodes) != 0;
+                case ItemTypeToSelect.Edge:
+					return (colorMode & PropertyColorsMode.Edges) != 0;
+				case ItemTypeToSelect.Face:
+					return (colorMode & PropertyColorsMode.Faces) != 0; // WARNING: does not work correctly for 2D elements, because in case of 2D elements faces and elements are considered as equal
+				case ItemTypeToSelect.Element:
+					return (colorMode & PropertyColorsMode.Elements) != 0;
+				case ItemTypeToSelect.Beam:
+					return (colorMode & PropertyColorsMode.Beams) != 0;
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
 		private HashSet<ISelectable> advancedPointSelection(SelectMode mode, ItemTypeToSelect itemType, Element2D faceHit, ISelectable item)
 		{
 			WingedEdge edgeHit = item as WingedEdge;
-			HashSet<ISelectable> selection = new HashSet<ISelectable>();
-
-			float angleLimit = this.mesh.SoftBorderLimit;
-			if (mode == SelectMode.ExtendedSurface)
-				angleLimit = this.mesh.HardBorderLimit;
-			else if (mode == SelectMode.Object)
-				angleLimit = float.MaxValue;
-
 			if (itemType == ItemTypeToSelect.Face || itemType == ItemTypeToSelect.Element || edgeHit == null || edgeHit.FeatureAngle < this.mesh.HardBorderLimit)
 			{
+				HashSet<ISelectable> selection = new HashSet<ISelectable>();
 				if (faceHit != null)
+				{
+					float angleLimit = this.mesh.SoftBorderLimit;
+					if (mode == SelectMode.ExtendedSurface)
+						angleLimit = this.mesh.HardBorderLimit;
+					else if (mode == SelectMode.Object)
+						angleLimit = float.MaxValue;
+
 					selection = transformSelectedFacesInto(itemType, selectWholeSurface(faceHit, angleLimit));
+				}
+				return selection;
 			}
 			else if (itemType == ItemTypeToSelect.Node || itemType == ItemTypeToSelect.Edge)
 			{
+				HashSet<ISelectable> selection = new HashSet<ISelectable>();
 				foreach (WingedEdge e in getHardBorderEdges(edgeHit, faceHit, mode))
 				{
 					if (itemType == ItemTypeToSelect.Node)
@@ -1406,8 +1404,12 @@ namespace MeshEditor.Data
 					else
 						selection.Add(e);
 				}
+				return selection;
 			}
-			return selection;
+			else
+			{
+				throw new NotSupportedException();
+			}
 		}
 
 		/// <summary>
@@ -1714,37 +1716,54 @@ namespace MeshEditor.Data
 			return result;
 		}
 
-		private HashSet<ISelectable> getAllItemsToSelect(ItemTypeToSelect itemType)
+		private HashSet<ISelectable> getAllItemsToSelect(ItemTypeToSelect itemType, Predicate<ISelectable> filter)
 		{
 			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
 			switch (itemType)
 			{
 				case ItemTypeToSelect.Element:
 					foreach (Element e in mesh.Elements)
-						if (!mesh.HiddenElements.Contains(e))
-							newSelection.Add(e);
+					{
+						if (!mesh.HiddenElements.Contains(e) && !(e is Beam))
+						{
+							if (filter == null || filter(e))
+								newSelection.Add(e);
+						}
+					}
 					break;
 				case ItemTypeToSelect.Node:
 					foreach (Element e in mesh.Elements)
 					{
 						if (!mesh.HiddenElements.Contains(e))
 						{
-							foreach (Node n in e.IterateThroughAllNodes())
-								newSelection.Add(n);
+							foreach (Node n in e.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+							{
+								if (filter == null || filter(n))
+									newSelection.Add(n);
+							}
 						}
 					}
 					break;
 				case ItemTypeToSelect.Face:
 					foreach (Element2D face in mesh.Faces)
-						newSelection.Add(face);
+					{
+						if (filter == null || filter(face))
+							newSelection.Add(face);
+					}
 					break;
 				case ItemTypeToSelect.Edge:
 					foreach (WingedEdge edge in mesh.Edges)
-						newSelection.Add(edge);
+					{
+						if (filter == null || filter(edge))
+							newSelection.Add(edge);
+					}
 					break;
 				case ItemTypeToSelect.Beam:
 					foreach (Beam beam in mesh.Beams)
-						newSelection.Add(beam);
+					{
+						if (filter == null || filter(beam))
+							newSelection.Add(beam);
+					}
 					break;
 			}
 
