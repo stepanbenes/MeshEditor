@@ -267,8 +267,7 @@ namespace MeshEditor.Cuts
 			if (mesh == null)
 				return;
 			var visibleElements = new HashSet<Element>(mesh.Elements);
-			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, visibleElements);
+			new MeshConstructor().CutMesh(mesh, visibleElements);
 		}
 
 		#endregion
@@ -416,8 +415,7 @@ namespace MeshEditor.Cuts
 		{
 			Debug.Assert(elementVisibilityTest != null);
 			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements.Where(e => elementVisibilityTest(e)));
-			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, visibleElements);
+			new MeshConstructor().CutMesh(mesh, visibleElements);
 		}
 
 		private static void hideElements(Mesh mesh, HashSet<Element> toHide)
@@ -425,12 +423,8 @@ namespace MeshEditor.Cuts
 			if (toHide.Count == 0)
 				return;
 
-			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
-			visibleElements.ExceptWith(mesh.HiddenElements);
-			visibleElements.ExceptWith(toHide);
-
-			MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, visibleElements);
+			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements.Where(e => !mesh.HiddenElements.Contains(e) && !toHide.Contains(e)));
+			new MeshConstructor().CutMesh(mesh, visibleElements);
 		}
 
 		private static void doCut(Mesh mesh, CutTest isToCut, CutInfo.ItemHitDecision hitDecision, bool transformCoordinates)
@@ -445,11 +439,8 @@ namespace MeshEditor.Cuts
 			else
 				throw new NotSupportedException(hitDecision.ToString() + " option is not supported");
 
-			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements);
-			visibleElements.ExceptWith(elementHits);
-			
-            MeshConstructor ctor = new MeshConstructor();
-			ctor.CutMesh(mesh, visibleElements);
+			HashSet<Element> visibleElements = new HashSet<Element>(mesh.Elements.Where(e => !elementHits.Contains(e)));
+			new MeshConstructor().CutMesh(mesh, visibleElements);
 		}
 
 		private static IEnumerable<Node> getAllNodes(Mesh mesh)
