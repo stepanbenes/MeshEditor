@@ -1295,14 +1295,6 @@ namespace MeshEditor.Data
 			if (itemHit == null && faceHit == null)
 				return new HashSet<ISelectable>();
 
-			if (itemType == ItemTypeToSelect.Beam)
-			{
-				newSelection = new HashSet<ISelectable>();
-				if (itemHit != null)
-					newSelection.Add(itemHit);
-				return newSelection;
-			}
-
 			switch (mode)
 			{
 				case SelectMode.None:
@@ -1313,7 +1305,7 @@ namespace MeshEditor.Data
 					if (itemHit != null)
 					{
 						newSelection.Add(itemHit);
-						if (faceHit != null && faceHit.HasTwinElements)
+						if (itemType == ItemTypeToSelect.Element && faceHit != null && faceHit.HasTwinElements)
 						{
 							addAllTwinElementsOfFaceToSet(faceHit, newSelection);
 						}
@@ -1349,12 +1341,12 @@ namespace MeshEditor.Data
 
 		private bool itemTypeToSelectMatchesCurrentPropertyColorsMode(ItemTypeToSelect itemType)
 		{
-            var colorMode = mesh.ColorMode;
+			var colorMode = mesh.ColorMode;
 			switch (itemType)
 			{
 				case ItemTypeToSelect.Node:
 					return (colorMode & PropertyColorsMode.Nodes) != 0;
-                case ItemTypeToSelect.Edge:
+				case ItemTypeToSelect.Edge:
 					return (colorMode & PropertyColorsMode.Edges) != 0;
 				case ItemTypeToSelect.Face:
 					return (colorMode & PropertyColorsMode.Faces) != 0; // WARNING: does not work correctly for 2D elements, because in case of 2D elements faces and elements are considered as equal
@@ -1369,23 +1361,40 @@ namespace MeshEditor.Data
 
 		private HashSet<ISelectable> advancedPointSelection(SelectMode mode, ItemTypeToSelect itemType, Element2D faceHit, ISelectable item)
 		{
+			float angleLimit = this.mesh.SoftBorderLimit;
+			if (mode == SelectMode.ExtendedSurface)
+				angleLimit = this.mesh.HardBorderLimit;
+			else if (mode == SelectMode.Object)
+				angleLimit = float.MaxValue;
+
+			if (itemType == ItemTypeToSelect.Beam)
+			{
+				HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
+				Beam beam = item as Beam;
+				if (beam != null)
+				{
+					newSelection.Add(item);
+					foreach (Beam b in getAllBeamsNeighboringWith(beam, angleLimit))
+					{
+						newSelection.Add(b);
+					}
+				}
+				return newSelection;
+			}
+
 			WingedEdge edgeHit = item as WingedEdge;
+
 			if (itemType == ItemTypeToSelect.Face || itemType == ItemTypeToSelect.Element || edgeHit == null || edgeHit.FeatureAngle < this.mesh.HardBorderLimit)
 			{
 				HashSet<ISelectable> selection = new HashSet<ISelectable>();
 				if (faceHit != null)
 				{
-					float angleLimit = this.mesh.SoftBorderLimit;
-					if (mode == SelectMode.ExtendedSurface)
-						angleLimit = this.mesh.HardBorderLimit;
-					else if (mode == SelectMode.Object)
-						angleLimit = float.MaxValue;
-
 					selection = transformSelectedFacesInto(itemType, selectWholeSurface(faceHit, angleLimit));
 				}
 				return selection;
 			}
-			else if (itemType == ItemTypeToSelect.Node || itemType == ItemTypeToSelect.Edge)
+
+			if (itemType == ItemTypeToSelect.Node || itemType == ItemTypeToSelect.Edge)
 			{
 				HashSet<ISelectable> selection = new HashSet<ISelectable>();
 				foreach (WingedEdge e in getHardBorderEdges(edgeHit, faceHit, mode))
@@ -1406,10 +1415,70 @@ namespace MeshEditor.Data
 				}
 				return selection;
 			}
+
+			throw new NotSupportedException();
+		}
+
+		private IEnumerable<Beam> getAllBeamsNeighboringWith(Beam startBeam, float angleLimit)
+		{
+			// create Node-beam incidence map
+			ILookup<Node, Beam> beamNodeMap = (from beam in mesh.Beams
+											   from node in beam.IterateThroughAllNodes()
+											   select new KeyValuePair<Node, Beam>(node, beam)).ToLookup(pair => pair.Key, pair => pair.Value);
+
+			HashSet<Beam> selectionSet = new HashSet<Beam>();
+			Stack<Beam> beams = new Stack<Beam>();
+			beams.Push(startBeam);
+			selectionSet.Add(startBeam);
+			while (beams.Count > 0)
+			{
+				Beam beam = beams.Pop();
+				foreach (Beam neighbor in getBeamNeighbors(beam, beamNodeMap, angleLimit))
+					if (selectionSet.Add(neighbor))
+						beams.Push(neighbor);
+			}
+			return selectionSet;
+		}
+
+		private IEnumerable<Beam> getBeamNeighbors(Beam beam, ILookup<Node, Beam> beamNodeMap, float angleLimit)
+		{
+			return from node in beam.IterateThroughAllNodes()
+				   from neighborBeam in beamNodeMap[node]
+				   where angleLimit > getAngleBetweenTwoBeams(beam, neighborBeam, node)
+				   select neighborBeam;
+		}
+
+		private static float getAngleBetweenTwoBeams(Beam first, Beam second, Node connectingNode)
+		{
+			Vector3 firstUnitVector, secondUnitVector;
+			if (first.BeginNode == connectingNode)
+			{
+				if (second.BeginNode == connectingNode)
+				{
+					firstUnitVector = Vector3.Normalize(first.EndNode.Position - first.BeginNode.Position);
+					secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
+				}
+				else
+				{
+					firstUnitVector = Vector3.Normalize(first.BeginNode.Position - first.EndNode.Position);
+					secondUnitVector = Vector3.Normalize(second.BeginNode.Position - second.EndNode.Position);
+				}
+			}
 			else
 			{
-				throw new NotSupportedException();
+				if (second.BeginNode == connectingNode)
+				{
+					firstUnitVector = Vector3.Normalize(first.BeginNode.Position - first.EndNode.Position);
+					secondUnitVector = Vector3.Normalize(second.BeginNode.Position - second.EndNode.Position);
+				}
+				else
+				{
+					firstUnitVector = Vector3.Normalize(first.EndNode.Position - first.BeginNode.Position);
+					secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
+				}
 			}
+			float result = Utils.GetAngleInDegreesBetweenUnitVectors(firstUnitVector, secondUnitVector);
+			return result;
 		}
 
 		/// <summary>
@@ -1538,8 +1607,8 @@ namespace MeshEditor.Data
 					foreach (Element2D face in faces)
 					{
 						items.Add(face);
-						if (face.HasTwinElements)
-							addAllTwinElementsOfFaceToSet(face, items);
+						//if (face.HasTwinElements)
+						//	addAllTwinElementsOfFaceToSet(face, items);
 					}
 					break;
 				case ItemTypeToSelect.Node:
@@ -2025,8 +2094,8 @@ namespace MeshEditor.Data
 						if (!allVerticesInArea)
 						{
 							result.Add(face);
-							if (face.HasTwinElements)
-								addAllTwinElementsOfFaceToSet(face, result);
+							//if (face.HasTwinElements)
+							//	addAllTwinElementsOfFaceToSet(face, result);
 						}
 						else
 						{
@@ -2034,8 +2103,8 @@ namespace MeshEditor.Data
 							if (number == face.NodeCount)
 							{
 								result.Add(face);
-								if (face.HasTwinElements)
-									addAllTwinElementsOfFaceToSet(face, result);
+								//if (face.HasTwinElements)
+								//	addAllTwinElementsOfFaceToSet(face, result);
 							}
 						}
 					}
