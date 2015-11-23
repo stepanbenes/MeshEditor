@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static MeshEditor.Utilities.Functions;
 
 namespace MeshEditor.Construction
 {
@@ -15,13 +16,24 @@ namespace MeshEditor.Construction
 
 		public QuadMark(int n1, int n2, int n3, int n4)
 		{
-			// sort indices
-			int[] array = new int[] { n1, n2, n3, n4 };
-			Array.Sort<int>(array);
-			this.node1ID = array[0];
-			this.node2ID = array[1];
-			this.node3ID = array[2];
-			this.node4ID = array[3];
+			// sort indices using bubble-sort
+			if (n1 > n2)
+				Swap(ref n1, ref n2);
+			if (n1 > n3)
+				Swap(ref n1, ref n3);
+			if (n1 > n4)
+				Swap(ref n1, ref n4);
+			if (n2 > n3)
+				Swap(ref n2, ref n3);
+			if (n2 > n4)
+				Swap(ref n2, ref n4);
+			if (n3 > n4)
+				Swap(ref n3, ref n4);
+
+			node1ID = n1;
+			node2ID = n2;
+			node3ID = n3;
+			node4ID = n4;
 		}
 
 		#endregion

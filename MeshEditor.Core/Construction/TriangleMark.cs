@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static MeshEditor.Utilities.Functions;
 
 namespace MeshEditor.Construction
 {
@@ -16,57 +17,17 @@ namespace MeshEditor.Construction
 
 		public TriangleMark(int n1, int n2, int n3)
 		{
-			// sort indices
-			int[] array = new int[] { n1, n2, n3 };
-			Array.Sort<int>(array);
-			this.node1ID = array[0];
-			this.node2ID = array[1];
-			this.node3ID = array[2];
-			//if (n1 <= n2 && n1 <= n3)
-			//{
-			//    if (n2 <= n3)
-			//    {
-			//        node1ID = n1;
-			//        node2ID = n2;
-			//        node3ID = n3;
-			//    }
-			//    else
-			//    {
-			//        node1ID = n1;
-			//        node2ID = n3;
-			//        node3ID = n2;
-			//    }
-			//}
-			//else if (n2 <= n1 && n2 <= n3)
-			//{
-			//    if (n1 <= n3)
-			//    {
-			//        node1ID = n2;
-			//        node2ID = n1;
-			//        node3ID = n3;
-			//    }
-			//    else
-			//    {
-			//        node1ID = n2;
-			//        node2ID = n3;
-			//        node3ID = n1;
-			//    }
-			//}
-			//else //if (n3 <= n1 && n3 <= n2)
-			//{
-			//    if (n1 <= n2)
-			//    {
-			//        node1ID = n3;
-			//        node2ID = n1;
-			//        node3ID = n2;
-			//    }
-			//    else
-			//    {
-			//        node1ID = n3;
-			//        node2ID = n2;
-			//        node3ID = n1;
-			//    }
-			//}
+			// sort indices using bubble-sort
+			if (n1 > n2)
+				Swap(ref n1, ref n2);
+			if (n1 > n3)
+				Swap(ref n1, ref n3);
+			if (n2 > n3)
+				Swap(ref n2, ref n3);
+
+			node1ID = n1;
+			node2ID = n2;
+			node3ID = n3;
 		}
 
 		#endregion
