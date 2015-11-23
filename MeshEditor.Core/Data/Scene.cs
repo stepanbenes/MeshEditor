@@ -199,7 +199,7 @@ namespace MeshEditor.Data
 			DefaultCameraDistance = 2.5f;
 			XRayVision = false;
 			EnableSkipSelectionModeIfNothingNewSelected = false; /**/
-																 //DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
+																//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
 			SifelFileFormatExtension = ".top";
@@ -563,8 +563,8 @@ namespace MeshEditor.Data
 		public static void ExtractMatrices(out int[] viewport, out double[] modelview, out double[] projection)
 		{
 			viewport = new int[4];
-			modelview = new double[16]; // mptm modelovací matice
-			projection = new double[16];    // ptm projekční matice
+			modelview = new double[16]; // mptm Model matrix
+			projection = new double[16];    // ptm Projection matrix
 
 			GL.GetInteger(GetPName.Viewport, viewport);
 			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
@@ -587,8 +587,8 @@ namespace MeshEditor.Data
 		public static Vector3 ProjectWorldCoordToWindowCoords(Vector3 point)
 		{
 			int[] viewport = new int[4];
-			double[] modelview = new double[16];    // mptm modelovací matice
-			double[] projection = new double[16];   // ptm projekční matice
+			double[] modelview = new double[16];    // mptm Model matrix
+			double[] projection = new double[16];   // ptm Projection matrix
 
 			GL.GetInteger(GetPName.Viewport, viewport);
 			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
@@ -924,6 +924,8 @@ namespace MeshEditor.Data
 
 		#region Selection
 
+		#region Public methods
+
 		public string GetSelectedItemsDescription()
 		{
 			if (mesh == null || mesh.SelectedItems.Count == 0) // nothing selected
@@ -956,6 +958,276 @@ namespace MeshEditor.Data
 			{
 				return item.ToString();
 			}
+		}
+
+		public void SelectItems(Rectangle area, SelectMode mode, SelectOperationType opType, bool allVerticesInArea, ItemTypeToSelect itemType)
+		{
+			if (mesh == null)
+				return;
+
+			GL.MatrixMode(MatrixMode.Modelview);
+			GL.PushMatrix();
+			GL.LoadIdentity();
+			camera.LookAt(); // nastavit kameru
+							 // ------------------------------------------------
+
+			HashSet<ISelectable> newSelection;
+
+			if (area.Size == Size.Empty)
+				newSelection = getPointSelection(area.X, area.Y, mode, itemType); /**/
+			else if (area.Width == 0 || area.Height == 0) // neni to ramecek, ma sirku nebo dylku 0, takze nic nedelam
+				return;
+			else
+				newSelection = getItemsInArea(area, itemType, allVerticesInArea);
+
+
+			// ulozit pred oznacenim do historie --------------------------------------
+			saveStateBeforeSelect();
+			// ------------------------------------------------------------------------
+
+
+			HashSet<ISelectable> selectedItems = new HashSet<ISelectable>(mesh.SelectedItems);
+
+			switch (opType)
+			{
+				case SelectOperationType.New:
+					selectedItems = newSelection;
+					break;
+				case SelectOperationType.Union:
+					selectedItems.UnionWith(newSelection);
+					break;
+				case SelectOperationType.Intersection:
+					selectedItems.IntersectWith(newSelection);
+					break;
+				case SelectOperationType.Except:
+					selectedItems.ExceptWith(newSelection);
+					break;
+				case SelectOperationType.SymetricDifference:
+					selectedItems.SymmetricExceptWith(newSelection);
+					break;
+				default:
+					throw new NotSupportedException("This select operation type is not supported.");
+			}
+
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			mesh.SelectedItems = selectedItems;
+			updateColorBuffers(oldSelection, selectedItems);
+
+			GL.MatrixMode(MatrixMode.Modelview);
+			GL.PopMatrix();
+		}
+
+		public void UnselectAllItems()
+		{
+			if (mesh == null)
+				return;
+
+			// ulozit pred oznacenim do historie --------------------------------------
+			saveStateBeforeSelect();
+			// ------------------------------------------------------------------------
+
+			unselectAllItems();
+		}
+
+		public void SelectAllItems(EditorMode editorMode)
+		{
+			if (mesh == null)
+				return;
+
+			// ulozit pred oznacenim do historie --------------------------------------
+			saveStateBeforeSelect();
+			// ------------------------------------------------------------------------
+
+			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
+
+			HashSet<ISelectable> temp = mesh.SelectedItems;
+			mesh.SelectedItems = getAllItemsToSelect(itemType);
+			updateColorBuffers(temp, mesh.SelectedItems);
+		}
+
+		public void InvertSelection()
+		{
+			if (mesh == null)
+				return;
+
+			ItemTypeToSelect itemType;
+			ISelectable firstItem = getFirstSelectedItem();
+			if (firstItem == null) // nic neni vybrano
+				return;
+			// -------------------------------------------
+			if (firstItem is Element3D)
+				itemType = ItemTypeToSelect.Element;
+			else if (firstItem is Element2D)
+				itemType = ItemTypeToSelect.Face;
+			else if (firstItem is Node)
+				itemType = ItemTypeToSelect.Node;
+			else if (firstItem is WingedEdge)
+				itemType = ItemTypeToSelect.Edge;
+			else if (firstItem is Beam)
+				itemType = ItemTypeToSelect.Beam;
+			else
+				return;
+			// -------------------------------------------
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			mesh.SelectedItems = new HashSet<ISelectable>();
+
+			switch (itemType)
+			{
+				case ItemTypeToSelect.Element:
+					foreach (Element e in mesh.Elements)
+						if (!mesh.HiddenElements.Contains(e) && !oldSelection.Contains(e))
+							mesh.SelectedItems.Add(e);
+					break;
+				case ItemTypeToSelect.Node:
+					foreach (Element e in mesh.Elements)
+					{
+						if (!mesh.HiddenElements.Contains(e))
+						{
+							foreach (Node n in e.IterateThroughAllNodes())
+								if (!oldSelection.Contains(n))
+									mesh.SelectedItems.Add(n);
+						}
+					}
+					break;
+				case ItemTypeToSelect.Face:
+					foreach (Element2D face in mesh.Faces)
+						if (!oldSelection.Contains(face))
+							mesh.SelectedItems.Add(face);
+					break;
+				case ItemTypeToSelect.Edge:
+					foreach (WingedEdge edge in mesh.Edges)
+						if (!oldSelection.Contains(edge))
+							mesh.SelectedItems.Add(edge);
+					break;
+				case ItemTypeToSelect.Beam:
+					foreach (Beam beam in mesh.Beams)
+						if (!oldSelection.Contains(beam))
+							mesh.SelectedItems.Add(beam);
+					break;
+			}
+
+			updateColorBuffers(oldSelection, mesh.SelectedItems);
+		}
+
+		public void SelectItemsIncidingWithFaces()
+		{
+			if (mesh == null || mesh.SelectedItems.Count == 0)
+				return;
+
+			// ulozit pred oznacenim do historie --------------------------------------
+			saveStateBeforeSelect();
+			// ------------------------------------------------------------------------
+
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
+
+			switch (SceneFacade.EditorMode)
+			{
+				case EditorMode.SelectElements:
+					foreach (ISelectable item in mesh.SelectedItems)
+					{
+						IFaceOfElement3D f = item as IFaceOfElement3D;
+						if (f != null && f.ParentElement != null)
+							newSelection.Add(f.ParentElement);
+					}
+					break;
+				case EditorMode.SelectEdges:
+					foreach (ISelectable item in mesh.SelectedItems)
+					{
+						Element2D f = item as Element2D;
+						if (f != null)
+						{
+							foreach (WingedEdge e in f.IterateThroughAllEdges())
+								newSelection.Add(e);
+						}
+					}
+					break;
+				case EditorMode.SelectNodes:
+					foreach (ISelectable item in mesh.SelectedItems)
+					{
+						Element2D f = item as Element2D;
+						if (f != null)
+						{
+							foreach (Node n in (Scene.IncludeEdgeMiddleNodes) ? f.IterateThroughAllNodesIncludingEdgeMiddleNodes() : f.IterateThroughAllNodes())
+								newSelection.Add(n);
+						}
+					}
+					break;
+				default:
+					return;
+			}
+			mesh.SelectedItems = newSelection;
+			updateColorBuffers(oldSelection, mesh.SelectedItems);
+		}
+
+		public void SelectItemsWithProperty(EditorMode editorMode, Property property, bool addToSelection)
+		{
+			if (mesh == null)
+				return;
+
+			// ulozit pred oznacenim do historie --------------------------------------
+			saveStateBeforeSelect();
+			// ------------------------------------------------------------------------
+
+			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
+
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = addToSelection ? new HashSet<ISelectable>(oldSelection) : new HashSet<ISelectable>();
+			mesh.SelectedItems = newSelection;
+			// --------------------------------------------
+			switch (itemType)
+			{
+				case ItemTypeToSelect.Element:
+					foreach (Element e in mesh.Elements) // neuriznuty prvky
+					{
+						if (!mesh.HiddenElements.Contains(e) && !(e is Beam))
+						{
+							if (e.Property == property)
+								newSelection.Add(e);
+						}
+					}
+					break;
+				case ItemTypeToSelect.Node:
+					foreach (Element e in mesh.Elements) // uzly vsech neuriznutych prvku
+					{
+						if (!mesh.HiddenElements.Contains(e))
+						{
+							foreach (Node n in e.IterateThroughAllNodesIncludingEdgeMiddleNodes()) // uzly
+								if (n.ContainsProperty(property))
+									newSelection.Add(n);
+						}
+					}
+					break;
+				case ItemTypeToSelect.Face:
+					foreach (Element2D face in mesh.Faces) // plochy na povrchu
+						if (face.Property == property)
+							newSelection.Add(face);
+					break;
+				case ItemTypeToSelect.Edge:
+					foreach (WingedEdge edge in mesh.Edges) // hrany na povrchu
+						if (edge.Property == property)
+							newSelection.Add(edge);
+					break;
+				case ItemTypeToSelect.Beam:
+					foreach (Beam b in mesh.Beams)
+						if (b.Property == property)
+							newSelection.Add(b);
+					break;
+			}
+			// --------------------------------------------
+			updateColorBuffers(oldSelection, newSelection);
+		}
+
+		#endregion
+
+		#region Private methods
+
+		private void unselectAllItems()
+		{
+			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
+			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
+			mesh.SelectedItems = newSelection;
+			updateColorBuffers(oldSelection, newSelection);
 		}
 
 		private string getSelectionGroupSummary()
@@ -1049,63 +1321,6 @@ namespace MeshEditor.Data
 			}
 
 			return text.ToString();
-		}
-
-		public void SelectItems(Rectangle area, SelectMode mode, SelectOperationType opType, bool allVerticesInArea, ItemTypeToSelect itemType)
-		{
-			if (mesh == null)
-				return;
-
-			GL.MatrixMode(MatrixMode.Modelview);
-			GL.PushMatrix();
-			GL.LoadIdentity();
-			camera.LookAt(); // nastavit kameru
-							 // ------------------------------------------------
-
-			HashSet<ISelectable> newSelection;
-
-			if (area.Size == Size.Empty)
-				newSelection = getPointSelection(area.X, area.Y, mode, itemType); /**/
-			else if (area.Width == 0 || area.Height == 0) // neni to ramecek, ma sirku nebo dylku 0, takze nic nedelam
-				return;
-			else
-				newSelection = getItemsInArea(area, itemType, allVerticesInArea);
-
-
-			// ulozit pred oznacenim do historie --------------------------------------
-			saveStateBeforeSelect();
-			// ------------------------------------------------------------------------
-
-
-			HashSet<ISelectable> selectedItems = new HashSet<ISelectable>(mesh.SelectedItems);
-
-			switch (opType)
-			{
-				case SelectOperationType.New:
-					selectedItems = newSelection;
-					break;
-				case SelectOperationType.Union:
-					selectedItems.UnionWith(newSelection);
-					break;
-				case SelectOperationType.Intersection:
-					selectedItems.IntersectWith(newSelection);
-					break;
-				case SelectOperationType.Except:
-					selectedItems.ExceptWith(newSelection);
-					break;
-				case SelectOperationType.SymetricDifference:
-					selectedItems.SymmetricExceptWith(newSelection);
-					break;
-				default:
-					throw new NotSupportedException("This select operation type is not supported.");
-			}
-
-			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
-			mesh.SelectedItems = selectedItems;
-			updateColorBuffers(oldSelection, selectedItems);
-
-			GL.MatrixMode(MatrixMode.Modelview);
-			GL.PopMatrix();
 		}
 
 		private HashSet<ISelectable> getPointSelection(int x, int y, SelectMode mode, ItemTypeToSelect itemType)
@@ -1499,46 +1714,15 @@ namespace MeshEditor.Data
 			return result;
 		}
 
-		public void UnselectAllItems()
+		private HashSet<ISelectable> getAllItemsToSelect(ItemTypeToSelect itemType)
 		{
-			if (mesh == null)
-				return;
-
-			// ulozit pred oznacenim do historie --------------------------------------
-			saveStateBeforeSelect();
-			// ------------------------------------------------------------------------
-
-			unselectAllItems();
-		}
-
-		private void unselectAllItems()
-		{
-			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
 			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
-			mesh.SelectedItems = newSelection;
-			updateColorBuffers(oldSelection, newSelection);
-		}
-
-		public void SelectAllItems(EditorMode editorMode)
-		{
-			if (mesh == null)
-				return;
-
-			// ulozit pred oznacenim do historie --------------------------------------
-			saveStateBeforeSelect();
-			// ------------------------------------------------------------------------
-
-			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
-
-			HashSet<ISelectable> temp = mesh.SelectedItems;
-			mesh.SelectedItems = new HashSet<ISelectable>();
-
 			switch (itemType)
 			{
 				case ItemTypeToSelect.Element:
 					foreach (Element e in mesh.Elements)
 						if (!mesh.HiddenElements.Contains(e))
-							mesh.SelectedItems.Add(e);
+							newSelection.Add(e);
 					break;
 				case ItemTypeToSelect.Node:
 					foreach (Element e in mesh.Elements)
@@ -1546,25 +1730,25 @@ namespace MeshEditor.Data
 						if (!mesh.HiddenElements.Contains(e))
 						{
 							foreach (Node n in e.IterateThroughAllNodes())
-								mesh.SelectedItems.Add(n);
+								newSelection.Add(n);
 						}
 					}
 					break;
 				case ItemTypeToSelect.Face:
 					foreach (Element2D face in mesh.Faces)
-						mesh.SelectedItems.Add(face);
+						newSelection.Add(face);
 					break;
 				case ItemTypeToSelect.Edge:
 					foreach (WingedEdge edge in mesh.Edges)
-						mesh.SelectedItems.Add(edge);
+						newSelection.Add(edge);
 					break;
 				case ItemTypeToSelect.Beam:
 					foreach (Beam beam in mesh.Beams)
-						mesh.SelectedItems.Add(beam);
+						newSelection.Add(beam);
 					break;
 			}
 
-			updateColorBuffers(temp, mesh.SelectedItems);
+			return newSelection;
 		}
 
 		private static ItemTypeToSelect editorModeToItemType(EditorMode editorMode)
@@ -1592,121 +1776,6 @@ namespace MeshEditor.Data
 					break;
 			}
 			return itemType;
-		}
-
-		public void InvertSelection()
-		{
-			if (mesh == null)
-				return;
-
-			ItemTypeToSelect itemType;
-			ISelectable firstItem = getFirstSelectedItem();
-			if (firstItem == null) // nic neni vybrano
-				return;
-			// -------------------------------------------
-			if (firstItem is Element3D)
-				itemType = ItemTypeToSelect.Element;
-			else if (firstItem is Element2D)
-				itemType = ItemTypeToSelect.Face;
-			else if (firstItem is Node)
-				itemType = ItemTypeToSelect.Node;
-			else if (firstItem is WingedEdge)
-				itemType = ItemTypeToSelect.Edge;
-			else if (firstItem is Beam)
-				itemType = ItemTypeToSelect.Beam;
-			else
-				return;
-			// -------------------------------------------
-			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
-			mesh.SelectedItems = new HashSet<ISelectable>();
-
-			switch (itemType)
-			{
-				case ItemTypeToSelect.Element:
-					foreach (Element e in mesh.Elements)
-						if (!mesh.HiddenElements.Contains(e) && !oldSelection.Contains(e))
-							mesh.SelectedItems.Add(e);
-					break;
-				case ItemTypeToSelect.Node:
-					foreach (Element e in mesh.Elements)
-					{
-						if (!mesh.HiddenElements.Contains(e))
-						{
-							foreach (Node n in e.IterateThroughAllNodes())
-								if (!oldSelection.Contains(n))
-									mesh.SelectedItems.Add(n);
-						}
-					}
-					break;
-				case ItemTypeToSelect.Face:
-					foreach (Element2D face in mesh.Faces)
-						if (!oldSelection.Contains(face))
-							mesh.SelectedItems.Add(face);
-					break;
-				case ItemTypeToSelect.Edge:
-					foreach (WingedEdge edge in mesh.Edges)
-						if (!oldSelection.Contains(edge))
-							mesh.SelectedItems.Add(edge);
-					break;
-				case ItemTypeToSelect.Beam:
-					foreach (Beam beam in mesh.Beams)
-						if (!oldSelection.Contains(beam))
-							mesh.SelectedItems.Add(beam);
-					break;
-			}
-
-			updateColorBuffers(oldSelection, mesh.SelectedItems);
-		}
-
-		public void SelectItemsIncidingWithFaces()
-		{
-			if (mesh == null || mesh.SelectedItems.Count == 0)
-				return;
-
-			// ulozit pred oznacenim do historie --------------------------------------
-			saveStateBeforeSelect();
-			// ------------------------------------------------------------------------
-
-			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
-			HashSet<ISelectable> newSelection = new HashSet<ISelectable>();
-
-			switch (SceneFacade.EditorMode)
-			{
-				case EditorMode.SelectElements:
-					foreach (ISelectable item in mesh.SelectedItems)
-					{
-						IFaceOfElement3D f = item as IFaceOfElement3D;
-						if (f != null && f.ParentElement != null)
-							newSelection.Add(f.ParentElement);
-					}
-					break;
-				case EditorMode.SelectEdges:
-					foreach (ISelectable item in mesh.SelectedItems)
-					{
-						Element2D f = item as Element2D;
-						if (f != null)
-						{
-							foreach (WingedEdge e in f.IterateThroughAllEdges())
-								newSelection.Add(e);
-						}
-					}
-					break;
-				case EditorMode.SelectNodes:
-					foreach (ISelectable item in mesh.SelectedItems)
-					{
-						Element2D f = item as Element2D;
-						if (f != null)
-						{
-							foreach (Node n in (Scene.IncludeEdgeMiddleNodes) ? f.IterateThroughAllNodesIncludingEdgeMiddleNodes() : f.IterateThroughAllNodes())
-								newSelection.Add(n);
-						}
-					}
-					break;
-				default:
-					return;
-			}
-			mesh.SelectedItems = newSelection;
-			updateColorBuffers(oldSelection, mesh.SelectedItems);
 		}
 
 		private ISelectable getFirstSelectedItem()
@@ -2046,63 +2115,7 @@ namespace MeshEditor.Data
 			return selectionSet;
 		}
 
-		public void SelectItemsWithProperty(EditorMode editorMode, Property property, bool addToSelection)
-		{
-			if (mesh == null)
-				return;
-
-			// ulozit pred oznacenim do historie --------------------------------------
-			saveStateBeforeSelect();
-			// ------------------------------------------------------------------------
-
-			ItemTypeToSelect itemType = editorModeToItemType(editorMode);
-
-			HashSet<ISelectable> oldSelection = mesh.SelectedItems;
-			HashSet<ISelectable> newSelection = addToSelection ? new HashSet<ISelectable>(oldSelection) : new HashSet<ISelectable>();
-			mesh.SelectedItems = newSelection;
-			// --------------------------------------------
-			switch (itemType)
-			{
-				case ItemTypeToSelect.Element:
-					foreach (Element e in mesh.Elements) // neuriznuty prvky
-					{
-						if (!mesh.HiddenElements.Contains(e) && !(e is Beam))
-						{
-							if (e.Property == property)
-								newSelection.Add(e);
-						}
-					}
-					break;
-				case ItemTypeToSelect.Node:
-					foreach (Element e in mesh.Elements) // uzly vsech neuriznutych prvku
-					{
-						if (!mesh.HiddenElements.Contains(e))
-						{
-							foreach (Node n in e.IterateThroughAllNodesIncludingEdgeMiddleNodes()) // uzly
-								if (n.ContainsProperty(property))
-									newSelection.Add(n);
-						}
-					}
-					break;
-				case ItemTypeToSelect.Face:
-					foreach (Element2D face in mesh.Faces) // plochy na povrchu
-						if (face.Property == property)
-							newSelection.Add(face);
-					break;
-				case ItemTypeToSelect.Edge:
-					foreach (WingedEdge edge in mesh.Edges) // hrany na povrchu
-						if (edge.Property == property)
-							newSelection.Add(edge);
-					break;
-				case ItemTypeToSelect.Beam:
-					foreach (Beam b in mesh.Beams)
-						if (b.Property == property)
-							newSelection.Add(b);
-					break;
-			}
-			// --------------------------------------------
-			updateColorBuffers(oldSelection, newSelection);
-		}
+		#endregion
 
 		#endregion
 
