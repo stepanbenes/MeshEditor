@@ -872,13 +872,21 @@ namespace MeshEditor.Construction
 			//            edgesOfn.TrimExcess(); // oriznout seznam sousedu hran, aby se setrilo mistem
 			//    }
 
+			bool containsAnyPoints = false;
+
 			// spocitat meze obalky site (pro vypocet centra a polomeru site)
 			foreach (Node n in mesh.GetNodes(false))
+			{
 				updateBounds(n.Position, ref lowerBound, ref upperBound);
+				containsAnyPoints = true;
+			}
 
 			// nastavit stred rotace site pro nastroj Orbit a radius viditelne site
-			mesh.CenterOfRotation = (nodesEdgesIncidence.Count > 0) ? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound) : /*Vector3.Zero*/ mesh.PositionOffset * -mesh.ResizeFactor;
-			mesh.Radius = (nodesEdgesIncidence.Count > 0) ? (lowerBound - upperBound).Length * 0.5f : 1f;
+			mesh.CenterOfRotation = containsAnyPoints ? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound) : Vector3.Zero;
+			mesh.Radius = containsAnyPoints ? (lowerBound - upperBound).Length * 0.5f : 1f;
+
+			if (mesh.Radius == 0)
+				mesh.Radius = 1f;
 
 			mesh.LowerBound = lowerBound;
 			mesh.UpperBound = upperBound;

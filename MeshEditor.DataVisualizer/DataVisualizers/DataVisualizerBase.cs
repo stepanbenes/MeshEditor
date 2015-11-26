@@ -283,6 +283,7 @@ namespace MeshEditor.DataVisualizer
 
 			Vector3 lowerBound = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
 			Vector3 upperBound = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+			bool containsAnyPoints = false;
 
 			switch (action)
 			{
@@ -293,6 +294,7 @@ namespace MeshEditor.DataVisualizer
 						originalNodePositions[node] = node.Position;
 						node.Position += getDisplacementVector(node);
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
+						containsAnyPoints = true;
 					}
 					updateFaceNormals();
 					break;
@@ -302,6 +304,7 @@ namespace MeshEditor.DataVisualizer
 					{
 						node.Position = originalNodePositions[node];
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
+						containsAnyPoints = true;
 					}
 					updateFaceNormals();
 					originalNodePositions = null;
@@ -313,6 +316,7 @@ namespace MeshEditor.DataVisualizer
 						node.Position = originalNodePositions[node];
 						node.Position += getDisplacementVector(node);
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
+						containsAnyPoints = true;
 					}
 					updateFaceNormals();
 					break;
@@ -321,8 +325,11 @@ namespace MeshEditor.DataVisualizer
 			}
 
 			// update mesh bounds
-			mesh.CenterOfRotation = Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound);
-			mesh.Radius = (lowerBound - upperBound).Length * 0.5f;
+			mesh.CenterOfRotation = containsAnyPoints ? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound) : Vector3.Zero;
+			mesh.Radius = containsAnyPoints ? (lowerBound - upperBound).Length * 0.5f : 1f;
+
+			if (mesh.Radius == 0)
+				mesh.Radius = 1f;
 
 			mesh.LowerBound = lowerBound;
 			mesh.UpperBound = upperBound;

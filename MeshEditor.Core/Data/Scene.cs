@@ -78,7 +78,6 @@ namespace MeshEditor.Data
 		public static float BorderEdgeWidth;
 		public static float BeamWidth;
 		public static float DefaultCameraDistance;
-		public static bool AlwaysShowNumbers;
 
 		public static Color NonActiveBackColor;
 		public static Color ActiveBackColor;
@@ -114,11 +113,8 @@ namespace MeshEditor.Data
 		private static ShadingModel meshShadingModel;
 		private static bool EnableSkipSelectionModeIfNothingNewSelected;
 
-		//public static readonly float DEPTH_TEST_TOLERANCE_DISTANCE;
 		public static readonly float WHEEL_ZOOM_FACTOR;
 		public static readonly float MAX_ZOOM_DISTANCE;
-		public static readonly float LINEAR_ZOOM_DISTANCE;
-		public static readonly float CLOSEST_ZOOM_MULTIPLE_OF_NEAR_PARAM;
 		public static readonly float RADIUS_OF_NORMALIZED_MESH;
 		public static readonly float MAX_VISIBLE_NUMBERS_DENSITY; // pixel^2
 		public static readonly int NODE_SELECTION_TOLERANCE_DISTANCE; // pixels
@@ -140,19 +136,15 @@ namespace MeshEditor.Data
 
 			WHEEL_ZOOM_FACTOR = 0.1f; // (0,1)
 			MAX_ZOOM_DISTANCE = 0.2f;
-			LINEAR_ZOOM_DISTANCE = 0.005f;
-			CLOSEST_ZOOM_MULTIPLE_OF_NEAR_PARAM = 2.0f;
 			NODE_SELECTION_TOLERANCE_DISTANCE = 20;
 			EDGE_SELECTION_TOLERANCE_DISTANCE = 20;
 			LIMIT_ANGLE_FOR_POINT_INSIDE_FACE_DECISION = 10f; /**/
 
 			ColorScaleLegendPosition = ColorScaleLegendPosition.RightTop;
 
-			// ---------------------------------------------------
-			AlwaysShowNumbers = false;
 			// ===================================================
 
-			SetDefaultParametres(false);
+			SetDefaultParametres(openGLIsInitialized: false);
 
 			// ------------------------------------------
 		}
