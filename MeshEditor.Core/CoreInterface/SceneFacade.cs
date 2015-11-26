@@ -290,14 +290,8 @@ namespace MeshEditor.CoreInterface
 			GL.Disable(EnableCap.CullFace);
 			//GL.CullFace(CullFaceMode.Back);
 
-			// obe plochy, predni i zadni, zobrazovat stejne
-			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
-
-			// zadni plochu zobrazovat tmavou
+			// No side is special, use lighting for both sides
 			GL.LightModel(LightModelParameter.LightModelTwoSide, 1f);
-
-			//GL.glLightModeli(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_FALSE);
-			//GL.LightModel(LightModelParameter.LightModelTwoSide, 1f); // ???
 
 			//// default materials
 			//float[] ambientMat = { 0.4f, 0.4f, 0.4f, 1 };
@@ -567,10 +561,6 @@ namespace MeshEditor.CoreInterface
 				case AvailableAction.XRayVision:
 					Scene.XRayVision = !Scene.XRayVision;
 					return; // !!
-				case AvailableAction.InvertAllNormals:
-					scene.InvertAllNormalsOfMesh();
-					thisMeshNeedRefreshInOtherWindows = true;
-					break;
 				case AvailableAction.ChangeRenderMode: // change render mode
 					if (scene.RenderMode == RenderMode.Points)
 						scene.RenderMode = RenderMode.BorderLines;

@@ -67,8 +67,6 @@ namespace MeshEditor.Data
 		private MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
 		private Font textFont;
 
-		private bool normalVectorsAreInverted;
-
 		// -------------------------------
 
 		// Data visualizer
@@ -104,8 +102,6 @@ namespace MeshEditor.Data
 
 			this.textPrinter = new OpenTKCompatibility.TextPrinter();
 			this.textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
-
-			this.normalVectorsAreInverted = false;
 		}
 
 		public void TrimExcessMemory()
@@ -176,11 +172,6 @@ namespace MeshEditor.Data
 		public int ExternalNodesCount
 		{
 			get { return nodesEdgesIncidence.Count + edgeMiddleNodes.Count + beamNodesNotInFaces.Count; }
-		}
-
-		public bool NormalVectorsAreInverted
-		{
-			get { return normalVectorsAreInverted; }
 		}
 
 		public Dictionary<Element2D, Vector2> FaceCentersPositions
@@ -1100,19 +1091,6 @@ namespace MeshEditor.Data
 		#endregion
 
 		#region Other public methods
-
-		public void InvertAllNormals()
-		{
-			//GL.FrontFace(FrontFaceDirection.Cw);
-			if (this.vbo != null)
-				this.vbo.InvertAllNormals(); // invertovat vektory v normal bufferu
-			// jeste invertovat normal vektory vsech ploch
-			foreach (Element2D face in faces)
-				face.InvertNormalVector();
-			
-			// nastavit priznak
-			this.normalVectorsAreInverted = !this.normalVectorsAreInverted;
-		}
 
 		public IEnumerable<Node> GetSimpleExternalNodes()
 		{

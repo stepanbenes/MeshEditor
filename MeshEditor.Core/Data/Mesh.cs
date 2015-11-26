@@ -154,11 +154,6 @@ namespace MeshEditor.Data
 			get { return content.Beams.Count; }
 		}
 
-		public bool NormalVectorsAreInverted
-		{
-			get { return content.NormalVectorsAreInverted; }
-		}
-
 		// -----------------------
 
 		public EdgeFacePropertySet HiddenItemsProperties
@@ -1012,11 +1007,6 @@ namespace MeshEditor.Data
 			foreach (Node n in visibleNodes)
 				result[n] = screenProjections[n];
 			return result;
-		}
-
-		public void InvertAllNormals()
-		{
-			content.InvertAllNormals();
 		}
 
 		public IEnumerable<Node> GetNodes(bool includeMiddleNodes)

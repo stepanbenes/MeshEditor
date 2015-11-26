@@ -1156,14 +1156,6 @@ namespace MeshEditor.Construction
 
 			this.hiddenItemsProperties = mesh.HiddenItemsProperties; // nastavit odkaz na skryte polozky s vlastnostmi
 
-			// -------------------------------------------------------------
-			// pokud jsou normaly ploch otocene, tak je pred rezanim vratim,
-			// na konci rezani vratim puvodni stav
-			bool normalVectorsWereInverted = mesh.NormalVectorsAreInverted;
-			if (mesh.NormalVectorsAreInverted)
-				mesh.InvertAllNormals();
-			// -------------------------------------------------------------
-
 			// projit vsechny hrany a ulozit jejich vlastnosti
 			foreach (WingedEdge edge in mesh.Edges)
 			{
@@ -1254,12 +1246,6 @@ namespace MeshEditor.Construction
 			mesh.InitializeMesh(edgeAnglesHistogram, this.meshHasTwinElements);
 			// vytvorit buffery
 			mesh.CreateBuffers(); // docela to zdrzuje, pomaly !!!
-
-			// -------------------------------------------------------------
-			// pokud byly normaly puvodne otocene, tak je ted vratim zpet
-			if (normalVectorsWereInverted)
-				mesh.InvertAllNormals();
-			// -------------------------------------------------------------
 		}
 
 		private void processQuadraticNodesOfFace(Element2D face)

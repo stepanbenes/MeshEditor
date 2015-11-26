@@ -15,7 +15,6 @@ namespace MeshEditor.CoreInterface
 		FaceLighting,
 		EdgeLighting,
 		XRayVision,
-		InvertAllNormals,
 		ChangeRenderMode,
 		CameraReset,
 		CameraStandardView,

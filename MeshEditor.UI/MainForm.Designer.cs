@@ -68,6 +68,8 @@
 			this.facePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.edgePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamPropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+			this.configurePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.renderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.pointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.borderLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,7 +117,6 @@
 			this.cutsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.showHideElementsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.restoreCuttedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.invertAllNormalsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
 			this.splitActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -154,6 +155,8 @@
 			this.facesPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
 			this.edgesPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamsPropertyColorsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
+			this.configurePropertyColorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripButtonSetPropertyOfSelectedItems = new System.Windows.Forms.ToolStripButton();
 			this.toolStripButtonSelectItemsByProperty = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
@@ -187,10 +190,6 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
-			this.configurePropertyColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
-			this.configurePropertyColorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -499,37 +498,49 @@
 			// elementPropertyColorsToolStripMenuItem
 			// 
 			this.elementPropertyColorsToolStripMenuItem.Name = "elementPropertyColorsToolStripMenuItem";
-			this.elementPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+			this.elementPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
 			this.elementPropertyColorsToolStripMenuItem.Text = "&Elements";
 			this.elementPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// nodePropertyColorsToolStripMenuItem
 			// 
 			this.nodePropertyColorsToolStripMenuItem.Name = "nodePropertyColorsToolStripMenuItem";
-			this.nodePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+			this.nodePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
 			this.nodePropertyColorsToolStripMenuItem.Text = "&Nodes";
 			this.nodePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// facePropertyColorsToolStripMenuItem
 			// 
 			this.facePropertyColorsToolStripMenuItem.Name = "facePropertyColorsToolStripMenuItem";
-			this.facePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+			this.facePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
 			this.facePropertyColorsToolStripMenuItem.Text = "&Faces";
 			this.facePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// edgePropertyColorsToolStripMenuItem
 			// 
 			this.edgePropertyColorsToolStripMenuItem.Name = "edgePropertyColorsToolStripMenuItem";
-			this.edgePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+			this.edgePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
 			this.edgePropertyColorsToolStripMenuItem.Text = "Ed&ges";
 			this.edgePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// beamPropertyColorsToolStripMenuItem
 			// 
 			this.beamPropertyColorsToolStripMenuItem.Name = "beamPropertyColorsToolStripMenuItem";
-			this.beamPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+			this.beamPropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
 			this.beamPropertyColorsToolStripMenuItem.Text = "&Beams";
 			this.beamPropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator6
+			// 
+			this.toolStripSeparator6.Name = "toolStripSeparator6";
+			this.toolStripSeparator6.Size = new System.Drawing.Size(124, 6);
+			// 
+			// configurePropertyColorsToolStripMenuItem
+			// 
+			this.configurePropertyColorsToolStripMenuItem.Name = "configurePropertyColorsToolStripMenuItem";
+			this.configurePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
+			this.configurePropertyColorsToolStripMenuItem.Text = "Configure";
+			this.configurePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
 			// 
 			// renderToolStripMenuItem
 			// 
@@ -886,14 +897,13 @@
             this.cutsToolStripMenuItem,
             this.showHideElementsToolStripMenuItem,
             this.restoreCuttedItemsToolStripMenuItem,
-            this.invertAllNormalsToolStripMenuItem,
             this.toolStripSeparator4,
             this.splitActiveWindowToolStripMenuItem,
             this.closeActiveWindowToolStripMenuItem,
             this.toolStripSeparator18,
             this.settingsToolStripMenuItem});
 			this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
+			this.toolsToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
 			this.toolsToolStripMenuItem.Text = "&TOOLS";
 			this.toolsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.toolsToolStripMenuItem_DropDownOpening);
 			// 
@@ -958,13 +968,6 @@
 			this.restoreCuttedItemsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
 			this.restoreCuttedItemsToolStripMenuItem.Text = "&Restore mesh";
 			this.restoreCuttedItemsToolStripMenuItem.Click += new System.EventHandler(this.restoreMeshToolStripMenuItem_Click);
-			// 
-			// invertAllNormalsToolStripMenuItem
-			// 
-			this.invertAllNormalsToolStripMenuItem.Name = "invertAllNormalsToolStripMenuItem";
-			this.invertAllNormalsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
-			this.invertAllNormalsToolStripMenuItem.Text = "&Invert all normals";
-			this.invertAllNormalsToolStripMenuItem.Click += new System.EventHandler(this.invertAllNormalsToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator4
 			// 
@@ -1311,37 +1314,49 @@
 			// elementPropertyColorsToolStripMenuItem2
 			// 
 			this.elementPropertyColorsToolStripMenuItem2.Name = "elementPropertyColorsToolStripMenuItem2";
-			this.elementPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.elementPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(210, 22);
 			this.elementPropertyColorsToolStripMenuItem2.Text = "&Element property colors";
 			this.elementPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// nodePropertyColorsToolStripMenuItem2
 			// 
 			this.nodePropertyColorsToolStripMenuItem2.Name = "nodePropertyColorsToolStripMenuItem2";
-			this.nodePropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.nodePropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(210, 22);
 			this.nodePropertyColorsToolStripMenuItem2.Text = "&Node property colors";
 			this.nodePropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// facesPropertyColorsToolStripMenuItem2
 			// 
 			this.facesPropertyColorsToolStripMenuItem2.Name = "facesPropertyColorsToolStripMenuItem2";
-			this.facesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.facesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(210, 22);
 			this.facesPropertyColorsToolStripMenuItem2.Text = "&Face property colors";
 			this.facesPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// edgesPropertyColorsToolStripMenuItem2
 			// 
 			this.edgesPropertyColorsToolStripMenuItem2.Name = "edgesPropertyColorsToolStripMenuItem2";
-			this.edgesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.edgesPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(210, 22);
 			this.edgesPropertyColorsToolStripMenuItem2.Text = "Ed&ge property colors";
 			this.edgesPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
 			// 
 			// beamsPropertyColorsToolStripMenuItem2
 			// 
 			this.beamsPropertyColorsToolStripMenuItem2.Name = "beamsPropertyColorsToolStripMenuItem2";
-			this.beamsPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(200, 22);
+			this.beamsPropertyColorsToolStripMenuItem2.Size = new System.Drawing.Size(210, 22);
 			this.beamsPropertyColorsToolStripMenuItem2.Text = "&Beam property colors";
 			this.beamsPropertyColorsToolStripMenuItem2.Click += new System.EventHandler(this.propertyColorsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator25
+			// 
+			this.toolStripSeparator25.Name = "toolStripSeparator25";
+			this.toolStripSeparator25.Size = new System.Drawing.Size(207, 6);
+			// 
+			// configurePropertyColorsToolStripMenuItem1
+			// 
+			this.configurePropertyColorsToolStripMenuItem1.Name = "configurePropertyColorsToolStripMenuItem1";
+			this.configurePropertyColorsToolStripMenuItem1.Size = new System.Drawing.Size(210, 22);
+			this.configurePropertyColorsToolStripMenuItem1.Text = "&Configure property colors";
+			this.configurePropertyColorsToolStripMenuItem1.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
 			// 
 			// toolStripButtonSetPropertyOfSelectedItems
 			// 
@@ -1631,30 +1646,6 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
-			// toolStripSeparator6
-			// 
-			this.toolStripSeparator6.Name = "toolStripSeparator6";
-			this.toolStripSeparator6.Size = new System.Drawing.Size(207, 6);
-			// 
-			// configurePropertyColorsToolStripMenuItem
-			// 
-			this.configurePropertyColorsToolStripMenuItem.Name = "configurePropertyColorsToolStripMenuItem";
-			this.configurePropertyColorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-			this.configurePropertyColorsToolStripMenuItem.Text = "Configure";
-			this.configurePropertyColorsToolStripMenuItem.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
-			// 
-			// toolStripSeparator25
-			// 
-			this.toolStripSeparator25.Name = "toolStripSeparator25";
-			this.toolStripSeparator25.Size = new System.Drawing.Size(207, 6);
-			// 
-			// configurePropertyColorsToolStripMenuItem1
-			// 
-			this.configurePropertyColorsToolStripMenuItem1.Name = "configurePropertyColorsToolStripMenuItem1";
-			this.configurePropertyColorsToolStripMenuItem1.Size = new System.Drawing.Size(210, 22);
-			this.configurePropertyColorsToolStripMenuItem1.Text = "&Configure property colors";
-			this.configurePropertyColorsToolStripMenuItem1.Click += new System.EventHandler(this.configurePropertyColorsToolStripMenuItem_Click);
-			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1740,7 +1731,6 @@
 		private System.Windows.Forms.ToolStripMenuItem nodeNumbersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
 		private System.Windows.Forms.ToolStripMenuItem meshInfoToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem invertAllNormalsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem hideSelectedItemsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem selectItemsByPropertyToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem invertSelectionToolStripMenuItem;

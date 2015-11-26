@@ -405,7 +405,7 @@ namespace MeshEditor.WinUI
 			restoreCuttedItemsToolStripMenuItem.Enabled = (bool)activeControl.SceneFacade.GetValue(AvailableValue.MeshHasHiddenElements);
 			closeActiveWindowToolStripMenuItem.Enabled = activeWindowCanBeClosed();
 			bool containsMesh = activeControl.SceneFacade.ContainsMesh;
-			listOfSelectedItemsToolStripMenuItem.Enabled = layersToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = invertAllNormalsToolStripMenuItem.Enabled = containsMesh;
+			listOfSelectedItemsToolStripMenuItem.Enabled = layersToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = containsMesh;
 		}
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -548,11 +548,6 @@ namespace MeshEditor.WinUI
 			longOpNotifier.Begin();
 			activeControl.SceneFacade.PerformAction(AvailableAction.RestoreMesh);
 			longOpNotifier.End();
-		}
-
-		private void invertAllNormalsToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			activeControl.SceneFacade.PerformAction(AvailableAction.InvertAllNormals);
 		}
 
 		private void splitActiveWindowToolStripMenuItem_Click(object sender, EventArgs e)

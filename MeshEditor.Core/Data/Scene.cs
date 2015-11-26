@@ -2326,15 +2326,6 @@ namespace MeshEditor.Data
 			cutPlaneDefinitionNodes.Clear(); // smazat definicni body
 		}
 
-		public void InvertAllNormalsOfMesh()
-		{
-			if (mesh != null)
-			{
-				saveStateBeforeInvertNormals();
-				mesh.InvertAllNormals();
-			}
-		}
-
 		public void HideSelectedElements()
 		{
 			if (mesh == null)
@@ -2361,13 +2352,6 @@ namespace MeshEditor.Data
 		#endregion
 
 		#region History
-
-		private void saveStateBeforeInvertNormals()
-		{
-			if (mesh == null)
-				return;
-			// no unsaved changes
-		}
 
 		private void saveStateBeforeSelect()
 		{

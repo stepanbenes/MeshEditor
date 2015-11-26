@@ -319,9 +319,6 @@ namespace MeshEditor.WinUI
 				//case Keys.F5:
 				//    action = AvailableAction.Refresh;
 				//    break;
-				case Keys.I:
-					action = AvailableAction.InvertAllNormals;
-					break;
 				case Keys.M: // change render mode
 					action = AvailableAction.ChangeRenderMode;
 					break;
