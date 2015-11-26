@@ -1633,8 +1633,6 @@ namespace MeshEditor.Data
 
 		private ISelectable getSingleEntityOnLocation(int x, int y, ItemTypeToSelect itemType, out Element2D faceHit)
 		{
-			bool computeFaceHit = (itemType != ItemTypeToSelect.Node && itemType != ItemTypeToSelect.Beam);
-			faceHit = null;
 			Rectangle area;
 			int[] viewport = new int[4];
 			GL.GetInteger(GetPName.Viewport, viewport);
@@ -1651,7 +1649,6 @@ namespace MeshEditor.Data
 				mesh.DrawFacesOnly();
 			}
 
-			if (itemType != ItemTypeToSelect.Node || computeFaceHit)
 			{
 				float pixelDepth = getPixelDepth(x, y, viewport);
 				Vector3 hitPoint;
