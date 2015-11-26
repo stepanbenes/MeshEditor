@@ -111,7 +111,6 @@ namespace MeshEditor.Data
 
 		public static bool XRayVision;
 		private static ShadingModel meshShadingModel;
-		private static bool EnableSkipSelectionModeIfNothingNewSelected;
 
 		public static readonly float WHEEL_ZOOM_FACTOR;
 		public static readonly float MAX_ZOOM_DISTANCE;
@@ -190,7 +189,6 @@ namespace MeshEditor.Data
 			BeamWidth = 2f;
 			DefaultCameraDistance = 2.5f;
 			XRayVision = false;
-			EnableSkipSelectionModeIfNothingNewSelected = true; /**/
 																//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
@@ -1321,7 +1319,8 @@ namespace MeshEditor.Data
 						do
 						{
 							newSelection = advancedPointSelection(mode, itemType, faceHit, advancedItemHit);
-						} while (EnableSkipSelectionModeIfNothingNewSelected && (itemType == ItemTypeToSelect.Face || itemType == ItemTypeToSelect.Element) && newSelection.Count == 1 && ++mode < SelectMode.Object);
+							++mode;
+						} while (newSelection.Count == 1 && mode < SelectMode.Object);
 					}
 					break;
 				default:
@@ -1469,7 +1468,7 @@ namespace MeshEditor.Data
 					secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
 				}
 			}
-			float result = Utils.GetAngleInDegreesBetweenUnitVectors(firstUnitVector, secondUnitVector);
+			float result = Utils.GetAngle0_90(firstUnitVector, secondUnitVector);
 			return result;
 		}
 
