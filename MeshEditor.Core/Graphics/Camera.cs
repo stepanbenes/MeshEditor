@@ -155,54 +155,51 @@ namespace MeshEditor.Graphics
 
 		public void Front()
 		{
-			eye = new Vector3(0f, -Scene.DefaultCameraDistance, 0f);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 0f, 1f);
+			eye = Vector3.UnitZ * Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitY;
 		}
 
 		public void Back()
 		{
-			eye = new Vector3(0f, Scene.DefaultCameraDistance, 0f);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 0f, 1f);
+			eye = Vector3.UnitZ * -Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitY;
 		}
 
 		public void Left()
 		{
-			eye = new Vector3(-Scene.DefaultCameraDistance, 0f, 0f);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 0f, 1f);
+			eye = Vector3.UnitX * Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitY;
 		}
 
 		public void Right()
 		{
-			eye = new Vector3(Scene.DefaultCameraDistance, 0f, 0f);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 0f, 1f);
+			eye = Vector3.UnitX * -Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitY;
 		}
 
 		public void Top()
 		{
-			eye = new Vector3(0f, 0f, Scene.DefaultCameraDistance);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 1f, 0f);
+			eye = Vector3.UnitY * Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitZ * -Scene.DefaultCameraDistance;
 		}
 
 		public void Bottom()
 		{
-			eye = new Vector3(0f, 0f, -Scene.DefaultCameraDistance);
-			center = new Vector3(0f, 0f, 0f);
-			up = new Vector3(0f, 1f, 0f);
+			eye = Vector3.UnitY * -Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.UnitZ * Scene.DefaultCameraDistance;
 		}
 
 		public void Iso()
 		{
-			//eye = Vector3.Normalize(new Vector3(1f, 1f, 1f)) * DefaultDistance;
-			//center = new Vector3(0f, 0f, 0f);
-			//up = Vector3.Normalize(new Vector3(-1f, 1f, -1f));
-			eye = Vector3.Normalize(new Vector3(1f, -1f, 1f)) * Scene.DefaultCameraDistance;
-			center = new Vector3(0f, 0f, 0f);
-			up = Vector3.Normalize(new Vector3(-1f, 1f, 1f));
+			eye = Vector3.Normalize(new Vector3(1f, 1f, 1f)) * Scene.DefaultCameraDistance;
+			center = Vector3.Zero;
+			up = Vector3.Normalize(new Vector3(-1f, 1f, -1f));
 		}
 
 		#endregion

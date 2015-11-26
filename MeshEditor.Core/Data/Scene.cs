@@ -649,14 +649,14 @@ namespace MeshEditor.Data
 			}
 
 			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
-			const float negligibleRelativeSize = 0.001f;
+			const float negligibleRelativeSize = 0.1f;
 
 			if (relativeDimensions.X < negligibleRelativeSize)
 				camera.SetView(CameraView.Right);
 			else if (relativeDimensions.Y < negligibleRelativeSize)
-				camera.SetView(CameraView.Front);
-			else if (relativeDimensions.Z < negligibleRelativeSize)
 				camera.SetView(CameraView.Top);
+			else if (relativeDimensions.Z < negligibleRelativeSize)
+				camera.SetView(CameraView.Front);
 			else
 				camera.SetView(CameraView.Iso);
 		}
@@ -872,10 +872,10 @@ namespace MeshEditor.Data
 			GL.Color3(1.0, 0, 0);       // X
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(AxisLength, 0, 0);
-			GL.Color3(0, 0, 1.0);       // Y
+			GL.Color3(0, 1.0, 0);       // Y
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, AxisLength, 0);
-			GL.Color3(0, 1.0, 0);       // Z
+			GL.Color3(0, 0, 1.0);       // Z
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, 0, AxisLength);
 			GL.End();
@@ -889,10 +889,10 @@ namespace MeshEditor.Data
 			GL.Color3(1.0, 0, 0);       // X
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(-AxisLength, 0, 0);
-			GL.Color3(0, 0, 1.0);       // Y
+			GL.Color3(0, 1.0, 0);       // Y
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, -AxisLength, 0);
-			GL.Color3(0, 1.0, 0);       // Z
+			GL.Color3(0, 0, 1.0);       // Z
 			GL.Vertex3(0, 0, 0);
 			GL.Vertex3(0, 0, -AxisLength);
 			GL.End();
