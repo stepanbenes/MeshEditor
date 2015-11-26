@@ -536,13 +536,18 @@ namespace MeshEditor.Data
 					crossHatchShader.Use(statistics.GetElementPropertyColorsPalette());
 				}
 
-				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, showNumbers, camera);
+				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, camera);
 
 				// turn off shaders
 				if (drawData)
 					content.DataVisualizer.EndDraw();
 				else if (userCrossHatching)
 					crossHatchShader.Unuse();
+
+				if (showNumbers)
+				{
+					content.DrawVisibleElementsNumbers(selectedItems);
+				}
 
 				if (!Scene.FaceLighting)
 					GL.Enable(EnableCap.Lighting);

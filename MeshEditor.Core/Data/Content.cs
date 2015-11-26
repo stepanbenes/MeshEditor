@@ -769,7 +769,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void DrawFaces(HashSet<ISelectable> selectedItems, bool facePropertyColors, bool elementPropertyColors, bool drawElementNumbers, Camera camera)
+		public void DrawFaces(HashSet<ISelectable> selectedItems, bool facePropertyColors, bool elementPropertyColors, Camera camera)
 		{
 			if (vbo != null)
 			{
@@ -817,11 +817,6 @@ namespace MeshEditor.Data
 					face.Draw();
 				}
 				GL.End();
-			}
-			// -------------------------------------------------------
-			if (drawElementNumbers)
-			{
-				drawVisibleElementsNumbers(selectedItems);
 			}
 		}
 
@@ -967,30 +962,7 @@ namespace MeshEditor.Data
 				drawVisibleNodeNumbers(selectedItems); /**/ // !!!
 		}
 
-		private void drawVisibleNodeNumbers(HashSet<ISelectable> selectedItems)
-		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			Scene.ExtractMatrices(out viewport, out modelview, out projection);
-
-			Vector3 winPos;
-
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
-			textPrinter.Begin(); // sets orthografic projection
-			foreach (Node n in this.visibleNodes)
-			{
-				if (stickyNodes.Contains(n))
-					continue;
-				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
-				area.X = winPos.X + 1;
-				area.Y = viewport[3] - winPos.Y + 1;
-				textPrinter.Print(n.ID.ToString(), textFont, selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
-			}
-			textPrinter.End(); // restores projection matrix
-		}
-
-		private void drawVisibleElementsNumbers(HashSet<ISelectable> selectedItems)
+		public void DrawVisibleElementsNumbers(HashSet<ISelectable> selectedItems)
 		{
 			if (faceCentersPositions == null)
 				return;
@@ -1032,6 +1004,29 @@ namespace MeshEditor.Data
 				area.X = winPos.X - 10;
 				area.Y = viewport[3] - winPos.Y - 8;
 				textPrinter.Print(id.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+			}
+			textPrinter.End(); // restores projection matrix
+		}
+
+		private void drawVisibleNodeNumbers(HashSet<ISelectable> selectedItems)
+		{
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			Scene.ExtractMatrices(out viewport, out modelview, out projection);
+
+			Vector3 winPos;
+
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+			foreach (Node n in this.visibleNodes)
+			{
+				if (stickyNodes.Contains(n))
+					continue;
+				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
+				area.X = winPos.X + 1;
+				area.Y = viewport[3] - winPos.Y + 1;
+				textPrinter.Print(n.ID.ToString(), textFont, selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1104,7 +1099,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Public methods
+		#region Other public methods
 
 		public void InvertAllNormals()
 		{
