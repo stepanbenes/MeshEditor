@@ -949,8 +949,9 @@ namespace MeshEditor.Data
 				GL.Enable(EnableCap.Blend);
 			}
 
-			GL.LineWidth(2.0f);
+			GL.LineWidth(1.5f);
 			GL.Disable(EnableCap.Lighting);
+			GL.Disable(EnableCap.DepthTest);
 
 			GL.MatrixMode(MatrixMode.Projection);
 			GL.PushMatrix();
@@ -1007,6 +1008,7 @@ namespace MeshEditor.Data
 
 			GL.MatrixMode(MatrixMode.Modelview);
 
+			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Lighting);
 
 			if (LineSmooth)
