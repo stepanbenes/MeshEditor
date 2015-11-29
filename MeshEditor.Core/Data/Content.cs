@@ -26,6 +26,19 @@ namespace MeshEditor.Data
 	public class Content
 	{
 
+		#region Static members
+
+		private static MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
+		private static Font textFont;
+
+		static Content()
+		{
+			textPrinter = new OpenTKCompatibility.TextPrinter();
+			textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
+		}
+
+		#endregion
+
 		#region Fields
 
 		// ---------------------------------------------------------------
@@ -64,9 +77,6 @@ namespace MeshEditor.Data
 
 		private HashSet<Node> visibleNodes;
 
-		private MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
-		private Font textFont;
-
 		// -------------------------------
 
 		// Data visualizer
@@ -99,9 +109,6 @@ namespace MeshEditor.Data
 
 			this.visibleNodes = null;
 			this.visibleNodesIBO = null;
-
-			this.textPrinter = new OpenTKCompatibility.TextPrinter();
-			this.textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
 		}
 
 		public void TrimExcessMemory()
@@ -953,7 +960,7 @@ namespace MeshEditor.Data
 				drawVisibleNodeNumbers(selectedItems); /**/ // !!!
 		}
 
-		public void DrawVisibleElementsNumbers(HashSet<ISelectable> selectedItems)
+		public void DrawVisibleElementNumbers(HashSet<ISelectable> selectedItems)
 		{
 			if (faceCentersPositions == null)
 				return;
@@ -1086,6 +1093,20 @@ namespace MeshEditor.Data
 			{
 				return PropertyColorProvider.GetRGBA32(baseProperty) | unchecked((int)0xFF000000); // return original color with alpha set to 255
 			}
+		}
+
+		public static void DrawTextLabels(KeyValuePair<string, Vector2>[] textPositions, float windowHeight, Color color)
+		{
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
+			foreach (var textPosition in textPositions)
+			{
+				Vector2 winPos = textPosition.Value;
+                area.X = winPos.X + 1;
+				area.Y = windowHeight - winPos.Y + 1;
+				textPrinter.Print(textPosition.Key, textFont, color, area);
+			}
+			textPrinter.End(); // restores projection matrix
 		}
 
 		#endregion

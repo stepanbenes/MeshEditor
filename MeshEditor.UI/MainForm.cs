@@ -653,6 +653,8 @@ namespace MeshEditor.WinUI
 			//axesToolStripMenuItem.Checked = nodeNumbersToolStripMenuItem.Checked = false;
 			bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawAxes);
 			axesToolStripMenuItem.Checked = value;
+			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawAxisArrows);
+			axisArrowsToolStripMenuItem.Checked = value;
 			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawBeams);
 			beamsToolStripMenuItem2.Checked = value;
 			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawNodeNumbers);
@@ -929,6 +931,14 @@ namespace MeshEditor.WinUI
 			value = !value;
 			activeControl.SceneFacade.SetValue(AvailableValue.DrawAxes, value);
 			axesToolStripMenuItem.Checked = value;
+		}
+
+		private void axisArrowsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawAxisArrows);
+			value = !value;
+			activeControl.SceneFacade.SetValue(AvailableValue.DrawAxisArrows, value);
+			axisArrowsToolStripMenuItem.Checked = value;
 		}
 
 		private void beamsToolStripMenuItem2_Click(object sender, EventArgs e)

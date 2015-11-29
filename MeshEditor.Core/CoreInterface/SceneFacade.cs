@@ -792,6 +792,8 @@ namespace MeshEditor.CoreInterface
 					return null;
 				case AvailableValue.DrawAxes:
 					return scene.DrawAxes;
+				case AvailableValue.DrawAxisArrows:
+					return scene.DrawAxisArrows;
 				case AvailableValue.DrawBeams:
 					return scene.DrawBeams;
 				case AvailableValue.DrawNodeNumbers:
@@ -866,6 +868,9 @@ namespace MeshEditor.CoreInterface
 					break;
 				case AvailableValue.DrawAxes:
 					scene.DrawAxes = (bool)value;
+					break;
+				case AvailableValue.DrawAxisArrows:
+					scene.DrawAxisArrows = (bool)value;
 					break;
 				case AvailableValue.DrawBeams:
 					scene.DrawBeams = (bool)value;
@@ -1667,6 +1672,7 @@ namespace MeshEditor.CoreInterface
 			GL.PushMatrix();
 			GL.LoadIdentity();
 
+			GL.LineWidth(1.0f);
 			GL.Disable(EnableCap.Lighting);
 			GL.Enable(EnableCap.Blend);
 

@@ -20,6 +20,7 @@ namespace MeshEditor.CoreInterface
 		NodeCount, // int
 		BeamCount, // int
 		DrawAxes, // bool
+		DrawAxisArrows, // bool
 		DrawNodeNumbers, // bool
 		DrawElementNumbers, // bool
 		SelectedItemsDescription, // string

@@ -506,7 +506,11 @@ namespace MeshEditor.CoreInterface
 		public Color ActiveBackColor
 		{
 			get { return Scene.ActiveBackColor; }
-			set { activeBackColor = Scene.ActiveBackColor = value; }
+			set
+			{
+				activeBackColor = Scene.ActiveBackColor = value;
+				Scene.LabelColor = Utilities.Functions.GetContrastColor(ActiveBackColor);
+			}
 		}
 
 		[Category("Other colors"), DisplayName("Background (non-active window)")]

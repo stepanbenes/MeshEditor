@@ -33,6 +33,7 @@ namespace MeshEditor.Data
 		private List<CutPlane> cutPlanes;
 
 		private bool drawAxesFlag;
+		private bool drawAxisArrowsFlag;
 		private bool drawNodeNumbersFlag;
 		private bool drawElementNumbersFlag;
 		private bool drawBeamsFlag;
@@ -52,7 +53,8 @@ namespace MeshEditor.Data
 			this.mesh = null;
 			this.camera = new Camera();
 			this.renderMode = DefaultRenderMode;
-			this.drawAxesFlag = true;
+			this.drawAxesFlag = false;
+			this.drawAxisArrowsFlag = true;
 			this.drawNodeNumbersFlag = true;
 			this.drawElementNumbersFlag = false;
 			this.drawBeamsFlag = true;
@@ -81,6 +83,7 @@ namespace MeshEditor.Data
 
 		public static Color NonActiveBackColor;
 		public static Color ActiveBackColor;
+		public static Color LabelColor;
 
 		public static Color FaceColor;
 		public static Color OrdinaryEdgeColor;
@@ -152,6 +155,7 @@ namespace MeshEditor.Data
 		{
 			ActiveBackColor = Color.FromArgb(225, 219, 194);
 			NonActiveBackColor = Color.FromArgb(186, 186, 200);
+			LabelColor = Utils.GetContrastColor(ActiveBackColor);
 
 			FaceColor = Color.WhiteSmoke;
 			SelectedElementColor = Color.Red;
@@ -189,7 +193,7 @@ namespace MeshEditor.Data
 			BeamWidth = 2f;
 			DefaultCameraDistance = 2.5f;
 			XRayVision = false;
-																//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
+			//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;
 
 			SifelFileFormatExtension = ".top";
@@ -238,6 +242,12 @@ namespace MeshEditor.Data
 		{
 			get { return drawAxesFlag; }
 			set { drawAxesFlag = value; }
+		}
+
+		public bool DrawAxisArrows
+		{
+			get { return drawAxisArrowsFlag; }
+			set { drawAxisArrowsFlag = value; }
 		}
 
 		public bool DrawNodeNumbers
@@ -540,6 +550,7 @@ namespace MeshEditor.Data
 			//else
 			//	copy.renderMode = this.renderMode;
 			copy.drawAxesFlag = this.drawAxesFlag;
+			copy.drawAxisArrowsFlag = this.drawAxisArrowsFlag;
 			// cut planes kopirovat nebudu
 			return copy;
 		}
@@ -820,6 +831,9 @@ namespace MeshEditor.Data
 			// draw cut planes
 			if (this.cutPlanes.Count > 0)
 				drawCutPlanes();
+
+			if (drawAxisArrowsFlag)
+				drawAxisArrows();
 		}
 
 		private void drawPlaneDefinitionPoints()
@@ -901,6 +915,89 @@ namespace MeshEditor.Data
 			}
 
 			GL.Disable(EnableCap.LineStipple);
+			GL.Enable(EnableCap.Lighting);
+
+			if (LineSmooth)
+			{
+				GL.Disable(EnableCap.LineSmooth);
+				GL.Disable(EnableCap.Blend);
+			}
+		}
+
+		private void drawAxisArrows()
+		{
+			const float arrowLength = 60f;
+			const float distanceFromWindowLeftBorder = 62f;
+			const float distanceFromWindowBottomBorder = 75f;
+			const float zDistance = 80f;
+
+			int[] viewport = new int[4];
+			GL.GetInteger(GetPName.Viewport, viewport);
+
+			if (LineSmooth)
+			{
+				GL.Enable(EnableCap.LineSmooth);
+				GL.Enable(EnableCap.Blend);
+			}
+
+			GL.LineWidth(2.0f);
+			GL.Disable(EnableCap.Lighting);
+
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.PushMatrix();
+			{
+				GL.LoadIdentity();
+				GL.Ortho(0, viewport[2], viewport[3], 0, 0, zDistance * 2);
+
+				GL.MatrixMode(MatrixMode.Modelview);
+				GL.PushMatrix();
+				{
+					GL.LoadIdentity();
+
+					GL.Translate(distanceFromWindowLeftBorder, viewport[3] - distanceFromWindowBottomBorder, -zDistance);
+					GL.Scale(1f, -1f, 1f); // flip y-axis
+					camera.LookAt();
+
+					Vector3 xAxisEndPoint = new Vector3(arrowLength, 0, 0);
+					Vector3 yAxisEndPoint = new Vector3(0, arrowLength, 0);
+					Vector3 zAxisEndPoint = new Vector3(0, 0, arrowLength);
+
+					// draw lines
+					GL.Begin(BeginMode.Lines);
+					{
+						GL.Color3(1.0, 0, 0);       // X
+						GL.Vertex3(0, 0, 0);
+						GL.Vertex3(ref xAxisEndPoint.X);
+
+						GL.Color3(0, 1.0, 0);       // Y
+						GL.Vertex3(0, 0, 0);
+						GL.Vertex3(ref yAxisEndPoint.X);
+
+						GL.Color3(0, 0, 1.0);       // Z
+						GL.Vertex3(0, 0, 0);
+						GL.Vertex3(ref zAxisEndPoint.X);
+					}
+					GL.End();
+
+					// draw labels
+					double[] modelview = new double[16];    // mptm Model matrix
+					double[] projection = new double[16];   // ptm Projection matrix
+					GL.GetDouble(GetPName.ModelviewMatrix, modelview);
+					GL.GetDouble(GetPName.ProjectionMatrix, projection);
+
+					Vector3 xLabelPosition, yLabelPosition, zLabelPosition;
+					Utils.GluProject(xAxisEndPoint, modelview, projection, viewport, out xLabelPosition);
+					Utils.GluProject(yAxisEndPoint, modelview, projection, viewport, out yLabelPosition);
+					Utils.GluProject(zAxisEndPoint, modelview, projection, viewport, out zLabelPosition);
+					Content.DrawTextLabels(new[] { new KeyValuePair<string, Vector2>("X", xLabelPosition.Xy), new KeyValuePair<string, Vector2>("Y", yLabelPosition.Xy), new KeyValuePair<string, Vector2>("Z", zLabelPosition.Xy) }, viewport[3], Scene.LabelColor);
+				}
+				GL.PopMatrix();
+			}
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.PopMatrix();
+
+			GL.MatrixMode(MatrixMode.Modelview);
+
 			GL.Enable(EnableCap.Lighting);
 
 			if (LineSmooth)

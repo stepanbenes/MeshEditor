@@ -541,7 +541,7 @@ namespace MeshEditor.Data
 
 				if (showNumbers)
 				{
-					content.DrawVisibleElementsNumbers(selectedItems);
+					content.DrawVisibleElementNumbers(selectedItems);
 				}
 
 				if (!Scene.FaceLighting)
