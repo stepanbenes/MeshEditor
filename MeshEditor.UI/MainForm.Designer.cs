@@ -191,6 +191,7 @@
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
 			this.axisArrowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -382,6 +383,7 @@
             this.toolStripSeparator19,
             this.nodeNumbersToolStripMenuItem,
             this.elementNumbersToolStripMenuItem,
+            this.beamNumbersToolStripMenuItem,
             this.toolStripSeparator20,
             this.signalNodeToolStripMenuItem,
             this.signalElementToolStripMenuItem,
@@ -1655,6 +1657,13 @@
 			this.axisArrowsToolStripMenuItem.Text = "A&xis arrows";
 			this.axisArrowsToolStripMenuItem.Click += new System.EventHandler(this.axisArrowsToolStripMenuItem_Click);
 			// 
+			// beamNumbersToolStripMenuItem
+			// 
+			this.beamNumbersToolStripMenuItem.Name = "beamNumbersToolStripMenuItem";
+			this.beamNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.beamNumbersToolStripMenuItem.Text = "Bea&m numbers";
+			this.beamNumbersToolStripMenuItem.Click += new System.EventHandler(this.beamNumbersToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1845,6 +1854,7 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator25;
 		private System.Windows.Forms.ToolStripMenuItem configurePropertyColorsToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem axisArrowsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem beamNumbersToolStripMenuItem;
 	}
 }
 

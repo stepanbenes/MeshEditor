@@ -904,7 +904,7 @@ namespace MeshEditor.Data
 			GL.Vertex3(n.Position);
 		}
 
-        public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors, bool drawElementNumbers)
+        public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors)
 		{
 			GL.LineWidth(Scene.BeamWidth);
 			if (Scene.LineSmooth)
@@ -940,9 +940,6 @@ namespace MeshEditor.Data
 				GL.Disable(EnableCap.LineSmooth);
 				GL.Disable(EnableCap.Blend);
 			}
-
-			if (drawElementNumbers)
-				drawBeamNumbers(selectedItems);
 		}
 
 		public void DrawVisibleNodes(HashSet<ISelectable> selectedItems, bool nodePropertyColors, bool drawNodeNumbers)
@@ -1029,37 +1026,35 @@ namespace MeshEditor.Data
 			textPrinter.End(); // restores projection matrix
 		}
 
-		private void drawBeamNumbers(HashSet<ISelectable> selectedItems)
+		public void DrawVisibleBeamNumbers(HashSet<ISelectable> selectedItems)
 		{
-			// TODO: fix this
+			if (beams.Count == 0)
+				return;
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			Scene.ExtractMatrices(out viewport, out modelview, out projection);
 
-			//if (beams.Count == 0)
-			//    return;
-			//int[] viewport;
-			//double[] modelview;
-			//double[] projection;
-			//Scene.ExtractMatrices(out viewport, out modelview, out projection);
-
-			//Vector3 winPos;
-			//RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
-			//textPrinter.Begin(); // sets orthografic projection
+			Vector3 winPos;
+			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
+			textPrinter.Begin(); // sets orthografic projection
 			//TextPrinterOptions options = TextPrinterOptions.NoCache; /* !!! */
-			//foreach (Beam beam in beams)
-			//{
-			//    if(!visibleNodes.Contains(beam.BeginNode) && !visibleNodes.Contains(beam.EndNode))
-			//        continue;
-			//    if (stickyNodes.Contains(beam.BeginNode) && stickyNodes.Contains(beam.EndNode))
-			//        continue;
-			//    Utils.GluProject(beam.GetCenter(), modelview, projection, viewport, out winPos);
-			//    //if (winPos.Z >= 0f && winPos.Z <= 1f)
-			//    //{
-			//        bool selected = selectedItems.Contains(beam);
-			//        area.X = winPos.X - 10;
-			//        area.Y = viewport[3] - winPos.Y - 8;
-			//        textPrinter.Print(beam.ID.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area, options);
-			//    //}
-			//}
-			//textPrinter.End(); // restores projection matrix
+			foreach (Beam beam in beams)
+			{
+				if (!visibleNodes.Contains(beam.BeginNode) && !visibleNodes.Contains(beam.EndNode))
+					continue;
+				if (stickyNodes.Contains(beam.BeginNode) && stickyNodes.Contains(beam.EndNode))
+					continue;
+				Utils.GluProject(beam.GetCenter(), modelview, projection, viewport, out winPos);
+				//if (winPos.Z >= 0f && winPos.Z <= 1f)
+				//{
+				bool selected = selectedItems.Contains(beam);
+				area.X = winPos.X - 10;
+				area.Y = viewport[3] - winPos.Y - 8;
+				textPrinter.Print(beam.ID.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+				//}
+			}
+			textPrinter.End(); // restores projection matrix
 		}
 
 		private int getRGBA32ColorForFace(Element2D face, Property baseProperty)

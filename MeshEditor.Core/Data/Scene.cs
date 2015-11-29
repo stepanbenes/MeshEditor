@@ -37,6 +37,7 @@ namespace MeshEditor.Data
 		private bool drawNodeNumbersFlag;
 		private bool drawElementNumbersFlag;
 		private bool drawBeamsFlag;
+		private bool drawBeamNumbersFlag;
 
 		private int[] nodeSignal;
 		private int? elementSignal;
@@ -57,7 +58,9 @@ namespace MeshEditor.Data
 			this.drawAxisArrowsFlag = true;
 			this.drawNodeNumbersFlag = true;
 			this.drawElementNumbersFlag = false;
+			
 			this.drawBeamsFlag = true;
+			this.drawBeamNumbersFlag = false;
 
 			this.cutPlaneDefinitionNodes = new List<Node>();
 			this.cutPlanes = new List<CutPlane>();
@@ -260,6 +263,12 @@ namespace MeshEditor.Data
 		{
 			get { return drawElementNumbersFlag; }
 			set { drawElementNumbersFlag = value; }
+		}
+
+		public bool DrawBeamNumbers
+		{
+			get { return drawBeamNumbersFlag; }
+			set { drawBeamNumbersFlag = value; }
 		}
 
 		public bool DrawBeams
@@ -814,7 +823,7 @@ namespace MeshEditor.Data
 		{
 			if (mesh != null)
 			{
-				mesh.DrawContent(this.renderMode, this.camera, optimizeForMoving, optimizeForSelecting, drawNodeNumbersFlag, drawElementNumbersFlag, this.drawBeamsFlag);
+				mesh.DrawContent(this.renderMode, this.camera, optimizeForMoving, optimizeForSelecting, drawNodeNumbersFlag, drawElementNumbersFlag, this.drawBeamsFlag, this.drawBeamNumbersFlag);
 
 				// if cutPlanes.Count != 0 then draw cut planes
 				//foreach (CutPlane plane in cutPlanes)

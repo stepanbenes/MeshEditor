@@ -800,6 +800,8 @@ namespace MeshEditor.CoreInterface
 					return scene.DrawNodeNumbers;
 				case AvailableValue.DrawElementNumbers:
 					return scene.DrawElementNumbers;
+				case AvailableValue.DrawBeamNumbers:
+					return scene.DrawBeamNumbers;
 				case AvailableValue.SelectedItemsDescription:
 					return scene.GetSelectedItemsDescription();
 				case AvailableValue.Status:
@@ -888,9 +890,12 @@ namespace MeshEditor.CoreInterface
 				case AvailableValue.DrawElementNumbers:
 					scene.DrawElementNumbers = (bool)value;
 					if (scene.DrawElementNumbers)
-					{
 						computeVisibleNodes();
-					}
+					break;
+				case AvailableValue.DrawBeamNumbers:
+					scene.DrawBeamNumbers = (bool)value;
+					if (scene.DrawBeamNumbers)
+						computeVisibleNodes();
 					break;
 				case AvailableValue.RenderMode:
 					if (value != null)

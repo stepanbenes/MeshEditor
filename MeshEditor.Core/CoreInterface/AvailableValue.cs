@@ -23,6 +23,7 @@ namespace MeshEditor.CoreInterface
 		DrawAxisArrows, // bool
 		DrawNodeNumbers, // bool
 		DrawElementNumbers, // bool
+		DrawBeamNumbers, // bool
 		SelectedItemsDescription, // string
 		MinimalElementRadius, // int
 		MeshElementPropertiesSorted, // Property[] //(Sorted array)

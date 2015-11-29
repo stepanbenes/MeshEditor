@@ -486,7 +486,7 @@ namespace MeshEditor.Data
 		/// Draws surface representation of mesh, 
 		/// if there are some 1D elements, it draws them too
 		/// </summary>
-		public void DrawContent(RenderMode renderMode, Camera camera, bool optimizeForMoving, bool optimizeForSelecting, bool drawNodeNumbers, bool drawElementNumbers, bool drawBeams)
+		public void DrawContent(RenderMode renderMode, Camera camera, bool optimizeForMoving, bool optimizeForSelecting, bool drawNodeNumbers, bool drawElementNumbers, bool drawBeams, bool drawBeamNumbers)
 		{
 			bool elementPropertyColors = (colorMode & PropertyColorsMode.Elements) != 0;
 			bool facePropertyColors = (colorMode & PropertyColorsMode.Faces) != 0;
@@ -495,7 +495,8 @@ namespace MeshEditor.Data
 			bool beamPropertyColors = (colorMode & PropertyColorsMode.Beams) != 0;
 
 			//bool numbersAreOK = !optimizeForMoving && content.VisibleNodesReady;// && (Scene.AlwaysShowNumbers || !optimizeForSelecting);
-			bool showNumbers = drawElementNumbers & !optimizeForMoving;
+			bool showElementNumbers = drawElementNumbers & !optimizeForMoving;
+			bool showBeamNumbers = drawBeamNumbers & !optimizeForMoving;
 
 			foreach (ILayer layer in layers)
 			{
@@ -539,10 +540,8 @@ namespace MeshEditor.Data
 				else if (userCrossHatching)
 					crossHatchShader.Unuse();
 
-				if (showNumbers)
-				{
+				if (showElementNumbers)
 					content.DrawVisibleElementNumbers(selectedItems);
-				}
 
 				if (!Scene.FaceLighting)
 					GL.Enable(EnableCap.Lighting);
@@ -615,11 +614,14 @@ namespace MeshEditor.Data
 				if (drawData)
 					content.DataVisualizer.BeginDraw(Scene.EdgeLighting);
 
-				content.DrawBeams(selectedItems, beamPropertyColors, showNumbers);
+				content.DrawBeams(selectedItems, beamPropertyColors);
 
 				// data visualizer end draw
 				if (drawData)
 					content.DataVisualizer.EndDraw();
+
+				if (showBeamNumbers)
+					content.DrawVisibleBeamNumbers(selectedItems);
 
 				if (!Scene.EdgeLighting)
 					GL.Enable(EnableCap.Lighting);

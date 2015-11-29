@@ -661,6 +661,8 @@ namespace MeshEditor.WinUI
 			nodeNumbersToolStripMenuItem.Checked = value;
 			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawElementNumbers);
 			elementNumbersToolStripMenuItem.Checked = value;
+			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawBeamNumbers);
+			beamNumbersToolStripMenuItem.Checked = value;
 			value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawQuadraticNodes);
 			intermediateNodesToolStripMenuItem.Checked = value;
 
@@ -1591,6 +1593,14 @@ namespace MeshEditor.WinUI
 			value = !value;
 			activeControl.SceneFacade.SetValue(AvailableValue.DrawElementNumbers, value);
 			elementNumbersToolStripMenuItem.Checked = value;
+		}
+
+		private void beamNumbersToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.DrawBeamNumbers);
+			value = !value;
+			activeControl.SceneFacade.SetValue(AvailableValue.DrawBeamNumbers, value);
+			beamNumbersToolStripMenuItem.Checked = value;
 		}
 
 		private void toolStripButtonPoints_Click(object sender, EventArgs e)
