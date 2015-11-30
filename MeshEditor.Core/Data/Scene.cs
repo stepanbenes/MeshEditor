@@ -392,25 +392,34 @@ namespace MeshEditor.Data
 			{
 				entityType = EntityType.Edge;
 				foreach (Node node in edge.IterateThroughAllNodes())
-					inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+				{
+					if (mesh.NodesEdgesIncidence.ContainsKey(node))
+					{
+						inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+					}
+				}
 				return;
 			}
 			IFaceOfElement3D face = item as IFaceOfElement3D;
 			if (face != null)
 			{
 				entityType = EntityType.Surface;
-				foreach (Node node in ((Element2D)face).IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				foreach (Node node in ((Element2D)face).IterateThroughAllNodes())
+				{
 					inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+				}
 				return;
 			}
 			Element element = item as Element;
 			if (element != null)
 			{
 				entityType = EntityType.Region;
-				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				foreach (Node node in element.IterateThroughAllNodes())
 				{
 					if (mesh.NodesEdgesIncidence.ContainsKey(node))
+					{
 						inspectNodeAdjacentEntities(node, nodesEdgeProperties, nodesSurfaceProperties, nodesRegionProperties);
+					}
 				}
 				return;
 			}
