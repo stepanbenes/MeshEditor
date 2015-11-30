@@ -298,7 +298,6 @@ namespace MeshEditor.Data
 
 		public static IEnumerable<EdgeMark> GetSequenceOfEdges(ElementType elementType, int[] nodeIDs)
 		{
-			// TODO: implement missing pyramid and triangular prism elements
 			// depends on edge ordering!
 			switch (elementType)
 			{
@@ -330,36 +329,30 @@ namespace MeshEditor.Data
 					break;
 				case ElementType.SquarePyramidLinear:
 				case ElementType.SquarePyramidQuadratic:
+					yield return new EdgeMark(nodeIDs[0], nodeIDs[1]);
+					yield return new EdgeMark(nodeIDs[1], nodeIDs[2]);
+					yield return new EdgeMark(nodeIDs[2], nodeIDs[3]);
+					yield return new EdgeMark(nodeIDs[3], nodeIDs[0]);
 
-					throw new NotImplementedException("Square pyramid edge ordering was not specified.");
-
-					//yield return new EdgeMark(nodeIDs[0], nodeIDs[1]);
-					//yield return new EdgeMark(nodeIDs[1], nodeIDs[2]);
-					//yield return new EdgeMark(nodeIDs[2], nodeIDs[3]);
-					//yield return new EdgeMark(nodeIDs[3], nodeIDs[0]);
-
-					//yield return new EdgeMark(nodeIDs[0], nodeIDs[4]);
-					//yield return new EdgeMark(nodeIDs[1], nodeIDs[4]);
-					//yield return new EdgeMark(nodeIDs[2], nodeIDs[4]);
-					//yield return new EdgeMark(nodeIDs[3], nodeIDs[4]);
-					//break;
+					yield return new EdgeMark(nodeIDs[0], nodeIDs[4]);
+					yield return new EdgeMark(nodeIDs[1], nodeIDs[4]);
+					yield return new EdgeMark(nodeIDs[2], nodeIDs[4]);
+					yield return new EdgeMark(nodeIDs[3], nodeIDs[4]);
+					break;
 				case ElementType.TriangularPrismLinear:
 				case ElementType.TriangularPrismQuadratic:
+					yield return new EdgeMark(nodeIDs[0], nodeIDs[1]);
+					yield return new EdgeMark(nodeIDs[1], nodeIDs[2]);
+					yield return new EdgeMark(nodeIDs[2], nodeIDs[0]);
 
-					throw new NotImplementedException("Triangular prism edge ordering was not specified.");
+					yield return new EdgeMark(nodeIDs[0], nodeIDs[3]);
+					yield return new EdgeMark(nodeIDs[1], nodeIDs[4]);
+					yield return new EdgeMark(nodeIDs[2], nodeIDs[5]);
 
-					//yield return new EdgeMark(nodeIDs[0], nodeIDs[1]);
-					//yield return new EdgeMark(nodeIDs[1], nodeIDs[2]);
-					//yield return new EdgeMark(nodeIDs[2], nodeIDs[0]);
-
-					//yield return new EdgeMark(nodeIDs[3], nodeIDs[4]);
-					//yield return new EdgeMark(nodeIDs[4], nodeIDs[5]);
-					//yield return new EdgeMark(nodeIDs[5], nodeIDs[3]);
-
-					//yield return new EdgeMark(nodeIDs[0], nodeIDs[3]);
-					//yield return new EdgeMark(nodeIDs[1], nodeIDs[4]);
-					//yield return new EdgeMark(nodeIDs[2], nodeIDs[5]);
-					//break;
+					yield return new EdgeMark(nodeIDs[3], nodeIDs[4]);
+					yield return new EdgeMark(nodeIDs[4], nodeIDs[5]);
+					yield return new EdgeMark(nodeIDs[5], nodeIDs[3]);
+					break;
 				case ElementType.HexahedronLinear:
 				case ElementType.HexahedronQuadratic:
 					yield return new EdgeMark(nodeIDs[0], nodeIDs[1]);
@@ -384,7 +377,6 @@ namespace MeshEditor.Data
 
 		public static IEnumerable<object> GetSequenceOfFaces(ElementType elementType, int[] nodeIDs)
 		{
-			// TODO: implement missing pyramid and triangular prism elements
 			// depends on face ordering!
 			switch (elementType)
 			{
@@ -408,26 +400,20 @@ namespace MeshEditor.Data
 					break;
 				case ElementType.SquarePyramidLinear:
 				case ElementType.SquarePyramidQuadratic:
-
-					throw new NotImplementedException("Square pyramid face ordering was not specified.");
-
-					//yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[4]);
-					//yield return new TriangleMark(nodeIDs[1], nodeIDs[2], nodeIDs[4]);
-					//yield return new TriangleMark(nodeIDs[2], nodeIDs[3], nodeIDs[4]);
-					//yield return new TriangleMark(nodeIDs[3], nodeIDs[0], nodeIDs[4]);
-					//yield return new QuadMark(nodeIDs[0], nodeIDs[1], nodeIDs[2], nodeIDs[3]);
-					//break;
+					yield return new QuadMark(nodeIDs[0], nodeIDs[3], nodeIDs[2], nodeIDs[1]);
+					yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[4]);
+					yield return new TriangleMark(nodeIDs[1], nodeIDs[2], nodeIDs[4]);
+					yield return new TriangleMark(nodeIDs[2], nodeIDs[3], nodeIDs[4]);
+					yield return new TriangleMark(nodeIDs[3], nodeIDs[0], nodeIDs[4]);
+					break;
 				case ElementType.TriangularPrismLinear:
 				case ElementType.TriangularPrismQuadratic:
-
-					throw new NotImplementedException("Triangular prism face ordering was not specified.");
-
-					//yield return new QuadMark(nodeIDs[0], nodeIDs[2], nodeIDs[5], nodeIDs[3]);
-					//yield return new QuadMark(nodeIDs[1], nodeIDs[0], nodeIDs[3], nodeIDs[4]);
-					//yield return new QuadMark(nodeIDs[2], nodeIDs[1], nodeIDs[4], nodeIDs[5]);
-					//yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[2]);
-					//yield return new TriangleMark(nodeIDs[3], nodeIDs[4], nodeIDs[5]);
-					//break;
+					yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[2]);
+					yield return new TriangleMark(nodeIDs[3], nodeIDs[5], nodeIDs[4]);
+					yield return new QuadMark(nodeIDs[1], nodeIDs[0], nodeIDs[3], nodeIDs[4]);
+					yield return new QuadMark(nodeIDs[2], nodeIDs[1], nodeIDs[4], nodeIDs[5]);
+					yield return new QuadMark(nodeIDs[0], nodeIDs[2], nodeIDs[5], nodeIDs[3]);
+					break;
 				case ElementType.HexahedronLinear:
 				case ElementType.HexahedronQuadratic:
 					yield return new QuadMark(nodeIDs[0], nodeIDs[3], nodeIDs[7], nodeIDs[4]);

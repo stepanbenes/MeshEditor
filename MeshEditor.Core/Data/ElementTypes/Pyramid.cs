@@ -49,7 +49,6 @@ namespace MeshEditor.Data
 			{
 				if (quadratic)
 				{
-					//additionalNodes[face] = new Node[] { nodes[6], nodes[11], nodes[10] };
 					quadraticNodesCache[new EdgeMark(nodes[1].ID, nodes[2].ID)] = nodes[6];
 					quadraticNodesCache[new EdgeMark(nodes[2].ID, nodes[4].ID)] = nodes[11];
 					quadraticNodesCache[new EdgeMark(nodes[4].ID, nodes[1].ID)] = nodes[10];
