@@ -1090,7 +1090,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void DrawTextLabels(KeyValuePair<string, Vector2>[] textPositions, float windowHeight, Color color)
+		public static void DrawTextLabels(KeyValuePair<string, Vector2>[] textPositions, float windowHeight)
 		{
 			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
@@ -1099,7 +1099,7 @@ namespace MeshEditor.Data
 				Vector2 winPos = textPosition.Value;
                 area.X = winPos.X + 1;
 				area.Y = windowHeight - winPos.Y + 1;
-				textPrinter.Print(textPosition.Key, textFont, color, area);
+				textPrinter.Print(textPosition.Key, textFont, Scene.LabelColor, area);
 			}
 			textPrinter.End(); // restores projection matrix
 		}

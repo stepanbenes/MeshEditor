@@ -977,15 +977,15 @@ namespace MeshEditor.Data
 					{
 						GL.Color3(1.0, 0, 0);       // X
 						GL.Vertex3(0, 0, 0);
-						GL.Vertex3(ref xAxisEndPoint.X);
+						GL.Vertex3(xAxisEndPoint);
 
 						GL.Color3(0, 1.0, 0);       // Y
 						GL.Vertex3(0, 0, 0);
-						GL.Vertex3(ref yAxisEndPoint.X);
+						GL.Vertex3(yAxisEndPoint);
 
 						GL.Color3(0, 0, 1.0);       // Z
 						GL.Vertex3(0, 0, 0);
-						GL.Vertex3(ref zAxisEndPoint.X);
+						GL.Vertex3(zAxisEndPoint);
 					}
 					GL.End();
 
@@ -999,7 +999,7 @@ namespace MeshEditor.Data
 					Utils.GluProject(xAxisEndPoint, modelview, projection, viewport, out xLabelPosition);
 					Utils.GluProject(yAxisEndPoint, modelview, projection, viewport, out yLabelPosition);
 					Utils.GluProject(zAxisEndPoint, modelview, projection, viewport, out zLabelPosition);
-					Content.DrawTextLabels(new[] { new KeyValuePair<string, Vector2>("X", xLabelPosition.Xy), new KeyValuePair<string, Vector2>("Y", yLabelPosition.Xy), new KeyValuePair<string, Vector2>("Z", zLabelPosition.Xy) }, viewport[3], Scene.LabelColor);
+					Content.DrawTextLabels(new[] { new KeyValuePair<string, Vector2>("X", xLabelPosition.Xy), new KeyValuePair<string, Vector2>("Y", yLabelPosition.Xy), new KeyValuePair<string, Vector2>("Z", zLabelPosition.Xy) }, viewport[3]);
 				}
 				GL.PopMatrix();
 			}
