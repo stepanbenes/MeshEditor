@@ -118,19 +118,8 @@ namespace MeshEditor.Data
 			// nodesEdgesIncidence asi tezko zmensim
 			beams.TrimExcess();
 			edgeMiddleNodes.TrimExcess();
-
-			// tohle odebirat nebudu, jsou pak s tim problemy napriklad pri rezani site. a moc mista to neusetri...
-			// !!! remove2DElementsFromElementList();
-			
 			elements.TrimExcess();
 		}
-
-		//private void remove2DElementsFromElementList()
-		//{
-		//    // odebrat ze seznamu 2D prvky (jsou uz totiz v surface)
-		//    Predicate<Element> discard2D = delegate(Element e) { return e is Element2D; };
-		//    elements.RemoveAll(discard2D);
-		//}
 
 		#endregion
 
@@ -641,10 +630,10 @@ namespace MeshEditor.Data
 						else
 							faceColor = Utils.ColorToRgba32(Scene.SelectedFaceColor);
 					}
-					else if (elementPropertyColors & faceOfElement != null)
-						faceColor = getRGBA32ColorForFace(face, faceOfElement.ParentElement.Property);
-					else if (facePropertyColors | (elementPropertyColors & faceOfElement == null))
-						faceColor = getRGBA32ColorForFace(face, face.Property);
+					else if (elementPropertyColors & (faceOfElement != null))
+						faceColor = getRGBA32ColorForFace(face, faceOfElement.ParentElement.Property, hatchTwinElements: true);
+					else if (facePropertyColors | (elementPropertyColors & (faceOfElement == null)))
+						faceColor = getRGBA32ColorForFace(face, face.Property, hatchTwinElements: (faceOfElement == null)); // hatch only if it is 2D element, not face
 					else
 						faceColor = ordinaryFaceColor;
 					// ------------------------------------------
@@ -1057,9 +1046,9 @@ namespace MeshEditor.Data
 			textPrinter.End(); // restores projection matrix
 		}
 
-		private int getRGBA32ColorForFace(Element2D face, Property baseProperty)
+		private int getRGBA32ColorForFace(Element2D face, Property baseProperty, bool hatchTwinElements)
 		{
-            if (face.HasTwinElements)
+            if (hatchTwinElements && face.HasTwinElements)
 			{
 				//if (baseProperty.IsZero)
 				//{

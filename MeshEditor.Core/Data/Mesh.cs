@@ -323,7 +323,7 @@ namespace MeshEditor.Data
 			this.hasTwinElements = hasTwinElements;
 
 			content.TrimExcessMemory();
-
+			// hiddenItemsProperties is dictionary-based, it can't be shrinken
 			//computeInitialBorderLimitsFromHistogram();
 		}
 

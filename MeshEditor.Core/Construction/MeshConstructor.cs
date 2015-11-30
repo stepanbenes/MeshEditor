@@ -642,11 +642,23 @@ namespace MeshEditor.Construction
 		private void processTriangleFace(Triangle newTriangle)
 		{
 			TriangleMark mark = new TriangleMark(newTriangle.Node1.ID, newTriangle.Node2.ID, newTriangle.Node3.ID);
+
+			bool t2IsFaceOfElement3D = newTriangle is IFaceOfElement3D;
+
+			// try to assign property if it was hidden previously
+			if (t2IsFaceOfElement3D)
+			{
+				Property property;
+				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				{
+					newTriangle.Property = property;
+				}
+			}
+
 			Triangle currentTriangle;
 			if (triangleFaces.TryGetValue(mark, out currentTriangle)) // face match !
 			{
 				bool t1IsFaceOfElement3D = currentTriangle is IFaceOfElement3D;
-				bool t2IsFaceOfElement3D = newTriangle is IFaceOfElement3D;
 
 				if (t1IsFaceOfElement3D & t2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
@@ -714,26 +726,29 @@ namespace MeshEditor.Construction
 			else // face do not match
 			{
 				triangleFaces.Add(mark, newTriangle);
-				// try to assign property if it was hidden previously
-				if (newTriangle is IFaceOfElement3D)
-				{
-					Property property;
-					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
-					{
-						newTriangle.Property = property;
-					}
-				}
 			}
 		}
 
 		private void processQuadFace(Quadrilateral newQuad)
 		{
 			QuadMark mark = new QuadMark(newQuad.Node1.ID, newQuad.Node2.ID, newQuad.Node3.ID, newQuad.Node4.ID);
+
+			bool t2IsFaceOfElement3D = newQuad is IFaceOfElement3D;
+
+			// try to assign property if it was hidden previously
+			if (t2IsFaceOfElement3D)
+			{
+				Property property;
+				if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
+				{
+					newQuad.Property = property;
+				}
+			}
+
 			Quadrilateral currentQuad;
 			if (quadFaces.TryGetValue(mark, out currentQuad)) // face match !
 			{
 				bool t1IsFaceOfElement3D = currentQuad is IFaceOfElement3D;
-				bool t2IsFaceOfElement3D = newQuad is IFaceOfElement3D;
 
 				if (t1IsFaceOfElement3D & t2IsFaceOfElement3D) // both are internal faces of neighboring 3D elements => remove both faces
 				{
@@ -801,15 +816,6 @@ namespace MeshEditor.Construction
 			else // face do not match
 			{
 				quadFaces.Add(mark, newQuad);
-				// try to assign property if it was hidden previously
-				if (newQuad is IFaceOfElement3D)
-				{
-					Property property;
-					if (hiddenItemsProperties.TryGetPropertyAndRemove(ref mark, out property))
-					{
-						newQuad.Property = property;
-					}
-				}
 			}
 		}
 
