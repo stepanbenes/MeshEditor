@@ -60,7 +60,6 @@ namespace MeshEditor.Data
 			// jeste spravne natocim normalu, pokud smeruje dovnitr prvku
 			if (Vector3.Dot(centerOfElement - node1.Position, result.NormalVector) > 0)
 			{
-				result.InvertNormalVector();
 				result.ReverseNodeOrder();
 			}
 			return result;
@@ -80,7 +79,6 @@ namespace MeshEditor.Data
 			// jeste spravne natocim normalu, pokud smeruje dovnitr prvku
 			if (Vector3.Dot(centerOfElement - node1.Position, result.NormalVector) > 0)
 			{
-				result.InvertNormalVector();
 				result.ReverseNodeOrder();
 			}
 			return result;

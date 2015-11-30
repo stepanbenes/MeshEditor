@@ -47,7 +47,6 @@ namespace MeshEditor.Data
 			Debug.Assert(!parentElement.Equals(newParentElement));
 
 			parentElement = newParentElement;
-			InvertNormalVector();
 			ReverseNodeOrder();
 			// NOTE: face property remains the same
 		}

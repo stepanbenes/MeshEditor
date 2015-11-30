@@ -296,7 +296,6 @@ namespace MeshEditor.DataVisualizer
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
 						containsAnyPoints = true;
 					}
-					updateFaceNormals();
 					break;
 				case DeformAction.Restore:
 					Debug.Assert(originalNodePositions != null);
@@ -306,7 +305,6 @@ namespace MeshEditor.DataVisualizer
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
 						containsAnyPoints = true;
 					}
-					updateFaceNormals();
 					originalNodePositions = null;
 					break;
 				case DeformAction.Update:
@@ -318,7 +316,6 @@ namespace MeshEditor.DataVisualizer
 						updateBounds(node.Position, ref lowerBound, ref upperBound);
 						containsAnyPoints = true;
 					}
-					updateFaceNormals();
 					break;
 				default:
 					throw new NotSupportedException();
@@ -333,12 +330,6 @@ namespace MeshEditor.DataVisualizer
 
 			mesh.LowerBound = lowerBound;
 			mesh.UpperBound = upperBound;
-		}
-
-		private void updateFaceNormals()
-		{
-			foreach (Element2D face in mesh.Faces)
-				face.UpdateNormalVector();
 		}
 
 		private Vector3 getDisplacementVector(Node node)

@@ -24,7 +24,6 @@ namespace MeshEditor.Data
 			this.node3 = n3;
 			this.node4 = n4;
 			edge1 = edge2 = edge3 = edge4 = null;
-			UpdateNormalVector();
 		}
 
 		public override int NodeCount
@@ -81,6 +80,16 @@ namespace MeshEditor.Data
 			get { return node1; }
 		}
 
+		public override Vector3 NormalVector
+		{
+			get
+			{
+				Vector3 normal = Vector3.Cross(node2.Position - node1.Position, node4.Position - node1.Position);
+				normal.Normalize();
+				return normal;
+			}
+		}
+
 		public override void Draw()
 		{
 			// provedu teselaci - rozdelim na dva trojuhelniky
@@ -92,13 +101,6 @@ namespace MeshEditor.Data
 			GL.Vertex3(node1.Position);
 			GL.Vertex3(node3.Position);
 			GL.Vertex3(node4.Position);
-		}
-
-		public override void UpdateNormalVector()
-		{
-			Vector3 normal = Vector3.Cross(node2.Position - node1.Position, node4.Position - node1.Position);
-			normal.Normalize();
-			this.normal = normal;
 		}
 
 		public override IEnumerable<WingedEdge> IterateThroughAllEdges()

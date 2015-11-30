@@ -23,7 +23,6 @@ namespace MeshEditor.Data
 			this.node2 = n2;
 			this.node3 = n3;
 			edge1 = edge2 = edge3 = null;
-			UpdateNormalVector();
 		}
 
 		public override int NodeCount
@@ -69,18 +68,21 @@ namespace MeshEditor.Data
 			get { return node1; }
 		}
 
+		public override Vector3 NormalVector
+		{
+			get
+			{
+				Vector3 normal = Vector3.Cross(node2.Position - node1.Position, node3.Position - node1.Position);
+				normal.Normalize();
+				return normal;
+			}
+		}
+
 		public override void Draw()
 		{
 			GL.Vertex3(node1.Position);
 			GL.Vertex3(node2.Position);
 			GL.Vertex3(node3.Position);
-		}
-
-		public override void UpdateNormalVector()
-		{
-			Vector3 normal = Vector3.Cross(node2.Position - node1.Position, node3.Position - node1.Position);
-			normal.Normalize();
-			this.normal = normal;
 		}
 
 		public override IEnumerable<WingedEdge> IterateThroughAllEdges()

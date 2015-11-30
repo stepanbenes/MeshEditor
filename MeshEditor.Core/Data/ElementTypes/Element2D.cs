@@ -16,39 +16,28 @@ namespace MeshEditor.Data
 
 		#region Field, Constructor, Property
 
-		protected Vector3 normal;
 		private Element2D[] twinElements;
 
 		public Element2D(int id, ElementType type)
 			: base(id, type)
 		{ }
 
-		public Vector3 NormalVector
-		{
-			get { return normal; }
-		}
-
 		#endregion
 
 		#region Abstract public methods & properties
 
+		public abstract Vector3 NormalVector { get; }
+
 		public abstract void Draw();
-		public abstract void UpdateNormalVector();
 		public abstract IEnumerable<WingedEdge> IterateThroughAllEdges();
 		//public abstract void ReplaceNode(Node from, Node to);
 		public abstract float ComputeArea();
 		public abstract void ReverseNodeOrder();
-
 		public abstract Node[] GetNodeArray();
 
 		#endregion
 
 		#region Public instance methods
-
-		public void InvertNormalVector()
-		{
-			normal = -normal;
-		}
 
 		public IEnumerable<Element2D> GetNeighbors(float borderAngleLimit)
 		{
