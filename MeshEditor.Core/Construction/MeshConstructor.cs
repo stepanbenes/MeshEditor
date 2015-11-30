@@ -1233,7 +1233,7 @@ namespace MeshEditor.Construction
 						Debug.Assert(candidates.Count <= 1);
 						if (candidates.Count == 1)
 						{
-							face.ChangeParentElement(candidates.First());
+							face.SwapParentElementForOppositeOne(candidates.First());
 						}
 					};
 

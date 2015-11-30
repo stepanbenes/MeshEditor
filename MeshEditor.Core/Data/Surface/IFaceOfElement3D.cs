@@ -13,6 +13,6 @@ namespace MeshEditor.Data
 
 		Element3D ParentElement { get; }
 
-		void ChangeParentElement(Element3D newParentElement);
+		void SwapParentElementForOppositeOne(Element3D newParentElement);
 	}
 }

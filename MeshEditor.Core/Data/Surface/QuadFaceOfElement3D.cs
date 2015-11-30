@@ -41,12 +41,15 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void ChangeParentElement(Element3D newParentElement)
+		public void SwapParentElementForOppositeOne(Element3D newParentElement)
 		{
 			Debug.Assert(newParentElement != null);
 			Debug.Assert(!parentElement.Equals(newParentElement));
 
 			parentElement = newParentElement;
+			InvertNormalVector();
+			ReverseNodeOrder();
+			// NOTE: face property remains the same
 		}
 	}
 }
