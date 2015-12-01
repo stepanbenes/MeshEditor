@@ -1513,11 +1513,7 @@ namespace MeshEditor.CoreInterface
 
 			//distance = projection;
 
-			// pozice oka
-			cam.Eye = this.pointUnderCursor - (dir * distance);
-			// smer pohledu
-			cam.Center = cam.Eye + dir;
-			// Up vektor zustava stejny
+			cam.SetNewEyePosition(this.pointUnderCursor - (dir * distance));
 
 			// -----------------------------------------------
 			cameraChangedDirection = true; /**/

@@ -671,7 +671,7 @@ namespace MeshEditor.Data
 		{
 			if (mesh == null)
 			{
-				camera.Reset();
+				camera.SetView(CameraView.Iso);
 				return;
 			}
 

@@ -29,7 +29,7 @@ namespace MeshEditor.Graphics
 		
         public Camera()
         {
-			Reset();
+			setIsoView();
 		}
 
 		#endregion
@@ -39,19 +39,16 @@ namespace MeshEditor.Graphics
 		public Vector3 Eye
         {
             get { return eye; }
-			set { eye = value; }
         }
 
         public Vector3 Center
         {
             get { return center; }
-			set { center = value; }
         }
 
         public Vector3 Up
         {
             get { return up; }
-			set { up = value; }
 		}
 
 		#endregion
@@ -98,12 +95,6 @@ namespace MeshEditor.Graphics
 			return newCam;
 		}
 
-		public void Reset()
-		{
-			//Front();
-			Iso();
-		}
-
 		public void Move(Vector3 move)
 		{
 			eye += move;
@@ -121,6 +112,13 @@ namespace MeshEditor.Graphics
 			up = rotateVector(up, zAngle, this.GetDirection());
 		}
 
+		public void SetNewEyePosition(Vector3 newPosition)
+		{
+			Vector3 direction = GetDirection();
+			eye = newPosition;
+			center = eye + direction;
+		}
+
 		#endregion
 
 		#region Predefined views
@@ -130,72 +128,72 @@ namespace MeshEditor.Graphics
 			switch (view)
 			{
 				case CameraView.Front:
-					Front();
+					setFrontView();
 					break;
 				case CameraView.Back:
-					Back();
+					setBackView();
 					break;
 				case CameraView.Left:
-					Left();
+					setLeftView();
 					break;
 				case CameraView.Right:
-					Right();
+					setRightView();
 					break;
 				case CameraView.Top:
-					Top();
+					setTopView();
 					break;
 				case CameraView.Bottom:
-					Bottom();
+					setBottomView();
 					break;
 				case CameraView.Iso:
-					Iso();
+					setIsoView();
 					break;
 			}
 		}
 
-		public void Front()
+		private void setFrontView()
 		{
 			eye = Vector3.UnitZ * Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitY;
 		}
 
-		public void Back()
+		private void setBackView()
 		{
 			eye = Vector3.UnitZ * -Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitY;
 		}
 
-		public void Left()
+		private void setLeftView()
 		{
 			eye = Vector3.UnitX * Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitY;
 		}
 
-		public void Right()
+		private void setRightView()
 		{
 			eye = Vector3.UnitX * -Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitY;
 		}
 
-		public void Top()
+		private void setTopView()
 		{
 			eye = Vector3.UnitY * Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitZ * -Scene.DefaultCameraDistance;
 		}
 
-		public void Bottom()
+		private void setBottomView()
 		{
 			eye = Vector3.UnitY * -Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
 			up = Vector3.UnitZ * Scene.DefaultCameraDistance;
 		}
 
-		public void Iso()
+		private void setIsoView()
 		{
 			eye = Vector3.Normalize(new Vector3(1f, 1f, 1f)) * Scene.DefaultCameraDistance;
 			center = Vector3.Zero;
