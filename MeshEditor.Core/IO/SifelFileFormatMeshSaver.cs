@@ -454,30 +454,34 @@ namespace MeshEditor.IO
 			{
 				foreach (object faceMark in Element.GetSequenceOfFaces(element3D.ElementType, nodeIDs)) // write face properties
 				{
-					Property property;
+					Property property = Property.Zero;
+					bool found = false;
 					if (faceMark is TriangleMark)
 					{
-						if (edgeFacePropertySet.TriangleProperties.TryGetValue((TriangleMark)faceMark, out property))
-						{
-							text.Append(" ");
-							text.Append(property.ToString());
-						}
-						else
-						{
-							text.Append(" 0");
-						}
+						found = edgeFacePropertySet.TriangleProperties.TryGetValue((TriangleMark)faceMark, out property);
 					}
 					else if (faceMark is QuadMark)
 					{
-						if (edgeFacePropertySet.QuadProperties.TryGetValue((QuadMark)faceMark, out property))
+						QuadMark quadMark = (QuadMark)faceMark;
+						TriangleMark collapsedTriangleMark;
+						if (quadMark.IsCollapsedToTriangle(out collapsedTriangleMark))
 						{
-							text.Append(" ");
-							text.Append(property.ToString());
+							found = edgeFacePropertySet.TriangleProperties.TryGetValue(collapsedTriangleMark, out property);
 						}
 						else
 						{
-							text.Append(" 0");
-						}
+							found = edgeFacePropertySet.QuadProperties.TryGetValue(quadMark, out property);
+                        }
+					}
+
+					if (found)
+					{
+						text.Append(" ");
+						text.Append(property.ToString());
+					}
+					else
+					{
+						text.Append(" 0");
 					}
 				}
 			}

@@ -376,12 +376,11 @@ namespace MeshEditor.Construction
 					if (quadFaces.TryGetValue(mark, out q))
 						q.Property = fd.Property;
 					else
-						hiddenItemsProperties.Add(ref mark, fd.Property);
+						checkAndSaveQuadFaceProperty(mark, fd.Property);
 				}
 				else
 					throw new NotSupportedException("Unsupported face type");
 			}
-
 
 			// nacti property hran a vytvor edgeMarks
 			foreach (EdgeDraft ed in advancedFileParser.ReadEdges())
@@ -393,6 +392,22 @@ namespace MeshEditor.Construction
 			}
 
 			//advancedFileParser.ReadToEnd();
+		}
+
+		/// <summary>
+		/// Check if quad is not collapsed to triangle and than save property to hiddenProperties
+		/// </summary>
+		private void checkAndSaveQuadFaceProperty(QuadMark quadMark, Property property)
+		{
+			TriangleMark collapsedTriangleMark;
+			if (quadMark.IsCollapsedToTriangle(out collapsedTriangleMark))
+			{
+				hiddenItemsProperties.Add(ref collapsedTriangleMark, property);
+			}
+			else
+			{
+				hiddenItemsProperties.Add(ref quadMark, property);
+			}
 		}
 
 		private void loadPropertyComment(string line, MeshStatistics statistics)
@@ -559,7 +574,7 @@ namespace MeshEditor.Construction
 				if (index >= draft.FaceProperties.Length)
 					break;
 				Property property = new Property(draft.FaceProperties[index]);
-				if (property != Property.Zero)
+				if (!property.IsZero)
 				{
 					// -----------------------------------------------------------
 					statistics.AddProperty(property, EntityType.Surface);
@@ -570,8 +585,7 @@ namespace MeshEditor.Construction
 					}
 					else if (mark is QuadMark)
 					{
-						QuadMark qm = (QuadMark)mark;
-						hiddenItemsProperties.Add(ref qm, property);
+						checkAndSaveQuadFaceProperty((QuadMark)mark, property);
 					}
 					// -----------------------------------------------------------
 				}

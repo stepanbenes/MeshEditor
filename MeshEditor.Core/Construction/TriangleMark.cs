@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using static MeshEditor.Utilities.Functions;
 
@@ -28,6 +29,8 @@ namespace MeshEditor.Construction
 			node1ID = n1;
 			node2ID = n2;
 			node3ID = n3;
+
+			Debug.Assert(CheckIfArrayIsSorted(new[] { node1ID, node2ID, node3ID }));
 		}
 
 		#endregion

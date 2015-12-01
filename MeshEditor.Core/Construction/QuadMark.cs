@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using static MeshEditor.Utilities.Functions;
 
@@ -34,7 +35,9 @@ namespace MeshEditor.Construction
 			node2ID = n2;
 			node3ID = n3;
 			node4ID = n4;
-		}
+
+			Debug.Assert(CheckIfArrayIsSorted(new[] { node1ID, node2ID, node3ID, node4ID }));
+        }
 
 		#endregion
 
@@ -81,6 +84,28 @@ namespace MeshEditor.Construction
 				hash = hash * 23 + node3ID.GetHashCode();
 				return hash;
 			}
+		}
+
+		public bool IsCollapsedToTriangle(out TriangleMark collapsedTriangle)
+		{
+			// node ids must be sorted!
+			if (node1ID == node2ID)
+			{
+				collapsedTriangle = new TriangleMark(node2ID, node3ID, node4ID); // quad is collapsed to triangle
+				return true;
+			}
+			if (node2ID == node3ID)
+			{
+				collapsedTriangle = new TriangleMark(node1ID, node3ID, node4ID); // quad is collapsed to triangle
+				return true;
+			}
+			if (node3ID == node4ID)
+			{
+				collapsedTriangle = new TriangleMark(node1ID, node2ID, node4ID); // quad is collapsed to triangle
+				return true;
+			}
+			collapsedTriangle = default(TriangleMark);
+			return false;
 		}
 
 		#endregion
