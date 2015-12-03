@@ -96,9 +96,7 @@ namespace MeshEditor.CoreInterface
 		private Point mouseDownLocation;
 		private Point mouseUpLocation;
 
-		private Vector3 pointUnderCursor;
-		private float pixelDepthUnderCursor;
-		private bool mouseDownBackgroundHit;
+		private PointUnderCursorContext pointUnderCursorContext;
 
 		private bool cameraChangedDirection;
 
@@ -174,6 +172,7 @@ namespace MeshEditor.CoreInterface
 			this.cameraChangedDirection = true;
 
 			// ================================
+			this.pointUnderCursorContext = new PointUnderCursorContext();
 		}
 
 		#endregion
@@ -805,9 +804,9 @@ namespace MeshEditor.CoreInterface
 				case AvailableValue.SelectedItemsDescription:
 					return scene.GetSelectedItemsDescription();
 				case AvailableValue.Status:
-					if (scene.Mesh != null && mouseDownFlag && !mouseDownBackgroundHit && prevMouseLocation == mouseDownLocation && mouseDownCount == 1)
+					if (scene.Mesh != null && mouseDownFlag && !pointUnderCursorContext.MouseDownBackgroundHit && prevMouseLocation == mouseDownLocation && mouseDownCount == 1)
 					{
-						Vector3 transformedPosition = (pointUnderCursor / scene.Mesh.ResizeFactor) + scene.Mesh.PositionOffset;
+						Vector3 transformedPosition = (pointUnderCursorContext.PointUnderCursor / scene.Mesh.ResizeFactor) + scene.Mesh.PositionOffset;
 						return "Point under cursor: " + Utils.GetVector3StringRepresentation(ref transformedPosition);
 					}
 					return scene.GetSelectedItemsDescription();
@@ -946,8 +945,7 @@ namespace MeshEditor.CoreInterface
 			if (EditorMode == EditorMode.Pan)
 				cameraChangedDirection = true;
 			//else if (EditorMode == EditorMode.Orbit)
-			computePointUnderCursor(mouseDownLocation, true);
-
+			pointUnderCursorContext.Compute(scene, mouseDownLocation, true);
 		}
 
 		public void MouseUpHandler(Point location, MouseButton button)
@@ -1039,7 +1037,7 @@ namespace MeshEditor.CoreInterface
 						translateCamera(dX, dY); // <--
 						break;
 					case EditorMode.LookAround:
-						rotateCamera(dX, dY); // <--
+						lookAroundCamera(dX, dY); // <--
 						break;
 					case EditorMode.RotateZ:
 						RotateZAxis(dX);
@@ -1054,8 +1052,8 @@ namespace MeshEditor.CoreInterface
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
 			
-			computePointUnderCursor(mouseLocation, false);
-			Vector3 direction = this.pointUnderCursor - scene.Camera.Eye;
+			pointUnderCursorContext.Compute(scene, mouseLocation, false);
+			Vector3 direction = pointUnderCursorContext.PointUnderCursor - scene.Camera.Eye;
 			float distance = direction.Length;
 
 			cameraChangedTimer.Enabled = false;
@@ -1260,7 +1258,7 @@ namespace MeshEditor.CoreInterface
 			{
 				EditorMode = editorModeWithoutModificationKeys;
 				//if (EditorMode == EditorMode.Orbit || EditorMode == EditorMode.RotateZ)
-				computePointUnderCursor(prevMouseLocation, true);
+				pointUnderCursorContext.Compute(scene, prevMouseLocation, true);
 				return;
 			}
 
@@ -1445,13 +1443,13 @@ namespace MeshEditor.CoreInterface
 				InvalidateNeeded(this, EventArgs.Empty);
 		}
 
-		private void rotateCamera(int dX, int dY)
+		private void lookAroundCamera(int dX, int dY)
 		{
 			cameraChangedTimer.Enabled = false;
 
 			float xAngle = -dX * 0.003f;
 			float yAngle = -dY * 0.003f;
-			scene.Camera.Rotate(xAngle, yAngle);
+			scene.Camera.RotateView(xAngle, yAngle);
 			cameraChangedDirection = true;
 
 			cameraChangedTimer.Start();
@@ -1466,18 +1464,18 @@ namespace MeshEditor.CoreInterface
 			float xAngle = -dX * 0.005f;
 			float yAngle = -dY * 0.005f;
 			Vector3 centerOfRotation;
-			if (!this.mouseDownBackgroundHit)
-				centerOfRotation = this.pointUnderCursor;
+			if (!pointUnderCursorContext.MouseDownBackgroundHit)
+				centerOfRotation = pointUnderCursorContext.PointUnderCursor;
 			else if (scene.Mesh != null)
 				centerOfRotation = scene.Mesh.CenterOfRotation;
 			else
 				centerOfRotation = Vector3.Zero;
 			scene.Camera.Strafe(xAngle, yAngle, centerOfRotation);
 			// ----------------------------------------------
-			if (!this.mouseDownBackgroundHit)
+			if (!pointUnderCursorContext.MouseDownBackgroundHit)
 			{
-				Vector3 currentPointUnderCursor = getPointUnderCursorWithKnownDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY, pixelDepthUnderCursor);
-				Vector3 translation = pointUnderCursor - currentPointUnderCursor;
+				Vector3 currentPointUnderCursor = pointUnderCursorContext.GetNewPointUnderCursorWithSamePixelDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
+				Vector3 translation = pointUnderCursorContext.PointUnderCursor - currentPointUnderCursor;
 				scene.Camera.Move(translation);
 			}
 			cameraChangedDirection = true;
@@ -1503,7 +1501,7 @@ namespace MeshEditor.CoreInterface
 			Camera cam = scene.Camera;
 			Vector3 dir = cam.GetDirection();
 
-			float projection = Vector3.Dot(pointUnderCursor - cam.Eye, dir);
+			float projection = Vector3.Dot(pointUnderCursorContext.PointUnderCursor - cam.Eye, dir);
 
 			float distance = computeDistanceOfCameraFromRectangleSelection(area, projection);
 
@@ -1513,7 +1511,7 @@ namespace MeshEditor.CoreInterface
 
 			//distance = projection;
 
-			cam.SetNewEyePosition(this.pointUnderCursor - (dir * distance));
+			cam.SetNewEyePosition(pointUnderCursorContext.PointUnderCursor - (dir * distance));
 
 			// -----------------------------------------------
 			cameraChangedDirection = true; /**/
@@ -1533,18 +1531,18 @@ namespace MeshEditor.CoreInterface
 			Camera cam = scene.Camera;
 			Vector3 dir = cam.GetDirection();
 
-			computePointUnderCursor(center, true);
+			pointUnderCursorContext.Compute(scene, center, true);
 
-			Vector3 pointUnderCenter = pointUnderCursor;
-			float distanceOfCenter = (pointUnderCursor - cam.Eye).Length; //Vector3.Dot(pointUnderCursor - cam.Eye, dir);
+			Vector3 pointUnderCenter = pointUnderCursorContext.PointUnderCursor;
+			float distanceOfCenter = (pointUnderCursorContext.PointUnderCursor - cam.Eye).Length; //Vector3.Dot(pointUnderCursor - cam.Eye, dir);
 			
 			//Vector3 closestPointInArea = pointUnderCenter;
-			float distanceOfClosestPoint = (mouseDownBackgroundHit) ? float.MaxValue : distanceOfCenter;
+			float distanceOfClosestPoint = (pointUnderCursorContext.MouseDownBackgroundHit) ? float.MaxValue : distanceOfCenter;
 
 			foreach (Point point in new Point[] { leftTop, leftBottom, rightTop, rightBottom })
 			{
-				computePointUnderCursor(point, true);
-				float projection = (mouseDownBackgroundHit) ? float.MaxValue : (pointUnderCursor - cam.Eye).Length; //Vector3.Dot(pointUnderCursor - cam.Eye, dir);
+				pointUnderCursorContext.Compute(scene, point, true);
+				float projection = (pointUnderCursorContext.MouseDownBackgroundHit) ? float.MaxValue : (pointUnderCursorContext.PointUnderCursor - cam.Eye).Length; //Vector3.Dot(pointUnderCursor - cam.Eye, dir);
 				if (projection < distanceOfClosestPoint)
 				{
 					distanceOfClosestPoint = projection;
@@ -1556,9 +1554,9 @@ namespace MeshEditor.CoreInterface
 
 			// set field to closest
 			if (distanceOfClosestPoint < float.MaxValue)
-				this.pointUnderCursor = pointUnderCenter - (course * (distanceOfCenter - distanceOfClosestPoint));
+				pointUnderCursorContext.PointUnderCursor = pointUnderCenter - (course * (distanceOfCenter - distanceOfClosestPoint));
 			else
-				this.pointUnderCursor = pointUnderCenter;
+				pointUnderCursorContext.PointUnderCursor = pointUnderCenter;
 		}
 
 		private float computeDistanceOfCameraFromRectangleSelection(Rectangle area, float distanceToHit)
@@ -1590,69 +1588,17 @@ namespace MeshEditor.CoreInterface
 
 			if (cameraChangedDirection)
 			{
-				computePointUnderCursor(prevMouseLocation, true);
+				pointUnderCursorContext.Compute(scene, prevMouseLocation, true);
 				cameraChangedDirection = false;
 			}
 
-			Vector3 currentPointUnderCursor = getPointUnderCursorWithKnownDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY, pixelDepthUnderCursor);
-			Vector3 translation = pointUnderCursor - currentPointUnderCursor;
+			Vector3 currentPointUnderCursor = pointUnderCursorContext.GetNewPointUnderCursorWithSamePixelDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
+			Vector3 translation = pointUnderCursorContext.PointUnderCursor - currentPointUnderCursor;
 			scene.Camera.Move(translation);
 
 			cameraChangedTimer.Start();
 			if (InvalidateNeeded != null)
 				InvalidateNeeded(this, EventArgs.Empty);
-		}
-
-		private void computePointUnderCursor(Point pointLocation, bool eliminateBackgroundHit)
-		{
-			Vector3 meshCenter = Vector3.Zero;
-			float meshRadius = Scene.RADIUS_OF_NORMALIZED_MESH;
-			if (scene.Mesh != null)
-			{
-				meshCenter = scene.Mesh.CenterOfRotation;
-				meshRadius = scene.Mesh.Radius;
-			}
-			// -----------------------------------------------------------------------------------------------------------
-			//bool redraw = (scene.RenderMode & RenderMode.Faces) == 0; // pokud se nekreslej plochy, tak to musim pri zjisteni bodu pod kurzorem prekreslit
-			bool redraw = true; // prekresluju radsi pokazdy - co kdyz se mi tam neco priplete - nebudu to riskovat
-			this.pointUnderCursor = scene.UnprojectWindowCoordsToWorldCoords(redraw, pointLocation.X, pointLocation.Y, out this.pixelDepthUnderCursor);
-			this.mouseDownBackgroundHit = (this.pointUnderCursor - meshCenter).Length > meshRadius;
-
-			if (eliminateBackgroundHit && this.mouseDownBackgroundHit) // pokud jsem klepnul mimo model (nekam do dalky)
-			{
-				Vector3 lineA = scene.Camera.Eye;
-				Vector3 lineB = this.pointUnderCursor;
-				Vector3 dir = Vector3.Normalize(lineB - lineA);
-
-				Vector3 projectionCenter = meshCenter + scene.Camera.GetDirection() * meshRadius;
-
-				// pokud je jsem moc blizko centra, tak posunout plochu
-				float projection = Vector3.Dot(projectionCenter - scene.Camera.Eye, dir);
-				Vector3 add;
-				if (projection < 0.1f)
-					add = dir * (0.1f - projection);
-				else
-					add = Vector3.Zero;
-				// --------------------------------------------------
-
-				Vector3 planeA = projectionCenter + add;
-				Vector3 planeB = projectionCenter + add + Vector3.Cross(scene.Camera.Center - scene.Camera.Eye, scene.Camera.Up);
-				Vector3 planeC = projectionCenter + add + scene.Camera.Up;
-				Vector3 intersection;
-				Vector3 parametres;
-
-				if (Utils.LinePlaneIntersection(lineA, lineB, planeA, planeB, planeC, out intersection, out parametres))
-				{
-					this.pointUnderCursor = intersection;
-					// jeste spocist novou hloubku pixelu pomoci Glu.Project()
-					this.pixelDepthUnderCursor = Scene.ProjectWorldCoordToWindowCoords(this.pointUnderCursor).Z;
-				}
-			}
-		}
-
-		private Vector3 getPointUnderCursorWithKnownDepth(int x, int y, float pixelDepth)
-		{
-			return Scene.UnprojectWindowCoordsToWorldCoords(x, y, pixelDepth);
 		}
 
 		private void drawSelectionRectangle()

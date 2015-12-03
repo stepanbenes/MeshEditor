@@ -750,8 +750,9 @@ namespace MeshEditor.Data
 		/// <summary>
 		/// Draws faces in mesh only
 		/// </summary>
-		public void DrawFacesOnly()
+		public void DrawFacesToDepthBuffer()
 		{
+			GL.Clear(ClearBufferMask.DepthBufferBit);
 			content.DrawFacesOnly();
 		}
 
@@ -911,11 +912,9 @@ namespace MeshEditor.Data
 			Rectangle bounds = new Rectangle((int)minBound.X, (int)minBound.Y, ((int)maxBound.X - (int)minBound.X + 1), ((int)maxBound.Y - (int)minBound.Y + 1));
 
 			// ===================================================================
-			// vykreslit do depth bufferu plochy site
-			GL.Clear(ClearBufferMask.DepthBufferBit);
 			GL.PolygonOffset(1f, 1f); // trochu je posunu, abych pak mohl testovat
 			GL.Enable(EnableCap.PolygonOffsetFill);
-			DrawFacesOnly();
+			DrawFacesToDepthBuffer(); // vykreslit do depth bufferu plochy site
 			GL.Disable(EnableCap.PolygonOffsetFill);
 			// -------------------------------------------------------------------
 
@@ -1092,11 +1091,9 @@ namespace MeshEditor.Data
 			}
 
 			// ===================================================================
-			// vykreslit do depth bufferu plochy site
-			GL.Clear(ClearBufferMask.DepthBufferBit);
 			GL.PolygonOffset(1f, 1f); // trochu je posunu, abych pak mohl testovat
 			GL.Enable(EnableCap.PolygonOffsetFill);
-			DrawFacesOnly();
+			DrawFacesToDepthBuffer(); // vykreslit do depth bufferu plochy site
 			GL.Disable(EnableCap.PolygonOffsetFill);
 			// -------------------------------------------------------------------
 
