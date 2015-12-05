@@ -1559,34 +1559,26 @@ namespace MeshEditor.Data
 		private static float getAngleBetweenTwoBeams(Beam first, Beam second, Node connectingNode)
 		{
 			Vector3 firstUnitVector, secondUnitVector;
+
 			if (first.BeginNode == connectingNode)
 			{
-				if (second.BeginNode == connectingNode)
-				{
-					firstUnitVector = Vector3.Normalize(first.EndNode.Position - first.BeginNode.Position);
-					secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
-				}
-				else
-				{
-					firstUnitVector = Vector3.Normalize(first.BeginNode.Position - first.EndNode.Position);
-					secondUnitVector = Vector3.Normalize(second.BeginNode.Position - second.EndNode.Position);
-				}
+				firstUnitVector = Vector3.Normalize(first.EndNode.Position - first.BeginNode.Position);
 			}
 			else
 			{
-				if (second.BeginNode == connectingNode)
-				{
-					firstUnitVector = Vector3.Normalize(first.BeginNode.Position - first.EndNode.Position);
-					secondUnitVector = Vector3.Normalize(second.BeginNode.Position - second.EndNode.Position);
-				}
-				else
-				{
-					firstUnitVector = Vector3.Normalize(first.EndNode.Position - first.BeginNode.Position);
-					secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
-				}
+				firstUnitVector = Vector3.Normalize(first.BeginNode.Position - first.EndNode.Position);
 			}
-			float result = Utils.GetAngle0_90(firstUnitVector, secondUnitVector);
-			return result;
+
+			if (second.BeginNode == connectingNode)
+			{
+				secondUnitVector = Vector3.Normalize(second.EndNode.Position - second.BeginNode.Position);
+			}
+			else
+			{
+				secondUnitVector = Vector3.Normalize(second.BeginNode.Position - second.EndNode.Position);
+			}
+
+			return Utils.GetAngleInDegreesBetweenUnitVectors(firstUnitVector, -secondUnitVector); // invert second vector because the more open angle the better
 		}
 
 		/// <summary>
