@@ -29,7 +29,7 @@ namespace MeshEditor.Graphics
 		private Vector3 globalViewVector, globalUpVector;
 		private float yaw, pitch, roll;
 
-		private Vector3 eye, center, up;
+		private Vector3 eye, center, up; // center and up vectors are computed from yaw and pitch angles in method updateViewVectors()
 
 		public Camera()
         {
@@ -87,10 +87,6 @@ namespace MeshEditor.Graphics
 			// rotate horizontally
 			yaw += xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
 
-			// normalize angles
-			yaw %= MathHelper.TwoPi;
-			pitch %= MathHelper.TwoPi;
-
 			// update center and up
 			updateViewVectors();
 		}
@@ -109,11 +105,20 @@ namespace MeshEditor.Graphics
 			center += move;
 		}
 
-		public void Strafe(float xAngle, float yAngle, Vector3 centerOfOrbit)
+		public void Orbit(Vector3 centerOfOrbit, float xAngle, float yAngle)
 		{
-			RotateView(xAngle, yAngle);
-			//strafeHorizontal(xAngle, centerOfOrbit);
-			//strafeVertical(yAngle, centerOfOrbit);
+			Vector3 direction = Vector3.Normalize(center - eye);
+			Vector3 verticalRotationAxis = Vector3.Cross(direction, up);
+
+			float correctedXAngle = xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
+
+			eye = RotateVector(eye - centerOfOrbit, correctedXAngle, globalUpVector) + centerOfOrbit;
+			eye = RotateVector(eye - centerOfOrbit, yAngle, verticalRotationAxis) + centerOfOrbit;
+
+			yaw += correctedXAngle;
+			pitch += yAngle;
+
+			updateViewVectors();
 		}
 
 		public void RotateZAxis(float zAngle)
@@ -272,11 +277,11 @@ namespace MeshEditor.Graphics
 		//	//up = Vector3.Normalize(RotateVector(up, angle, axis));
 		//}
 
-		private Vector3 getVerticalRotationAxis()
-		{
-			Vector3 direction = GetDirection();
-			return Vector3.Cross(direction, up);
-		}
+		//private Vector3 getVerticalRotationAxis()
+		//{
+		//	Vector3 direction = GetDirection();
+		//	return Vector3.Cross(direction, up);
+		//}
 
 		#endregion
 

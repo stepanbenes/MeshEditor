@@ -13,9 +13,13 @@ namespace MeshEditor.Data
 
 		#region Fields
 
-		private Vector3 pointUnderCursor;
+		private Vector3 pointUnderCursor, translatedPointUnderCursor;
 		private float pixelDepthUnderCursor;
 		private bool mouseDownBackgroundHit;
+
+		int[] viewport;
+		double[] modelview;
+		double[] projection;
 
 		#endregion
 
@@ -24,7 +28,11 @@ namespace MeshEditor.Data
 		public Vector3 PointUnderCursor
 		{
 			get { return pointUnderCursor; }
-			set { pointUnderCursor = value; }
+			set
+			{
+				pointUnderCursor = value;
+				translatedPointUnderCursor = pointUnderCursor;
+			}
 		}
 
 		public bool MouseDownBackgroundHit
@@ -51,8 +59,8 @@ namespace MeshEditor.Data
 				scene.Mesh.DrawFacesToDepthBuffer();
 			}
 
-			unprojectWindowCoordsToWorldCoords(pointLocation.X, pointLocation.Y);
-
+			computePixelDepthAndPointUnderCursor(pointLocation.X, pointLocation.Y);
+			
 			this.mouseDownBackgroundHit = (this.pointUnderCursor - meshCenter).Length > meshRadius;
 
 			if (eliminateBackgroundHit && this.mouseDownBackgroundHit) // pokud jsem klepnul mimo model (nekam do dalky)
@@ -82,30 +90,26 @@ namespace MeshEditor.Data
 					this.pixelDepthUnderCursor = Scene.ProjectWorldCoordToWindowCoords(this.pointUnderCursor).Z;
 				}
 			}
+
+			translatedPointUnderCursor = pointUnderCursor;
 		}
 
-		public Vector3 GetNewPointUnderCursorWithSamePixelDepth(int windowX, int windowY)
+		public Vector3 GetTranslationVector(int windowX, int windowY)
 		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			Scene.ExtractMatrices(out viewport, out modelview, out projection);
-
 			Vector3 windowPos = new Vector3(windowX - viewport[0], viewport[3] - windowY - viewport[1], pixelDepthUnderCursor);
-			Vector3 result;
-			Utilities.Functions.GluUnProject(windowPos, modelview, projection, viewport, out result);
-			return result;
+			Vector3 worldPos;
+			Utilities.Functions.GluUnProject(windowPos, modelview, projection, viewport, out worldPos);
+			Vector3 translation = translatedPointUnderCursor - worldPos;
+			translatedPointUnderCursor -= translation;
+			return translation;
 		}
 
 		#endregion
 
 		#region Private methods
 
-		private void unprojectWindowCoordsToWorldCoords(int windowX, int windowY)
+		private void computePixelDepthAndPointUnderCursor(int windowX, int windowY)
 		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
 			Scene.ExtractMatrices(out viewport, out modelview, out projection);
 
 			this.pixelDepthUnderCursor = Scene.GetPixelDepth(windowX, windowY, viewport);

@@ -1470,14 +1470,13 @@ namespace MeshEditor.CoreInterface
 				centerOfRotation = scene.Mesh.CenterOfRotation;
 			else
 				centerOfRotation = Vector3.Zero;
-			scene.Camera.Strafe(xAngle, yAngle, centerOfRotation);
+			scene.Camera.Orbit(centerOfRotation, xAngle, yAngle);
 			// ----------------------------------------------
-			if (!pointUnderCursorContext.MouseDownBackgroundHit)
-			{
-				Vector3 currentPointUnderCursor = pointUnderCursorContext.GetNewPointUnderCursorWithSamePixelDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
-				Vector3 translation = pointUnderCursorContext.PointUnderCursor - currentPointUnderCursor;
-				scene.Camera.Move(translation);
-			}
+			//if (!pointUnderCursorContext.MouseDownBackgroundHit)
+			//{
+			//	Vector3 translation = pointUnderCursorContext.GetTranslationVector(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
+			//	scene.Camera.Move(translation);
+			//}
 			cameraChangedDirection = true;
 
 			cameraChangedTimer.Start();
@@ -1592,8 +1591,7 @@ namespace MeshEditor.CoreInterface
 				cameraChangedDirection = false;
 			}
 
-			Vector3 currentPointUnderCursor = pointUnderCursorContext.GetNewPointUnderCursorWithSamePixelDepth(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
-			Vector3 translation = pointUnderCursorContext.PointUnderCursor - currentPointUnderCursor;
+			Vector3 translation = pointUnderCursorContext.GetTranslationVector(prevMouseLocation.X + dX, prevMouseLocation.Y + dY);
 			scene.Camera.Move(translation);
 
 			cameraChangedTimer.Start();
