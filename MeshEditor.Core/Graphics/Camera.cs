@@ -81,16 +81,17 @@ namespace MeshEditor.Graphics
 		/// </summary>
 		public void RotateView(float xAngle, float yAngle)
 		{
-			const float half_pi = (float)Math.PI / 2f;
-
-			// rotate horizontally
-			yaw += xAngle;
-
 			// rotate vertically
 			pitch += yAngle;
-			pitch = Math.Min(pitch, half_pi);
-			pitch = Math.Max(pitch, -half_pi);
 
+			// rotate horizontally
+			yaw += xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
+
+			// normalize angles
+			yaw %= MathHelper.TwoPi;
+			pitch %= MathHelper.TwoPi;
+
+			// update center and up
 			updateViewVectors();
 		}
 
