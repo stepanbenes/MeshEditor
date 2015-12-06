@@ -1537,25 +1537,32 @@ namespace MeshEditor.WinUI
 
 		private void loadAppSettings()
 		{
-			this.Width = Properties.Settings.Default.MainWindowWidth;
-			this.Height = Properties.Settings.Default.MainWindowHeight;
+			if (Properties.Settings.Default.MainWindowState == FormWindowState.Normal)
+			{
+				this.Width = Properties.Settings.Default.MainWindowWidth;
+				this.Height = Properties.Settings.Default.MainWindowHeight;
 
-			this.Left = Properties.Settings.Default.MainWindowPositionLeft;
-			this.Top = Properties.Settings.Default.MainWindowPositionTop;
+				this.Left = Properties.Settings.Default.MainWindowPositionLeft;
+				this.Top = Properties.Settings.Default.MainWindowPositionTop;
 
-			this.WindowState = Properties.Settings.Default.MainWindowState;
+				// Screen screen = Screen.FromControl(this);
+				// Rectangle workingArea = screen.WorkingArea;
+				// if (workingArea.Contains(Properties.Settings.Default.MainWindowPositionLeft, Properties.Settings.Default.MainWindowPositionTop)) ...
+			}
+
+			this.WindowState = Properties.Settings.Default.MainWindowState; // must be AFTER setting window position (Left, Top)
 		}
 
 		private void saveAppSettings()
 		{
 			Properties.Settings.Default.MainWindowState = this.WindowState;
-			if (this.WindowState != FormWindowState.Maximized)
+			if (this.WindowState == FormWindowState.Normal)
 			{
 				Properties.Settings.Default.MainWindowWidth = this.Width;
 				Properties.Settings.Default.MainWindowHeight = this.Height;
+				Properties.Settings.Default.MainWindowPositionLeft = this.Left;
+				Properties.Settings.Default.MainWindowPositionTop = this.Top;
 			}
-			Properties.Settings.Default.MainWindowPositionLeft = this.Left;
-			Properties.Settings.Default.MainWindowPositionTop = this.Top;
 
 			//if (!string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
 			Properties.Settings.Default.LastLoadedMesh = activeControl.SceneFacade.MeshFilename;
