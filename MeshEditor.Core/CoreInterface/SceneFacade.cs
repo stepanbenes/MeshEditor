@@ -1250,19 +1250,20 @@ namespace MeshEditor.CoreInterface
 				case EditorMode.Orbit:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
+					else if (controlDown)
+						EditorMode = EditorMode.LookAround;
 					break;
 				case EditorMode.LookAround:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
+					else if (controlDown)
+						EditorMode = EditorMode.Orbit;
 					break;
 				case EditorMode.Pan:
 					if (shiftDown)
 						EditorMode = EditorMode.Orbit;
-					break;
-				case EditorMode.ZoomWindow:
-				case EditorMode.ScreenshotWindow:
-					if (shiftDown)
-						EditorMode = EditorMode.Pan;
+					else if (controlDown)
+						EditorMode = EditorMode.LookAround;
 					break;
 			}
 		}
