@@ -4,8 +4,9 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 
-using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.Data;
+using System.Diagnostics;
+using static MeshEditor.Utilities.Functions;
 
 namespace MeshEditor.Graphics
 {
@@ -25,9 +26,12 @@ namespace MeshEditor.Graphics
 
 		#region Fields, Constructor
 
-		private Vector3 eye, center, up;
-		
-        public Camera()
+		private Vector3 globalViewVector, globalUpVector;
+		private float yaw, pitch;
+
+		private Vector3 eye, center, up; // center and up vectors are computed from yaw and pitch angles in method updateViewVectors()
+
+		public Camera()
         {
 			setIsoView();
 		}
@@ -41,11 +45,6 @@ namespace MeshEditor.Graphics
             get { return eye; }
         }
 
-        public Vector3 Center
-        {
-            get { return center; }
-        }
-
         public Vector3 Up
         {
             get { return up; }
@@ -54,6 +53,15 @@ namespace MeshEditor.Graphics
 		#endregion
 
 		#region Public methods
+
+		public Camera Clone()
+		{
+			Camera newCam = new Camera();
+			newCam.eye = this.eye;
+			newCam.center = this.center;
+			newCam.up = this.up;
+			return newCam;
+		}
 
 		/// <summary>
 		/// Returns direction vector of camera (normalized).
@@ -65,17 +73,22 @@ namespace MeshEditor.Graphics
 
 		public void LookAt()
 		{
-			Utils.GluLookAt(ref eye, ref center, ref up);
+			GluLookAt(ref eye, ref center, ref up);
 		}
 
-		public void Rotate(float xAngle, float yAngle)
+		/// <summary>
+		/// Look around eye
+		/// </summary>
+		public void RotateView(float xAngle, float yAngle)
 		{
-			// horizontal
-			center = rotateVector(center - eye, xAngle, up) + eye;
-			//vertical
-			Vector3 axis = getVerticalRotationAxis();
-			center = rotateVector(center - eye, yAngle, axis) + eye;
-			up = Vector3.Normalize(rotateVector(up, yAngle, axis));
+			// rotate vertically
+			pitch += yAngle;
+
+			// rotate horizontally
+			yaw += xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
+
+			// update center and up
+			updateViewVectors();
 		}
 
 		public void ZoomToFit()
@@ -86,30 +99,26 @@ namespace MeshEditor.Graphics
 			// up zustane stejny
 		}
 
-		public Camera Clone()
-		{
-			Camera newCam = new Camera();
-			newCam.eye = this.eye;
-			newCam.center = this.center;
-			newCam.up = this.up;
-			return newCam;
-		}
-
 		public void Move(Vector3 move)
 		{
 			eye += move;
 			center += move;
 		}
 
-		public void Strafe(float xAngle, float yAngle, Vector3 centerOfOrbit)
+		public void Orbit(Vector3 centerOfOrbit, float xAngle, float yAngle)
 		{
-			strafeHorizontal(xAngle, centerOfOrbit);
-			strafeVertical(yAngle, centerOfOrbit);
-		}
+			Vector3 direction = Vector3.Normalize(center - eye);
+			Vector3 verticalRotationAxis = Vector3.Cross(direction, up);
 
-		public void RotateZAxis(float zAngle)
-		{
-			up = rotateVector(up, zAngle, this.GetDirection());
+			float correctedXAngle = xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
+
+			eye = RotateVector(eye - centerOfOrbit, correctedXAngle, globalUpVector) + centerOfOrbit;
+			eye = RotateVector(eye - centerOfOrbit, yAngle, verticalRotationAxis) + centerOfOrbit;
+
+			yaw += correctedXAngle;
+			pitch += yAngle;
+
+			updateViewVectors();
 		}
 
 		public void SetNewEyePosition(Vector3 newPosition)
@@ -148,105 +157,94 @@ namespace MeshEditor.Graphics
 				case CameraView.Iso:
 					setIsoView();
 					break;
+				default:
+					throw new NotSupportedException();
 			}
 		}
 
 		private void setFrontView()
 		{
 			eye = Vector3.UnitZ * Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitY;
+			globalViewVector = -Vector3.UnitZ;
+			globalUpVector = Vector3.UnitY;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setBackView()
 		{
 			eye = Vector3.UnitZ * -Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitY;
+			globalViewVector = Vector3.UnitZ;
+			globalUpVector = Vector3.UnitY;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setLeftView()
 		{
-			eye = Vector3.UnitX * Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitY;
+			eye = Vector3.UnitX * -Scene.DefaultCameraDistance;
+			globalViewVector = Vector3.UnitX;
+			globalUpVector = Vector3.UnitY;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setRightView()
 		{
-			eye = Vector3.UnitX * -Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitY;
+			eye = Vector3.UnitX * Scene.DefaultCameraDistance;
+			globalViewVector = -Vector3.UnitX;
+			globalUpVector = Vector3.UnitY;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setTopView()
 		{
 			eye = Vector3.UnitY * Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitZ * -Scene.DefaultCameraDistance;
+			globalViewVector = -Vector3.UnitY;
+			globalUpVector = -Vector3.UnitZ;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setBottomView()
 		{
 			eye = Vector3.UnitY * -Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.UnitZ * Scene.DefaultCameraDistance;
+			globalViewVector = Vector3.UnitY;
+			globalUpVector = Vector3.UnitZ;
+			yaw = 0f;
+			pitch = 0f;
+			updateViewVectors();
 		}
 
 		private void setIsoView()
 		{
 			eye = Vector3.Normalize(new Vector3(1f, 1f, 1f)) * Scene.DefaultCameraDistance;
-			center = Vector3.Zero;
-			up = Vector3.Normalize(new Vector3(-1f, 1f, -1f));
+			globalViewVector = -Vector3.UnitZ;
+			globalUpVector = Vector3.UnitY;
+			yaw = (float)(Math.PI / 4.0); // 45°
+			pitch = (float)-Math.Asin(1.0 / Math.Sqrt(3.0)); // the slope of the diagonal of a cube with the side of unit length
+			updateViewVectors();
 		}
 
 		#endregion
 
 		#region Private methods
 
-		private static Vector3 rotateVector(Vector3 v, float angle, Vector3 axis)
+		private void updateViewVectors()
 		{
-			float cosTheta = (float)Math.Cos(angle);
-			float sinTheta = (float)Math.Sin(angle);
+			var rotatedView = RotateVector(globalViewVector, yaw, globalUpVector);
+			var pitchAxis = Vector3.Cross(rotatedView, globalUpVector);
+			rotatedView = RotateVector(rotatedView, pitch, pitchAxis);
+			var rotatedUp = RotateVector(globalUpVector, pitch, pitchAxis);
 
-			Vector3 rotated = new Vector3();
-			rotated.X = (cosTheta + (1 - cosTheta) * axis.X * axis.X) * v.X;
-			rotated.X += ((1 - cosTheta) * axis.X * axis.Y - axis.Z * sinTheta) * v.Y;
-			rotated.X += ((1 - cosTheta) * axis.X * axis.Z + axis.Y * sinTheta) * v.Z;
-
-			rotated.Y = ((1 - cosTheta) * axis.X * axis.Y + axis.Z * sinTheta) * v.X;
-			rotated.Y += (cosTheta + (1 - cosTheta) * axis.Y * axis.Y) * v.Y;
-			rotated.Y += ((1 - cosTheta) * axis.Y * axis.Z - axis.X * sinTheta) * v.Z;
-
-			rotated.Z = ((1 - cosTheta) * axis.X * axis.Z - axis.Y * sinTheta) * v.X;
-			rotated.Z += ((1 - cosTheta) * axis.Y * axis.Z + axis.X * sinTheta) * v.Y;
-			rotated.Z += (cosTheta + (1 - cosTheta) * axis.Z * axis.Z) * v.Z;
-
-			return rotated;
-		}
-
-		private void strafeHorizontal(float angle, Vector3 centerOfOrbit)
-		{
-			//float angle = (float)(Math.PI / 720.0);
-			center = rotateVector(center - centerOfOrbit, angle, up) + centerOfOrbit;
-			eye = rotateVector(eye - centerOfOrbit, angle, up) + centerOfOrbit;
-		}
-
-		private void strafeVertical(float angle, Vector3 centerOfOrbit)
-		{
-			//float angle = (float)(Math.PI / 720.0);
-			Vector3 axis = getVerticalRotationAxis();
-
-			center = rotateVector(center - centerOfOrbit, angle, axis) + centerOfOrbit;
-			eye = rotateVector(eye - centerOfOrbit, angle, axis) + centerOfOrbit;
-			up = Vector3.Normalize(rotateVector(up, angle, axis));
-		}
-
-		private Vector3 getVerticalRotationAxis()
-		{
-			Vector3 dir = center - eye;
-			Vector3 axis = Vector3.Cross(dir, up);
-			return Vector3.Normalize(axis);
+			center = eye + rotatedView;
+			up = rotatedUp;
 		}
 
 		#endregion

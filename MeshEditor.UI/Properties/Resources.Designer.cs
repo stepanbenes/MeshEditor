@@ -333,16 +333,6 @@ namespace MeshEditor.WinUI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap rotateZ {
-            get {
-                object obj = ResourceManager.GetObject("rotateZ", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap selectBeams {
             get {
                 object obj = ResourceManager.GetObject("selectBeams", resourceCulture);

@@ -376,7 +376,6 @@ namespace MeshEditor.WinUI
 			toolStripButtonPan.Checked = (mode == EditorMode.Pan);
 			toolStripButtonLookAround.Checked = (mode == EditorMode.LookAround);
 			toolStripButtonZoomWindow.Checked = (mode == EditorMode.ZoomWindow);
-			toolStripButtonRotateZ.Checked = (mode == EditorMode.RotateZ);
 			toolStripButtonSelectElements.Checked = (mode == EditorMode.SelectElements);
 			toolStripButtonSelectNodes.Checked = (mode == EditorMode.SelectNodes);
 			toolStripButtonSelectFaces.Checked = (mode == EditorMode.SelectFaces);
@@ -589,15 +588,12 @@ namespace MeshEditor.WinUI
 				SceneFacade.EditorMode = EditorMode.LookAround;
 			else if (sender == zoomWindowToolStripMenuItem || sender == zoomWindowToolStripMenuItem1)
 				SceneFacade.EditorMode = EditorMode.ZoomWindow;
-			else if (sender == toolStripMenuItemRotateZ || sender == toolStripMenuItemRotateZ1)
-				SceneFacade.EditorMode = EditorMode.RotateZ;
 		}
 
 		private void uncheckAllCameraToolMenuItems()
 		{
 			orbitToolStripMenuItem.Checked = panToolStripMenuItem.Checked = lookAroundToolStripMenuItem.Checked = zoomWindowToolStripMenuItem.Checked = false;
 			orbitToolStripMenuItem1.Checked = panToolStripMenuItem1.Checked = lookAroundToolStripMenuItem1.Checked = zoomWindowToolStripMenuItem1.Checked = false;
-			toolStripMenuItemRotateZ.Checked = toolStripMenuItemRotateZ1.Checked = false;
 		}
 
 		private void selectToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -639,9 +635,6 @@ namespace MeshEditor.WinUI
 					break;
 				case EditorMode.ZoomWindow:
 					zoomWindowToolStripMenuItem.Checked = zoomWindowToolStripMenuItem1.Checked = true;
-					break;
-				case EditorMode.RotateZ:
-					toolStripMenuItemRotateZ.Checked = toolStripMenuItemRotateZ1.Checked = true;
 					break;
 			}
 
@@ -1642,8 +1635,6 @@ namespace MeshEditor.WinUI
 				editorMode = EditorMode.LookAround;
 			else if (sender == toolStripButtonZoomWindow)
 				editorMode = EditorMode.ZoomWindow;
-			else if (sender == toolStripButtonRotateZ)
-				editorMode = EditorMode.RotateZ;
 			else if (sender == toolStripButtonSelectElements)
 				editorMode = EditorMode.SelectElements;
 			else if (sender == toolStripButtonSelectNodes)

@@ -54,7 +54,7 @@ namespace MeshEditor.Data
 			this.mesh = null;
 			this.camera = new Camera();
 			this.renderMode = DefaultRenderMode;
-			this.drawAxesFlag = false;
+			this.drawAxesFlag = true;
 			this.drawAxisArrowsFlag = true;
 			this.drawNodeNumbersFlag = true;
 			this.drawElementNumbersFlag = false;
@@ -596,75 +596,16 @@ namespace MeshEditor.Data
 			GL.GetInteger(GetPName.Viewport, viewport);
 		}
 
-		public static void ExtractMatrices(int[] viewport, double[] modelview, double[] projection)
-		{
-			GL.GetInteger(GetPName.Viewport, viewport);
-			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
-			GL.GetDouble(GetPName.ProjectionMatrix, projection);
-		}
-
 		public static Vector3 ProjectWorldCoordToWindowCoords(Vector3 point)
 		{
-			int[] viewport = new int[4];
-			double[] modelview = new double[16];    // mptm Model matrix
-			double[] projection = new double[16];   // ptm Projection matrix
-
-			GL.GetInteger(GetPName.Viewport, viewport);
-			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
-			GL.GetDouble(GetPName.ProjectionMatrix, projection);
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			ExtractMatrices(out viewport, out modelview, out projection);
 
 			Vector3 result;
 			Utils.GluProject(point, modelview, projection, viewport, out result);
 			return result;
-		}
-
-		public static Vector3 UnprojectWindowCoordsToWorldCoords(int x, int y, float pixelDepth)
-		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			ExtractMatrices(out viewport, out modelview, out projection);
-
-			Vector3 windowPos = new Vector3(x - viewport[0], viewport[3] - y - viewport[1], pixelDepth);
-
-			Vector3 position;
-			Utils.GluUnProject(windowPos, modelview, projection, viewport, out position);
-			return position;
-		}
-
-		public Vector3 UnprojectWindowCoordsToWorldCoords(bool redraw, int x, int y, out float pixelDepth)
-		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			ExtractMatrices(out viewport, out modelview, out projection);
-
-			if (redraw)
-			{
-				GL.Clear(ClearBufferMask.DepthBufferBit);
-				// vykreslit plochy site jen se nekresli pouze beamy nebo uzly
-				if (mesh != null /* && renderMode != RenderMode.None && renderMode != RenderMode.Points*/)
-				{
-					mesh.DrawFacesOnly();
-
-					//mesh.DrawContent(this.renderMode & ~RenderMode.Points, this.camera, /*optimizeForMoving*/ false, /*optimizeForSelecting*/ false, /*drawNodeNumbersFlag*/ false, /*drawElementNumbersFlag*/ false, /*this.drawBeamsFlag*/ true);
-
-					//GL.Enable(EnableCap.CullFace);
-					//GL.CullFace(CullFaceMode.Front);
-					////mesh.DrawContent(this.renderMode & ~RenderMode.Points, this.camera, /*optimizeForMoving*/ false, /*optimizeForSelecting*/ false, /*drawNodeNumbersFlag*/ false, /*drawElementNumbersFlag*/ false, /*this.drawBeamsFlag*/ true);
-					//mesh.DrawFacesOnly();
-					//GL.CullFace(CullFaceMode.Back);
-					//GL.Disable(EnableCap.CullFace);
-				}
-			}
-
-			pixelDepth = getPixelDepth(x, y, viewport);
-			Vector3 windowPos = new Vector3(x - viewport[0], viewport[3] - y - viewport[1], pixelDepth);
-
-			Vector3 position;
-			Utils.GluUnProject(windowPos, modelview, projection, viewport, out position);
-
-			return position;
 		}
 
 		public void SetDefaultCameraView()
@@ -678,12 +619,16 @@ namespace MeshEditor.Data
 			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
 			const float negligibleRelativeSize = 0.1f;
 
-			if (relativeDimensions.X < negligibleRelativeSize)
-				camera.SetView(CameraView.Right);
-			else if (relativeDimensions.Y < negligibleRelativeSize)
-				camera.SetView(CameraView.Top);
-			else if (relativeDimensions.Z < negligibleRelativeSize)
-				camera.SetView(CameraView.Front);
+			float smallestRelativeDimension = Math.Min(relativeDimensions.X, Math.Min(relativeDimensions.Y, relativeDimensions.Z));
+			if (smallestRelativeDimension < negligibleRelativeSize)
+			{
+				if (relativeDimensions.X < relativeDimensions.Y && relativeDimensions.X < relativeDimensions.Z) // X is smallest
+					camera.SetView(CameraView.Right);
+				else if (relativeDimensions.Y < relativeDimensions.X && relativeDimensions.Y < relativeDimensions.Z) // Y is smallest
+					camera.SetView(CameraView.Top);
+				else // Z is smallest
+					camera.SetView(CameraView.Front);
+			}
 			else
 				camera.SetView(CameraView.Iso);
 		}
@@ -1754,12 +1699,11 @@ namespace MeshEditor.Data
 			}
 			else if (itemType != ItemTypeToSelect.Beam)
 			{
-				GL.Clear(ClearBufferMask.DepthBufferBit); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
-				mesh.DrawFacesOnly();
+				mesh.DrawFacesToDepthBuffer(); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
 			}
 
 			{
-				float pixelDepth = getPixelDepth(x, y, viewport);
+				float pixelDepth = GetPixelDepth(x, y, viewport);
 				Vector3 hitPoint;
 				faceHit = getNearestFace(mesh.Faces, new Vector3(x - viewport[0], viewport[3] - y - viewport[1], pixelDepth), out hitPoint);
 			}
@@ -1971,7 +1915,7 @@ namespace MeshEditor.Data
 			return mesh.SelectedItems.FirstOrDefault();
 		}
 
-		private static float getPixelDepth(int x, int y, int[] viewport)
+		public static float GetPixelDepth(int x, int y, int[] viewport)
 		{
 			float[] depth = new float[1];
 			GL.ReadPixels(x - viewport[0], viewport[3] - y - viewport[1], 1, 1, PixelFormat.DepthComponent, PixelType.Float, depth);
