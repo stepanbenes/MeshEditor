@@ -194,7 +194,7 @@ namespace MeshEditor.Data
 			OrdinaryEdgeWidth = 1f;
 			BorderEdgeWidth = 2f;
 			BeamWidth = 2f;
-			DefaultCameraDistance = 2.5f;
+			DefaultCameraDistance = 2.2f;
 			XRayVision = false;
 			//DEPTH_TEST_TOLERANCE_DISTANCE = 0.005f; // musi byt kladne; na tohle cislo radsi nesahej, na jeho vyladeni bylo potreba plno krve, potu a slz
 			DefaultRenderMode = RenderMode.FacesLines;

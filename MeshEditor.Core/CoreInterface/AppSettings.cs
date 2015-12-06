@@ -145,7 +145,7 @@ namespace MeshEditor.CoreInterface
 		#region Private fields & constructor
 
 		private bool lineSmooth, pointSmooth, edgeLighting, faceLighting;
-		private float pointSize, ordinaryEdgeWidth, borderEdgeWidth, beamWidth, defaultCameraDistance;
+		private float pointSize, ordinaryEdgeWidth, borderEdgeWidth, beamWidth;
 		private Color activeBackColor, nonActiveBackColor, faceColor, ordinaryEdgeColor, firstBorderColor, secondBorderColor, selectedElementColor, selectedFaceColor, selectedEdgeColor, selectedNodeColor, selectedFaceAndElementColor, beamColor, selectedBeamColor, nodesColor, nodeNumbersColor, elementNumbersColor, selectedElementNumbersColor;
 		private ShadingModel shadingModel;
 		private RenderMode defaultRenderMode;
@@ -166,7 +166,6 @@ namespace MeshEditor.CoreInterface
 			OrdinaryEdgeWidth = ordinaryEdgeWidth;
 			BorderEdgeWidth = borderEdgeWidth;
 			BeamWidth = beamWidth;
-			DefaultCameraDistance = defaultCameraDistance;
 			DefaultRenderMode = defaultRenderMode;
 			SifelFileformatExtension = sifelFileFormatExtension;
 
@@ -208,7 +207,6 @@ namespace MeshEditor.CoreInterface
 			ordinaryEdgeWidth = OrdinaryEdgeWidth;
 			borderEdgeWidth = BorderEdgeWidth;
 			beamWidth = BeamWidth;
-			defaultCameraDistance = DefaultCameraDistance;
 			defaultRenderMode = DefaultRenderMode;
 			sifelFileFormatExtension = SifelFileformatExtension;
 
@@ -361,13 +359,6 @@ namespace MeshEditor.CoreInterface
 		}
 
 		// -----------------------------------------------------------------------------
-
-		[DisplayName("Default camera distance"), Description("Default distance of camera from mesh after resetting view")]
-		public float DefaultCameraDistance
-		{
-			get { return Scene.DefaultCameraDistance; }
-			set { defaultCameraDistance = Scene.DefaultCameraDistance = value; }
-		}
 
 		[DisplayName("SIFEL file format extension"), Description("Extension of default input/output file format used in SIFEL software")]
 		public string SifelFileformatExtension
