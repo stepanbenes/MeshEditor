@@ -619,12 +619,16 @@ namespace MeshEditor.Data
 			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
 			const float negligibleRelativeSize = 0.1f;
 
-			if (relativeDimensions.X < negligibleRelativeSize)
-				camera.SetView(CameraView.Right);
-			else if (relativeDimensions.Y < negligibleRelativeSize)
-				camera.SetView(CameraView.Top);
-			else if (relativeDimensions.Z < negligibleRelativeSize)
-				camera.SetView(CameraView.Front);
+			float smallestRelativeDimension = Math.Min(relativeDimensions.X, Math.Min(relativeDimensions.Y, relativeDimensions.Z));
+			if (smallestRelativeDimension < negligibleRelativeSize)
+			{
+				if (relativeDimensions.X < relativeDimensions.Y && relativeDimensions.X < relativeDimensions.Z) // X is smallest
+					camera.SetView(CameraView.Right);
+				else if (relativeDimensions.Y < relativeDimensions.X && relativeDimensions.Y < relativeDimensions.Z) // Y is smallest
+					camera.SetView(CameraView.Top);
+				else // Z is smallest
+					camera.SetView(CameraView.Front);
+			}
 			else
 				camera.SetView(CameraView.Iso);
 		}
