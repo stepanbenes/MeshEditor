@@ -1039,9 +1039,6 @@ namespace MeshEditor.CoreInterface
 					case EditorMode.LookAround:
 						lookAroundCamera(dX, dY); // <--
 						break;
-					case EditorMode.RotateZ:
-						RotateZAxis(dX);
-						break;
 				}
 			}
 			prevMouseLocation = location;
@@ -1089,19 +1086,6 @@ namespace MeshEditor.CoreInterface
 			
 			if (RefreshNeeded != null)
 				RefreshNeeded(this, EventArgs.Empty);
-		}
-
-		public void RotateZAxis(int delta)
-		{
-			cameraChangedTimer.Enabled = false;
-
-			float zAngle = -(float)delta * 0.005f;
-			
-			scene.Camera.RotateZAxis(zAngle);
-
-			cameraChangedTimer.Start();
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
 		}
 
 		public void Initialize()
@@ -1257,7 +1241,6 @@ namespace MeshEditor.CoreInterface
 			if (!shiftDown && !controlDown)
 			{
 				EditorMode = editorModeWithoutModificationKeys;
-				//if (EditorMode == EditorMode.Orbit || EditorMode == EditorMode.RotateZ)
 				pointUnderCursorContext.Compute(scene, prevMouseLocation, true);
 				return;
 			}
@@ -1267,30 +1250,19 @@ namespace MeshEditor.CoreInterface
 				case EditorMode.Orbit:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
-					else if (controlDown)
-						EditorMode = EditorMode.RotateZ;
 					break;
 				case EditorMode.LookAround:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
-					else if (controlDown)
-					{
-						EditorMode = EditorMode.RotateZ;
-						//computePointUnderCursor(prevMouseLocation, true);
-					}
 					break;
 				case EditorMode.Pan:
 					if (shiftDown)
 						EditorMode = EditorMode.Orbit;
-					else if (controlDown)
-						EditorMode = EditorMode.RotateZ;
 					break;
 				case EditorMode.ZoomWindow:
 				case EditorMode.ScreenshotWindow:
 					if (shiftDown)
 						EditorMode = EditorMode.Pan;
-					else if (controlDown)
-						EditorMode = EditorMode.RotateZ;
 					break;
 			}
 		}

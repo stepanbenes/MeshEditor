@@ -332,13 +332,6 @@ namespace MeshEditor.WinUI
 					SetPropertyOfSelectedItems();
 					return;
 
-				case Keys.OemPeriod:
-					sceneFacade.RotateZAxis(10);
-					return;
-				case Keys.Oemcomma:
-					sceneFacade.RotateZAxis(-10);
-					return;
-
 				default:
 					e.Handled = false;
 					e.SuppressKeyPress = false;
@@ -504,9 +497,6 @@ namespace MeshEditor.WinUI
 				case EditorMode.ZoomWindow:
 				case EditorMode.ScreenshotWindow:
 					this.Cursor = Cursors.UpArrow;
-					break;
-				case EditorMode.RotateZ:
-					this.Cursor = Cursors.SizeWE;
 					break;
 				case EditorMode.SelectNodes:
 				case EditorMode.SelectEdges:

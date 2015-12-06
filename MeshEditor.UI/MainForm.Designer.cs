@@ -51,11 +51,13 @@
 			this.takeScreenshotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.axesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.axisArrowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.intermediateNodesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
 			this.nodeNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.elementNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.beamNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator20 = new System.Windows.Forms.ToolStripSeparator();
 			this.signalNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.signalElementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -84,7 +86,6 @@
 			this.panToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.lookAroundToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.zoomWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItemRotateZ1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
 			this.zoomToFitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
@@ -139,7 +140,6 @@
 			this.toolStripButtonPan = new System.Windows.Forms.ToolStripButton();
 			this.toolStripButtonLookAround = new System.Windows.Forms.ToolStripButton();
 			this.toolStripButtonZoomWindow = new System.Windows.Forms.ToolStripButton();
-			this.toolStripButtonRotateZ = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
 			this.toolStripButtonZoomToFit = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
@@ -183,15 +183,12 @@
 			this.panToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.lookAroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.zoomWindowToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItemRotateZ = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
 			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-			this.axisArrowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.beamNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -403,6 +400,13 @@
 			this.axesToolStripMenuItem.Text = "&Axes";
 			this.axesToolStripMenuItem.Click += new System.EventHandler(this.axesToolStripMenuItem_Click);
 			// 
+			// axisArrowsToolStripMenuItem
+			// 
+			this.axisArrowsToolStripMenuItem.Name = "axisArrowsToolStripMenuItem";
+			this.axisArrowsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.axisArrowsToolStripMenuItem.Text = "A&xis arrows";
+			this.axisArrowsToolStripMenuItem.Click += new System.EventHandler(this.axisArrowsToolStripMenuItem_Click);
+			// 
 			// intermediateNodesToolStripMenuItem
 			// 
 			this.intermediateNodesToolStripMenuItem.Name = "intermediateNodesToolStripMenuItem";
@@ -437,6 +441,13 @@
 			this.elementNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
 			this.elementNumbersToolStripMenuItem.Text = "&Element numbers";
 			this.elementNumbersToolStripMenuItem.Click += new System.EventHandler(this.elementNumbersToolStripMenuItem_Click);
+			// 
+			// beamNumbersToolStripMenuItem
+			// 
+			this.beamNumbersToolStripMenuItem.Name = "beamNumbersToolStripMenuItem";
+			this.beamNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+			this.beamNumbersToolStripMenuItem.Text = "Bea&m numbers";
+			this.beamNumbersToolStripMenuItem.Click += new System.EventHandler(this.beamNumbersToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator20
 			// 
@@ -632,7 +643,6 @@
             this.panToolStripMenuItem1,
             this.lookAroundToolStripMenuItem1,
             this.zoomWindowToolStripMenuItem,
-            this.toolStripMenuItemRotateZ1,
             this.toolStripSeparator10,
             this.zoomToFitToolStripMenuItem,
             this.toolStripSeparator16,
@@ -653,7 +663,7 @@
 			this.orbitToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
 			this.orbitToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.orbitToolStripMenuItem1.Name = "orbitToolStripMenuItem1";
-			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
 			this.orbitToolStripMenuItem1.Text = "&Orbit";
 			this.orbitToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -662,7 +672,7 @@
 			this.panToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
 			this.panToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.panToolStripMenuItem1.Name = "panToolStripMenuItem1";
-			this.panToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.panToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
 			this.panToolStripMenuItem1.Text = "&Pan";
 			this.panToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -671,7 +681,7 @@
 			this.lookAroundToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
 			this.lookAroundToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.lookAroundToolStripMenuItem1.Name = "lookAroundToolStripMenuItem1";
-			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
+			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
 			this.lookAroundToolStripMenuItem1.Text = "Look &around";
 			this.lookAroundToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -680,84 +690,75 @@
 			this.zoomWindowToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
 			this.zoomWindowToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
 			this.zoomWindowToolStripMenuItem.Name = "zoomWindowToolStripMenuItem";
-			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.zoomWindowToolStripMenuItem.Text = "&Zoom window";
 			this.zoomWindowToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
-			// 
-			// toolStripMenuItemRotateZ1
-			// 
-			this.toolStripMenuItemRotateZ1.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
-			this.toolStripMenuItemRotateZ1.ImageTransparentColor = System.Drawing.Color.White;
-			this.toolStripMenuItemRotateZ1.Name = "toolStripMenuItemRotateZ1";
-			this.toolStripMenuItemRotateZ1.Size = new System.Drawing.Size(151, 22);
-			this.toolStripMenuItemRotateZ1.Text = "&Rotate view";
-			this.toolStripMenuItemRotateZ1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
 			// toolStripSeparator10
 			// 
 			this.toolStripSeparator10.Name = "toolStripSeparator10";
-			this.toolStripSeparator10.Size = new System.Drawing.Size(148, 6);
+			this.toolStripSeparator10.Size = new System.Drawing.Size(149, 6);
 			// 
 			// zoomToFitToolStripMenuItem
 			// 
 			this.zoomToFitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
 			this.zoomToFitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
 			this.zoomToFitToolStripMenuItem.Name = "zoomToFitToolStripMenuItem";
-			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.zoomToFitToolStripMenuItem.Text = "Zoo&m to fit";
 			this.zoomToFitToolStripMenuItem.Click += new System.EventHandler(this.zoomToFitToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator16
 			// 
 			this.toolStripSeparator16.Name = "toolStripSeparator16";
-			this.toolStripSeparator16.Size = new System.Drawing.Size(148, 6);
+			this.toolStripSeparator16.Size = new System.Drawing.Size(149, 6);
 			// 
 			// frontToolStripMenuItem
 			// 
 			this.frontToolStripMenuItem.Name = "frontToolStripMenuItem";
-			this.frontToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.frontToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.frontToolStripMenuItem.Text = "&Front";
 			this.frontToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// backToolStripMenuItem
 			// 
 			this.backToolStripMenuItem.Name = "backToolStripMenuItem";
-			this.backToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.backToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.backToolStripMenuItem.Text = "&Back";
 			this.backToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// topToolStripMenuItem
 			// 
 			this.topToolStripMenuItem.Name = "topToolStripMenuItem";
-			this.topToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.topToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.topToolStripMenuItem.Text = "&Top";
 			this.topToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// bottomToolStripMenuItem
 			// 
 			this.bottomToolStripMenuItem.Name = "bottomToolStripMenuItem";
-			this.bottomToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.bottomToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.bottomToolStripMenuItem.Text = "Bo&ttom";
 			this.bottomToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// rightToolStripMenuItem
 			// 
 			this.rightToolStripMenuItem.Name = "rightToolStripMenuItem";
-			this.rightToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.rightToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.rightToolStripMenuItem.Text = "&Right";
 			this.rightToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// leftToolStripMenuItem
 			// 
 			this.leftToolStripMenuItem.Name = "leftToolStripMenuItem";
-			this.leftToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.leftToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.leftToolStripMenuItem.Text = "&Left";
 			this.leftToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// isoToolStripMenuItem
 			// 
 			this.isoToolStripMenuItem.Name = "isoToolStripMenuItem";
-			this.isoToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+			this.isoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.isoToolStripMenuItem.Text = "&Iso";
 			this.isoToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
@@ -1054,7 +1055,6 @@
             this.toolStripButtonPan,
             this.toolStripButtonLookAround,
             this.toolStripButtonZoomWindow,
-            this.toolStripButtonRotateZ,
             this.toolStripSeparator11,
             this.toolStripButtonZoomToFit,
             this.toolStripSeparator15,
@@ -1201,17 +1201,6 @@
 			this.toolStripButtonZoomWindow.Text = "Zoom window";
 			this.toolStripButtonZoomWindow.ToolTipText = "Zoom window (Z)";
 			this.toolStripButtonZoomWindow.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
-			// 
-			// toolStripButtonRotateZ
-			// 
-			this.toolStripButtonRotateZ.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButtonRotateZ.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
-			this.toolStripButtonRotateZ.ImageTransparentColor = System.Drawing.Color.White;
-			this.toolStripButtonRotateZ.Name = "toolStripButtonRotateZ";
-			this.toolStripButtonRotateZ.Size = new System.Drawing.Size(28, 28);
-			this.toolStripButtonRotateZ.Text = "Rotate view";
-			this.toolStripButtonRotateZ.ToolTipText = "Rotate view around screen axis";
-			this.toolStripButtonRotateZ.Click += new System.EventHandler(this.toolStripButtonEditorModeTool_Click);
 			// 
 			// toolStripSeparator11
 			// 
@@ -1503,7 +1492,6 @@
             this.panToolStripMenuItem,
             this.lookAroundToolStripMenuItem,
             this.zoomWindowToolStripMenuItem1,
-            this.toolStripMenuItemRotateZ,
             this.toolStripSeparator2,
             this.splitWindowToolStripMenuItem,
             this.closeWindowToolStripMenuItem});
@@ -1612,16 +1600,6 @@
 			this.zoomWindowToolStripMenuItem1.Text = "&Zoom window";
 			this.zoomWindowToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
-			// toolStripMenuItemRotateZ
-			// 
-			this.toolStripMenuItemRotateZ.Image = global::MeshEditor.WinUI.Properties.Resources.rotateZ;
-			this.toolStripMenuItemRotateZ.ImageTransparentColor = System.Drawing.Color.White;
-			this.toolStripMenuItemRotateZ.Name = "toolStripMenuItemRotateZ";
-			this.toolStripMenuItemRotateZ.Size = new System.Drawing.Size(151, 22);
-			this.toolStripMenuItemRotateZ.Text = "&Rotate view";
-			this.toolStripMenuItemRotateZ.ToolTipText = "Rotate view around screen axis";
-			this.toolStripMenuItemRotateZ.Click += new System.EventHandler(this.cameraToolChosen);
-			// 
 			// toolStripSeparator2
 			// 
 			this.toolStripSeparator2.Name = "toolStripSeparator2";
@@ -1649,20 +1627,6 @@
 			this.centralPanel.Name = "centralPanel";
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
-			// 
-			// axisArrowsToolStripMenuItem
-			// 
-			this.axisArrowsToolStripMenuItem.Name = "axisArrowsToolStripMenuItem";
-			this.axisArrowsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
-			this.axisArrowsToolStripMenuItem.Text = "A&xis arrows";
-			this.axisArrowsToolStripMenuItem.Click += new System.EventHandler(this.axisArrowsToolStripMenuItem_Click);
-			// 
-			// beamNumbersToolStripMenuItem
-			// 
-			this.beamNumbersToolStripMenuItem.Name = "beamNumbersToolStripMenuItem";
-			this.beamNumbersToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
-			this.beamNumbersToolStripMenuItem.Text = "Bea&m numbers";
-			this.beamNumbersToolStripMenuItem.Click += new System.EventHandler(this.beamNumbersToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
@@ -1826,9 +1790,6 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
 		private System.Windows.Forms.ToolStripMenuItem elementNumbersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem beamsToolStripMenuItem2;
-		private System.Windows.Forms.ToolStripButton toolStripButtonRotateZ;
-		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRotateZ;
-		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRotateZ1;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator20;
 		private System.Windows.Forms.ToolStripMenuItem signalNodeToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem signalElementToolStripMenuItem;

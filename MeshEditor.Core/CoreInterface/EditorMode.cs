@@ -19,7 +19,6 @@ namespace MeshEditor.CoreInterface
 		Orbit,
 		LookAround,
 		ZoomWindow,
-		RotateZ,
 		PickCuttingPlanePoint,
 		ScreenshotWindow
 	}

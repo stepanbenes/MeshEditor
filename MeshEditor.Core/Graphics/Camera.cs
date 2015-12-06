@@ -27,7 +27,7 @@ namespace MeshEditor.Graphics
 		#region Fields, Constructor
 
 		private Vector3 globalViewVector, globalUpVector;
-		private float yaw, pitch, roll;
+		private float yaw, pitch;
 
 		private Vector3 eye, center, up; // center and up vectors are computed from yaw and pitch angles in method updateViewVectors()
 
@@ -121,11 +121,6 @@ namespace MeshEditor.Graphics
 			updateViewVectors();
 		}
 
-		public void RotateZAxis(float zAngle)
-		{
-			up = RotateVector(up, zAngle, this.GetDirection());
-		}
-
 		public void SetNewEyePosition(Vector3 newPosition)
 		{
 			Vector3 direction = GetDirection();
@@ -174,7 +169,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitY;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -185,7 +179,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitY;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -196,7 +189,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitY;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -207,7 +199,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitY;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -218,7 +209,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = -Vector3.UnitZ;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -229,7 +219,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitZ;
 			yaw = 0f;
 			pitch = 0f;
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -240,7 +229,6 @@ namespace MeshEditor.Graphics
 			globalUpVector = Vector3.UnitY;
 			yaw = (float)(Math.PI / 4.0); // 45°
 			pitch = (float)-Math.Asin(1.0 / Math.Sqrt(3.0)); // the slope of the diagonal of a cube with the side of unit length
-			roll = 0f;
 			updateViewVectors();
 		}
 
@@ -254,34 +242,10 @@ namespace MeshEditor.Graphics
 			var pitchAxis = Vector3.Cross(rotatedView, globalUpVector);
 			rotatedView = RotateVector(rotatedView, pitch, pitchAxis);
 			var rotatedUp = RotateVector(globalUpVector, pitch, pitchAxis);
-			rotatedUp = RotateVector(rotatedUp, roll, rotatedView);
 
 			center = eye + rotatedView;
 			up = rotatedUp;
 		}
-
-		//private void strafeHorizontal(float angle, Vector3 centerOfOrbit)
-		//{
-		//	//center = RotateVector(center - centerOfOrbit, angle, up) + centerOfOrbit;
-		//	//eye = RotateVector(eye - centerOfOrbit, angle, up) + centerOfOrbit;
-		//	yaw += angle;
-		//	updateViewVectors();
-		//}
-
-		//private void strafeVertical(float angle, Vector3 centerOfOrbit)
-		//{
-		//	//Vector3 axis = getVerticalRotationAxis();
-
-		//	//center = RotateVector(center - centerOfOrbit, angle, axis) + centerOfOrbit;
-		//	//eye = RotateVector(eye - centerOfOrbit, angle, axis) + centerOfOrbit;
-		//	//up = Vector3.Normalize(RotateVector(up, angle, axis));
-		//}
-
-		//private Vector3 getVerticalRotationAxis()
-		//{
-		//	Vector3 direction = GetDirection();
-		//	return Vector3.Cross(direction, up);
-		//}
 
 		#endregion
 
