@@ -133,6 +133,8 @@ namespace MeshEditor.DataVisualizer.UI
 				return DataVisualizerTypes.Timetree;
 			else if (dataVisualizer is OctreeDataVisualizer)
 				return DataVisualizerTypes.Octree;
+			else if (dataVisualizer is WaveletDataVisualizer)
+				return DataVisualizerTypes.Wavelet;
 			throw new NotSupportedException();
 		}
 
@@ -217,6 +219,8 @@ namespace MeshEditor.DataVisualizer.UI
 					return new OctreeDataVisualizer();
 				case DataVisualizerTypes.Timetree:
 					return new TimetreeDataVisualizer();
+				case DataVisualizerTypes.Wavelet:
+					return new WaveletDataVisualizer();
 				default:
 					throw new NotSupportedException();
 			}

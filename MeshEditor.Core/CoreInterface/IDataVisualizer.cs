@@ -180,6 +180,7 @@ namespace MeshEditor.CoreInterface
 	{
 		Exact = 0,
 		Octree,
-		Timetree
+		Timetree,
+		Wavelet,
 	}
 }
