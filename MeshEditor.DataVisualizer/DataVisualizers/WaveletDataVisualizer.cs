@@ -42,7 +42,18 @@ namespace MeshEditor.DataVisualizer
 
 			public void DrawBoundary()
 			{
-				root.DrawBoundary(lowerBounds, upperBounds);
+				GL.Begin(BeginMode.Lines);
+				{
+					root.DrawBoundary(lowerBounds, upperBounds);
+				}
+				GL.End();
+			}
+
+			public List<TData> Traverse()
+			{
+				List<TData> dataCollection = new List<TData>();
+				root.ZOrderTraverse(dataCollection);
+				return dataCollection;
 			}
 
 			abstract class OctreeNode<T> where T : class, IItemWithSignificantPoint
@@ -51,49 +62,46 @@ namespace MeshEditor.DataVisualizer
 
 				public virtual void DrawBoundary(Vector3 lowerBounds, Vector3 upperBounds)
 				{
-					// DRAW BOUNDARY
-					GL.Begin(BeginMode.Lines);
-					{
-						GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
-						GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
-						GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
 
 
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
 
 
-						GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, upperBounds.Z);
 
-						GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
-						GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(upperBounds.X, lowerBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, lowerBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, lowerBounds.Z);
 
-						GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
-						GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
-					}
-					GL.End();
+					GL.Vertex3(lowerBounds.X, upperBounds.Y, upperBounds.Z);
+					GL.Vertex3(lowerBounds.X, lowerBounds.Y, upperBounds.Z);
 				}
+
+				public abstract void ZOrderTraverse(ICollection<T> dataCollection);
 			}
 
 			class InternalNode<T> : OctreeNode<T> where T : class, IItemWithSignificantPoint
@@ -199,7 +207,18 @@ namespace MeshEditor.DataVisualizer
 						{
 							Vector3 childLowerBounds, childUpperBounds;
 							getChildBounds(i, ref lowerBounds, ref upperBounds, out childLowerBounds, out childUpperBounds);
-							children[i].DrawBoundary(childLowerBounds, childUpperBounds);	
+							children[i].DrawBoundary(childLowerBounds, childUpperBounds);
+						}
+					}
+				}
+
+				public override void ZOrderTraverse(ICollection<T> dataCollection)
+				{
+					for (int i = 0; i < children.Length; i++)
+					{
+						if (children[i] != null)
+						{
+							children[i].ZOrderTraverse(dataCollection);
 						}
 					}
 				}
@@ -213,6 +232,10 @@ namespace MeshEditor.DataVisualizer
 					Data = data;
 				}
 				public override T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds) => Data;
+				public override void ZOrderTraverse(ICollection<T> dataCollection)
+				{
+					dataCollection.Add(Data);
+				}
 			}
 		}
 
@@ -221,6 +244,7 @@ namespace MeshEditor.DataVisualizer
 		#region Fields
 
 		Octree<Node> octree;
+		IEnumerable<Node> spaceFillingNodeSequence;
 
 		#endregion
 
@@ -253,6 +277,8 @@ namespace MeshEditor.DataVisualizer
 			{
 				octree.Insert(node);
 			}
+
+			spaceFillingNodeSequence = octree.Traverse();
 		}
 
 		public override double GetDataValue(Node node, DataIndex dataIndex)
@@ -269,6 +295,8 @@ namespace MeshEditor.DataVisualizer
 		{
 			base.DrawItems(propertyColorsMode);
 
+			Debug.Assert(octree != null);
+
 			if (Settings.DrawGrid)
 			{
 				bool lightEnabled = GL.IsEnabled(EnableCap.Lighting);
@@ -280,6 +308,21 @@ namespace MeshEditor.DataVisualizer
 				GL.Color3(1f, 1f, 0f);
 
 				octree.DrawBoundary();
+
+				if (spaceFillingNodeSequence != null)
+				{
+					GL.Color3(1f, 0f, 0f);
+					GL.Begin(BeginMode.LineStrip);
+					{
+						Node firstNode = spaceFillingNodeSequence.First();
+						GL.Vertex3(firstNode.Position.X, firstNode.Position.Y, firstNode.Position.Z);
+						foreach (Node node in spaceFillingNodeSequence.Skip(1))
+						{
+							GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
+						}
+					}
+					GL.End();
+				}
 
 				if (lightEnabled)
 					GL.Enable(EnableCap.Lighting);
