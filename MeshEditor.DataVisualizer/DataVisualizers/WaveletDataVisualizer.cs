@@ -53,6 +53,7 @@ namespace MeshEditor.DataVisualizer
 			{
 				List<TData> dataCollection = new List<TData>();
 				root.ZOrderTraverse(dataCollection);
+				// TODO: add Hilbert space-filling curve, that will is more local
 				return dataCollection;
 			}
 
@@ -232,10 +233,7 @@ namespace MeshEditor.DataVisualizer
 					Data = data;
 				}
 				public override T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds) => Data;
-				public override void ZOrderTraverse(ICollection<T> dataCollection)
-				{
-					dataCollection.Add(Data);
-				}
+				public override void ZOrderTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
 			}
 		}
 
@@ -244,7 +242,8 @@ namespace MeshEditor.DataVisualizer
 		#region Fields
 
 		Octree<Node> octree;
-		IEnumerable<Node> spaceFillingNodeSequence;
+		Dictionary<Node, int> spaceFillingNodeSequenceIndices;
+		Dictionary<int, double[]> data;
 
 		#endregion
 
@@ -278,12 +277,28 @@ namespace MeshEditor.DataVisualizer
 				octree.Insert(node);
 			}
 
-			spaceFillingNodeSequence = octree.Traverse();
+			spaceFillingNodeSequenceIndices = octree.Traverse().Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+			data = new Dictionary<int, double[]>();
+			foreach (int dataIndex in nodeValues.Keys)
+			{
+				double[] dataArray = new double[spaceFillingNodeSequenceIndices.Count];
+				foreach (var pair in spaceFillingNodeSequenceIndices)
+				{
+					dataArray[pair.Value] = nodeValues[dataIndex][pair.Key.ID];
+				}
+				data[dataIndex] = dataArray;
+			}
+
+			//doWaveletTransform();
 		}
 
 		public override double GetDataValue(Node node, DataIndex dataIndex)
 		{
-			throw new NotImplementedException();
+			int index;
+			if (!spaceFillingNodeSequenceIndices.TryGetValue(node, out index))
+				return double.NaN;
+			return data[dataIndex.Index][index];
 		}
 
 		public override ApproximationQuality GetApproximationQuality(LongOpNotifier longOpNotifier)
@@ -309,17 +324,13 @@ namespace MeshEditor.DataVisualizer
 
 				octree.DrawBoundary();
 
-				if (spaceFillingNodeSequence != null)
+				if (spaceFillingNodeSequenceIndices != null)
 				{
 					GL.Color3(1f, 0f, 0f);
 					GL.Begin(BeginMode.LineStrip);
 					{
-						Node firstNode = spaceFillingNodeSequence.First();
-						GL.Vertex3(firstNode.Position.X, firstNode.Position.Y, firstNode.Position.Z);
-						foreach (Node node in spaceFillingNodeSequence.Skip(1))
-						{
+						foreach (Node node in spaceFillingNodeSequenceIndices.OrderBy(pair => pair.Value).Select(pair => pair.Key))
 							GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
-						}
 					}
 					GL.End();
 				}
@@ -333,7 +344,19 @@ namespace MeshEditor.DataVisualizer
 
 		#region Private methods
 
+		private void doWaveletTransform()
+		{
+			Debug.Assert(data != null);
 
+			throw new NotImplementedException();
+		}
+
+		private double[] doInverseWaveletTransform(DataIndex dataIndex)
+		{
+			Debug.Assert(data != null);
+
+			throw new NotImplementedException();
+		}
 
 		#endregion
 

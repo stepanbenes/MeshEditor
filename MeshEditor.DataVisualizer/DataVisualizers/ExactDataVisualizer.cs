@@ -19,11 +19,11 @@ namespace MeshEditor.DataVisualizer
 
 		#region Fields
 
-		Dictionary<int, Dictionary<int, double>> nodeValues;
+		protected Dictionary<int, Dictionary<int, double>> nodeValues;
 		//Dictionary<int, Dictionary<Element, Dictionary<Node, double>>> elementNodeValues;
 		Dictionary<int, IntervalD> dataValueRangeMap;
 
-		private int dataRecordsCount;
+		int dataRecordsCount;
 
 		//public bool ShowElementNodesValues { get; set; }
 
