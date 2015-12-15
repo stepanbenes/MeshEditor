@@ -134,12 +134,8 @@ namespace MeshEditor.DataVisualizer
 
 		public override double GetDataValue(Node node, DataIndex dataIndex, out float maxError)
 		{
-			Debug.Assert(nodeValues.ContainsKey(dataIndex.Index));
 			maxError = 0.0f; // showing exact data
-			double value;
-			if (nodeValues[dataIndex.Index].TryGetValue(node.ID, out value))
-				return value;
-			return double.NaN;
+			return GetDataValue(node, dataIndex);
 		}
 
 		public override ApproximationQuality GetApproximationQuality(LongOpNotifier longOpNotifier)
