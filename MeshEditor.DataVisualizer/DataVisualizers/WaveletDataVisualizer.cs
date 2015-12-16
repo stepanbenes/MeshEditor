@@ -53,7 +53,7 @@ namespace MeshEditor.DataVisualizer
 			{
 				List<TData> dataCollection = new List<TData>();
 				root.ZOrderTraverse(dataCollection);
-				// TODO: add Hilbert space-filling curve, that will is more local
+				// TODO: add Hilbert space-filling curve, that has more local characteristics
 				return dataCollection;
 			}
 
@@ -245,6 +245,9 @@ namespace MeshEditor.DataVisualizer
 		Dictionary<Node, int> spaceFillingNodeSequenceIndices;
 		Dictionary<int, double[]> data;
 
+		int currentDataIndex;
+		double[] currentData;
+
 		#endregion
 
 		#region Overrides
@@ -266,6 +269,9 @@ namespace MeshEditor.DataVisualizer
 			upperBound.Z = Math.Max(lowerBound.Z + maxDim, mesh.UpperBound.Z);
 
 			octree = new Octree<Node>(lowerBound, upperBound);
+
+			currentDataIndex = -1;
+			currentData = null;
 		}
 
 		public override void LoadData(IApproximationParameters approximationParameters, string[] filenames, LongOpNotifier longOpNotifier)
@@ -285,12 +291,16 @@ namespace MeshEditor.DataVisualizer
 				double[] dataArray = new double[spaceFillingNodeSequenceIndices.Count];
 				foreach (var pair in spaceFillingNodeSequenceIndices)
 				{
-					dataArray[pair.Value] = nodeValues[dataIndex][pair.Key.ID];
+					double value;
+					if (nodeValues[dataIndex].TryGetValue(pair.Key.ID, out value))
+					{
+						dataArray[pair.Value] = value;
+					}
+					else
+						Debugger.Break();
 				}
-				data[dataIndex] = dataArray;
+				data[dataIndex] = doWaveletTransform(dataArray, GetDataValueRange(dataIndex)); // TODO: dowavelet transform on space-time 2D surface instead of 1D space-filling curve
 			}
-
-			//doWaveletTransform();
 		}
 
 		public override double GetDataValue(Node node, DataIndex dataIndex)
@@ -298,7 +308,13 @@ namespace MeshEditor.DataVisualizer
 			int index;
 			if (!spaceFillingNodeSequenceIndices.TryGetValue(node, out index))
 				return double.NaN;
-			return data[dataIndex.Index][index];
+
+			if (currentDataIndex != dataIndex.Index)
+			{
+				currentData = doInverseWaveletTransform(data[dataIndex.Index], GetDataValueRange(dataIndex.Index));
+				currentDataIndex = dataIndex.Index;
+			}
+			return currentData[index];
 		}
 
 		public override ApproximationQuality GetApproximationQuality(LongOpNotifier longOpNotifier)
@@ -342,20 +358,66 @@ namespace MeshEditor.DataVisualizer
 
 		#endregion
 
-		#region Private methods
+		#region Wavelet transform
 
-		private void doWaveletTransform()
+		private const double w0 = 0.5;
+		private const double w1 = -0.5;
+		private const double s0 = 0.5;
+		private const double s1 = 0.5;
+
+		private static double[] doWaveletTransform(double[] input, IntervalD dataInterval)
 		{
-			Debug.Assert(data != null);
-
-			throw new NotImplementedException();
+			Debug.Assert(input != null);
+			double[] scaledInput = new double[input.Length];
+			for (int i = 0; i < input.Length; i++)
+			{
+				scaledInput[i] = scale(dataInterval.Min, dataInterval.Max, -1, 1, input[i]);
+			}
+			// TODO: make more iterations
+			double[] output = new double[scaledInput.Length];
+			int h = scaledInput.Length >> 1; // TODO: handle cases when the length of the input is not a power of two
+			for (int i = 0; i < h; i++)
+			{
+				int k = (i << 1);
+				output[i] = scaledInput[k] * s0 + scaledInput[k + 1] * s1;
+				output[i + h] = scaledInput[k] * w0 + scaledInput[k + 1] * w1;
+			}
+			return output;
 		}
 
-		private double[] doInverseWaveletTransform(DataIndex dataIndex)
+		private static double[] doInverseWaveletTransform(double[] input, IntervalD dataInterval)
 		{
-			Debug.Assert(data != null);
+			Debug.Assert(input != null);
 
-			throw new NotImplementedException();
+			double[] output = new double[input.Length];
+			int h = input.Length >> 1; // TODO: handle cases when the length of the input is not a power of two
+			for (int i = 0; i < h; i++)
+			{
+				int k = (i << 1);
+				output[k] = (input[i] * s0 + input[i + h] * w0) / w0;
+				output[k + 1] = (input[i] * s1 + input[i + h] * w1) / s0;
+			}
+
+			for (int i = 0; i < output.Length; i++)
+			{
+				output[i] = scale(-1, 1, dataInterval.Min, dataInterval.Max, output[i]);
+			}
+			return output;
+		}
+
+		private static double scale(double fromMin, double fromMax, double toMin, double toMax, double x)
+		{
+			if (fromMax - fromMin == 0) return 0;
+			double value = (toMax - toMin) * (x - fromMin) / (fromMax - fromMin) + toMin;
+			if (value > toMax)
+			{
+				value = toMax;
+			}
+			if (value < toMin)
+			{
+				value = toMin;
+			}
+			return value;
 		}
 
 		#endregion
