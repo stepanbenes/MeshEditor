@@ -103,6 +103,7 @@ namespace MeshEditor.DataVisualizer
 				}
 
 				public abstract void ZOrderTraverse(ICollection<T> dataCollection);
+				public abstract void HilbertCurveTraverse(ICollection<T> dataCollection);
 			}
 
 			class InternalNode<T> : OctreeNode<T> where T : class, IItemWithSignificantPoint
@@ -223,6 +224,11 @@ namespace MeshEditor.DataVisualizer
 						}
 					}
 				}
+
+				public override void HilbertCurveTraverse(ICollection<T> dataCollection)
+				{
+					throw new NotImplementedException();
+				}
 			}
 
 			class LeafNode<T> : OctreeNode<T> where T : class, IItemWithSignificantPoint
@@ -234,6 +240,7 @@ namespace MeshEditor.DataVisualizer
 				}
 				public override T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds) => Data;
 				public override void ZOrderTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
+				public override void HilbertCurveTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
 			}
 		}
 
@@ -299,7 +306,7 @@ namespace MeshEditor.DataVisualizer
 					else
 						Debugger.Break();
 				}
-				data[dataIndex] = doWaveletTransform(dataArray, GetDataValueRange(dataIndex)); // TODO: dowavelet transform on space-time 2D surface instead of 1D space-filling curve
+				data[dataIndex] = FWT(dataArray, GetDataValueRange(dataIndex)); // TODO: dowavelet transform on space-time 2D surface instead of 1D space-filling curve
 			}
 		}
 
@@ -311,7 +318,7 @@ namespace MeshEditor.DataVisualizer
 
 			if (currentDataIndex != dataIndex.Index)
 			{
-				currentData = doInverseWaveletTransform(data[dataIndex.Index], GetDataValueRange(dataIndex.Index));
+				currentData = IWT(data[dataIndex.Index], GetDataValueRange(dataIndex.Index));
 				currentDataIndex = dataIndex.Index;
 			}
 			return currentData[index];
@@ -364,45 +371,115 @@ namespace MeshEditor.DataVisualizer
 		private const double w1 = -0.5;
 		private const double s0 = 0.5;
 		private const double s1 = 0.5;
+		private const int IterationsCount = 3;
 
-		private static double[] doWaveletTransform(double[] input, IntervalD dataInterval)
+		private static double[] FWT(double[] input, IntervalD dataInterval)
 		{
-			Debug.Assert(input != null);
-			double[] scaledInput = new double[input.Length];
+			//int newLength = getNearestPowerOfTwo(input.Length);
+			int newLength = findClosestNumberDivisibleBy(number: input.Length, divider: 1 << IterationsCount);
+			double[] scaledInput = enlarge(input, newLength);
 			for (int i = 0; i < input.Length; i++)
 			{
-				scaledInput[i] = scale(dataInterval.Min, dataInterval.Max, -1, 1, input[i]);
+				scaledInput[i] = scale(dataInterval.Min, dataInterval.Max, -1, 1, scaledInput[i]);
 			}
-			// TODO: make more iterations
-			double[] output = new double[scaledInput.Length];
-			int h = scaledInput.Length >> 1; // TODO: handle cases when the length of the input is not a power of two
+			int usableLength = scaledInput.Length;
+			Debug.Assert((usableLength >> IterationsCount) > 1);
+			for (int i = 0; i < IterationsCount; i++)
+			{
+				FWTiteration(scaledInput, usableLength);
+				usableLength >>= 1;
+			}
+			return scaledInput;
+		}
+
+		private static double[] IWT(double[] input, IntervalD dataInterval)
+		{
+			double[] result = input.ToArray();
+			int usableLength = result.Length >> (IterationsCount - 1);
+			Debug.Assert(usableLength > 1);
+			for (int i = 0; i < IterationsCount; i++)
+			{
+				IWTiteration(result, usableLength);
+				usableLength <<= 1;
+			}
+			for (int i = 0; i < input.Length; i++)
+			{
+				result[i] = scale(-1, 1, dataInterval.Min, dataInterval.Max, result[i]); // scale output back
+			}
+			return result;
+		}
+
+		private static void FWTiteration(double[] input, int usableLength)
+		{
+			Debug.Assert(input != null);
+			Debug.Assert(usableLength <= input.Length);
+			double[] output = new double[usableLength];
+			int h = usableLength >> 1;
 			for (int i = 0; i < h; i++)
 			{
 				int k = (i << 1);
-				output[i] = scaledInput[k] * s0 + scaledInput[k + 1] * s1;
-				output[i + h] = scaledInput[k] * w0 + scaledInput[k + 1] * w1;
+				output[i] = input[k] * s0 + input[k + 1] * s1;
+				output[i + h] = input[k] * w0 + input[k + 1] * w1;
 			}
-			return output;
+			for (int i = 0; i < usableLength; i++)
+			{
+				input[i] = output[i];
+			}
 		}
 
-		private static double[] doInverseWaveletTransform(double[] input, IntervalD dataInterval)
+		private static void IWTiteration(double[] input, int usableLength)
 		{
 			Debug.Assert(input != null);
-
-			double[] output = new double[input.Length];
-			int h = input.Length >> 1; // TODO: handle cases when the length of the input is not a power of two
+			Debug.Assert(usableLength <= input.Length);
+			double[] output = new double[usableLength];
+			int h = usableLength >> 1; // TODO: handle cases when the length of the input is not a power of two
 			for (int i = 0; i < h; i++)
 			{
 				int k = (i << 1);
 				output[k] = (input[i] * s0 + input[i + h] * w0) / w0;
 				output[k + 1] = (input[i] * s1 + input[i + h] * w1) / s0;
 			}
-
-			for (int i = 0; i < output.Length; i++)
+			for (int i = 0; i < usableLength; i++)
 			{
-				output[i] = scale(-1, 1, dataInterval.Min, dataInterval.Max, output[i]);
+				input[i] = output[i];
 			}
-			return output;
+		}
+
+		private static int findClosestNumberDivisibleBy(int number, int divider)
+		{
+			return (number / divider + 1) * divider;
+		}
+
+		private static double[] enlarge(double[] data, int newSize)
+		{
+			Debug.Assert(newSize >= data.Length);
+			if (newSize == data.Length)
+				return data.ToArray();
+			double[] result = new double[newSize];
+			Array.Copy(data, result, data.Length);
+			return result;
+		}
+
+		private static int getNearestPowerOfTwo(int number) // NOT USED
+		{
+			Debug.Assert(number >= 0);
+			int n = number - 1;
+			n |= n >> 1;
+			n |= n >> 2;
+			n |= n >> 4;
+			n |= n >> 8;
+			n |= n >> 16;
+			return n + 1;
+		}
+
+		private static double[] shrink(double[] data, int newSize) // NOT USED
+		{
+			Debug.Assert(newSize <= data.Length);
+			if (newSize == data.Length)
+				return data;
+			double[] result = new double[newSize];
+			Array.Copy(data, result, newSize);
+			return result;
 		}
 
 		private static double scale(double fromMin, double fromMax, double toMin, double toMax, double x)
