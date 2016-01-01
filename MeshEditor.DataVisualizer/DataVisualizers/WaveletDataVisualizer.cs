@@ -345,15 +345,27 @@ namespace MeshEditor.DataVisualizer
 				GL.Disable(EnableCap.Lighting);
 				GL.Color3(1f, 1f, 0f);
 
-				octree.DrawBoundary();
+				//octree.DrawBoundary();
 
 				if (spaceFillingNodeSequenceIndices != null)
 				{
+					hilbertPosition = new Vector3(0f, 0f, 0f);
+					hilbertViewVector = new Vector3(1f, 0f, 0f);
+					hilbertUpVector = new Vector3(0f, 1f, 0f);
+					const int level = 3;
+					const float cubeSideLength = 1.0f;
+					const float stepLength = cubeSideLength / ((1 << level) - 1);
+					List<Vector3> hilbertCurve = new List<Vector3>();
+					createHilbertCurve(level, stepLength, hilbertCurve);
+
 					GL.Color3(1f, 0f, 0f);
 					GL.Begin(BeginMode.LineStrip);
 					{
-						foreach (Node node in spaceFillingNodeSequenceIndices.OrderBy(pair => pair.Value).Select(pair => pair.Key))
-							GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
+						//foreach (Node node in spaceFillingNodeSequenceIndices.OrderBy(pair => pair.Value).Select(pair => pair.Key))
+						//	GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
+
+						foreach (Vector3 point in hilbertCurve)
+							GL.Vertex3(point);
 					}
 					GL.End();
 				}
@@ -495,6 +507,99 @@ namespace MeshEditor.DataVisualizer
 				value = toMin;
 			}
 			return value;
+		}
+
+		static Vector3 hilbertPosition, hilbertViewVector, hilbertUpVector;
+
+		private static void createHilbertCurve(int level, float stepLength, List<Vector3> hilbertCurve)
+		{
+			if (level == 0)
+			{
+				hilbertCurve.Add(hilbertPosition);
+				return;
+			}
+
+			// rewrite X to ^ < X F ^ < X F X -F ^ > > X F X &F + > > X F X -F > X - >;
+			// interpret F as DrawForward(10);
+			// interpret + as Yaw(90);
+			// interpret - as Yaw(-90);
+			// interpret ^ as Pitch(90);
+			// interpret & as Pitch(-90);
+			// interpret > as Roll(90);
+			// interpret < as Roll(-90);
+
+			Vector3 temp;
+
+			// ^
+			temp = hilbertUpVector;
+			hilbertUpVector = -hilbertViewVector;
+			hilbertViewVector = temp;
+			// <
+			hilbertUpVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// ^
+			temp = hilbertUpVector;
+			hilbertUpVector = -hilbertViewVector;
+			hilbertViewVector = temp;
+			// <
+			hilbertUpVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// -
+			hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// ^
+			temp = hilbertUpVector;
+			hilbertUpVector = -hilbertViewVector;
+			hilbertViewVector = temp;
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// &
+			temp = hilbertViewVector;
+			hilbertViewVector = -hilbertUpVector;
+			hilbertUpVector = temp;
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// +
+			hilbertViewVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// -
+			hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// F
+			hilbertPosition += hilbertViewVector * stepLength;
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// X
+			createHilbertCurve(level - 1, stepLength, hilbertCurve);
+			// -
+			hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
+			// >
+			hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
 		}
 
 		#endregion
