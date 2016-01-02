@@ -47,6 +47,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataVisualizers\HilbertOctree.cs" />
     <Compile Include="DataVisualizers\WaveletDataVisualizer.cs" />
     <Compile Include="Data\DataIndex.cs" />
     <Compile Include="Data\DataSequence.cs" />
