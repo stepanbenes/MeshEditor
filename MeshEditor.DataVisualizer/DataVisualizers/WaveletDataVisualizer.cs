@@ -111,12 +111,17 @@ namespace MeshEditor.DataVisualizer
 				GL.End();
 			}
 
-			public List<TData> Traverse()
+			public List<TData> ZOrderCurveTraverse()
 			{
 				List<TData> dataCollection = new List<TData>();
-				//root.ZOrderTraverse(dataCollection);
-				// Hilbert space-filling curve, that has more local characteristics
-				root.HilbertCurveTraverse(dataCollection, parentOrientation: 0);
+				root.ZOrderTraverse(dataCollection);
+				return dataCollection;
+			}
+
+			public List<TData> HilbertCurveTraverse()
+			{
+				List<TData> dataCollection = new List<TData>();
+				root.HilbertCurveTraverse(dataCollection, parentOrientation: 0); // Hilbert space-filling curve has more local characteristics than Z-order curve
 				return dataCollection;
 			}
 
@@ -387,7 +392,7 @@ namespace MeshEditor.DataVisualizer
 				octree.Insert(node);
 			}
 
-			spaceFillingNodeSequenceIndices = octree.Traverse().Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+			createSpaceFillingNodeSequence();
 
 			data = new Dictionary<int, double[]>();
 			foreach (int dataIndex in nodeValues.Keys)
@@ -405,6 +410,65 @@ namespace MeshEditor.DataVisualizer
 				}
 				data[dataIndex] = FWT(dataArray, GetDataValueRange(dataIndex)); // TODO: dowavelet transform on space-time 2D surface instead of 1D space-filling curve
 			}
+		}
+
+		private void createSpaceFillingNodeSequence()
+		{
+			// Octree-based traversal: Z-order curve
+			//spaceFillingNodeSequenceIndices = octree.ZOrderCurveTraverse().Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+			// Octree-based traversal: Hilbert curve
+			spaceFillingNodeSequenceIndices = octree.HilbertCurveTraverse().Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+			// shortest neighbor traversal
+			//spaceFillingNodeSequenceIndices = new Dictionary<Node, int>();
+			//HashSet<Node> restOfNodes = new HashSet<Node>(nodeIndexMap.Values);
+			//Node currentNode = null;
+			//while (restOfNodes.Count > 0)
+			//{
+			//	Node closestNode = null;
+			//	if (currentNode != null) // non-first iteration
+			//	{
+			//		float minDistance = float.MaxValue;
+			//		foreach (Node neighbor in restOfNodes)
+			//		{
+			//			float distance = (neighbor.Position - currentNode.Position).Length;
+			//			if (distance < minDistance)
+			//			{
+			//				closestNode = neighbor;
+			//				minDistance = distance;
+			//			}
+			//		}
+			//	}
+			//	else // first iteration
+			//	{
+			//		closestNode = nodeIndexMap.Values.First();
+			//	}
+			//	Debug.Assert(closestNode != null);
+			//	restOfNodes.Remove(closestNode);
+			//	spaceFillingNodeSequenceIndices[closestNode] = spaceFillingNodeSequenceIndices.Count;
+			//	currentNode = closestNode;
+			//}
+
+			// original node positions
+			//spaceFillingNodeSequenceIndices = nodeIndexMap.Values.Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+			// random node positions
+			//List<Node> allNodes = new List<Node>(nodeIndexMap.Values);
+			//spaceFillingNodeSequenceIndices = randomizeList(allNodes).Select((node, index) => new KeyValuePair<Node, int>(node, index)).ToDictionary(pair => pair.Key, pair => pair.Value);
+		}
+
+		private static List<T> randomizeList<T>(List<T> list)
+		{
+			List<T> randomizedList = new List<T>();
+			Random rnd = new Random();
+			while (list.Count > 0)
+			{
+				int index = rnd.Next(0, list.Count); //pick a random item from the master list
+				randomizedList.Add(list[index]); //place it at the end of the randomized list
+				list.RemoveAt(index);
+			}
+			return randomizedList;
 		}
 
 		public override double GetDataValue(Node node, DataIndex dataIndex)
@@ -470,7 +534,7 @@ namespace MeshEditor.DataVisualizer
 		private const double w1 = -0.5;
 		private const double s0 = 0.5;
 		private const double s1 = 0.5;
-		private const int IterationsCount = 3;
+		private const int IterationsCount = 2;
 
 		private static double[] FWT(double[] input, IntervalD dataInterval)
 		{
