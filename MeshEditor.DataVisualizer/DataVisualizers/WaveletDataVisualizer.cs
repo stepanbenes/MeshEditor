@@ -22,29 +22,91 @@ namespace MeshEditor.DataVisualizer
 
 		private class Octree<TData> where TData : class, IItemWithSignificantPoint
 		{
+			static int[,] orderingTable =
+			{
+				{ 0, 1, 3, 2, 6, 7, 5, 4 },
+				{ 0, 4, 6, 2, 3, 7, 5, 1 },
+				{ 0, 1, 5, 4, 6, 7, 3, 2 },
+				{ 5, 1, 0, 4, 6, 2, 3, 7 },
+				{ 3, 7, 6, 2, 0, 4, 5, 1 },
+				{ 6, 7, 3, 2, 0, 1, 5, 4 },
+				{ 5, 1, 3, 7, 6, 2, 0, 4 },
+				{ 0, 4, 5, 1, 3, 7, 6, 2 },
+				{ 5, 4, 0, 1, 3, 2, 6, 7 },
+				{ 5, 4, 6, 7, 3, 2, 0, 1 },
+				{ 0, 2, 3, 1, 5, 7, 6, 4 },
+				{ 6, 4, 0, 2, 3, 1, 5, 7 },
+				{ 5, 7, 3, 1, 0, 2, 6, 4 },
+				{ 3, 7, 5, 1, 0, 4, 6, 2 },
+				{ 6, 4, 5, 7, 3, 1, 0, 2 },
+				{ 0, 2, 6, 4, 5, 7, 3, 1 },
+				{ 6, 2, 0, 4, 5, 1, 3, 7 },
+				{ 6, 2, 3, 7, 5, 1, 0, 4 },
+				{ 3, 2, 0, 1, 5, 4, 6, 7 },
+				{ 6, 7, 5, 4, 0, 1, 3, 2 },
+				{ 5, 7, 6, 4, 0, 2, 3, 1 },
+				{ 3, 2, 6, 7, 5, 4, 0, 1 },
+				{ 3, 1, 0, 2, 6, 4, 5, 7 },
+				{ 3, 1, 5, 7, 6, 4, 0, 2 },
+			};
+
+			static int[,] orientationTable =
+			{
+				{ 1, 2, 0, 3, 4, 0, 5, 6 },
+				{ 0, 7, 1, 8, 5, 1, 4, 9 },
+				{ 15, 0, 2, 22, 20, 2, 19, 23 },
+				{ 20, 6, 3, 23, 15, 3, 16, 22 },
+				{ 22, 13, 4, 12, 11, 4, 1, 20 },
+				{ 11, 19, 5, 20, 22, 5, 0, 12 },
+				{ 9, 3, 6, 2, 21, 6, 17, 0 },
+				{ 10, 1, 7, 11, 12, 7, 13, 14 },
+				{ 12, 9, 8, 14, 10, 8, 18, 11 },
+				{ 6, 8, 9, 7, 17, 9, 21, 1 },
+				{ 7, 15, 10, 16, 13, 10, 12, 17 },
+				{ 5, 14, 11, 9, 0, 11, 22, 8 },
+				{ 8, 20, 12, 19, 18, 12, 10, 5 },
+				{ 18, 4, 13, 5, 8, 13, 7, 19 },
+				{ 17, 11, 14, 1, 6, 14, 23, 7 },
+				{ 2, 10, 15, 18, 19, 15, 20, 21 },
+				{ 19, 17, 16, 21, 2, 16, 3, 18 },
+				{ 14, 16, 17, 15, 23, 17, 6, 10 },
+				{ 13, 21, 18, 17, 7, 18, 8, 16 },
+				{ 16, 5, 19, 4, 3, 19, 2, 13 },
+				{ 3, 12, 20, 13, 16, 20, 15, 4 },
+				{ 23, 18, 21, 10, 14, 21, 9, 15 },
+				{ 4, 23, 22, 6, 1, 22, 11, 3 },
+				{ 21, 22, 23, 0, 9, 23, 14, 2 },
+			};
+
 			InternalNode<TData> root;
-			Vector3 lowerBounds, upperBounds;
 
 			public Octree(Vector3 lowerBounds, Vector3 upperBounds)
 			{
-				this.lowerBounds = lowerBounds;
-				this.upperBounds = upperBounds;
-				root = new InternalNode<TData>();
+				root = new InternalNode<TData>(lowerBounds, upperBounds);
 			}
 
 			public void Insert(TData data)
 			{
 				Debug.Assert(data != null);
-				root.Insert(data, ref lowerBounds, ref upperBounds, depth: 0);
+				root.Insert(data, depth: 0);
 			}
 
-			public TData GetData(Vector3 position) => root.GetData(position, lowerBounds, upperBounds);
+			public TData GetData(Vector3 position) => root.GetData(position);
 
 			public void DrawBoundary()
 			{
 				GL.Begin(BeginMode.Lines);
 				{
-					root.DrawBoundary(lowerBounds, upperBounds);
+					root.DrawBoundary();
+				}
+				GL.End();
+			}
+
+			public void Draw()
+			{
+				GL.Begin(BeginMode.LineStrip);
+				{
+					root.DrawHilbertCurve(parentOrientation: 0);
 				}
 				GL.End();
 			}
@@ -52,16 +114,25 @@ namespace MeshEditor.DataVisualizer
 			public List<TData> Traverse()
 			{
 				List<TData> dataCollection = new List<TData>();
-				root.ZOrderTraverse(dataCollection);
-				// TODO: add Hilbert space-filling curve, that has more local characteristics
+				//root.ZOrderTraverse(dataCollection);
+				// Hilbert space-filling curve, that has more local characteristics
+				root.HilbertCurveTraverse(dataCollection, parentOrientation: 0);
 				return dataCollection;
 			}
 
 			abstract class OctreeNode<T> where T : class, IItemWithSignificantPoint
 			{
-				public abstract T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds);
+				protected Vector3 lowerBounds, upperBounds;
 
-				public virtual void DrawBoundary(Vector3 lowerBounds, Vector3 upperBounds)
+				public OctreeNode(Vector3 lowerBounds, Vector3 upperBounds)
+				{
+					this.lowerBounds = lowerBounds;
+					this.upperBounds = upperBounds;
+				}
+
+				public abstract T GetData(Vector3 position);
+
+				public virtual void DrawBoundary()
 				{
 					GL.Vertex3(upperBounds.X, upperBounds.Y, upperBounds.Z);
 					GL.Vertex3(upperBounds.X, upperBounds.Y, lowerBounds.Z);
@@ -103,57 +174,61 @@ namespace MeshEditor.DataVisualizer
 				}
 
 				public abstract void ZOrderTraverse(ICollection<T> dataCollection);
-				public abstract void HilbertCurveTraverse(ICollection<T> dataCollection);
+				public abstract void HilbertCurveTraverse(ICollection<T> dataCollection, int parentOrientation);
+				public abstract void DrawHilbertCurve(int parentOrientation);
 			}
 
 			class InternalNode<T> : OctreeNode<T> where T : class, IItemWithSignificantPoint
 			{
 				OctreeNode<T>[] children = new OctreeNode<T>[8];
 
-				public override T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds)
+				public InternalNode(Vector3 lowerBounds, Vector3 upperBounds)
+					: base(lowerBounds, upperBounds)
+				{ }
+
+				public override T GetData(Vector3 position)
 				{
-					int childIndex = getChildIndex(position, ref lowerBounds, ref upperBounds);
+					int childIndex = getChildIndex(position);
 					OctreeNode<T> child = children[childIndex];
 					if (child == null)
 						return null;
-					return child.GetData(position, lowerBounds, upperBounds);
+					return child.GetData(position);
 				}
 
-				public void Insert(T data, ref Vector3 lowerBounds, ref Vector3 upperBounds, int depth)
+				public void Insert(T data, int depth)
 				{
-					int childIndex = getChildIndex(data.GetSignificantPoint(), ref lowerBounds, ref upperBounds);
+					int childIndex = getChildIndex(data.GetSignificantPoint());
+					Vector3 childLowerBounds, childUpperBounds;
+					getChildBounds(childIndex, out childLowerBounds, out childUpperBounds);
 					OctreeNode<T> child = children[childIndex];
 					if (child == null)
 					{
-						children[childIndex] = new LeafNode<T>(data);
+						children[childIndex] = new LeafNode<T>(data, childLowerBounds, childUpperBounds);
 					}
 					else
 					{
 						//if (depth > 9)
 						//	return;
-
-						Vector3 childLowerBounds, childUpperBounds;
-						getChildBounds(childIndex, ref lowerBounds, ref upperBounds, out childLowerBounds, out childUpperBounds);
-
+						
 						InternalNode<T> internalNode;
 						LeafNode<T> leafNode = child as LeafNode<T>;
 						if (leafNode != null)
 						{
-							internalNode = new InternalNode<T>();
+							internalNode = new InternalNode<T>(childLowerBounds, childUpperBounds);
 							children[childIndex] = internalNode;
-							internalNode.children[getChildIndex(leafNode.Data.GetSignificantPoint(), ref childLowerBounds, ref childUpperBounds)] = leafNode;
+							internalNode.children[getChildIndex(leafNode.Data.GetSignificantPoint())] = leafNode;
 						}
 						else
 						{
 							internalNode = (InternalNode<T>)child;
 						}
-						internalNode.Insert(data, ref childLowerBounds, ref childUpperBounds, depth + 1);
+						internalNode.Insert(data, depth + 1);
 					}
 				}
 
-				private static int getChildIndex(Vector3 position, ref Vector3 lowerBounds, ref Vector3 upperBounds)
+				private int getChildIndex(Vector3 position)
 				{
-					Vector3 center = Utilities.Functions.GetCenterOfLineSegment(ref upperBounds, ref lowerBounds);
+					Vector3 center = Utilities.Functions.GetCenterOfLineSegment(ref lowerBounds, ref upperBounds);
 					int childIndex = 0;
 					if (position.X > center.X)
 						childIndex += 1;
@@ -164,52 +239,50 @@ namespace MeshEditor.DataVisualizer
 					return childIndex;
 				}
 
-				private static void getChildBounds(int childIndex, ref Vector3 parentLowerBounds, ref Vector3 parentUpperBounds, out Vector3 childLowerBounds, out Vector3 childUpperBounds)
+				private void getChildBounds(int childIndex, out Vector3 childLowerBounds, out Vector3 childUpperBounds)
 				{
-					Vector3 center = Utilities.Functions.GetCenterOfLineSegment(ref parentUpperBounds, ref parentLowerBounds);
+					Vector3 center = Utilities.Functions.GetCenterOfLineSegment(ref lowerBounds, ref upperBounds);
 					if ((childIndex & 1) > 0)
 					{
 						childLowerBounds.X = center.X;
-						childUpperBounds.X = parentUpperBounds.X;
+						childUpperBounds.X = upperBounds.X;
 					}
 					else
 					{
-						childLowerBounds.X = parentLowerBounds.X;
+						childLowerBounds.X = lowerBounds.X;
 						childUpperBounds.X = center.X;
 					}
 
 					if ((childIndex & 2) > 0)
 					{
 						childLowerBounds.Y = center.Y;
-						childUpperBounds.Y = parentUpperBounds.Y;
+						childUpperBounds.Y = upperBounds.Y;
 					}
 					else
 					{
-						childLowerBounds.Y = parentLowerBounds.Y;
+						childLowerBounds.Y = lowerBounds.Y;
 						childUpperBounds.Y = center.Y;
 					}
 
 					if ((childIndex & 4) > 0)
 					{
 						childLowerBounds.Z = center.Z;
-						childUpperBounds.Z = parentUpperBounds.Z;
+						childUpperBounds.Z = upperBounds.Z;
 					}
 					else
 					{
-						childLowerBounds.Z = parentLowerBounds.Z;
+						childLowerBounds.Z = lowerBounds.Z;
 						childUpperBounds.Z = center.Z;
 					}
 				}
 
-				public override void DrawBoundary(Vector3 lowerBounds, Vector3 upperBounds)
+				public override void DrawBoundary()
 				{
 					for (int i = 0; i < children.Length; i++)
 					{
 						if (children[i] != null)
 						{
-							Vector3 childLowerBounds, childUpperBounds;
-							getChildBounds(i, ref lowerBounds, ref upperBounds, out childLowerBounds, out childUpperBounds);
-							children[i].DrawBoundary(childLowerBounds, childUpperBounds);
+							children[i].DrawBoundary();
 						}
 					}
 				}
@@ -225,22 +298,48 @@ namespace MeshEditor.DataVisualizer
 					}
 				}
 
-				public override void HilbertCurveTraverse(ICollection<T> dataCollection)
+				public override void HilbertCurveTraverse(ICollection<T> dataCollection, int parentOrientation)
 				{
-					throw new NotImplementedException();
+					for (int i = 0; i < 8; i++)
+					{
+						int order = orderingTable[parentOrientation, i];
+						if (children[order] != null)
+						{
+							children[order].HilbertCurveTraverse(dataCollection, orientationTable[parentOrientation, i]);
+						}
+					}
+				}
+
+				public override void DrawHilbertCurve(int parentOrientation)
+				{
+					for (int i = 0; i < 8; i++)
+					{
+						int order = orderingTable[parentOrientation, i];
+						if (children[order] != null)
+						{
+							children[order].DrawHilbertCurve(orientationTable[parentOrientation, i]);
+						}
+					}
 				}
 			}
 
 			class LeafNode<T> : OctreeNode<T> where T : class, IItemWithSignificantPoint
 			{
-				public T Data { get; }
-				public LeafNode(T data)
+				public LeafNode(T data, Vector3 lowerBounds, Vector3 upperBounds)
+					: base(lowerBounds, upperBounds)
 				{
 					Data = data;
 				}
-				public override T GetData(Vector3 position, Vector3 lowerBounds, Vector3 upperBounds) => Data;
+				public T Data { get; }
+				public override T GetData(Vector3 position) => Data;
 				public override void ZOrderTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
-				public override void HilbertCurveTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
+				public override void HilbertCurveTraverse(ICollection<T> dataCollection, int parentOrientation) => dataCollection.Add(Data);
+
+				public override void DrawHilbertCurve(int parentOrientation)
+				{
+					Vector3 center = Utilities.Functions.GetCenterOfLineSegment(ref lowerBounds, ref upperBounds);
+					GL.Vertex3(center);
+				}
 			}
 		}
 
@@ -255,8 +354,6 @@ namespace MeshEditor.DataVisualizer
 		int currentDataIndex;
 		double[] currentData;
 
-		HilbertOctree hilbertOctree;
-
 		#endregion
 
 		#region Overrides
@@ -266,23 +363,19 @@ namespace MeshEditor.DataVisualizer
 			base.Initialize(mesh);
 
 			// non-uniform dimensions => block/prism
-			// octree = new Octree<Node>(mesh.LowerBound, mesh.UpperBound);
+			//octree = new Octree<Node>(mesh.LowerBound, mesh.UpperBound);
 
 			// uniform dimensions => cube
 			float maxDim = Math.Max(Math.Max(mesh.UpperBound.X - mesh.LowerBound.X, mesh.UpperBound.Y - mesh.LowerBound.Y), mesh.UpperBound.Z - mesh.LowerBound.Z);
-
 			Vector3 lowerBound = mesh.LowerBound;
 			Vector3 upperBound;
 			upperBound.X = Math.Max(lowerBound.X + maxDim, mesh.UpperBound.X); // avoid rounding error
 			upperBound.Y = Math.Max(lowerBound.Y + maxDim, mesh.UpperBound.Y);
 			upperBound.Z = Math.Max(lowerBound.Z + maxDim, mesh.UpperBound.Z);
-
 			octree = new Octree<Node>(lowerBound, upperBound);
 
 			currentDataIndex = -1;
 			currentData = null;
-
-			hilbertOctree = new HilbertOctree(lowerBound, upperBound);
 		}
 
 		public override void LoadData(IApproximationParameters approximationParameters, string[] filenames, LongOpNotifier longOpNotifier)
@@ -352,29 +445,17 @@ namespace MeshEditor.DataVisualizer
 				//octree.DrawBoundary();
 
 				GL.Color3(1f, 0f, 0f);
-				hilbertOctree.Draw();
+				//octree.Draw();
 
-				//if (spaceFillingNodeSequenceIndices != null)
-				//{
-				//	//hilbertPosition = new Vector3(0f, 0f, 0f);
-				//	//hilbertViewVector = new Vector3(1f, 0f, 0f);
-				//	//hilbertUpVector = new Vector3(0f, 1f, 0f);
-				//	//const int level = 3;
-				//	//const float cubeSideLength = 1.0f;
-				//	//const float stepLength = cubeSideLength / ((1 << level) - 1);
-				//	//List<Vector3> hilbertCurve = new List<Vector3>();
-				//	//createHilbertCurve(level, stepLength, hilbertCurve);
-
-				//	GL.Begin(BeginMode.LineStrip);
-				//	{
-				//		foreach (Node node in spaceFillingNodeSequenceIndices.OrderBy(pair => pair.Value).Select(pair => pair.Key))
-				//			GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
-
-				//		//foreach (Vector3 point in hilbertCurve)
-				//		//	GL.Vertex3(point);
-				//	}
-				//	GL.End();
-				//}
+				if (spaceFillingNodeSequenceIndices != null)
+				{
+					GL.Begin(BeginMode.LineStrip);
+					{
+						foreach (Node node in spaceFillingNodeSequenceIndices.OrderBy(pair => pair.Value).Select(pair => pair.Key))
+							GL.Vertex3(node.Position.X, node.Position.Y, node.Position.Z);
+					}
+					GL.End();
+				}
 
 				if (lightEnabled)
 					GL.Enable(EnableCap.Lighting);
@@ -407,6 +488,10 @@ namespace MeshEditor.DataVisualizer
 				FWTiteration(scaledInput, usableLength);
 				usableLength >>= 1;
 			}
+			//for (int i = usableLength; i < scaledInput.Length; i++)
+			//{
+			//	scaledInput[i] = 0.0;
+			//}
 			return scaledInput;
 		}
 
@@ -514,99 +599,6 @@ namespace MeshEditor.DataVisualizer
 			}
 			return value;
 		}
-
-		//static Vector3 hilbertPosition, hilbertViewVector, hilbertUpVector;
-
-		//private static void createHilbertCurve(int level, float stepLength, List<Vector3> hilbertCurve)
-		//{
-		//	if (level == 0)
-		//	{
-		//		hilbertCurve.Add(hilbertPosition);
-		//		return;
-		//	}
-
-		//	// rewrite X to ^ < X F ^ < X F X -F ^ > > X F X &F + > > X F X -F > X - >;
-		//	// interpret F as DrawForward(10);
-		//	// interpret + as Yaw(90);
-		//	// interpret - as Yaw(-90);
-		//	// interpret ^ as Pitch(90);
-		//	// interpret & as Pitch(-90);
-		//	// interpret > as Roll(90);
-		//	// interpret < as Roll(-90);
-
-		//	Vector3 temp;
-
-		//	// ^
-		//	temp = hilbertUpVector;
-		//	hilbertUpVector = -hilbertViewVector;
-		//	hilbertViewVector = temp;
-		//	// <
-		//	hilbertUpVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// ^
-		//	temp = hilbertUpVector;
-		//	hilbertUpVector = -hilbertViewVector;
-		//	hilbertViewVector = temp;
-		//	// <
-		//	hilbertUpVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// -
-		//	hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// ^
-		//	temp = hilbertUpVector;
-		//	hilbertUpVector = -hilbertViewVector;
-		//	hilbertViewVector = temp;
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// &
-		//	temp = hilbertViewVector;
-		//	hilbertViewVector = -hilbertUpVector;
-		//	hilbertUpVector = temp;
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// +
-		//	hilbertViewVector = Vector3.Cross(hilbertUpVector, hilbertViewVector);
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// -
-		//	hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// F
-		//	hilbertPosition += hilbertViewVector * stepLength;
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// X
-		//	createHilbertCurve(level - 1, stepLength, hilbertCurve);
-		//	// -
-		//	hilbertViewVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//	// >
-		//	hilbertUpVector = Vector3.Cross(hilbertViewVector, hilbertUpVector);
-		//}
 
 		#endregion
 
