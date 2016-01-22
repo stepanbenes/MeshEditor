@@ -18,18 +18,14 @@ namespace MeshEditor.DataVisualizer.UI
 		#region Static members
 
 		private static bool savedLoadInternalEntities = true;
-		private static ApproximationMethod savedApproximationMethod = ApproximationMethod.TrilinearRegression;
-		private static DataVisualizerTypes savedDataVisualizerTypes = DataVisualizerTypes.Exact; // Exact is default
 		private static bool savedCompressTime;
-		private static double[] savedKeyTimes;
 
 		#endregion
 
 		#region Fields, constructor
 
 		IDataVisualizer dataVisualizer;
-		IApproximationParameters approximationParameters;
-		DataVisualizerTypes dataVisualizerType;
+		ApproximationParameters approximationParameters;
 		LongOpNotifier longOpNotifier;
 
 		public DataVisualizerLoaderForm(IDataVisualizer dataVisualizer, LongOpNotifier longOpNotifier)
@@ -41,17 +37,12 @@ namespace MeshEditor.DataVisualizer.UI
 
 			InitializeComponent();
 
-			approximationParameters = new ApproximationParameters(savedApproximationMethod, savedLoadInternalEntities, savedCompressTime, savedKeyTimes);
+			approximationParameters = new ApproximationParameters(savedLoadInternalEntities, savedCompressTime);
 			
-			comboBoxApproximationMethod.Items.AddRange(Enum.GetValues(typeof(ApproximationMethod)).Cast<object>().ToArray());
-			comboBoxApproximationMethod.SelectedItem = approximationParameters.Method;
 			checkBoxLoadInternalEntities.Checked = approximationParameters.LoadInternalEntities;
-			if (savedKeyTimes != null)
-				textBoxKeyTimeSteps.Text = string.Join(" ", savedKeyTimes.Select(kt => kt.ToString()).ToArray());
 
 			setupFilesList();
 			updateUIState();
-			setupDataVisualizerType();
 		}
 
 		#endregion
@@ -68,19 +59,6 @@ namespace MeshEditor.DataVisualizer.UI
 		#endregion
 
 		#region Private methods
-
-		private double[] parseKeyTimes()
-		{
-			string[] parts = textBoxKeyTimeSteps.Text.Split(';', ' ', '\t');
-			List<double> keyTimes = new List<double>();
-			foreach (string part in parts)
-			{
-				double keyTime;
-				if (double.TryParse(part, out keyTime))
-					keyTimes.Add(keyTime);
-			}
-			return keyTimes.ToArray();
-		}
 
 		private void setupFilesList(bool greyLoadedFiles = true)
 		{
@@ -117,27 +95,6 @@ namespace MeshEditor.DataVisualizer.UI
 			worker.RunWorkerAsync();
 		}
 
-		private void setupDataVisualizerType()
-		{
-			comboBoxDataVisualizerType.Items.AddRange(Enum.GetValues(typeof(DataVisualizerTypes)).Cast<object>().ToArray());
-			comboBoxDataVisualizerType.SelectedItem = getCurrentDataVisualizerType();
-		}
-
-		private DataVisualizerTypes getCurrentDataVisualizerType()
-		{
-			if (dataVisualizer == null)
-				return savedDataVisualizerTypes;
-			else if (dataVisualizer is ExactDataVisualizer)
-				return DataVisualizerTypes.Exact;
-			else if (dataVisualizer is TimetreeDataVisualizer)
-				return DataVisualizerTypes.Timetree;
-			else if (dataVisualizer is OctreeDataVisualizer)
-				return DataVisualizerTypes.Octree;
-			else if (dataVisualizer is WaveletDataVisualizer)
-				return DataVisualizerTypes.Wavelet;
-			throw new NotSupportedException();
-		}
-
 		private void buttonClose_Click(object sender, EventArgs e)
 		{
 			this.Close();
@@ -149,7 +106,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 			if (dataVisualizer == null)
 			{
-				dataVisualizer = dataVisualizerFactory(dataVisualizerType);
+				dataVisualizer = new ExactDataVisualizer();
 
 				EventHandler handler = NeedInitialize;
 				if (handler != null) // inform UI - data visualizer will be initialized
@@ -157,8 +114,6 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 
 			string[] filenames = listViewFiles.Items.Cast<ListViewItem>().Select(item => item.Text).ToArray();
-
-			approximationParameters.FixedTimes = parseKeyTimes();
 
 			linkLabelApproximationQuality.Visible = labelApproximationQualityText.Visible = false;
 
@@ -186,10 +141,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 					dataVisualizer.FinishUp(); // finish off creation of data visualizer object (sets default values of DataVisualizerController settings)
 
-					savedApproximationMethod = approximationParameters.Method;
 					savedLoadInternalEntities = approximationParameters.LoadInternalEntities;
 					savedCompressTime = approximationParameters.CompressTime;
-					savedKeyTimes = approximationParameters.FixedTimes;
 
 					setupFilesList();
 					
@@ -207,23 +160,6 @@ namespace MeshEditor.DataVisualizer.UI
 		private static void reportError(Exception ex)
 		{
 			MessageBox.Show(Utilities.Functions.BuildErrorMessage(ex), "Error while loading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		}
-
-		private static IDataVisualizer dataVisualizerFactory(DataVisualizerTypes type)
-		{
-			switch (type)
-			{
-				case DataVisualizerTypes.Exact:
-					return new ExactDataVisualizer();
-				case DataVisualizerTypes.Octree:
-					return new OctreeDataVisualizer();
-				case DataVisualizerTypes.Timetree:
-					return new TimetreeDataVisualizer();
-				case DataVisualizerTypes.Wavelet:
-					return new WaveletDataVisualizer();
-				default:
-					throw new NotSupportedException();
-			}
 		}
 
 		private void listViewFiles_SelectedIndexChanged(object sender, EventArgs e)
@@ -297,35 +233,12 @@ namespace MeshEditor.DataVisualizer.UI
 			updateUIState();
 		}
 
-		private void comboBoxApproximationMethod_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			approximationParameters.Method = (ApproximationMethod)comboBoxApproximationMethod.SelectedItem;
-			updateUIState();
-		}
-
-		private void comboBoxDataVisualizerType_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			if (comboBoxDataVisualizerType.SelectedItem == null)
-				dataVisualizerType = DataVisualizerTypes.Exact;
-			else
-				dataVisualizerType = (DataVisualizerTypes)comboBoxDataVisualizerType.SelectedItem;
-			savedDataVisualizerTypes = dataVisualizerType;
-			updateUIState();
-		}
-
 		private void updateUIState()
 		{
 			buttonLoad.Enabled = (dataVisualizer == null && listViewFiles.Items.Count > 0) || (dataVisualizer != null && listViewFiles.Items.Cast<ListViewItem>().Any(item => !dataVisualizer.LoadedFiles.Contains(item.Text)));
 			buttonReload.Enabled = (dataVisualizer != null);
 			buttonUnload.Enabled = (dataVisualizer != null);
-
 			buttonClear.Enabled = listViewFiles.Items.Count > 0 && (dataVisualizer == null || listViewFiles.Items.Cast<ListViewItem>().Any(item => !dataVisualizer.LoadedFiles.Contains(item.Text)));
-
-			labelApproximationMethodHeader.Visible = comboBoxApproximationMethod.Visible = (dataVisualizerType == DataVisualizerTypes.Octree || dataVisualizerType == DataVisualizerTypes.Timetree);
-			linkLabelApproximationQuality.Visible = labelApproximationQualityText.Visible = (dataVisualizer != null && getCurrentDataVisualizerType() != DataVisualizerTypes.Exact);
-			checkBoxCompressTime.Visible = labelKeyTimeSteps.Visible = textBoxKeyTimeSteps.Visible = (dataVisualizerType == DataVisualizerTypes.Timetree);
-
-			labelKeyTimeSteps.Enabled = textBoxKeyTimeSteps.Enabled = checkBoxCompressTime.Checked = approximationParameters.CompressTime;
 		}
 
 		private void checkBoxLoadInternalEntities_CheckedChanged(object sender, EventArgs e)

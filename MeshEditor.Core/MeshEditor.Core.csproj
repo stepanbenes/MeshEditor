@@ -188,6 +188,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="CoreInterface\EditorMode.cs" />
+    <Compile Include="Utilities\FloatComparisons.cs" />
     <Compile Include="Utilities\PerformanceMeters.cs" />
     <Compile Include="Utilities\Delegates.cs" />
     <Compile Include="Utilities\Functions.cs" />
