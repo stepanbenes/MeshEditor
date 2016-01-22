@@ -91,8 +91,6 @@ namespace MeshEditor.DataVisualizer
 				root.Insert(data, depth: 0);
 			}
 
-			public TData GetData(Vector3 position) => root.GetData(position);
-
 			public void DrawBoundary()
 			{
 				GL.Begin(BeginMode.Lines);
@@ -134,8 +132,6 @@ namespace MeshEditor.DataVisualizer
 					this.lowerBounds = lowerBounds;
 					this.upperBounds = upperBounds;
 				}
-
-				public abstract T GetData(Vector3 position);
 
 				public virtual void DrawBoundary()
 				{
@@ -190,15 +186,6 @@ namespace MeshEditor.DataVisualizer
 				public InternalNode(Vector3 lowerBounds, Vector3 upperBounds)
 					: base(lowerBounds, upperBounds)
 				{ }
-
-				public override T GetData(Vector3 position)
-				{
-					int childIndex = getChildIndex(position);
-					OctreeNode<T> child = children[childIndex];
-					if (child == null)
-						return null;
-					return child.GetData(position);
-				}
 
 				public void Insert(T data, int depth)
 				{
@@ -336,7 +323,6 @@ namespace MeshEditor.DataVisualizer
 					Data = data;
 				}
 				public T Data { get; }
-				public override T GetData(Vector3 position) => Data;
 				public override void ZOrderTraverse(ICollection<T> dataCollection) => dataCollection.Add(Data);
 				public override void HilbertCurveTraverse(ICollection<T> dataCollection, int parentOrientation) => dataCollection.Add(Data);
 
@@ -346,6 +332,8 @@ namespace MeshEditor.DataVisualizer
 					GL.Vertex3(center);
 				}
 			}
+
+			// TODO: Add MultiLeafNode<T> : OctreeNode<T> with IEnumerable<T> Data { get; } that will concentrate data values in nodes with exactly same coordinates
 		}
 
 		#endregion
