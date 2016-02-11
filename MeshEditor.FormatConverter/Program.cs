@@ -21,9 +21,9 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			if(args.Length < 2)
+			if(args.Length < 1)
 			{
-				Console.WriteLine("Usage: {0} input output", Path.GetFileName(Assembly.GetExecutingAssembly().CodeBase));
+				Console.WriteLine("Usage: {0} mesh-file [result-files]", Path.GetFileName(Assembly.GetExecutingAssembly().CodeBase));
 				Console.ReadKey();
 				return;
 			}
@@ -36,7 +36,7 @@ namespace MeshEditor.FormatConverter
 			}
 
 			Layer surfaceLayer = createSurfaceLayer(mesh);
-			writeLayerToFile(surfaceLayer, args[1]);
+			writeMeshFile(surfaceLayer.MeshFile, args[1]);
 
 			Console.Clear();
 			Console.Write("Done.");
@@ -46,40 +46,42 @@ namespace MeshEditor.FormatConverter
 
 		private static Layer createSurfaceLayer(Mesh mesh)
 		{
-			Layer layer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
+			Layer surfaceLayer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
+
+			MeshFile meshFile = new MeshFile { LayerId = surfaceLayer.Id };
 
 			// find triangle faces
 			List<Node> points = new List<Node>();
-			Dictionary<Node, int> pointIndices = new Dictionary<Node, int>();
+			Dictionary<int, int> pointIndices = new Dictionary<int, int>();
 			List<int> triangleConnectivity = new List<int>();
 			foreach (Element2D face in mesh.Faces)
 			{
 				foreach (Node node in face.IterateThroughAllNodes())
 				{
-					if (!pointIndices.ContainsKey(node))
+					if (!pointIndices.ContainsKey(node.ID))
 					{
 						points.Add(node);
-						pointIndices[node] = points.Count;
+						pointIndices[node.ID] = points.Count;
 					}
 				}
 				Triangle triangle = face as Triangle;
 				if (triangle != null)
 				{
-					triangleConnectivity.Add(pointIndices[triangle.Node1]);
-					triangleConnectivity.Add(pointIndices[triangle.Node2]);
-					triangleConnectivity.Add(pointIndices[triangle.Node3]);
+					triangleConnectivity.Add(pointIndices[triangle.Node1.ID]);
+					triangleConnectivity.Add(pointIndices[triangle.Node2.ID]);
+					triangleConnectivity.Add(pointIndices[triangle.Node3.ID]);
 				}
 				else
 				{
 					Quadrilateral quad = (Quadrilateral)face;
 					// first half
-					triangleConnectivity.Add(pointIndices[quad.Node1]);
-					triangleConnectivity.Add(pointIndices[quad.Node2]);
-					triangleConnectivity.Add(pointIndices[quad.Node3]);
+					triangleConnectivity.Add(pointIndices[quad.Node1.ID]);
+					triangleConnectivity.Add(pointIndices[quad.Node2.ID]);
+					triangleConnectivity.Add(pointIndices[quad.Node3.ID]);
 					// second half
-					triangleConnectivity.Add(pointIndices[quad.Node1]);
-					triangleConnectivity.Add(pointIndices[quad.Node3]);
-					triangleConnectivity.Add(pointIndices[quad.Node4]);
+					triangleConnectivity.Add(pointIndices[quad.Node1.ID]);
+					triangleConnectivity.Add(pointIndices[quad.Node3.ID]);
+					triangleConnectivity.Add(pointIndices[quad.Node4.ID]);
 				}
 			}
 			List<int> edgeConnectivity = new List<int>();
@@ -87,8 +89,8 @@ namespace MeshEditor.FormatConverter
 			{
 				if (edge.FeatureAngle >= mesh.HardBorderLimit)
 				{
-					edgeConnectivity.Add(pointIndices[edge.BeginNode]);
-					edgeConnectivity.Add(pointIndices[edge.EndNode]);
+					edgeConnectivity.Add(pointIndices[edge.BeginNode.ID]);
+					edgeConnectivity.Add(pointIndices[edge.EndNode.ID]);
 				}
 			}
 
@@ -100,16 +102,18 @@ namespace MeshEditor.FormatConverter
 				pointCoordinates.Add(transformedPosition.Y);
 				pointCoordinates.Add(transformedPosition.Z);
 			}
-			layer.PointCoordinates = pointCoordinates.ToArray();
-			layer.TriangleConnectivity = triangleConnectivity.ToArray();
-			layer.EdgeConnectivity = edgeConnectivity.ToArray();
+			meshFile.PointCoordinates = pointCoordinates.ToArray();
+			meshFile.TriangleConnectivity = triangleConnectivity.ToArray();
+			meshFile.EdgeConnectivity = edgeConnectivity.ToArray();
 
-			return layer;
+			surfaceLayer.MeshFile = meshFile;
+
+			return surfaceLayer;
 		}
 
-		private static void writeLayerToFile(Layer layer, string outputFilename)
+		private static void writeMeshFile(MeshFile meshFile, string outputFilename)
 		{
-			string json = JsonConvert.SerializeObject(layer, Formatting.Indented, new NotIndentedArrayJsonConverter());
+			string json = JsonConvert.SerializeObject(meshFile, Formatting.Indented, new NotIndentedArrayJsonConverter());
 			File.WriteAllText(outputFilename, json, Encoding.UTF8);
 		}
 	}

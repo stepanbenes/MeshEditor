@@ -10,8 +10,7 @@ namespace MeshEditor.FormatConverter
 	{
 		public Guid Id { get; set; }
 		public string Name { get; set; }
-		public double[] PointCoordinates { get; set; }
-		public int[] EdgeConnectivity { get; set; }
-		public int[] TriangleConnectivity { get; set; }
+		public MeshFile MeshFile { get; set; }
+		public ResultSummaryFile ResultSummaryFile { get; set; }
 	}
 }
