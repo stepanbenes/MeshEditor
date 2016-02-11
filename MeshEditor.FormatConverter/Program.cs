@@ -10,6 +10,8 @@ using MeshEditor.Data;
 using MeshEditor.CoreInterface;
 using System.Threading;
 using System.Globalization;
+using OpenTK;
+using Newtonsoft.Json;
 
 namespace MeshEditor.FormatConverter
 {
@@ -26,39 +28,89 @@ namespace MeshEditor.FormatConverter
 				return;
 			}
 
-			IMeshFileParser parser = MeshParserFactory.Create(args[0]); // choose parser
-
-			IMeshSaver meshSaver;
-
-			// choose saver
-			switch (Path.GetExtension(args[1]))
+			Mesh mesh = null;
+			using (IMeshFileParser parser = MeshParserFactory.Create(args[0])) // choose parser
 			{
-				case ".res":
-					GiDResFileFormatGenerator generator = new GiDResFileFormatGenerator();
-					generator.GenerateResultFile(parser, args[1]);
-					meshSaver = null;
-					break;
-				default:
-					meshSaver = MeshSaverFactory.Create(args[1]);
-					break;
+				IMeshCreator meshCreator = new MeshConstructor();
+				mesh = meshCreator.CreateMesh(parser, cancelled: null);
 			}
 
-			if (meshSaver != null)
-			{
-				meshSaver.Step += meshSaver_Step;
-				meshSaver.SaveMesh(parser, args[1], /*cancelled: */ null);
-			}
-			
+			Layer surfaceLayer = createSurfaceLayer(mesh);
+			writeLayerToFile(surfaceLayer, args[1]);
+
 			Console.Clear();
 			Console.Write("Done.");
 
 			Console.ReadKey();
 		}
 
-		private static void meshSaver_Step(object sender, MeshIOEventArgs e)
+		private static Layer createSurfaceLayer(Mesh mesh)
 		{
-			Console.Clear();
-			Console.Write("Done " + e.PercentDone + "%");
+			Layer layer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
+
+			// find triangle faces
+			List<Node> points = new List<Node>();
+			Dictionary<Node, int> pointIndices = new Dictionary<Node, int>();
+			List<int> triangleConnectivity = new List<int>();
+			foreach (Element2D face in mesh.Faces)
+			{
+				foreach (Node node in face.IterateThroughAllNodes())
+				{
+					if (!pointIndices.ContainsKey(node))
+					{
+						points.Add(node);
+						pointIndices[node] = points.Count;
+					}
+				}
+				Triangle triangle = face as Triangle;
+				if (triangle != null)
+				{
+					triangleConnectivity.Add(pointIndices[triangle.Node1]);
+					triangleConnectivity.Add(pointIndices[triangle.Node2]);
+					triangleConnectivity.Add(pointIndices[triangle.Node3]);
+				}
+				else
+				{
+					Quadrilateral quad = (Quadrilateral)face;
+					// first half
+					triangleConnectivity.Add(pointIndices[quad.Node1]);
+					triangleConnectivity.Add(pointIndices[quad.Node2]);
+					triangleConnectivity.Add(pointIndices[quad.Node3]);
+					// second half
+					triangleConnectivity.Add(pointIndices[quad.Node1]);
+					triangleConnectivity.Add(pointIndices[quad.Node3]);
+					triangleConnectivity.Add(pointIndices[quad.Node4]);
+				}
+			}
+			List<int> edgeConnectivity = new List<int>();
+			foreach (WingedEdge edge in mesh.Edges)
+			{
+				if (edge.FeatureAngle >= mesh.HardBorderLimit)
+				{
+					edgeConnectivity.Add(pointIndices[edge.BeginNode]);
+					edgeConnectivity.Add(pointIndices[edge.EndNode]);
+				}
+			}
+
+			List<double> pointCoordinates = new List<double>();
+			foreach (Node point in points)
+			{
+				Vector3 transformedPosition = (point.Position / mesh.ResizeFactor) + mesh.PositionOffset;
+				pointCoordinates.Add(transformedPosition.X);
+				pointCoordinates.Add(transformedPosition.Y);
+				pointCoordinates.Add(transformedPosition.Z);
+			}
+			layer.PointCoordinates = pointCoordinates.ToArray();
+			layer.TriangleConnectivity = triangleConnectivity.ToArray();
+			layer.EdgeConnectivity = edgeConnectivity.ToArray();
+
+			return layer;
+		}
+
+		private static void writeLayerToFile(Layer layer, string outputFilename)
+		{
+			string json = JsonConvert.SerializeObject(layer, Formatting.Indented, new NotIndentedArrayJsonConverter());
+			File.WriteAllText(outputFilename, json, Encoding.UTF8);
 		}
 	}
 }
