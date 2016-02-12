@@ -9,6 +9,7 @@ namespace MeshEditor.FormatConverter
 	class ResultSummaryFile
 	{
 		public Guid LayerId { get; set; }
-		public ResultFile[] ResultFiles { get; set; }
+		public double[] TimeSteps { get; set; }
+		public ResultDescriptor[] ResultDescriptors { get; set; }
 	}
 }

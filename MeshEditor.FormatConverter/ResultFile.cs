@@ -6,10 +6,26 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.FormatConverter
 {
-	class ResultFile
+	class ResultFile : IResultDescription
 	{
 		public Guid LayerId { get; set; }
 
-		// Data component, time step, wavelet coefficients, ... data
+		public string ResultName { get; set; }
+
+		public string ComponentName { get; set; }
+
+		public double TimeStep { get; set; }
+
+		// Data, wavelet coefficients ...
+
+		/// <summary>
+		/// Wavelet transform level, 0 means no transform
+		/// </summary>
+		public int CompressionLevel { get; set; }
+
+		/// <summary>
+		/// double array data in Base64 string format
+		/// </summary>
+		public string Data { get; set; }
 	}
 }
