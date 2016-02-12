@@ -32,12 +32,16 @@ namespace MeshEditor.FormatConverter
 			}
 
 			Layer surfaceLayer = createSurfaceLayer(args[0], args.Skip(1));
-			writeLayer(surfaceLayer, Path.GetDirectoryName(args[0]));
+			string path = Path.GetDirectoryName(args[0]);
 
-			Console.Clear();
+			// MeshFile
+			writeJsonFile(path, surfaceLayer.Name, surfaceLayer.Id, "mesh", surfaceLayer.MeshFile);
+			// ResultSummaryFile
+			writeJsonFile(path, surfaceLayer.Name, surfaceLayer.Id, "summary", surfaceLayer.ResultSummaryFile);
+
+			//Console.Clear();
 			Console.Write("Done.");
-
-			Console.ReadKey();
+			//Console.ReadKey();
 		}
 
 		private static Layer createSurfaceLayer(string meshFilename, IEnumerable<string> resultFilenames)
@@ -49,7 +53,7 @@ namespace MeshEditor.FormatConverter
 				mesh = meshCreator.CreateMesh(parser, cancelled: null);
 			}
 
-			Layer layer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
+			Layer layer = new Layer { Id = Guid.NewGuid(), Name = Path.GetFileNameWithoutExtension(meshFilename) + "-Surface" };
 
 			Dictionary<int, int> nodeIdMap;
 
@@ -110,7 +114,7 @@ namespace MeshEditor.FormatConverter
 								ResultName = dataInfo.DataType.Name,
 								ComponentName = dataInfo.DataType.Components[i].Name,
 								TimeStep = dataInfo.Time,
-								FileName = resultJsonFilename,
+								FileName = Path.GetFileName(resultJsonFilename),
 							};
 
 							resultDescriptors.Add(resultDescriptor);
@@ -202,14 +206,6 @@ namespace MeshEditor.FormatConverter
 			meshFile.EdgeConnectivity = edgeConnectivity.ToArray();
 
 			return meshFile;
-		}
-
-		private static void writeLayer(Layer layer, string path)
-		{
-			// MeshFile
-			writeJsonFile(path, layer.Name, layer.Id, "mesh", layer.MeshFile);
-			// ResultSummaryFile
-			writeJsonFile(path, layer.Name, layer.Id, "summary", layer.ResultSummaryFile);
 		}
 
 		private static string writeJsonFile(string path, string filePrefix, Guid layerId, string fileType, object objectToSerialize)
