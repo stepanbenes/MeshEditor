@@ -39,9 +39,7 @@ namespace MeshEditor.FormatConverter
 			// ResultSummaryFile
 			writeJsonFile(path, surfaceLayer.Name, surfaceLayer.Id, "summary", surfaceLayer.ResultSummaryFile);
 
-			//Console.Clear();
 			Console.Write("Done.");
-			//Console.ReadKey();
 		}
 
 		private static Layer createSurfaceLayer(string meshFilename, IEnumerable<string> resultFilenames)
@@ -60,9 +58,6 @@ namespace MeshEditor.FormatConverter
 			MeshFile meshFile = createMeshFile(mesh, out nodeIdMap);
 			meshFile.LayerId = layer.Id;
 			layer.MeshFile = meshFile;
-
-			//ResultSummaryFile resultSummaryFile = createResultSummaryFile(
-			//surfaceLayer.res
 
 			List<ResultDescriptor> resultDescriptors = new List<ResultDescriptor>();
 			HashSet<double> timeSteps = new HashSet<double>();
@@ -103,7 +98,7 @@ namespace MeshEditor.FormatConverter
 								ComponentName = dataInfo.DataType.Components[i].Name,
 								TimeStep = dataInfo.Time,
 								CompressionLevel = 0, // no compression
-								Data = convertData(values[i]),
+								Data = convertArrayToBase64String(values[i]), // TODO: add wavelet transform
 							};
 
 							string resultJsonFilePrefix = $"{layer.Name}-{resultFile.ResultName}-{resultFile.ComponentName}-{resultFile.TimeStep}";
@@ -137,10 +132,17 @@ namespace MeshEditor.FormatConverter
 			return layer;
 		}
 
-		private static string convertData(double[] values)
+		//private static string convertDoubleArrayToBase64String(double[] values)
+		//{
+		//	//byte[] bytes = values.SelectMany(value => BitConverter.GetBytes(value)).ToArray();
+		//	byte[] bytes = new byte[values.Length * sizeof(double)];
+		//	Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+		//	return Convert.ToBase64String(bytes);
+		//}
+
+		private static string convertArrayToBase64String<TItem>(TItem[] values) where TItem : struct
 		{
-			//byte[] bytes = values.SelectMany(value => BitConverter.GetBytes(value)).ToArray();
-			byte[] bytes = new byte[values.Length * sizeof(double)];
+			byte[] bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
 			Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
 			return Convert.ToBase64String(bytes);
 		}
@@ -193,17 +195,17 @@ namespace MeshEditor.FormatConverter
 				}
 			}
 
-			List<double> pointCoordinates = new List<double>();
-			foreach (Node point in points)
+			double[] pointCoordinates = new double[points.Count * 3];
+			for (int i = 0; i < points.Count; i++)
 			{
-				Vector3 transformedPosition = (point.Position / mesh.ResizeFactor) + mesh.PositionOffset;
-				pointCoordinates.Add(transformedPosition.X);
-				pointCoordinates.Add(transformedPosition.Y);
-				pointCoordinates.Add(transformedPosition.Z);
+				Vector3 transformedPosition = (points[i].Position / mesh.ResizeFactor) + mesh.PositionOffset;
+				pointCoordinates[i * 3 + 0] = transformedPosition.X;
+				pointCoordinates[i * 3 + 1] = transformedPosition.Y;
+				pointCoordinates[i * 3 + 2] = transformedPosition.Z;
 			}
-			meshFile.PointCoordinates = pointCoordinates.ToArray();
-			meshFile.TriangleConnectivity = triangleConnectivity.ToArray();
-			meshFile.EdgeConnectivity = edgeConnectivity.ToArray();
+			meshFile.PointCoordinates = convertArrayToBase64String(pointCoordinates);
+			meshFile.TriangleConnectivity = convertArrayToBase64String(triangleConnectivity.ToArray());
+			meshFile.EdgeConnectivity = convertArrayToBase64String(edgeConnectivity.ToArray());
 
 			return meshFile;
 		}
@@ -222,7 +224,7 @@ namespace MeshEditor.FormatConverter
 			string prefixNormalized = regex.Replace(prefix, "");
 			string suffixNormalized = regex.Replace(suffix, "");
 
-			return $"{prefixNormalized}_{guid.ToString()}.{suffix}.{extension}";
+			return $"{prefixNormalized}_{guid.ToString()}.{suffixNormalized}.{extension}";
 		}
 	}
 }

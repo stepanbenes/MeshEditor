@@ -9,8 +9,8 @@ namespace MeshEditor.FormatConverter
 	class MeshFile
 	{
 		public Guid LayerId { get; set; }
-		public double[] PointCoordinates { get; set; }
-		public int[] EdgeConnectivity { get; set; }
-		public int[] TriangleConnectivity { get; set; }
+		public string PointCoordinates { get; set; }
+		public string EdgeConnectivity { get; set; }
+		public string TriangleConnectivity { get; set; }
 	}
 }
