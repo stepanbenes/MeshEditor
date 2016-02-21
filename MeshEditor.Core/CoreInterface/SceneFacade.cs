@@ -248,7 +248,7 @@ namespace MeshEditor.CoreInterface
 
 		public static string InputFileFormatFilter
 		{
-			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
+			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply, *.mesh.json)|*{0};*.msh;*.vtu;*.obj;*.ply;*.mesh.json|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|JSON mesh file format (*.mesh.json)|*.mesh.json|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
 		}
 
 		public static string OutputFileFormatFilter
