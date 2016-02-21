@@ -62,6 +62,17 @@ namespace MeshEditor.IO
 				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(connectivity, i * 3, 3);
 				yield return new ElementDraft { ID = i, NodeIDs = nodeIDs, Type = ElementType.TriangleLinear };
 			}
+
+			/**/
+			// Consider edges as beams
+			int[] edgeConnectivity = convertBase64StringToArray<int>(meshFile.EdgeConnectivity);
+			int edgeCount = edgeConnectivity.Length / 2;
+			int index = elementCount;
+			for (int i = 0; i < edgeCount; i++)
+			{
+				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(edgeConnectivity, i * 2, 2);
+				yield return new ElementDraft { ID = ++index, NodeIDs = nodeIDs, Type = ElementType.BeamLinear };
+			}
 		}
 
 		public void Dispose()
