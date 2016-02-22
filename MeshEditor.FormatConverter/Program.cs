@@ -35,9 +35,9 @@ namespace MeshEditor.FormatConverter
 			string path = Path.GetDirectoryName(args[0]);
 
 			// MeshFile
-			writeJsonFile(path, surfaceLayer.Name, surfaceLayer.Id, "mesh", surfaceLayer.MeshFile);
+			writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "mesh", surfaceLayer.MeshFile);
 			// ResultSummaryFile
-			writeJsonFile(path, surfaceLayer.Name, surfaceLayer.Id, "summary", surfaceLayer.ResultSummaryFile);
+			writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "summary", surfaceLayer.ResultSummaryFile);
 
 			Console.Write("Done.");
 		}
@@ -51,7 +51,7 @@ namespace MeshEditor.FormatConverter
 				mesh = meshCreator.CreateMesh(parser, cancelled: null);
 			}
 
-			Layer layer = new Layer { Id = Guid.NewGuid(), Name = Path.GetFileNameWithoutExtension(meshFilename) + "-Surface" };
+			Layer layer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
 
 			Dictionary<int, int> nodeIdMap;
 
@@ -102,7 +102,7 @@ namespace MeshEditor.FormatConverter
 							};
 
 							string resultJsonFilePrefix = $"{layer.Name}-{resultFile.ResultName}-{resultFile.ComponentName}-{resultFile.TimeStep}";
-							string resultJsonFilename = writeJsonFile(Path.GetDirectoryName(meshFilename), resultJsonFilePrefix, resultFile.LayerId, "result", resultFile);
+							string resultJsonFilename = writeJsonFile(Path.GetDirectoryName(meshFilename), resultFile.LayerId, resultJsonFilePrefix, "result", resultFile);
 
 							ResultDescriptor resultDescriptor = new ResultDescriptor
 							{
@@ -210,21 +210,21 @@ namespace MeshEditor.FormatConverter
 			return meshFile;
 		}
 
-		private static string writeJsonFile(string path, string filePrefix, Guid layerId, string fileType, object objectToSerialize)
+		private static string writeJsonFile(string path, Guid layerId, string fileDescription, string fileType, object objectToSerialize)
 		{
-			string filename = Path.Combine(path, createUniqueFileName(filePrefix, layerId, fileType, "json"));
+			string filename = Path.Combine(path, createUniqueFileName(layerId, fileDescription, fileType, "json"));
 			string json = JsonConvert.SerializeObject(objectToSerialize, Formatting.Indented, new NotIndentedArrayJsonConverter());
 			File.WriteAllText(filename, json, Encoding.UTF8);
 			return filename;
 		}
 
-		private static string createUniqueFileName(string prefix, Guid guid, string suffix, string extension)
+		private static string createUniqueFileName(Guid guid, string description, string suffix, string extension)
 		{
 			Regex regex = new Regex("[^a-zA-Z0-9-]");
-			string prefixNormalized = regex.Replace(prefix, "");
+			string descriptionNormalized = regex.Replace(description, "");
 			string suffixNormalized = regex.Replace(suffix, "");
 
-			return $"{prefixNormalized}_{guid.ToString()}.{suffixNormalized}.{extension}";
+			return $"{guid.ToString()}_{descriptionNormalized}.{suffixNormalized}.{extension}";
 		}
 	}
 }
