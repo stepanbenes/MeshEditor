@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.FormatConverter
+namespace LayerManager.Types
 {
-	class ResultFile : IResultDescription
+	public class ResultFile : IResultDescription
 	{
 		public Guid LayerId { get; set; }
 

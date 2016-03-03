@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using MeshEditor.DataVisualizer.IO;
 using MeshEditor.DataVisualizer.Data;
+using LayerManager.Types;
 
 namespace MeshEditor.FormatConverter
 {
@@ -31,7 +32,7 @@ namespace MeshEditor.FormatConverter
 				return;
 			}
 
-			Layer surfaceLayer = createSurfaceLayer(args[0], args.Skip(1));
+			LayerFile surfaceLayer = createSurfaceLayer(args[0], args.Skip(1));
 			string path = Path.GetDirectoryName(args[0]);
 
 			// MeshFile
@@ -42,7 +43,7 @@ namespace MeshEditor.FormatConverter
 			Console.Write("Done.");
 		}
 
-		private static Layer createSurfaceLayer(string meshFilename, IEnumerable<string> resultFilenames)
+		private static LayerFile createSurfaceLayer(string meshFilename, IEnumerable<string> resultFilenames)
 		{
 			Mesh mesh = null;
 			using (IMeshFileParser parser = MeshParserFactory.Create(meshFilename)) // choose parser
@@ -51,7 +52,7 @@ namespace MeshEditor.FormatConverter
 				mesh = meshCreator.CreateMesh(parser, cancelled: null);
 			}
 
-			Layer layer = new Layer { Id = Guid.NewGuid(), Name = "Surface" };
+			LayerFile layer = new LayerFile { Id = Guid.NewGuid(), Name = "Surface" };
 
 			Dictionary<int, int> nodeIdMap;
 

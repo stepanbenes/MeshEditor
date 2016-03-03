@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.FormatConverter
+namespace LayerManager.Types
 {
-	class ResultSummaryFile
+	public class ResultSummaryFile
 	{
 		public Guid LayerId { get; set; }
 		public double[] TimeSteps { get; set; }
