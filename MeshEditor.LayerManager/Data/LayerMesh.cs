@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayerManager.Types
+namespace MeshEditor.LayerManager.Data
 {
-	public class MeshFile
+	public class LayerMesh
 	{
 		public Guid LayerId { get; set; }
 		public string PointCoordinates { get; set; }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.LayerManager.Serialization
 {
 	class NotIndentedArrayJsonConverter : JsonConverter
 	{

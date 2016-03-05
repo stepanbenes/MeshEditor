@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{67DD8877-D62C-42A9-BE03-01D9812E961A}</ProjectGuid>
+    <ProjectGuid>{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LayerManager.Generator</RootNamespace>
-    <AssemblyName>LayerManager.Generator</AssemblyName>
+    <RootNamespace>MeshEditor.LayerManager</RootNamespace>
+    <AssemblyName>MeshEditor.LayerManager</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,13 +44,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compression\GenericCompressionService.cs" />
+    <Compile Include="Compression\ICompressionService.cs" />
+    <Compile Include="Data\CompressionDescriptor.cs" />
+    <Compile Include="Data\LayerMesh.cs" />
+    <Compile Include="Data\LayerResult.cs" />
+    <Compile Include="Data\ResultDescriptor.cs" />
+    <Compile Include="Data\LayerSummary.cs" />
+    <Compile Include="FilterLayerGenerator.cs" />
+    <Compile Include="Filters\FilterDescriptor.cs" />
+    <Compile Include="Filters\FilterType.cs" />
+    <Compile Include="Import\DataDescription.cs" />
+    <Compile Include="Import\GeometryDescription.cs" />
+    <Compile Include="Import\IDataImportService.cs" />
+    <Compile Include="Import\IGeometryImportService.cs" />
+    <Compile Include="LayerGenerator.cs" />
+    <Compile Include="MasterLayerGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\GenericLayerSerializer.cs" />
+    <Compile Include="Serialization\ILayerSerializer.cs" />
+    <Compile Include="Serialization\IStorageService.cs" />
+    <Compile Include="Serialization\JsonLayerSerializer.cs" />
+    <Compile Include="Serialization\NotIndentedArrayJsonConverter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LayerManager.Data\LayerManager.Data.csproj">
-      <Project>{a0a702ff-4494-4815-ad07-c1c9012e2e48}</Project>
-      <Name>LayerManager.Data</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

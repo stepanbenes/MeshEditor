@@ -24,11 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{351018
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FormatConverter", "FormatConverter", "{F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LayerManager.Data", "LayerManager.Data\LayerManager.Data.csproj", "{A0A702FF-4494-4815-AD07-C1C9012E2E48}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LayerManager.Converter", "LayerManager.Converter\LayerManager.Converter.csproj", "{F05D3AB2-F68D-4722-A9A8-399283476C86}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LayerManager.Generator", "LayerManager.Generator\LayerManager.Generator.csproj", "{67DD8877-D62C-42A9-BE03-01D9812E961A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.LayerManager", "MeshEditor.LayerManager\MeshEditor.LayerManager.csproj", "{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,27 +56,17 @@ Global
 		{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0A702FF-4494-4815-AD07-C1C9012E2E48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0A702FF-4494-4815-AD07-C1C9012E2E48}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0A702FF-4494-4815-AD07-C1C9012E2E48}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0A702FF-4494-4815-AD07-C1C9012E2E48}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F05D3AB2-F68D-4722-A9A8-399283476C86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F05D3AB2-F68D-4722-A9A8-399283476C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F05D3AB2-F68D-4722-A9A8-399283476C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F05D3AB2-F68D-4722-A9A8-399283476C86}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67DD8877-D62C-42A9-BE03-01D9812E961A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67DD8877-D62C-42A9-BE03-01D9812E961A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67DD8877-D62C-42A9-BE03-01D9812E961A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67DD8877-D62C-42A9-BE03-01D9812E961A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{469F9E5D-1EE2-4219-A9AA-890E2923D26B} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
-		{A0A702FF-4494-4815-AD07-C1C9012E2E48} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
-		{F05D3AB2-F68D-4722-A9A8-399283476C86} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
-		{67DD8877-D62C-42A9-BE03-01D9812E961A} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
+		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		VisualSVNWorkingCopyRoot = .

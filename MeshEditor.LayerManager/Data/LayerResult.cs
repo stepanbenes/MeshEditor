@@ -4,24 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayerManager.Types
+namespace MeshEditor.LayerManager.Data
 {
-	public class ResultFile : IResultDescription
+	public class LayerResult : IResultDescription
 	{
 		public Guid LayerId { get; set; }
-
-		public string ResultName { get; set; }
-
+		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
+		public int Index { get; set; }
+		public double? TimeStep { get; set; }
 
-		public double TimeStep { get; set; }
-
-		// Data, wavelet coefficients ...
-
-		/// <summary>
-		/// Wavelet transform level, 0 means no transform
-		/// </summary>
-		public int CompressionLevel { get; set; }
+		public CompressionDescriptor Compression { get; set; }
 
 		/// <summary>
 		/// double array data in Base64 string format

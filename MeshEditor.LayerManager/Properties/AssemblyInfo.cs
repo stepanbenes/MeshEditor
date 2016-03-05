@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LayerManager.Data")]
+[assembly: AssemblyTitle("MeshEditor.LayerManager")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LayerManager.Data")]
+[assembly: AssemblyProduct("MeshEditor.LayerManager")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a0a702ff-4494-4815-ad07-c1c9012e2e48")]
+[assembly: Guid("315e6aa6-a925-44bc-8f13-76cff7dcb02f")]
 
 // Version information for an assembly consists of the following four values:
 //

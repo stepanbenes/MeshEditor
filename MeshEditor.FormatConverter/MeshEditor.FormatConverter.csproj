@@ -38,10 +38,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -50,16 +46,16 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GiDResFileFormatGenerator.cs" />
-    <Compile Include="NotIndentedArrayJsonConverter.cs" />
+    <Compile Include="Import\DataImportServiceFactory.cs" />
+    <Compile Include="Import\GeometryImportServiceFactory.cs" />
+    <Compile Include="Import\GiDDataImportService.cs" />
+    <Compile Include="Import\GiDGeometryImportService.cs" />
+    <Compile Include="Storage\LocalFileSystemStorageService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Import\VTKXmlImportService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LayerManager.Data\LayerManager.Data.csproj">
-      <Project>{a0a702ff-4494-4815-ad07-c1c9012e2e48}</Project>
-      <Name>LayerManager.Data</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
       <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
       <Name>MeshEditor.Core</Name>
@@ -67,6 +63,10 @@
     <ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj">
       <Project>{f586dc27-a7fd-4ab7-9a6b-1b6683a84b3f}</Project>
       <Name>MeshEditor.DataVisualizer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
+      <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
+      <Name>MeshEditor.LayerManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
