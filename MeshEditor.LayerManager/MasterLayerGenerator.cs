@@ -29,6 +29,7 @@ namespace MeshEditor.LayerManager
 			}
 
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
+			IEnumerable<DataDescription> data = dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>();
 
 			throw new NotImplementedException();
 		}

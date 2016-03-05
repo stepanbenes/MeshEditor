@@ -39,17 +39,9 @@ namespace MeshEditor.FormatConverter
 
 			var masterLayerGenerator = new MasterLayerGenerator(storageService);
 
-			IGeometryImportService geometryImportService = GeometryImportServiceFactory.Create(storageService, args.Take(1));
-			IDataImportService dataImportService = DataImportServiceFactory.Create(storageService, args.Skip(1));
+			IGeometryImportService geometryImportService = GeometryImportServiceFactory.Create(storageService, Path.GetFileName(args.First()));
+			IDataImportService dataImportService = (args.Length > 1) ? DataImportServiceFactory.Create(storageService, args.Skip(1).Select(arg => Path.GetFileName(arg))) : null;
 			masterLayerGenerator.Generate(Path.GetFileNameWithoutExtension(args[0]), geometryImportService, dataImportService);
-
-			//LayerFile surfaceLayer = createSurfaceLayer(args[0], args.Skip(1));
-			//string path = Path.GetDirectoryName(args[0]);
-
-			//// MeshFile
-			//writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "mesh", surfaceLayer.MeshFile);
-			//// ResultSummaryFile
-			//writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "summary", surfaceLayer.ResultSummaryFile);
 
 			Console.Write("Done.");
 		}

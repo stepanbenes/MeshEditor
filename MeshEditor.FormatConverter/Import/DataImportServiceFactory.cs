@@ -24,7 +24,7 @@ namespace MeshEditor.FormatConverter.Import
 				case ".res": // GiD results 
 					return new GiDDataImportService(storageService, filenames);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlImportService(storageService, filenames);
+					return new VTKXmlDataImportService(storageService, filenames);
 
 				default:
 					throw new NotSupportedException();

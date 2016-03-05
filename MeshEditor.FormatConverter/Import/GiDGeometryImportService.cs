@@ -11,12 +11,12 @@ namespace MeshEditor.FormatConverter.Import
 	class GiDGeometryImportService : IGeometryImportService
 	{
 		IStorageService storageService;
-		IEnumerable<string> filenames;
+		string filename;
 
-		public GiDGeometryImportService(IStorageService storageService, IEnumerable<string> filenames)
+		public GiDGeometryImportService(IStorageService storageService, string filename)
 		{
 			this.storageService = storageService;
-			this.filenames = filenames;
+			this.filename = filename;
 		}
 
 		public GeometryDescription ReadGeometry()

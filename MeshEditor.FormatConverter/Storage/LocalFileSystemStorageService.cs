@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,11 +20,13 @@ namespace MeshEditor.FormatConverter.Storage
 
 		public Stream Load(string filename)
 		{
+			Debug.Assert(!Path.IsPathRooted(filename));
 			return new FileStream(Path.Combine(directoryName, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 
 		public void Save(Stream stream, string filename)
 		{
+			Debug.Assert(!Path.IsPathRooted(filename));
 			using (var fileStream = new FileStream(Path.Combine(directoryName, filename), FileMode.OpenOrCreate/**/, FileAccess.Write, FileShare.None))
 			{
 				stream.CopyTo(fileStream);

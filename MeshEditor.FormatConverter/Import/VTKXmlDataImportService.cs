@@ -8,20 +8,15 @@ using MeshEditor.LayerManager.Serialization;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class VTKXmlImportService : IGeometryImportService, IDataImportService
+	class VTKXmlDataImportService : VTKXmlBase, IDataImportService
 	{
 		IStorageService storageService;
 		IEnumerable<string> filenames;
 
-		public VTKXmlImportService(IStorageService storageService, IEnumerable<string> filenames)
+		public VTKXmlDataImportService(IStorageService storageService, IEnumerable<string> filenames)
 		{
 			this.storageService = storageService;
 			this.filenames = filenames;
-		}
-
-		public GeometryDescription ReadGeometry()
-		{
-			throw new NotImplementedException();
 		}
 
 		public IEnumerable<DataDescription> ReadData()
