@@ -101,10 +101,6 @@ namespace MeshEditor.FormatConverter.Import
 					throw new FormatException($"Unexpected length of coordinates data array ({coordinates.Length} instead of {expectedDataArrayLength}).");
 				}
 
-				GeometryDescription geometry = new GeometryDescription();
-				geometry.NumberOfCoordinateComponents = numberOfComponents;
-				geometry.PointCoordinates = coordinates;
-
 				// -----------------
 
 				if (!input.ReadToFollowing("Cells"))
@@ -117,8 +113,13 @@ namespace MeshEditor.FormatConverter.Import
 				input.Skip(); // skip offsets data array
 				CellType[] types = readTypesArray(input, numberOfCells);
 
-				geometry.CellConnectivity = connectivity;
-				geometry.CellTypes = types;
+				GeometryDescription geometry = new GeometryDescription
+				{
+					NumberOfCoordinateComponents = numberOfComponents,
+					PointCoordinates = coordinates,
+					CellConnectivity = connectivity,
+					CellTypes = types
+				};
 
 				// TODO: catch all exceptions and convert them to FileParserException
 

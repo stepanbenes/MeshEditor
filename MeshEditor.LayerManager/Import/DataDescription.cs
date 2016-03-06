@@ -13,16 +13,23 @@ namespace MeshEditor.LayerManager.Import
 		Tensor = 3,
 	}
 
+	public enum DataLocationType
+	{
+		Points = 1,
+		CellPoints = 2,
+		Cells = 3,
+	}
+
 	public class DataDescription
 	{
 		// <PointData Scalars="PressureVector IST_VOFFraction " Vectors="DisplacementVector " Tensors="" >
 		// <CellData Scalars="" Vectors="" Tensors="" >
 
 		public int NumberOfDataComponents { get; set; }
-		public double[] Data { get; set; }
+		public double[] Data { get; set; } // or float ?
 		public string Name { get; set; }
 		public FieldType FieldType { get; set; }
-
-		public int NumberOfDataBlocks => Data.Length / NumberOfDataComponents;
+		public DataLocationType LocationType { get; set; }
+		public int NumberOfDataLocations => Data.Length / NumberOfDataComponents;
 	}
 }

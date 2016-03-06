@@ -31,6 +31,11 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 			IEnumerable<DataDescription> data = dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>();
 
+			foreach (var dataComponent in data)
+			{
+
+			}
+
 			throw new NotImplementedException();
 		}
 	}
