@@ -11,7 +11,8 @@ namespace MeshEditor.LayerManager.Data
 		string FieldName { get; set; }
 		string ComponentName { get; set; }
 		int Index { get; set; }
-		double? TimeStep { get; set; }
+		double[] TimeSteps { get; set; }
+		string Location { get; set; }
 	}
 
 	public class ResultDescriptor : IResultDescription
@@ -26,13 +27,15 @@ namespace MeshEditor.LayerManager.Data
 				FieldName = source.FieldName,
 				ComponentName = source.ComponentName,
 				Index = source.Index,
-				TimeStep = source.TimeStep,
+				TimeSteps = source.TimeSteps.ToArray(),
+				Location = source.Location
 			};
 		}
 
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
 		public int Index { get; set; }
-		public double? TimeStep { get; set; }
+		public double[] TimeSteps { get; set; }
+		public string Location { get; set; }
 	}
 }

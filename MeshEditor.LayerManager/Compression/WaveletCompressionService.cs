@@ -11,6 +11,9 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		public byte[] Compress(double[] dataValues, Dictionary<string, object> compressionParameters)
 		{
+			compressionParameters["level"] = 0;
+			compressionParameters["precision"] = "double";
+
 			byte[] bytes = new byte[dataValues.Length * sizeof(double)];
 			Buffer.BlockCopy(dataValues, 0, bytes, 0, bytes.Length);
 			return bytes;

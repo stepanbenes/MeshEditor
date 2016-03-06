@@ -12,6 +12,8 @@ namespace MeshEditor.LayerManager
 {
 	public class MasterLayerGenerator : LayerGenerator
 	{
+		#region Fields, constructor
+
 		public MasterLayerGenerator(
 			IStorageService storageService,
 			ILayerSerializer layerSerializer = null,
@@ -22,16 +24,22 @@ namespace MeshEditor.LayerManager
 				  compressionService)
 		{ }
 
-		public void Generate(string projectName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		#endregion
+
+		#region Public methods
+
+		public Guid Generate(string projectName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
 			if (geometryImportService == null)
 			{
 				throw new ArgumentNullException(nameof(geometryImportService));
 			}
 
+			Guid layerId = Guid.NewGuid();
+
 			LayerSummary layerSummary = new LayerSummary
 			{
-				Id = Guid.NewGuid(),
+				Id = layerId,
 				Name = projectName,
 				ParentId = null,
 				Filters = null,
@@ -39,24 +47,23 @@ namespace MeshEditor.LayerManager
 
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 
-			LayerMesh layerMesh = createLayerMeshFrom(geometry, layerSummary.Id);
+			LayerMesh layerMesh = createLayerMeshFrom(geometry, layerId);
 
-			StoreLayerFile(layerMesh, $"{layerSummary.Id}.mesh");
+			StoreLayerFile(layerMesh, $"{layerId}.mesh");
 
 			var resultDescriptors = new List<ResultDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
 			int dataIndex = 1;
 			foreach (var dataComponent in dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>())
 			{
-				foreach (var layerResult in createLayerResultFrom(dataComponent, layerSummary.Id, dataIndex))
+				foreach (var layerResult in createLayerResultFrom(dataComponent, layerId, dataIndex))
 				{
 					resultDescriptors.Add(ResultDescriptor.CreateFrom(layerResult));
-					if (layerResult.TimeStep.HasValue)
-					{
-						timeStepsHashSet.Add(layerResult.TimeStep.Value);
-					}
 
-					StoreLayerFile(layerResult, $"{layerSummary.Id}.{layerResult.Index}.result");
+					foreach (var timeStep in layerResult.TimeSteps)
+						timeStepsHashSet.Add(timeStep);
+
+					StoreLayerFile(layerResult, $"{layerId}.{layerResult.Index}.result");
 				}
 				dataIndex += dataComponent.NumberOfDataComponents;
 			}
@@ -64,8 +71,12 @@ namespace MeshEditor.LayerManager
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
 			layerSummary.Results = resultDescriptors.ToArray();
 
-			StoreLayerFile(layerSummary, $"{layerSummary.Id}.summary");
+			StoreLayerFile(layerSummary, $"{layerId}.summary");
+
+			return layerId;
 		}
+
+		#endregion
 
 		#region Private methods
 
@@ -98,7 +109,8 @@ namespace MeshEditor.LayerManager
 					FieldName = dataComponent.Name,
 					ComponentName = dataComponent.ComponentNames?[i],
 					Index = dataIndex + i,
-					TimeStep = dataComponent.TimeStep
+					TimeSteps = new[] { dataComponent.TimeStep ?? 0 },
+					Location = dataComponent.LocationType.ToString()
 				};
 
 				Dictionary<string, object> compressionParameters;

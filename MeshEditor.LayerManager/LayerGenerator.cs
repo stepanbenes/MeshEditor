@@ -6,17 +6,20 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
+using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 
 namespace MeshEditor.LayerManager
 {
-	public abstract class LayerGenerator
+	public class LayerGenerator
 	{
+		#region Fields, constructor
+
 		IStorageService storageService;
 		ICompressionService compressionService;
 		ILayerSerializer layerSerializer;
 
-		protected LayerGenerator(
+		public LayerGenerator(
 			IStorageService storageService,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
@@ -30,6 +33,24 @@ namespace MeshEditor.LayerManager
 			this.compressionService = compressionService ?? new WaveletCompressionService();
 		}
 
+		#endregion
+
+		#region Public methods
+
+		public void AppendData(Guid layer, IDataImportService dataImportService)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void CompressTime(Guid layer, string fieldName = null, string componentName = null)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Protected methods
+
 		protected void StoreLayerFile<T>(T layerFile, string recordName)
 		{
 			using (var stream = storageService.Save(recordName, layerSerializer.FileExtension))
@@ -40,10 +61,7 @@ namespace MeshEditor.LayerManager
 
 		protected string CompressData(double[] dataValues, out Dictionary<string, object> compressionParameters)
 		{
-			compressionParameters = new Dictionary<string, object>
-			{
-				["Level"] = 0
-			};
+			compressionParameters = new Dictionary<string, object>(); // works as in/out bag of parameters that should be then written to output layer file
 			byte[] compressedData = compressionService.Compress(dataValues, compressionParameters);
 			return Convert.ToBase64String(compressedData);
 		}
@@ -55,6 +73,12 @@ namespace MeshEditor.LayerManager
 			Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
 			return System.Convert.ToBase64String(bytes);
 		}
+
+		#endregion
+
+		#region Private methods
+
+		#endregion
 
 		//public void CreateLayerFromParent() { }
 

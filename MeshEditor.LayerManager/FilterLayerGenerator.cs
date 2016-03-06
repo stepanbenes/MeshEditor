@@ -12,6 +12,8 @@ namespace MeshEditor.LayerManager
 {
 	public class FilterLayerGenerator : LayerGenerator
 	{
+		#region Fields, constructor
+
 		public FilterLayerGenerator(
 			IStorageService storageService,
 			ILayerSerializer layerSerializer = null,
@@ -22,14 +24,21 @@ namespace MeshEditor.LayerManager
 				  compressionService)
 		{ }
 
-		public void GenerateFrom(Guid parentLayer, FilterDescriptor filter)
+		#endregion
+
+		#region Public methods
+
+		public Guid GenerateFrom(Guid parentLayer, FilterDescriptor filter)
 		{
+			Guid layerId = Guid.NewGuid();
+
+			// TODO: find parentLayer in storage and download summary
+
 			throw new NotImplementedException();
+
+			return layerId;
 		}
 
-		public void AppendData(Guid layer, IDataImportService dataImportService)
-		{
-			throw new NotImplementedException();
-		}
+		#endregion
 	}
 }

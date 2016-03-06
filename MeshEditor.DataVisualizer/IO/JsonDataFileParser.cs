@@ -17,7 +17,8 @@ namespace MeshEditor.DataVisualizer.IO
 			public string FieldName { get; set; }
 			public string ComponentName { get; set; }
 			public int Index { get; set; }
-			public double? TimeStep { get; set; }
+			public double[] TimeSteps { get; set; }
+			public string Location { get; set; }
 			public Dictionary<string, object> Compression { get; set; }
 			public string Data { get; set; }
 		}
@@ -36,7 +37,7 @@ namespace MeshEditor.DataVisualizer.IO
 			{
 				resultFile = ParseInput<ResultFile>();
 				DataType dataType = new DataType($"{resultFile.FieldName}-{resultFile.ComponentName}", Filename, 0, DataType.CompoundTypes.Scalar, resultFile.ComponentName);
-				return new DataInfo(dataType, "", resultFile.TimeStep ?? 0, DataLocation.Nodes);
+				return new DataInfo(dataType, "", resultFile.TimeSteps.Single(), DataLocation.Nodes);
 			}
 			else
 			{

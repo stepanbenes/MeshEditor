@@ -12,7 +12,9 @@ namespace MeshEditor.LayerManager.Data
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
 		public int Index { get; set; }
-		public double? TimeStep { get; set; }
+		public double[] TimeSteps { get; set; }
+
+		public string Location { get; set; }
 
 		public Dictionary<string, object> Compression { get; set; }
 
