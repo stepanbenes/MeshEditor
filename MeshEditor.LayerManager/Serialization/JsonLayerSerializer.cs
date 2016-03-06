@@ -10,6 +10,8 @@ namespace MeshEditor.LayerManager.Serialization
 {
 	class JsonLayerSerializer : ILayerSerializer
 	{
+		public string FileExtension => ".json";
+
 		public T Deserialize<T>(Stream layerStream)
 		{
 			using (StreamReader reader = new StreamReader(layerStream))
@@ -26,6 +28,8 @@ namespace MeshEditor.LayerManager.Serialization
 			using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
 			{
 				JsonSerializer jsonSerializer = new JsonSerializer();
+				jsonSerializer.Formatting = Formatting.Indented;
+				jsonSerializer.Converters.Add(new NotIndentedArrayJsonConverter());
 				jsonSerializer.Serialize(jsonWriter, layerObject);
 			}
 		}

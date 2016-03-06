@@ -16,6 +16,20 @@ namespace MeshEditor.LayerManager.Data
 
 	public class ResultDescriptor : IResultDescription
 	{
+		public ResultDescriptor()
+		{ }
+
+		internal static ResultDescriptor CreateFrom(IResultDescription source)
+		{
+			return new ResultDescriptor
+			{
+				FieldName = source.FieldName,
+				ComponentName = source.ComponentName,
+				Index = source.Index,
+				TimeStep = source.TimeStep,
+			};
+		}
+
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
 		public int Index { get; set; }

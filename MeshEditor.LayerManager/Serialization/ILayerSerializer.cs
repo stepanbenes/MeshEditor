@@ -9,6 +9,7 @@ namespace MeshEditor.LayerManager.Serialization
 {
 	public interface ILayerSerializer
 	{
+		string FileExtension { get; }
 		void Serialize<T>(T layerObject, Stream stream);
 		T Deserialize<T>(Stream layerStream);
 	}

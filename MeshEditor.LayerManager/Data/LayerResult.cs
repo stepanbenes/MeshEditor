@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.Data
 		public int Index { get; set; }
 		public double? TimeStep { get; set; }
 
-		public CompressionDescriptor Compression { get; set; }
+		public Dictionary<string, object> Compression { get; set; }
 
 		/// <summary>
 		/// double array data in Base64 string format

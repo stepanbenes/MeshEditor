@@ -24,7 +24,7 @@ namespace MeshEditor.FormatConverter.Import
 
 		public IEnumerable<DataDescription> ReadData()
 		{
-			foreach (var filename in filenames)
+			foreach (string filename in filenames)
 			{
 				string fileType;
 				using (Stream fileStream = storageService.Load(filename))
@@ -102,7 +102,9 @@ namespace MeshEditor.FormatConverter.Import
 						DataDescription dataDescription = new DataDescription
 						{
 							Name = dataArrayName,
+							TimeStep = tryGetOrdinalFromFileName(filename),
 							NumberOfDataComponents = numberOfComponents,
+							ComponentNames = null, // or new string[NumberOfDataComponents]
 							FieldType = fieldType,
 							LocationType = DataLocationType.Points, /**/
 							Data = values
@@ -118,7 +120,16 @@ namespace MeshEditor.FormatConverter.Import
 
 		#region Private methods
 
-		private void readToPointDataElement(XmlReader input, out int numberOfPoints, out int numberOfCells, out Dictionary<string, FieldType> fieldNameTypeMap)
+		private static int? tryGetOrdinalFromFileName(string filename)
+		{
+			string extension = Path.GetExtension(Path.GetFileNameWithoutExtension(filename)).TrimStart('.');
+			int ordinal;
+			if (int.TryParse(extension, out ordinal))
+				return ordinal;
+			return null;
+		}
+
+		private static void readToPointDataElement(XmlReader input, out int numberOfPoints, out int numberOfCells, out Dictionary<string, FieldType> fieldNameTypeMap)
 		{
 			if (!input.ReadToDescendant("UnstructuredGrid"))
 			{

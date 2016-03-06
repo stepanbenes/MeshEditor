@@ -14,10 +14,11 @@ namespace MeshEditor.DataVisualizer.IO
 		private class ResultFile
 		{
 			public Guid LayerId { get; set; }
-			public string ResultName { get; set; }
+			public string FieldName { get; set; }
 			public string ComponentName { get; set; }
-			public double TimeStep { get; set; }
-			public int CompressionLevel { get; set; }
+			public int Index { get; set; }
+			public double? TimeStep { get; set; }
+			public Dictionary<string, object> Compression { get; set; }
 			public string Data { get; set; }
 		}
 
@@ -34,8 +35,8 @@ namespace MeshEditor.DataVisualizer.IO
 			if (resultFile == null)
 			{
 				resultFile = ParseInput<ResultFile>();
-				DataType dataType = new DataType($"{resultFile.ResultName}-{resultFile.ComponentName}", Filename, 0, DataType.CompoundTypes.Scalar, resultFile.ComponentName);
-				return new DataInfo(dataType, "", resultFile.TimeStep, DataLocation.Nodes);
+				DataType dataType = new DataType($"{resultFile.FieldName}-{resultFile.ComponentName}", Filename, 0, DataType.CompoundTypes.Scalar, resultFile.ComponentName);
+				return new DataInfo(dataType, "", resultFile.TimeStep ?? 0, DataLocation.Nodes);
 			}
 			else
 			{

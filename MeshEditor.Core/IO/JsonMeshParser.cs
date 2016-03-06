@@ -14,9 +14,12 @@ namespace MeshEditor.IO
 		private class MeshFile
 		{
 			public Guid LayerId { get; set; }
+			public int NumberOfPoints { get; set; }
+			public int NumberOfTriangles { get; set; }
+			public int NumberOfEdges { get; set; }
 			public string PointCoordinates { get; set; }
-			public string EdgeConnectivity { get; set; }
 			public string TriangleConnectivity { get; set; }
+			public string EdgeConnectivity { get; set; }
 		}
 
 		MeshFile meshFile;
@@ -37,7 +40,7 @@ namespace MeshEditor.IO
 				meshFile = ParseInput<MeshFile>();
 			}
 
-			double[] coordinates = convertBase64StringToArray<double>(meshFile.PointCoordinates);
+			float[] coordinates = convertBase64StringToArray<float>(meshFile.PointCoordinates);
 			this.nodeCount = coordinates.Length / 3;
 
 			for (int i = 0; i < nodeCount; i++)

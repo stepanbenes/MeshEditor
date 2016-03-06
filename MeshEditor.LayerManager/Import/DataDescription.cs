@@ -22,14 +22,16 @@ namespace MeshEditor.LayerManager.Import
 
 	public class DataDescription
 	{
-		// <PointData Scalars="PressureVector IST_VOFFraction " Vectors="DisplacementVector " Tensors="" >
-		// <CellData Scalars="" Vectors="" Tensors="" >
-
-		public int NumberOfDataComponents { get; set; }
-		public double[] Data { get; set; } // or float ?
 		public string Name { get; set; }
+		public double? TimeStep { get; set; }
+		public string[] ComponentNames { get; set; }
+
 		public FieldType FieldType { get; set; }
 		public DataLocationType LocationType { get; set; }
+		
+		public int NumberOfDataComponents { get; set; }
 		public int NumberOfDataLocations => Data.Length / NumberOfDataComponents;
+
+		public double[] Data { get; set; } // or float ?
 	}
 }

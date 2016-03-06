@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Compression;
+using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Serialization;
 
 namespace MeshEditor.LayerManager
@@ -24,8 +26,34 @@ namespace MeshEditor.LayerManager
 				throw new ArgumentNullException(nameof(storageService));
 			}
 			this.storageService = storageService;
-			this.layerSerializer = layerSerializer ?? new GenericLayerSerializer();
-			this.compressionService = compressionService ?? new GenericCompressionService();
+			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
+			this.compressionService = compressionService ?? new WaveletCompressionService();
+		}
+
+		protected void StoreLayerFile<T>(T layerFile, string recordName)
+		{
+			using (var stream = storageService.Save(recordName, layerSerializer.FileExtension))
+			{
+				layerSerializer.Serialize(layerFile, stream);
+			}
+		}
+
+		protected string CompressData(double[] dataValues, out Dictionary<string, object> compressionParameters)
+		{
+			compressionParameters = new Dictionary<string, object>
+			{
+				["Level"] = 0
+			};
+			byte[] compressedData = compressionService.Compress(dataValues, compressionParameters);
+			return Convert.ToBase64String(compressedData);
+		}
+
+		protected static string ConvertArrayToBase64String<TItem>(TItem[] values) where TItem : struct
+		{
+			Debug.Assert(typeof(TItem) != typeof(byte));
+			byte[] bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
+			Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+			return System.Convert.ToBase64String(bytes);
 		}
 
 		//public void CreateLayerFromParent() { }

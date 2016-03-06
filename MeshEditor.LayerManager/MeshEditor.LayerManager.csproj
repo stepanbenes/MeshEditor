@@ -44,9 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compression\GenericCompressionService.cs" />
+    <Compile Include="Compression\WaveletCompressionService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
-    <Compile Include="Data\CompressionDescriptor.cs" />
     <Compile Include="Data\LayerMesh.cs" />
     <Compile Include="Data\LayerResult.cs" />
     <Compile Include="Data\ResultDescriptor.cs" />
@@ -60,8 +59,8 @@
     <Compile Include="Import\IGeometryImportService.cs" />
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MasterLayerGenerator.cs" />
+    <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serialization\GenericLayerSerializer.cs" />
     <Compile Include="Serialization\ILayerSerializer.cs" />
     <Compile Include="Serialization\IStorageService.cs" />
     <Compile Include="Serialization\JsonLayerSerializer.cs" />

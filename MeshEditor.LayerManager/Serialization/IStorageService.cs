@@ -9,7 +9,9 @@ namespace MeshEditor.LayerManager.Serialization
 {
 	public interface IStorageService
 	{
-		void Save(Stream stream, string filename);
-		Stream Load(string filename);
+		Stream Save(string fileName);
+		Stream Save(string recordName, string fileExtension);
+		Stream Load(string fileName);
+		Stream Load(string recordName, string fileExtension);
 	}
 }
