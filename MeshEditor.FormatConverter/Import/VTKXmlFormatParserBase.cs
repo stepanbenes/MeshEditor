@@ -11,7 +11,7 @@ using MeshEditor.IO;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	abstract class VTKXmlImportServiceBase : ImportServiceBase
+	abstract class VTKXmlFormatParserBase : FormatParserBase
 	{
 		protected enum DataArrayFormat
 		{

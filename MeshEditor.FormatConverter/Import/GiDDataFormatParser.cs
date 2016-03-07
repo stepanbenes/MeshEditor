@@ -8,12 +8,12 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class GiDDataImportService : IDataImportService
+	class GiDDataFormatParser : IDataImportService
 	{
 		IStorageService storageService;
 		IEnumerable<string> filenames;
 
-		public GiDDataImportService(IStorageService storageService, IEnumerable<string> filenames)
+		public GiDDataFormatParser(IStorageService storageService, IEnumerable<string> filenames)
 		{
 			this.storageService = storageService;
 			this.filenames = filenames;

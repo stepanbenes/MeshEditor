@@ -11,12 +11,12 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class VTKXmlGeometryImportService : VTKXmlImportServiceBase, IGeometryImportService
+	class VTKXmlGeometryFormatParser : VTKXmlFormatParserBase, IGeometryImportService
 	{
 		IStorageService storageService;
 		string filename;
 
-		public VTKXmlGeometryImportService(IStorageService storageService, string filename)
+		public VTKXmlGeometryFormatParser(IStorageService storageService, string filename)
 		{
 			this.storageService = storageService;
 			this.filename = filename;

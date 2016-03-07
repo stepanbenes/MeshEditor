@@ -28,8 +28,8 @@ namespace MeshEditor.FormatConverter
 
 			var masterLayerGenerator = new MasterLayerGenerator(storageService);
 
-			IGeometryImportService geometryImportService = GeometryImportServiceFactory.Create(storageService, Path.GetFileName(args.First()));
-			IDataImportService dataImportService = (args.Length > 1) ? DataImportServiceFactory.Create(storageService, args.Skip(1).Select(arg => Path.GetFileName(arg))) : null;
+			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(storageService, Path.GetFileName(args.First()));
+			IDataImportService dataImportService = (args.Length > 1) ? DataFormatParserFactory.Create(storageService, args.Skip(1).Select(arg => Path.GetFileName(arg))) : null;
 			masterLayerGenerator.Generate(Path.GetFileNameWithoutExtension(args[0]), geometryImportService, dataImportService);
 
 			Console.Write("Done.");

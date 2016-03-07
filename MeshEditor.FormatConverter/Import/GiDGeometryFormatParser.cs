@@ -10,7 +10,7 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class GiDGeometryImportService : ImportServiceBase, IGeometryImportService
+	class GiDGeometryFormatParser : FormatParserBase, IGeometryImportService
 	{
 		#region Static members
 
@@ -39,7 +39,7 @@ namespace MeshEditor.FormatConverter.Import
 		IStorageService storageService;
 		string filename;
 
-		public GiDGeometryImportService(IStorageService storageService, string filename)
+		public GiDGeometryFormatParser(IStorageService storageService, string filename)
 		{
 			this.storageService = storageService;
 			this.filename = filename;

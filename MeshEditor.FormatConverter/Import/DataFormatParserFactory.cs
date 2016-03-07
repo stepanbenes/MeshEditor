@@ -10,21 +10,22 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	static class GeometryImportServiceFactory
+	static class DataFormatParserFactory
 	{
-		public static IGeometryImportService Create(IStorageService storageService, string filename)
+		public static IDataImportService Create(IStorageService storageService, IEnumerable<string> filenames)
 		{
-			Debug.Assert(filename != null);
+			Debug.Assert(filenames != null);
+			Debug.Assert(filenames.Count() > 0);
 
-			var extension = Path.GetExtension(filename).ToLower();
+			var extension = Path.GetExtension(filenames.First()).ToLower();
 			// pick the right loader according to filename extension
 			switch (extension)
 			{
-				case ".msh": // GiD mesh 
-					return new GiDGeometryImportService(storageService, filename);
+				case ".res": // GiD results 
+					return new GiDDataFormatParser(storageService, filenames);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlGeometryImportService(storageService, filename);
-				
+					return new VTKXmlDataFormatParser(storageService, filenames);
+
 				default:
 					throw new NotSupportedException();
 			}

@@ -8,7 +8,7 @@ using MeshEditor.IO;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	abstract class ImportServiceBase
+	abstract class FormatParserBase
 	{
 		#region Protected methods
 
