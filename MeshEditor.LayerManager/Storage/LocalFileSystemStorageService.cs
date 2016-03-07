@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
 
-namespace MeshEditor.FormatConverter.Storage
+namespace MeshEditor.LayerManager.Storage
 {
-	class LocalFileSystemStorageService : IStorageService
+	public class LocalFileSystemStorageService : IStorageService
 	{
 		string directoryName;
 

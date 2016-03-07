@@ -51,9 +51,9 @@
     <Compile Include="Import\GeometryImportServiceFactory.cs" />
     <Compile Include="Import\GiDDataImportService.cs" />
     <Compile Include="Import\GiDGeometryImportService.cs" />
+    <Compile Include="Import\ImportServiceBase.cs" />
     <Compile Include="Import\VTKXmlDataImportService.cs" />
-    <Compile Include="Import\VTKXmlBase.cs" />
-    <Compile Include="Storage\LocalFileSystemStorageService.cs" />
+    <Compile Include="Import\VTKXmlImportServiceBase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Import\VTKXmlGeometryImportService.cs" />

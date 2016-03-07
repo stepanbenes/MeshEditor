@@ -7,11 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using MeshEditor.LayerManager.Import;
-using MeshEditor.LayerManager.Serialization;
+using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class VTKXmlGeometryImportService : VTKXmlBase, IGeometryImportService
+	class VTKXmlGeometryImportService : VTKXmlImportServiceBase, IGeometryImportService
 	{
 		IStorageService storageService;
 		string filename;

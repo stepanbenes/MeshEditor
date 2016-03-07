@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.LayerManager.Serialization
+namespace MeshEditor.LayerManager.Storage
 {
 	public interface IStorageService
 	{

@@ -8,6 +8,7 @@ using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
+using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.LayerManager
 {

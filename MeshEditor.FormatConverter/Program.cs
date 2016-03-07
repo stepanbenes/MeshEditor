@@ -1,24 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using MeshEditor.IO;
 using System.Reflection;
 using System.IO;
-using MeshEditor.Construction;
-using MeshEditor.Data;
-using MeshEditor.CoreInterface;
 using System.Threading;
 using System.Globalization;
-using OpenTK;
-using System.Text.RegularExpressions;
-using MeshEditor.DataVisualizer.IO;
-using MeshEditor.DataVisualizer.Data;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Import;
-using MeshEditor.FormatConverter.Storage;
 using MeshEditor.FormatConverter.Import;
-using MeshEditor.LayerManager.Serialization;
+using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter
 {
