@@ -29,7 +29,7 @@ namespace MeshEditor.LayerManager
 
 		#region Public methods
 
-		public Guid Generate(string projectName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public Guid Generate(/*Guid projectGuid, */ string projectName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
 			if (geometryImportService == null)
 			{
