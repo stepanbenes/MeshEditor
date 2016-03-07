@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compression\WaveletCompressionService.cs" />
+    <Compile Include="Compression\GeneralCompressionService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
     <Compile Include="Data\LayerMesh.cs" />
     <Compile Include="Data\LayerResult.cs" />
@@ -62,6 +62,7 @@
     <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\ILayerSerializer.cs" />
+    <Compile Include="Serialization\MemorySerializer.cs" />
     <Compile Include="Storage\IStorageService.cs" />
     <Compile Include="Serialization\JsonLayerSerializer.cs" />
     <Compile Include="Serialization\NotIndentedArrayJsonConverter.cs" />

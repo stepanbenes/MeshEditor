@@ -21,17 +21,13 @@ namespace MeshEditor.LayerManager
 		ILayerSerializer layerSerializer;
 
 		public LayerGenerator(
-			IStorageService storageService,
+			IStorageService storageService = null,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
 		{
-			if (storageService == null)
-			{
-				throw new ArgumentNullException(nameof(storageService));
-			}
 			this.storageService = storageService;
-			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
-			this.compressionService = compressionService ?? new WaveletCompressionService();
+			this.layerSerializer = layerSerializer ?? new MemorySerializer();
+			this.compressionService = compressionService ?? new GeneralCompressionService();
 		}
 
 		#endregion
@@ -54,10 +50,7 @@ namespace MeshEditor.LayerManager
 
 		protected void StoreLayerFile<T>(T layerFile, string recordName)
 		{
-			using (var stream = storageService.Save(recordName, layerSerializer.FileExtension))
-			{
-				layerSerializer.Serialize(layerFile, stream);
-			}
+			layerSerializer.Serialize(layerFile, recordName, storageService);
 		}
 
 		protected string CompressData(double[] dataValues, out Dictionary<string, object> compressionParameters)

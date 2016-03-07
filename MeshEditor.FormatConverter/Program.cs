@@ -8,6 +8,7 @@ using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.FormatConverter.Import;
 using MeshEditor.LayerManager.Storage;
+using MeshEditor.LayerManager.Serialization;
 
 namespace MeshEditor.FormatConverter
 {
@@ -25,8 +26,8 @@ namespace MeshEditor.FormatConverter
 			}
 
 			IStorageService storageService = new LocalFileSystemStorageService(Path.GetDirectoryName(args[0]));
-
-			var masterLayerGenerator = new MasterLayerGenerator(storageService);
+			ILayerSerializer layerSerializer = new JsonLayerSerializer();
+			var masterLayerGenerator = new MasterLayerGenerator(storageService, layerSerializer);
 
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(storageService, Path.GetFileName(args.First()));
 			IDataImportService dataImportService = (args.Length > 1) ? DataFormatParserFactory.Create(storageService, args.Skip(1).Select(arg => Path.GetFileName(arg))) : null;
