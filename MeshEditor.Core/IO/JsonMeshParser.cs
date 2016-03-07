@@ -46,7 +46,7 @@ namespace MeshEditor.IO
 			for (int i = 0; i < nodeCount; i++)
 			{
 				Vector3 position = new Vector3((float)coordinates[i * 3], (float)coordinates[i * 3 + 1], (float)coordinates[i * 3 + 2]);
-				Node node = new Node(i + 1, position, properties: null);
+				Node node = new Node(i, position, properties: null);
 				yield return node;
 			}
 		}
@@ -74,7 +74,7 @@ namespace MeshEditor.IO
 			for (int i = 0; i < edgeCount; i++)
 			{
 				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(edgeConnectivity, i * 2, 2);
-				yield return new ElementDraft { ID = ++index, NodeIDs = nodeIDs, Type = ElementType.BeamLinear };
+				yield return new ElementDraft { ID = index++, NodeIDs = nodeIDs, Type = ElementType.BeamLinear };
 			}
 		}
 

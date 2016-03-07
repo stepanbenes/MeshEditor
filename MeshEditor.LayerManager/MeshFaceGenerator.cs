@@ -43,7 +43,7 @@ namespace MeshEditor.LayerManager
 					case CellType.LineQuadratic:
 						throw new NotImplementedException();
 					case CellType.TriangleLinear:
-						triangleFaces.Add(new TriangleFace(geometry.CellConnectivity[pointIndex] + 1, geometry.CellConnectivity[pointIndex + 1] + 1, geometry.CellConnectivity[pointIndex + 2] + 1));
+						triangleFaces.Add(new TriangleFace(geometry.CellConnectivity[pointIndex], geometry.CellConnectivity[pointIndex + 1], geometry.CellConnectivity[pointIndex + 2]));
 						pointIndex += 3;
 						break;
 					case CellType.TriangleQuadratic:

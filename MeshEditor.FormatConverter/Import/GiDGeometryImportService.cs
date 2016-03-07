@@ -156,7 +156,7 @@ namespace MeshEditor.FormatConverter.Import
 									{
 										int nodeId = ParseInt32(parts[i + 1]);
 										int nodeIndex = nodeIdIndexMap[nodeId];
-										cellConnectivity.Add(nodeIndex + 1 /**/);
+										cellConnectivity.Add(nodeIndex);
 									}
 									//if (parts.Length > nnode + 1)
 									//{

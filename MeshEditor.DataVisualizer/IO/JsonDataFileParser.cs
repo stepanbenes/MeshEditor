@@ -51,7 +51,7 @@ namespace MeshEditor.DataVisualizer.IO
 			double[] data = convertBase64StringToArray<double>(resultFile.Data);
 			for (int i = 0; i < data.Length; i++)
 			{
-				yield return new NodeValue(i + 1, new[] { data[i] });
+				yield return new NodeValue(i, new[] { data[i] });
 			}
 		}
 
