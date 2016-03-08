@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
@@ -23,6 +24,8 @@ namespace MeshEditor.FormatConverter.Import
 		public static readonly string ComponentNamesToken = "ComponentNames";
 
 		private static readonly char[] whiteSpaceSeparators = { ' ', '\t' };
+		private static readonly string tokensWithQuotesRegexPattern = @"[\""].+?[\""]|[^ ]+";
+		private static readonly char[] quotesTrimChars = { '"' };
 
 		private enum ParserState
 		{
@@ -97,16 +100,15 @@ namespace MeshEditor.FormatConverter.Import
 								else if (line.StartsWith(ResultToken, StringComparison.InvariantCultureIgnoreCase)) // Result
 								{
 									state = ParserState.ResultHeader;
-									string[] tokens = splitLineToTokens(line);
+									string[] tokens = splitLineToTokensWithQuotes(line);
 									Debug.Assert(tokens.Length >= 6);
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
 									{
 										currentDataDescription = new DataDescription
 										{
-											Name = tokens[1].Trim('\"'),
+											Name = tokens[1],
 											TimeStep = ParseFloat64(tokens[3]),
-											//ComponentNames
 											//FieldType
 											//LocationType
 											//NumberOfDataComponents
@@ -192,6 +194,10 @@ namespace MeshEditor.FormatConverter.Import
 							case ParserState.ResultHeader:
 								if (line.StartsWith(ComponentNamesToken, StringComparison.InvariantCultureIgnoreCase)) // ComponentNames
 								{
+									string[] tokens = splitLineToTokensWithQuotes(line);
+									currentDataDescription.ComponentNames = tokens.Skip(1).ToArray();
+									currentDataDescription.NumberOfComponents = currentDataDescription.ComponentNames.Length;
+
 									//Debug.Assert(currentDataInfo != null);
 									//if (currentDataInfo != null)
 									//{
@@ -250,6 +256,14 @@ namespace MeshEditor.FormatConverter.Import
 			Debug.Assert(line != null);
 			// TODO: parse correctly quoted tokens (enclosed by '"' characters)
 			return line.Split(whiteSpaceSeparators, StringSplitOptions.RemoveEmptyEntries);
+		}
+
+		private static string[] splitLineToTokensWithQuotes(string line)
+		{
+			return Regex.Matches(line, tokensWithQuotesRegexPattern)
+				.Cast<Match>()
+				.Select(m => m.Value.Trim(quotesTrimChars))
+				.ToArray();
 		}
 
 		#endregion

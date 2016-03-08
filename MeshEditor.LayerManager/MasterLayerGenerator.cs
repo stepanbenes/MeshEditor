@@ -55,9 +55,9 @@ namespace MeshEditor.LayerManager
 			var resultDescriptors = new List<ResultDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
 			int dataIndex = 1;
-			foreach (var dataComponent in dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>())
+			foreach (var dataField in dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>())
 			{
-				foreach (var layerResult in createLayerResultFrom(dataComponent, layerId, dataIndex))
+				foreach (var layerResult in createLayerResultFrom(dataField, layerId, dataIndex))
 				{
 					resultDescriptors.Add(ResultDescriptor.CreateFrom(layerResult));
 
@@ -66,7 +66,7 @@ namespace MeshEditor.LayerManager
 
 					StoreLayerFile(layerResult, $"{layerId}.{layerResult.Index}.result");
 				}
-				dataIndex += dataComponent.NumberOfDataComponents;
+				dataIndex += dataField.NumberOfComponents;
 			}
 
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
@@ -100,22 +100,33 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
-		private IEnumerable<LayerResult> createLayerResultFrom(DataDescription dataComponent, Guid layerId, int dataIndex)
+		private IEnumerable<LayerResult> createLayerResultFrom(DataDescription dataField, Guid layerId, int dataIndex)
 		{
-			for (int i = 0; i < dataComponent.NumberOfDataComponents; i++)
+			int numberOfComponents = dataField.NumberOfComponents;
+			for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 			{
 				LayerResult layerResult = new LayerResult
 				{
 					LayerId = layerId,
-					FieldName = dataComponent.Name,
-					ComponentName = dataComponent.ComponentNames?[i],
-					Index = dataIndex + i,
-					TimeSteps = new[] { dataComponent.TimeStep ?? 0 },
-					Location = dataComponent.LocationType.ToString()
+					FieldName = dataField.Name,
+					ComponentName = dataField.ComponentNames?[componentIndex],
+					Index = dataIndex + componentIndex,
+					TimeSteps = new[] { dataField.TimeStep ?? 0 },
+					Location = dataField.LocationType.ToString()
 				};
 
 				Dictionary<string, object> compressionParameters;
-				layerResult.Data = CompressData(dataComponent.Data, out compressionParameters);
+
+
+				double[] allValues = dataField.Data;
+				double[] componentValues = new double[dataField.Data.Length / numberOfComponents];
+
+				for (int hip = 0, hop = componentIndex; hop < allValues.Length; hip += 1, hop += numberOfComponents)
+				{
+					componentValues[hip] = allValues[hop];
+				}
+
+				layerResult.Data = CompressData(componentValues, out compressionParameters);
 				layerResult.Compression = compressionParameters;
 
 				yield return layerResult;

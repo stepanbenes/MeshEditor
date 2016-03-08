@@ -29,8 +29,7 @@ namespace MeshEditor.LayerManager.Import
 		public FieldType FieldType { get; set; }
 		public DataLocationType LocationType { get; set; }
 		
-		public int NumberOfDataComponents { get; set; }
-		public int NumberOfDataLocations => Data.Length / NumberOfDataComponents;
+		public int NumberOfComponents { get; set; }
 
 		public double[] Data { get; set; } // or float ?
 	}

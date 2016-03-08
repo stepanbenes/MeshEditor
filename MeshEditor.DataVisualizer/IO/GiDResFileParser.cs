@@ -7,6 +7,7 @@ using System.Text;
 using MeshEditor.DataVisualizer.Data;
 using System.Globalization;
 using MeshEditor.IO;
+using System.Text.RegularExpressions;
 
 namespace MeshEditor.DataVisualizer.IO
 {
@@ -121,10 +122,10 @@ namespace MeshEditor.DataVisualizer.IO
 						if (line.StartsWith(GaussPointsToken, StringComparison.InvariantCultureIgnoreCase)) // GaussPoints
 						{
 							state = State.GaussPointsDescription;
-							string[] tokens = splitLineToTokens(line);
+							string[] tokens = splitLineToTokensWithQuotes(line);
 							Debug.Assert(tokens.Length >= 4);
 
-							string gaussPointsName = tokens[1].Trim('\"');
+							string gaussPointsName = tokens[1];
 							Debug.Assert(string.Equals(tokens[2], "Elemtype", StringComparison.InvariantCultureIgnoreCase));
 							GaussPointsInfo.ElementTypes elementType;
 							bool success = Utilities.Functions.EnumTryParseIgnoreCase(tokens[3], out elementType, ref elementTypesNamesCache);
@@ -135,22 +136,22 @@ namespace MeshEditor.DataVisualizer.IO
 
 							if (tokens.Length >= 5)
 							{
-								currentGaussPointsInfo.MeshName = tokens[4].Trim('\"');
+								currentGaussPointsInfo.MeshName = tokens[4];
 							}
 						}
 						else if (line.StartsWith(ResultToken, StringComparison.InvariantCultureIgnoreCase)) // Result
                         {
                             state = State.ResultHeader;
-                            string[] tokens = splitLineToTokens(line);
+                            string[] tokens = splitLineToTokensWithQuotes(line);
                             Debug.Assert(tokens.Length >= 6);
                             // Result "result name" "analysis name" step_value my_result_type my_location "location name"
                             if (tokens.Length >= 6)
                             {
-                                DataType dataType = new DataType(tokens[1].Trim('\"'), filename, currentLineFilePosition, convertDataTypeStringToCompoundTypeObject(tokens[4]));
-								currentDataInfo = new DataInfo(dataType, tokens[2].Trim('\"'), parseDouble(tokens[3]), convertLocationStringToDataLocation(tokens[5]));
+                                DataType dataType = new DataType(tokens[1], filename, currentLineFilePosition, convertDataTypeStringToCompoundTypeObject(tokens[4]));
+								currentDataInfo = new DataInfo(dataType, tokens[2], parseDouble(tokens[3]), convertLocationStringToDataLocation(tokens[5]));
                                 if (tokens.Length >= 7) // location name
                                 {
-									string locationName = tokens[6].Trim('\"');
+									string locationName = tokens[6];
 									GaussPointsInfo locationInfo;
 									if (gaussPointsDescriptions.TryGetValue(locationName, out locationInfo))
 										currentDataInfo.LocationInfo = locationInfo;
@@ -227,8 +228,8 @@ namespace MeshEditor.DataVisualizer.IO
 							Debug.Assert(currentDataInfo != null);
 							if (currentDataInfo != null)
 							{
-								string[] tokens = splitLineToTokens(line);
-								currentDataInfo.DataType.SetComponents(tokens.Skip(1).Select(name => name.Trim('\"')).ToArray());
+								string[] tokens = splitLineToTokensWithQuotes(line);
+								currentDataInfo.DataType.SetComponents(tokens.Skip(1).ToArray());
 							}
                         }
                         else if (line.StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase)) // Values
@@ -337,11 +338,21 @@ namespace MeshEditor.DataVisualizer.IO
 		#region Private methods
 
 		private static readonly char[] whiteSpaceSeparators = { ' ', '\t' };
+		private static readonly string tokensWithQuotesRegexPattern = @"[\""].+?[\""]|[^ ]+";
+		private static readonly char[] quotesTrimChars = { '"' };
 
 		private string[] splitLineToTokens(string line)
 		{
 			Debug.Assert(line != null);
 			return line.Split(whiteSpaceSeparators, StringSplitOptions.RemoveEmptyEntries);
+		}
+
+		private static string[] splitLineToTokensWithQuotes(string line)
+		{
+			return Regex.Matches(line, tokensWithQuotesRegexPattern)
+				.Cast<Match>()
+				.Select(m => m.Value.Trim(quotesTrimChars))
+				.ToArray();
 		}
 
 		private int parseInteger(string text)

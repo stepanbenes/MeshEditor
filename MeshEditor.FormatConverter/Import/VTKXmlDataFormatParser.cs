@@ -103,7 +103,7 @@ namespace MeshEditor.FormatConverter.Import
 						{
 							Name = dataArrayName,
 							TimeStep = tryGetOrdinalFromFileName(filename),
-							NumberOfDataComponents = numberOfComponents,
+							NumberOfComponents = numberOfComponents,
 							ComponentNames = null, // or new string[NumberOfDataComponents]
 							FieldType = fieldType,
 							LocationType = DataLocationType.Points, /**/
