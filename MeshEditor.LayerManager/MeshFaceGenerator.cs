@@ -40,6 +40,8 @@ namespace MeshEditor.LayerManager
 
 		public void ProcessGeometry(GeometryDescription geometry)
 		{
+			// TODO: pair faces and leave only one of two twin faces, also mark external faces
+
 			List<TriangleFace> triangleFaces = new List<TriangleFace>();
 			int pointIndex = 0;
 			for (int i = 0; i < geometry.NumberOfCells; i++)

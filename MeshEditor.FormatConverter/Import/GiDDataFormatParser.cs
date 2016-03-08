@@ -241,6 +241,8 @@ namespace MeshEditor.FormatConverter.Import
 
 									if (currentDataDescription.ComponentNames == null)
 										currentDataDescription.ComponentNames = createGenericComponentNames(currentResultTypeString);
+									if (currentDataDescription.NumberOfComponents == 0)
+										currentDataDescription.NumberOfComponents = currentDataDescription.ComponentNames?.Length ?? 0;
 
 									Debug.Assert(currentDataDescription.NumberOfComponents > 0);
 
