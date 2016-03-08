@@ -349,6 +349,7 @@ namespace MeshEditor.DataVisualizer.IO
 
 		private static string[] splitLineToTokensWithQuotes(string line)
 		{
+			// parse correctly quoted tokens (enclosed by '"' characters)
 			return Regex.Matches(line, tokensWithQuotesRegexPattern)
 				.Cast<Match>()
 				.Select(m => m.Value.Trim(quotesTrimChars))

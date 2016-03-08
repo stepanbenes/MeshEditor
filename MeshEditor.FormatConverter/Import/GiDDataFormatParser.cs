@@ -37,6 +37,13 @@ namespace MeshEditor.FormatConverter.Import
 			EOF
 		}
 
+		private enum FileDataLocation
+		{
+			Unknown = 0,
+			Nodes,
+			GaussPoints
+		}
+
 		#endregion
 
 		#region Fields, Constructor
@@ -64,8 +71,12 @@ namespace MeshEditor.FormatConverter.Import
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;
+
 					DataDescription currentDataDescription = null;
 					List<double> currentDataValues = null;
+					string currentResultTypeString = null;
+					FileDataLocation currentLocation = FileDataLocation.Unknown;
+
 					string line;
 					while ((line = reader.ReadLine()) != null)
 					{
@@ -105,14 +116,17 @@ namespace MeshEditor.FormatConverter.Import
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
 									{
+										currentResultTypeString = tokens[4];
+
 										currentDataDescription = new DataDescription
 										{
 											Name = tokens[1],
 											TimeStep = ParseFloat64(tokens[3]),
-											//FieldType
-											//LocationType
-											//NumberOfDataComponents
+											FieldType = convertResultTypeStringToFieldType(currentResultTypeString),
+											//LocationType =
 										};
+
+										currentLocation = convertLocationStringToDataLocation(tokens[5]);
 
 										//DataType dataType = new DataType(tokens[1].Trim('\"'), filename, currentLineFilePosition, convertDataTypeStringToCompoundTypeObject(tokens[4]));
 										//currentDataInfo = new DataInfo(dataType, tokens[2].Trim('\"'), ParseFloat64(tokens[3]), convertLocationStringToDataLocation(tokens[5]));
@@ -196,7 +210,6 @@ namespace MeshEditor.FormatConverter.Import
 								{
 									string[] tokens = splitLineToTokensWithQuotes(line);
 									currentDataDescription.ComponentNames = tokens.Skip(1).ToArray();
-									currentDataDescription.NumberOfComponents = currentDataDescription.ComponentNames.Length;
 
 									//Debug.Assert(currentDataInfo != null);
 									//if (currentDataInfo != null)
@@ -225,18 +238,29 @@ namespace MeshEditor.FormatConverter.Import
 									state = ParserState.Init;
 
 									currentDataDescription.Data = currentDataValues.ToArray();
+
+									if (currentDataDescription.ComponentNames == null)
+										currentDataDescription.ComponentNames = createGenericComponentNames(currentResultTypeString);
+
+									Debug.Assert(currentDataDescription.NumberOfComponents > 0);
+
 									yield return currentDataDescription;
+
+									currentDataDescription = null;
+									currentDataValues = null;
+									currentResultTypeString = null;
+									currentLocation = FileDataLocation.Unknown;
 								}
 								else
 								{
-									//switch (location)
-									//{
-									//	default:
-									//		break;
-									//}
-
 									string[] tokens = splitLineToTokens(line);
 									Debug.Assert(tokens.Length >= 1);
+
+									if (currentDataDescription.NumberOfComponents == 0)
+										currentDataDescription.NumberOfComponents = tokens.Length - 1;
+
+									Debug.Assert(currentDataDescription.NumberOfComponents == tokens.Length - 1); // fill in missing values?
+
 									int nodeId = ParseInt32(tokens[0]);
 									currentDataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
 								}
@@ -254,16 +278,79 @@ namespace MeshEditor.FormatConverter.Import
 		private static string[] splitLineToTokens(string line)
 		{
 			Debug.Assert(line != null);
-			// TODO: parse correctly quoted tokens (enclosed by '"' characters)
 			return line.Split(whiteSpaceSeparators, StringSplitOptions.RemoveEmptyEntries);
 		}
 
 		private static string[] splitLineToTokensWithQuotes(string line)
 		{
+			// parse correctly quoted tokens (enclosed by '"' characters)
 			return Regex.Matches(line, tokensWithQuotesRegexPattern)
 				.Cast<Match>()
 				.Select(m => m.Value.Trim(quotesTrimChars))
 				.ToArray();
+		}
+
+		private static FieldType convertResultTypeStringToFieldType(string resultType)
+		{
+			Debug.Assert(resultType != null);
+			switch (resultType.ToLower())
+			{
+				case "scalar":
+					return FieldType.Scalar;
+				case "vector":
+					return FieldType.Vector;
+				case "matrix":
+				case "plaindeformationmatrix":
+				case "mainmatrix":
+				case "localaxes":
+					return FieldType.Tensor;
+				default:
+					throw new NotSupportedException($"'{resultType}' result type is not supported.");
+			}
+		}
+
+		private static string[] createGenericComponentNames(string resultType)
+		{
+			Debug.Assert(resultType != null);
+			string[] names = null;
+			switch (resultType.ToLower())
+			{
+				case "scalar":
+					names = new[] { "value" };
+					break;
+				case "vector":
+					names = new[] { "X", "Y", "Z" }; // optional fourth component signed_module_value !!
+					break;
+				case "matrix":
+					names = new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!
+					break;
+				case "plaindeformationmatrix":
+					names = new[] { "Sxx", "Syy", "Sxy", "Szz" };
+					break;
+				case "mainmatrix":
+					names = new[] { "Si", "Sii", "Siii", "Vix", "Viy", "Viz", "Viix", "Viiy", "Viiz", "Viiix", "Viiiy", "Viiiz" };
+					break;
+				case "localaxes":
+					names = new[] { "euler_ang_1", "euler_ang_2", "euler_ang_3" };
+					break;
+				default:
+					break;
+			}
+			return names;
+		}
+
+		private FileDataLocation convertLocationStringToDataLocation(string locationString)
+		{
+			Debug.Assert(locationString != null);
+			switch (locationString.ToLower())
+			{
+				case "onnodes": // OnNodes
+					return FileDataLocation.Nodes;
+				case "ongausspoints": // OnGaussPoints
+					return FileDataLocation.GaussPoints;
+				default:
+					throw new FormatException($"Unknown data location ({locationString})");
+			}
 		}
 
 		#endregion
