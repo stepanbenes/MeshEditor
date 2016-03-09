@@ -35,6 +35,9 @@ namespace MeshEditor.LayerManager.Import
 		public int[] CellConnectivity { get; set; }
 		public CellType[] CellTypes { get; set; }
 
+		public Dictionary<int, int> PointIdIndexMap { get; set; }
+		public Dictionary<int, int> CellIdIndexMap { get; set; }
+
 		public int NumberOfPoints => PointCoordinates.Length / NumberOfCoordinateComponents;
 		public int NumberOfCells => CellTypes.Length;
 	}

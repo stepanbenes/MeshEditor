@@ -44,6 +44,44 @@ namespace MeshEditor.FormatConverter.Import
 			GaussPoints
 		}
 
+		private class ParserData
+		{
+			public string Name { get; set; }
+			public double? TimeStep { get; set; }
+			public FieldType? FieldType { get; set; }
+			public string LocationType { get; set; }
+			public int? NumberOfComponents { get; set; }
+			public string[] ComponentNames { get; set; }
+			public List<double> DataValues { get; set; }
+			public List<int> Ids { get; set; }
+			public string ResultTypeString { get; set; }
+			public FileDataLocation? Location { get; set; }
+
+			public DataDescription CreateDataDescription(GeometryDescription geometry)
+			{
+				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
+				DataDescription data = new DataDescription
+				{
+					Name = Name,
+					TimeStep = TimeStep,
+					ComponentNames = finalComponentNames,
+					FieldType = FieldType.Value,
+					//LocationType,
+					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
+				};
+
+				Debug.Assert(data.NumberOfComponents > 0);
+
+				data.Data = DataValues.ToArray();
+
+				// TODO: place values to appropriate position according to PointIdIndexMap resp. CellIdIndexMap (depending on nodes or gauss-points data location)
+				// TODO: do extrapolation if Location is Gauss-points
+				// TODO: set LocationType and Data properties
+
+				return data;
+			}
+		}
+
 		#endregion
 
 		#region Fields, Constructor
@@ -61,7 +99,7 @@ namespace MeshEditor.FormatConverter.Import
 
 		#region Public methods
 
-		public IEnumerable<DataDescription> ReadData()
+		public IEnumerable<DataDescription> ReadData(GeometryDescription correspondingGeometry)
 		{
 			// TODO: replace asserts with throws
 
@@ -71,12 +109,7 @@ namespace MeshEditor.FormatConverter.Import
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;
-
-					DataDescription currentDataDescription = null;
-					List<double> currentDataValues = null;
-					string currentResultTypeString = null;
-					FileDataLocation currentLocation = FileDataLocation.Unknown;
-
+					ParserData parserData = null;
 					string line;
 					while ((line = reader.ReadLine()) != null)
 					{
@@ -116,17 +149,13 @@ namespace MeshEditor.FormatConverter.Import
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
 									{
-										currentResultTypeString = tokens[4];
+										parserData = new ParserData();
 
-										currentDataDescription = new DataDescription
-										{
-											Name = tokens[1],
-											TimeStep = ParseFloat64(tokens[3]),
-											FieldType = convertResultTypeStringToFieldType(currentResultTypeString),
-											//LocationType =
-										};
-
-										currentLocation = convertLocationStringToDataLocation(tokens[5]);
+										parserData.ResultTypeString = tokens[4];
+										parserData.Name = tokens[1];
+										parserData.TimeStep = ParseFloat64(tokens[3]);
+										parserData.FieldType = convertResultTypeStringToFieldType(parserData.ResultTypeString);
+										parserData.Location = convertLocationStringToDataLocation(tokens[5]);
 
 										//DataType dataType = new DataType(tokens[1].Trim('\"'), filename, currentLineFilePosition, convertDataTypeStringToCompoundTypeObject(tokens[4]));
 										//currentDataInfo = new DataInfo(dataType, tokens[2].Trim('\"'), ParseFloat64(tokens[3]), convertLocationStringToDataLocation(tokens[5]));
@@ -209,26 +238,13 @@ namespace MeshEditor.FormatConverter.Import
 								if (line.StartsWith(ComponentNamesToken, StringComparison.InvariantCultureIgnoreCase)) // ComponentNames
 								{
 									string[] tokens = splitLineToTokensWithQuotes(line);
-									currentDataDescription.ComponentNames = tokens.Skip(1).ToArray();
-
-									//Debug.Assert(currentDataInfo != null);
-									//if (currentDataInfo != null)
-									//{
-									//	string[] tokens = splitLineToTokens(line);
-									//	currentDataInfo.DataType.SetComponents(tokens.Skip(1).Select(name => name.Trim('\"')).ToArray());
-									//}
+									parserData.ComponentNames = tokens.Skip(1).ToArray();
 								}
 								else if (line.StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase)) // Values
 								{
 									state = ParserState.ResultValues;
-									//Debug.Assert(currentDataInfo != null);
-									//if (currentDataInfo != null && currentDataInfo.DataType.ComponentCount == 0)
-									//{
-									//	// component names are not specified, add generic ones
-									//	currentDataInfo.DataType.AddGenericComponentNames();
-									//}
-									//return currentDataInfo;
-									currentDataValues = new List<double>();
+									parserData.Ids = new List<int>();
+									parserData.DataValues = new List<double>();
 								}
 								break;
 							case ParserState.ResultValues:
@@ -237,34 +253,26 @@ namespace MeshEditor.FormatConverter.Import
 									Debug.Assert(line.Substring(EndToken.Length).TrimStart().StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase));
 									state = ParserState.Init;
 
-									currentDataDescription.Data = currentDataValues.ToArray();
 
-									if (currentDataDescription.ComponentNames == null)
-										currentDataDescription.ComponentNames = createGenericComponentNames(currentResultTypeString);
-									if (currentDataDescription.NumberOfComponents == 0)
-										currentDataDescription.NumberOfComponents = currentDataDescription.ComponentNames?.Length ?? 0;
+									var dataDescription = parserData.CreateDataDescription(correspondingGeometry);
+									yield return dataDescription;
 
-									Debug.Assert(currentDataDescription.NumberOfComponents > 0);
-
-									yield return currentDataDescription;
-
-									currentDataDescription = null;
-									currentDataValues = null;
-									currentResultTypeString = null;
-									currentLocation = FileDataLocation.Unknown;
+									parserData = null;
 								}
 								else
 								{
 									string[] tokens = splitLineToTokens(line);
 									Debug.Assert(tokens.Length >= 1);
 
-									if (currentDataDescription.NumberOfComponents == 0)
-										currentDataDescription.NumberOfComponents = tokens.Length - 1;
+									if (parserData.NumberOfComponents == null)
+										parserData.NumberOfComponents = tokens.Length - 1;
 
-									Debug.Assert(currentDataDescription.NumberOfComponents == tokens.Length - 1); // fill in missing values?
+									Debug.Assert(parserData.NumberOfComponents == tokens.Length - 1); // fill in missing values?
 
-									int nodeId = ParseInt32(tokens[0]);
-									currentDataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
+									// save id (point's or element's) to list, it will be useful after reading all data in this block
+									int id = ParseInt32(tokens[0]);
+									parserData.Ids.Add(id);
+									parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
 								}
 								break;
 						}
@@ -314,31 +322,23 @@ namespace MeshEditor.FormatConverter.Import
 		private static string[] createGenericComponentNames(string resultType)
 		{
 			Debug.Assert(resultType != null);
-			string[] names = null;
 			switch (resultType.ToLower())
 			{
 				case "scalar":
-					names = new[] { "value" };
-					break;
+					return new[] { "value" };
 				case "vector":
-					names = new[] { "X", "Y", "Z" }; // optional fourth component signed_module_value !!
-					break;
+					return new[] { "X", "Y", "Z" }; // optional fourth component signed_module_value !!
 				case "matrix":
-					names = new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!
-					break;
+					return new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!
 				case "plaindeformationmatrix":
-					names = new[] { "Sxx", "Syy", "Sxy", "Szz" };
-					break;
+					return new[] { "Sxx", "Syy", "Sxy", "Szz" };
 				case "mainmatrix":
-					names = new[] { "Si", "Sii", "Siii", "Vix", "Viy", "Viz", "Viix", "Viiy", "Viiz", "Viiix", "Viiiy", "Viiiz" };
-					break;
+					return new[] { "Si", "Sii", "Siii", "Vix", "Viy", "Viz", "Viix", "Viiy", "Viiz", "Viiix", "Viiiy", "Viiiz" };
 				case "localaxes":
-					names = new[] { "euler_ang_1", "euler_ang_2", "euler_ang_3" };
-					break;
+					return new[] { "euler_ang_1", "euler_ang_2", "euler_ang_3" };
 				default:
-					break;
+					throw new FormatException($"'{resultType}' result type is not supported.");
 			}
-			return names;
 		}
 
 		private FileDataLocation convertLocationStringToDataLocation(string locationString)

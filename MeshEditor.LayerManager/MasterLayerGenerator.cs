@@ -55,7 +55,7 @@ namespace MeshEditor.LayerManager
 			var resultDescriptors = new List<ResultDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
 			int dataIndex = 1;
-			foreach (var dataField in dataImportService?.ReadData() ?? Enumerable.Empty<DataDescription>())
+			foreach (var dataField in dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>())
 			{
 				foreach (var layerResult in createLayerResultFrom(dataField, layerId, dataIndex))
 				{

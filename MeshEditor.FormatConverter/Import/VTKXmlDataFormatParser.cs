@@ -22,7 +22,7 @@ namespace MeshEditor.FormatConverter.Import
 			this.filenames = filenames;
 		}
 
-		public IEnumerable<DataDescription> ReadData()
+		public IEnumerable<DataDescription> ReadData(GeometryDescription ignored)
 		{
 			foreach (string filename in filenames)
 			{

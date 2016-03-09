@@ -58,6 +58,7 @@ namespace MeshEditor.FormatConverter.Import
 			int dimension = 0;
 			int currentLineNumber = 0;
 			Dictionary<int, int> nodeIdIndexMap = new Dictionary<int, int>();
+			Dictionary<int, int> elementIdIndexMap = new Dictionary<int, int>();
 
 			using (Stream fileStream = storageService.Load(filename))
 			using (TextReader reader = new StreamReader(fileStream))
@@ -121,7 +122,9 @@ namespace MeshEditor.FormatConverter.Import
 									}
 									Debug.Assert(parts.Length >= 3);
 									int nodeId = ParseInt32(parts[0]);
+
 									nodeIdIndexMap[nodeId] = nodeIdIndexMap.Count;
+
 									float positionX = (float)ParseFloat64(parts[1]); // WARNING: possible loss of precision
 									float positionY = (float)ParseFloat64(parts[2]); // WARNING: possible loss of precision
 									float positionZ = (parts.Length >= 4) ? (float)ParseFloat64(parts[3]) : 0f; // WARNING: possible loss of precision
@@ -151,7 +154,9 @@ namespace MeshEditor.FormatConverter.Import
 
 									cellTypes.Add(elementType);
 
-									//int elementId = ParseInt32(parts[0]);
+									int elementId = ParseInt32(parts[0]);
+									elementIdIndexMap[elementId] = elementIdIndexMap.Count;
+
 									for (int i = 0; i < nnode; i++)
 									{
 										int nodeId = ParseInt32(parts[i + 1]);
@@ -177,7 +182,9 @@ namespace MeshEditor.FormatConverter.Import
 				NumberOfCoordinateComponents = dimension,
 				PointCoordinates = pointCoordinates.ToArray(),
 				CellConnectivity = cellConnectivity.ToArray(),
-				CellTypes = cellTypes.ToArray()
+				CellTypes = cellTypes.ToArray(),
+				PointIdIndexMap = nodeIdIndexMap,
+				CellIdIndexMap = elementIdIndexMap
 			};
 			return geometry;
 		}

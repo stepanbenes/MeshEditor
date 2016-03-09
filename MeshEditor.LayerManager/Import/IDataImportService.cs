@@ -9,6 +9,6 @@ namespace MeshEditor.LayerManager.Import
 {
 	public interface IDataImportService
 	{
-		IEnumerable<DataDescription> ReadData();
+		IEnumerable<DataDescription> ReadData(GeometryDescription correspondingGeometry);
 	}
 }
