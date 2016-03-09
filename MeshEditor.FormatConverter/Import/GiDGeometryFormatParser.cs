@@ -53,6 +53,7 @@ namespace MeshEditor.FormatConverter.Import
 		{
 			List<float> pointCoordinates = new List<float>();
 			List<int> cellConnectivity = new List<int>();
+			List<int> cellOffsets = new List<int>();
 			List<CellType> cellTypes = new List<CellType>();
 
 			int dimension = 0;
@@ -152,6 +153,7 @@ namespace MeshEditor.FormatConverter.Import
 									}
 									Debug.Assert(parts.Length >= nnode + 1);
 
+									cellOffsets.Add(cellOffsets.LastOrDefault() + mapCellTypeToNumberOfPoints(elementType));
 									cellTypes.Add(elementType);
 
 									int elementId = ParseInt32(parts[0]);
@@ -182,6 +184,7 @@ namespace MeshEditor.FormatConverter.Import
 				NumberOfCoordinateComponents = dimension,
 				PointCoordinates = pointCoordinates.ToArray(),
 				CellConnectivity = cellConnectivity.ToArray(),
+				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
 				PointIdIndexMap = nodeIdIndexMap,
 				CellIdIndexMap = elementIdIndexMap
@@ -192,6 +195,41 @@ namespace MeshEditor.FormatConverter.Import
 		#endregion
 
 		#region Private methods
+
+		private static int mapCellTypeToNumberOfPoints(CellType cellType)
+		{
+			switch (cellType)
+			{
+				case CellType.Point:
+					return 1;
+				case CellType.LineLinear:
+					return 2;
+				case CellType.LineQuadratic:
+					return 3;
+				case CellType.TriangleLinear:
+					return 3;
+				case CellType.TriangleQuadratic:
+					return 6;
+				case CellType.QuadLinear:
+					return 4;
+				case CellType.QuadQuadratic:
+					return 8;
+				case CellType.TetraLinear:
+					return 4;
+				case CellType.TetraQuadratic:
+					return 10;
+				case CellType.WedgeLinear:
+					return 6;
+				case CellType.WedgeQuadratic:
+					return 15;
+				case CellType.HexaLinear:
+					return 8;
+				case CellType.HexaQuadratic:
+					return 20;
+				default:
+					throw new NotSupportedException();
+			}
+		}
 
 		private static CellType convertNameToCellType(string elementTypeName, int numberOfNodes)
 		{

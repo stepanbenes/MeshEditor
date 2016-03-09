@@ -33,6 +33,7 @@ namespace MeshEditor.LayerManager.Import
 		public int NumberOfCoordinateComponents { get; set; }
 		public float[] PointCoordinates { get; set; }
 		public int[] CellConnectivity { get; set; }
+		public int[] CellOffsets { get; set; }
 		public CellType[] CellTypes { get; set; }
 
 		public Dictionary<int, int> PointIdIndexMap { get; set; }

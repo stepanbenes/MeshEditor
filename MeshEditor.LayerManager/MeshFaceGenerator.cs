@@ -43,11 +43,10 @@ namespace MeshEditor.LayerManager
 			// TODO: pair faces and leave only one of two twin faces, also mark external faces
 
 			List<TriangleFace> triangleFaces = new List<TriangleFace>();
-			int pointIndex = 0;
-			for (int i = 0; i < geometry.NumberOfCells; i++)
+			for (int i = 0, offset = 0; i < geometry.NumberOfCells; i++)
 			{
-				triangleFaces.AddRange(GetSequenceOfFaces(geometry.CellTypes[i], geometry.CellConnectivity, pointIndex));
-				pointIndex += mapCellTypeToNumberOfPoints(geometry.CellTypes[i]);
+				triangleFaces.AddRange(GetSequenceOfFaces(geometry.CellTypes[i], geometry.CellConnectivity, offset));
+				offset = geometry.CellOffsets[i];
 			}
 
 			TriangleConnectivity = new int[triangleFaces.Count * 3];
@@ -65,41 +64,6 @@ namespace MeshEditor.LayerManager
 		#endregion
 
 		#region Private methods
-
-		private static int mapCellTypeToNumberOfPoints(CellType cellType)
-		{
-			switch (cellType)
-			{
-				case CellType.Point:
-					return 1;
-				case CellType.LineLinear:
-					return 2;
-				case CellType.LineQuadratic:
-					return 3;
-				case CellType.TriangleLinear:
-					return 3;
-				case CellType.TriangleQuadratic:
-					return 6;
-				case CellType.QuadLinear:
-					return 4;
-				case CellType.QuadQuadratic:
-					return 8;
-				case CellType.TetraLinear:
-					return 4;
-				case CellType.TetraQuadratic:
-					return 10;
-				case CellType.WedgeLinear:
-					return 6;
-				case CellType.WedgeQuadratic:
-					return 15;
-				case CellType.HexaLinear:
-					return 8;
-				case CellType.HexaQuadratic:
-					return 20;
-				default:
-					throw new NotSupportedException();
-			}
-		}
 
 		private static IEnumerable<TriangleFace> GetSequenceOfFaces(CellType cellType, int[] cellConnectivity, int startIndex)
 		{

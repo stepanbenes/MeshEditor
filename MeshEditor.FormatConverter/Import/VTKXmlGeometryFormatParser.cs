@@ -109,8 +109,8 @@ namespace MeshEditor.FormatConverter.Import
 				}
 
 				int[] connectivity = readConnectivityArray(input);
-				//int[] offsets = readOffsetsArray(input, numberOfCells);
-				input.Skip(); // skip offsets data array
+				int[] offsets = readOffsetsArray(input, numberOfCells);
+				//input.Skip(); // skip offsets data array
 				CellType[] types = readTypesArray(input, numberOfCells);
 
 				GeometryDescription geometry = new GeometryDescription
@@ -118,6 +118,7 @@ namespace MeshEditor.FormatConverter.Import
 					NumberOfCoordinateComponents = numberOfComponents,
 					PointCoordinates = coordinates,
 					CellConnectivity = connectivity,
+					CellOffsets = offsets,
 					CellTypes = types
 				};
 
