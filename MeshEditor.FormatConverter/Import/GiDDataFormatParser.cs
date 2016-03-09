@@ -11,7 +11,7 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.FormatConverter.Import
 {
-	class GiDDataFormatParser : FormatParserBase, IDataImportService
+	partial class GiDDataFormatParser : FormatParserBase, IDataImportService
 	{
 		#region Static members
 
@@ -46,10 +46,12 @@ namespace MeshEditor.FormatConverter.Import
 
 		private class ParserData
 		{
+			public int LineCounter { get; set; }
+
 			public string Name { get; set; }
 			public double? TimeStep { get; set; }
 			public FieldType? FieldType { get; set; }
-			public string LocationType { get; set; }
+
 			public int? NumberOfComponents { get; set; }
 			public string[] ComponentNames { get; set; }
 			public List<double> DataValues { get; set; }
@@ -57,8 +59,14 @@ namespace MeshEditor.FormatConverter.Import
 			public string ResultTypeString { get; set; }
 			public FileDataLocation? Location { get; set; }
 
+			public string LocationName { get; set; }
+
+			public IDictionary<string, GaussPointsInfo> GaussPointsDescriptions { get; } = new Dictionary<string, GaussPointsInfo>();
+
 			public DataDescription CreateDataDescription(GeometryDescription geometry)
 			{
+				DataLocationType targetDataLocation = (Location == FileDataLocation.GaussPoints) ? DataLocationType.Cells : DataLocationType.Points; /**/
+
 				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
 				DataDescription data = new DataDescription
 				{
@@ -66,19 +74,37 @@ namespace MeshEditor.FormatConverter.Import
 					TimeStep = TimeStep,
 					ComponentNames = finalComponentNames,
 					FieldType = FieldType.Value,
-					//LocationType,
+					LocationType = targetDataLocation,
 					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
 				};
 
-				Debug.Assert(data.NumberOfComponents > 0);
-
-				data.Data = DataValues.ToArray();
-
-				// TODO: place values to appropriate position according to PointIdIndexMap resp. CellIdIndexMap (depending on nodes or gauss-points data location)
-				// TODO: do extrapolation if Location is Gauss-points
-				// TODO: set LocationType and Data properties
+				data.Data = convertValues
+				(
+					DataValues,
+					Ids,
+					NumberOfComponents.Value,
+					geometry,
+					targetDataLocation,
+					Location.Value,
+					(Location == FileDataLocation.GaussPoints) ? GaussPointsDescriptions[LocationName] : null
+				);
 
 				return data;
+			}
+
+			public void ClearResultBlockData()
+			{
+				LineCounter = 0;
+				Name = null;
+				TimeStep = null;
+				FieldType = null;
+				NumberOfComponents = null;
+				ComponentNames = null;
+				DataValues = null;
+				Ids = null;
+				ResultTypeString = null;
+				Location = null;
+				LocationName = null;
 			}
 		}
 
@@ -109,7 +135,7 @@ namespace MeshEditor.FormatConverter.Import
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;
-					ParserData parserData = null;
+					ParserData parserData = new ParserData();
 					string line;
 					while ((line = reader.ReadLine()) != null)
 					{
@@ -123,23 +149,15 @@ namespace MeshEditor.FormatConverter.Import
 							case ParserState.Init:
 								if (line.StartsWith(GaussPointsToken, StringComparison.InvariantCultureIgnoreCase)) // GaussPoints
 								{
-									//state = ParserState.GaussPointsDescription;
-									//string[] tokens = splitLineToTokens(line);
-									//Debug.Assert(tokens.Length >= 4);
+									state = ParserState.GaussPointsDescription;
+									string[] tokens = splitLineToTokensWithQuotes(line);
+									Debug.Assert(tokens.Length >= 4);
+									// GaussPoints "gauss_points_name" Elemtype my_type "mesh_name"
+									string gaussPointsName = tokens[1];
+									Debug.Assert(string.Equals(tokens[2], "Elemtype", StringComparison.InvariantCultureIgnoreCase));
 
-									//string gaussPointsName = tokens[1].Trim('\"');
-									//Debug.Assert(string.Equals(tokens[2], "Elemtype", StringComparison.InvariantCultureIgnoreCase));
-									//GaussPointsInfo.ElementTypes elementType;
-									//bool success = Utilities.Functions.EnumTryParseIgnoreCase(tokens[3], out elementType, ref elementTypesNamesCache);
-									//Debug.Assert(success);
-
-									//this.currentGaussPointsInfo = new GaussPointsInfo(elementType);
-									//gaussPointsDescriptions[gaussPointsName] = this.currentGaussPointsInfo;
-
-									//if (tokens.Length >= 5)
-									//{
-									//	currentGaussPointsInfo.MeshName = tokens[4].Trim('\"');
-									//}
+									parserData.LocationName = gaussPointsName;
+									parserData.GaussPointsDescriptions[gaussPointsName] = new GaussPointsInfo(gaussPointsName, tokens[3], (tokens.Length >= 5) ? tokens[4] : null);
 								}
 								else if (line.StartsWith(ResultToken, StringComparison.InvariantCultureIgnoreCase)) // Result
 								{
@@ -149,23 +167,16 @@ namespace MeshEditor.FormatConverter.Import
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
 									{
-										parserData = new ParserData();
-
 										parserData.ResultTypeString = tokens[4];
 										parserData.Name = tokens[1];
 										parserData.TimeStep = ParseFloat64(tokens[3]);
 										parserData.FieldType = convertResultTypeStringToFieldType(parserData.ResultTypeString);
 										parserData.Location = convertLocationStringToDataLocation(tokens[5]);
 
-										//DataType dataType = new DataType(tokens[1].Trim('\"'), filename, currentLineFilePosition, convertDataTypeStringToCompoundTypeObject(tokens[4]));
-										//currentDataInfo = new DataInfo(dataType, tokens[2].Trim('\"'), ParseFloat64(tokens[3]), convertLocationStringToDataLocation(tokens[5]));
-										//if (tokens.Length >= 7) // location name
-										//{
-										//	string locationName = tokens[6].Trim('\"');
-										//	GaussPointsInfo locationInfo;
-										//	if (gaussPointsDescriptions.TryGetValue(locationName, out locationInfo))
-										//		currentDataInfo.LocationInfo = locationInfo;
-										//}
+										if (tokens.Length >= 7) // location name
+										{
+											parserData.LocationName = tokens[6];
+										}
 									}
 									else
 										throw new FormatException("Result block is not complete.");
@@ -173,65 +184,65 @@ namespace MeshEditor.FormatConverter.Import
 								break;
 							case ParserState.GaussPointsDescription:
 								{
-									//Debug.Assert(currentGaussPointsInfo != null);
-									//string[] tokens = splitLineToTokens(line);
+									Debug.Assert(parserData.GaussPointsDescriptions.ContainsKey(parserData.LocationName));
+									var gpDescription = parserData.GaussPointsDescriptions[parserData.LocationName];
+									string[] tokens = splitLineToTokens(line);
 
-									//if (line.StartsWith("Number of Gauss Points:", StringComparison.InvariantCultureIgnoreCase))
-									//{
-									//	int number = parseInteger(tokens[4]);
-									//	Debug.Assert(currentGaussPointsInfo.IsAllowedGaussPointsNumber(number));
-									//	currentGaussPointsInfo.SetGaussPointsNumber(number);
-									//}
-									//else if (line.StartsWith("Nodes", StringComparison.InvariantCultureIgnoreCase))
-									//{
-									//	if (string.Equals(tokens[1], "included", StringComparison.InvariantCultureIgnoreCase))
-									//	{
-									//		currentGaussPointsInfo.NodesIncluded = true;
-									//	}
-									//	else
-									//	{
-									//		Debug.Assert(string.Equals(tokens[1], "not", StringComparison.InvariantCultureIgnoreCase));
-									//		Debug.Assert(string.Equals(tokens[2], "included", StringComparison.InvariantCultureIgnoreCase));
+									if (line.StartsWith("Number of Gauss Points:", StringComparison.InvariantCultureIgnoreCase))
+									{
+										int numberOfGaussPoints = ParseInt32(tokens[4]);
+										gpDescription.NumberOfGaussPoints = numberOfGaussPoints;
+									}
+									else if (line.StartsWith("Nodes", StringComparison.InvariantCultureIgnoreCase))
+									{
+										if (string.Equals(tokens[1], "included", StringComparison.InvariantCultureIgnoreCase))
+										{
+											gpDescription.NodesIncluded = true;
+										}
+										else
+										{
+											Debug.Assert(string.Equals(tokens[1], "not", StringComparison.InvariantCultureIgnoreCase));
+											Debug.Assert(string.Equals(tokens[2], "included", StringComparison.InvariantCultureIgnoreCase));
 
-									//		currentGaussPointsInfo.NodesIncluded = false;
-									//	}
-									//}
-									//else if (line.StartsWith("Natural Coordinates:", StringComparison.InvariantCultureIgnoreCase))
-									//{
-									//	switch (tokens[2].ToLower())
-									//	{
-									//		case "internal":
-									//			currentGaussPointsInfo.SetInternalNaturalCoordinates();
-									//			break;
-									//		case "given":
-									//			state = ParserState.GaussPointsGivenNaturalCoordinates;
-									//			currentGaussPointIndex = 0;
-									//			break;
-									//	}
-									//}
-									//else if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))
-									//{
-									//	Debug.Assert(string.Equals(tokens[1], GaussPointsToken, StringComparison.InvariantCultureIgnoreCase));
-									//	state = ParserState.Init; // back to initial state
-									//}
+											gpDescription.NodesIncluded = false;
+										}
+									}
+									else if (line.StartsWith("Natural Coordinates:", StringComparison.InvariantCultureIgnoreCase))
+									{
+										switch (tokens[2].ToLower())
+										{
+											case "internal":
+												gpDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Internal;
+												gpDescription.SetInternalNaturalCoordinates();
+												break;
+											case "given":
+												gpDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Given;
+												state = ParserState.GaussPointsGivenNaturalCoordinates;
+												break;
+										}
+									}
+									else if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))
+									{
+										Debug.Assert(string.Equals(tokens[1], GaussPointsToken, StringComparison.InvariantCultureIgnoreCase));
+										state = ParserState.Init; // back to initial state
+										parserData.LocationName = null;
+									}
 								}
 								break;
 							case ParserState.GaussPointsGivenNaturalCoordinates:
 								{
-									//Debug.Assert(currentGaussPointsInfo != null);
-									//if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))
-									//{
-									//	state = ParserState.Init; // back to initial state
-									//}
-									//else
-									//{
-									//	string[] tokens = splitLineToTokens(line);
-									//	for (int i = 0; i < tokens.Length; i++)
-									//	{
-									//		currentGaussPointsInfo.SetNaturalCoordinate(currentGaussPointIndex, i, ParseFloat64(tokens[i]));
-									//	}
-									//	++currentGaussPointIndex;
-									//}
+									Debug.Assert(parserData.GaussPointsDescriptions.ContainsKey(parserData.LocationName));
+									var gpDescription = parserData.GaussPointsDescriptions[parserData.LocationName];
+									if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))
+									{
+										state = ParserState.Init; // back to initial state
+										parserData.LocationName = null;
+									}
+									else
+									{
+										string[] tokens = splitLineToTokens(line);
+										gpDescription.AddNaturalCoordinates(tokens.Select(token => ParseFloat64(token)).ToArray());
+									}
 								}
 								break;
 							case ParserState.ResultHeader:
@@ -239,6 +250,7 @@ namespace MeshEditor.FormatConverter.Import
 								{
 									string[] tokens = splitLineToTokensWithQuotes(line);
 									parserData.ComponentNames = tokens.Skip(1).ToArray();
+									parserData.NumberOfComponents = parserData.ComponentNames.Length;
 								}
 								else if (line.StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase)) // Values
 								{
@@ -253,11 +265,10 @@ namespace MeshEditor.FormatConverter.Import
 									Debug.Assert(line.Substring(EndToken.Length).TrimStart().StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase));
 									state = ParserState.Init;
 
-
 									var dataDescription = parserData.CreateDataDescription(correspondingGeometry);
 									yield return dataDescription;
 
-									parserData = null;
+									parserData.ClearResultBlockData();
 								}
 								else
 								{
@@ -270,9 +281,18 @@ namespace MeshEditor.FormatConverter.Import
 									Debug.Assert(parserData.NumberOfComponents == tokens.Length - 1); // fill in missing values?
 
 									// save id (point's or element's) to list, it will be useful after reading all data in this block
-									int id = ParseInt32(tokens[0]);
-									parserData.Ids.Add(id);
-									parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
+
+									int numberOfLinesPerRecord = parserData.LocationName == null ? 1 : parserData.GaussPointsDescriptions[parserData.LocationName].NumberOfGaussPoints;
+									if (parserData.LineCounter % numberOfLinesPerRecord == 0)
+									{
+										int id = ParseInt32(tokens[0]);
+										parserData.Ids.Add(id);
+										parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
+									}
+									else
+									{
+										parserData.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)));
+									}
 								}
 								break;
 						}

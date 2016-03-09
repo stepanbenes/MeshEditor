@@ -50,6 +50,7 @@
     <Compile Include="Import\DataFormatParserFactory.cs" />
     <Compile Include="Import\GeometryFormatParserFactory.cs" />
     <Compile Include="Import\GiDDataFormatParser.cs" />
+    <Compile Include="Import\GiDDataFormatParser.GaussPoints.cs" />
     <Compile Include="Import\GiDGeometryFormatParser.cs" />
     <Compile Include="Import\FormatParserBase.cs" />
     <Compile Include="Import\VTKXmlDataFormatParser.cs" />
