@@ -336,8 +336,46 @@ namespace MeshEditor.FormatConverter.Import
 							}
 							break;
 						case FileDataLocation.GaussPoints:
+							// recursive call to calculate CellPoints values
 							double[] cellPointResult = convertValues(values, ids, numberOfComponents, geometry, DataLocationType.CellPoints, fileLocation, gaussPoints);
-							throw new NotImplementedException();
+
+							var map = new List<KeyValuePair<double, double[]>>[geometry.NumberOfPoints];
+
+							int startOffset = 0;
+							for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
+							{
+								double cellVolume = computeCellVolume(cellIndex, geometry);
+								int endOffset = geometry.CellOffsets[cellIndex];
+								for (int offset = startOffset; offset < endOffset; offset++)
+								{
+									int pointIndex = geometry.CellConnectivity[offset];
+									if (map[pointIndex] == null)
+										map[pointIndex] = new List<KeyValuePair<double, double[]>>();
+									map[pointIndex].Add(new KeyValuePair<double, double[]>(cellVolume, Utilities.Functions.GetSliceOfArray(cellPointResult, offset * numberOfComponents, numberOfComponents)));
+								}
+								startOffset = endOffset;
+							}
+
+							for (int pointIndex = 0; pointIndex < geometry.NumberOfPoints; pointIndex++)
+							{
+								var list = map[pointIndex];
+								if (list != null)
+								{
+									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+									{
+										double volumeSum = 0.0;
+										double componentVolumeSum = 0.0;
+										foreach (var pair in list)
+										{
+											double cellVolume = pair.Key;
+											volumeSum += cellVolume;
+											componentVolumeSum += cellVolume * pair.Value[componentIndex];
+										}
+										result[pointIndex * numberOfComponents + componentIndex] = componentVolumeSum / volumeSum;
+									}
+								}
+							}
+							break;
 						default:
 							throw new NotSupportedException();
 					}
@@ -348,8 +386,11 @@ namespace MeshEditor.FormatConverter.Import
 						case FileDataLocation.Nodes:
 							throw new NotImplementedException();
 						case FileDataLocation.GaussPoints:
+
 							// TODO: add parameter specifying extrapolation strategy
+
 							throw new NotImplementedException();
+
 						default:
 							throw new NotSupportedException();
 					}
@@ -385,6 +426,11 @@ namespace MeshEditor.FormatConverter.Import
 			}
 
 			return result;
+		}
+
+		private static double computeCellVolume(int cellIndex, GeometryDescription geometry)
+		{
+			throw new NotImplementedException();
 		}
 
 		private static double[] createEmptyValueArray(int length)
