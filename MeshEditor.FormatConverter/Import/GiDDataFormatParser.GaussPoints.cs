@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
+using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.FormatConverter.Import
 {
@@ -351,7 +352,7 @@ namespace MeshEditor.FormatConverter.Import
 									int pointIndex = geometry.CellConnectivity[offset];
 									if (map[pointIndex] == null)
 										map[pointIndex] = new List<KeyValuePair<double, double[]>>();
-									map[pointIndex].Add(new KeyValuePair<double, double[]>(cellVolume, Utilities.Functions.GetSliceOfArray(cellPointResult, offset * numberOfComponents, numberOfComponents)));
+									map[pointIndex].Add(new KeyValuePair<double, double[]>(cellVolume, cellPointResult.CreateSlice(offset * numberOfComponents, numberOfComponents)));
 								}
 								startOffset = endOffset;
 							}

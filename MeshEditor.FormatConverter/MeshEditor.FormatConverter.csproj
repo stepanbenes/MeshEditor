@@ -38,10 +38,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK">
-      <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.XML" />
@@ -60,14 +56,6 @@
     <Compile Include="Import\VTKXmlGeometryFormatParser.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
-      <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
-      <Name>MeshEditor.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj">
-      <Project>{f586dc27-a7fd-4ab7-9a6b-1b6683a84b3f}</Project>
-      <Name>MeshEditor.DataVisualizer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
       <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
       <Name>MeshEditor.LayerManager</Name>
