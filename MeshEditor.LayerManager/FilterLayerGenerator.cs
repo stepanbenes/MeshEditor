@@ -16,7 +16,7 @@ namespace MeshEditor.LayerManager
 		#region Fields, constructor
 
 		public FilterLayerGenerator(
-			IStorageService storageService = null,
+			IStorageService storageService,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
 			: base(

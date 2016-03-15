@@ -22,10 +22,14 @@ namespace MeshEditor.LayerManager
 		ILayerSerializer layerSerializer;
 
 		public LayerGenerator(
-			IStorageService storageService = null,
+			IStorageService storageService,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
 		{
+			if (storageService == null)
+			{
+				throw new ArgumentNullException(nameof(storageService));
+			}
 			this.storageService = storageService;
 			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
 			this.compressionService = compressionService ?? new GeneralCompressionService();
@@ -51,16 +55,9 @@ namespace MeshEditor.LayerManager
 
 		protected void StoreLayerFile<T>(T layerObject, Uri uri)
 		{
-			if (storageService == null)
+			using (Stream stream = storageService.Save(uri))
 			{
-				throw new NotImplementedException();
-			}
-			else
-			{
-				using (Stream stream = storageService.Save(uri))
-				{
-					layerSerializer.Serialize(layerObject, stream);
-				}
+				layerSerializer.Serialize(layerObject, stream);
 			}
 		}
 
