@@ -22,15 +22,11 @@ namespace MeshEditor.LayerManager
 		ILayerSerializer layerSerializer;
 
 		public LayerGenerator(
-			IStorageService storageService,
+			IStorageService storageService = null,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
 		{
-			if (storageService == null)
-			{
-				throw new ArgumentNullException(nameof(storageService));
-			}
-			this.storageService = storageService;
+			this.storageService = storageService ?? new LocalFileSystemStorageService();
 			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
 			this.compressionService = compressionService ?? new GeneralCompressionService();
 		}

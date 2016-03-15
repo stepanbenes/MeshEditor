@@ -17,7 +17,7 @@ namespace MeshEditor.LayerManager
 		#region Fields, constructor
 
 		public MasterLayerGenerator(
-			IStorageService storageService,
+			IStorageService storageService = null,
 			ILayerSerializer layerSerializer = null,
 			ICompressionService compressionService = null)
 			: base(

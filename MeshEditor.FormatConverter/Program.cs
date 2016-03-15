@@ -26,11 +26,10 @@ namespace MeshEditor.FormatConverter
 			}
 
 			IStorageService storageService = new LocalFileSystemStorageService();
-			ILayerSerializer layerSerializer = new JsonLayerSerializer();
-			var masterLayerGenerator = new MasterLayerGenerator(storageService, layerSerializer);
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(storageService, new Uri(args[0]));
 			IDataImportService dataImportService = (args.Length > 1) ? DataFormatParserFactory.Create(storageService, args.Skip(1).Select(arg => new Uri(arg))) : null;
-			masterLayerGenerator.Generate(Path.GetFileNameWithoutExtension(args[0]), new Uri(Path.GetDirectoryName(args[0])), geometryImportService, dataImportService);
+
+			new MasterLayerGenerator(storageService).Generate(Path.GetFileNameWithoutExtension(args[0]), new Uri(Path.GetDirectoryName(args[0])), geometryImportService, dataImportService);
 
 			Console.Write("Done.");
 		}
