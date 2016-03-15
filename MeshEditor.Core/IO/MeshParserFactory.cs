@@ -22,7 +22,7 @@ namespace MeshEditor.IO
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
 					return new VTKXmlMeshParser(filename);
 				case ".json":
-					return new JsonMeshParser(filename);
+					return new LayerMeshFileParser(filename);
 
 				case ".ply":
 					return new PLYFileFormatParser(filename);

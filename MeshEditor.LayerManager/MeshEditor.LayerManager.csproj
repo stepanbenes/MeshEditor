@@ -51,7 +51,6 @@
     <Compile Include="Data\LayerResult.cs" />
     <Compile Include="Data\ResultDescriptor.cs" />
     <Compile Include="Data\LayerSummary.cs" />
-    <Compile Include="FilterLayerGenerator.cs" />
     <Compile Include="Filters\FilterDescriptor.cs" />
     <Compile Include="Filters\FilterType.cs" />
     <Compile Include="Import\DataDescription.cs" />
@@ -59,7 +58,6 @@
     <Compile Include="Import\IDataImportService.cs" />
     <Compile Include="Import\IGeometryImportService.cs" />
     <Compile Include="LayerGenerator.cs" />
-    <Compile Include="MasterLayerGenerator.cs" />
     <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\ILayerSerializer.cs" />

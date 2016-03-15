@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
+using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
@@ -45,11 +46,77 @@ namespace MeshEditor.LayerManager
 			throw new NotImplementedException();
 		}
 
+		public Guid GenerateFrom(Guid parentLayer, FilterDescriptor filter)
+		{
+			Guid layerId = Guid.NewGuid();
+			// TODO: find parentLayer in storage and download summary
+			throw new NotImplementedException();
+			return layerId;
+		}
+
+		public Guid Generate(string projectName, Uri projectLocation, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		{
+			if (geometryImportService == null)
+			{
+				throw new ArgumentNullException(nameof(geometryImportService));
+			}
+
+			Guid layerId = Guid.NewGuid();
+
+			LayerSummary layerSummary = new LayerSummary
+			{
+				Id = layerId,
+				Name = projectName,
+				ParentId = null,
+				Filters = null,
+			};
+
+			GeometryDescription geometry = geometryImportService.ReadGeometry();
+
+			LayerMesh layerMesh = createLayerMeshFromGeometry(geometry, layerId);
+			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{layerId}.layer");
+
+			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
+
+			var resultDescriptors = new List<ResultDescriptor>();
+			var timeStepsHashSet = new HashSet<double>();
+			int dataIndex = 1;
+			foreach (var dataField in dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>())
+			{
+				foreach (var layerResult in createLayerResultFrom(dataField, layerId, dataIndex))
+				{
+					resultDescriptors.Add(ResultDescriptor.CreateFrom(layerResult));
+
+					foreach (var timeStep in layerResult.TimeSteps)
+						timeStepsHashSet.Add(timeStep);
+
+					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{dataIndex}.result");
+				}
+				dataIndex += dataField.NumberOfComponents;
+			}
+
+			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
+			layerSummary.Results = resultDescriptors.ToArray();
+
+			StoreLayerFile(layerSummary, projectLocation, layerDirectory, $"{layerId}.layer");
+
+			return layerId;
+		}
+
+		public GeometryDescription LoadGeometry(Uri uri)
+		{
+			using (Stream stream = storageService.Load(uri))
+			{
+				LayerMesh layerMesh = layerSerializer.Deserialize<LayerMesh>(stream);
+				return createGeometryFromLayerMesh(layerMesh);
+			}
+		}
+
 		#endregion
 
 		#region Protected methods
 
-		protected void StoreLayerFile<T>(T layerObject, Uri projectLocation, string recordName, string layerDirectory = null)
+		protected void StoreLayerFile<T>(T layerObject, Uri projectLocation, string layerDirectory, string recordName)
 		{
 			Uri uri = new Uri(projectLocation, Path.Combine(layerDirectory ?? "", recordName + layerSerializer.FileExtension));
 			using (Stream stream = storageService.Save(uri))
@@ -65,227 +132,97 @@ namespace MeshEditor.LayerManager
 			return Convert.ToBase64String(compressedData);
 		}
 
+		protected double[] DecompressData(string encodedData, Dictionary<string, object> compressionParameters)
+		{
+			byte[] compressedData = Convert.FromBase64String(encodedData);
+			return compressionService.Decompress(compressedData, compressionParameters);
+		}
+
 		protected static string ConvertArrayToBase64String<TItem>(TItem[] values) where TItem : struct
 		{
 			Debug.Assert(typeof(TItem) != typeof(byte));
 			byte[] bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
 			Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
-			return System.Convert.ToBase64String(bytes);
+			return Convert.ToBase64String(bytes);
+		}
+
+		protected static TItem[] ConvertBase64StringToArray<TItem>(string base64String) where TItem : struct
+		{
+			Debug.Assert(typeof(TItem) != typeof(byte));
+			byte[] bytes = Convert.FromBase64String(base64String);
+			TItem[] values = new TItem[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
+			Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+			return values;
 		}
 
 		#endregion
 
 		#region Private methods
 
+		private LayerMesh createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
+		{
+			LayerMesh layerMesh = new LayerMesh { LayerId = layerId };
+
+			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
+			layerMesh.PointCoordinates = ConvertArrayToBase64String(geometry.PointCoordinates);
+
+			MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
+			faceGenerator.ProcessGeometry(geometry);
+
+			layerMesh.NumberOfTriangles = faceGenerator.NumberOfTriangles;
+			layerMesh.TriangleConnectivity = ConvertArrayToBase64String(faceGenerator.TriangleConnectivity);
+
+			layerMesh.NumberOfEdges = faceGenerator.NumberOfEdges;
+			layerMesh.EdgeConnectivity = ConvertArrayToBase64String(faceGenerator.EdgeConnectivity);
+
+			return layerMesh;
+		}
+
+		private GeometryDescription createGeometryFromLayerMesh(LayerMesh layerMesh)
+		{
+			GeometryDescription geometry = new GeometryDescription();
+
+			geometry.PointCoordinates = ConvertBase64StringToArray<float>(layerMesh.PointCoordinates);
+			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
+			geometry.CellConnectivity = ConvertBase64StringToArray<int>(layerMesh.TriangleConnectivity);
+			geometry.CellOffsets = Enumerable.Range(1, layerMesh.NumberOfTriangles).Select(i => i * 3).ToArray();
+			geometry.CellTypes = Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfTriangles).ToArray();
+
+			return geometry;
+		}
+
+		private IEnumerable<LayerResult> createLayerResultFrom(DataDescription dataField, Guid layerId, int dataIndex)
+		{
+			int numberOfComponents = dataField.NumberOfComponents;
+			for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+			{
+				LayerResult layerResult = new LayerResult
+				{
+					LayerId = layerId,
+					FieldName = dataField.Name,
+					ComponentName = dataField.ComponentNames?[componentIndex],
+					Index = dataIndex + componentIndex,
+					TimeSteps = new[] { dataField.TimeStep ?? 0 },
+					Location = dataField.LocationType.ToString()
+				};
+
+				double[] allValues = dataField.Data;
+				double[] componentValues = new double[dataField.Data.Length / numberOfComponents];
+
+				for (int hip = 0, hop = componentIndex; hop < allValues.Length; hip += 1, hop += numberOfComponents)
+				{
+					componentValues[hip] = allValues[hop];
+				}
+
+				Dictionary<string, object> compressionParameters;
+
+				layerResult.Data = CompressData(componentValues, out compressionParameters);
+				layerResult.Compression = compressionParameters;
+
+				yield return layerResult;
+			}
+		}
+
 		#endregion
-
-		//public void CreateLayerFromParent() { }
-
-		//static void Main(string[] args)
-		//{
-		//	Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-
-		//	if (args.Length < 1)
-		//	{
-		//		Console.WriteLine("Usage: {0} mesh-file [result-files]", Path.GetFileName(Assembly.GetExecutingAssembly().CodeBase));
-		//		Console.ReadKey();
-		//		return;
-		//	}
-
-		//	LayerFile surfaceLayer = createSurfaceLayer(args[0], args.Skip(1));
-		//	string path = Path.GetDirectoryName(args[0]);
-
-		//	// MeshFile
-		//	writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "mesh", surfaceLayer.MeshFile);
-		//	// ResultSummaryFile
-		//	writeJsonFile(path, surfaceLayer.Id, surfaceLayer.Name, "summary", surfaceLayer.ResultSummaryFile);
-
-		//	Console.Write("Done.");
-		//}
-
-		//private static LayerFile createSurfaceLayer(string meshFilename, IEnumerable<string> resultFilenames)
-		//{
-		//	Mesh mesh = null;
-		//	using (IMeshFileParser parser = MeshParserFactory.Create(meshFilename)) // choose parser
-		//	{
-		//		IMeshCreator meshCreator = new MeshConstructor();
-		//		mesh = meshCreator.CreateMesh(parser, cancelled: null);
-		//	}
-
-		//	LayerFile layer = new LayerFile { Id = Guid.NewGuid(), Name = "Surface" };
-
-		//	Dictionary<int, int> nodeIdMap;
-
-		//	MeshFile meshFile = createMeshFile(mesh, out nodeIdMap);
-		//	meshFile.LayerId = layer.Id;
-		//	layer.MeshFile = meshFile;
-
-		//	List<ResultDescriptor> resultDescriptors = new List<ResultDescriptor>();
-		//	HashSet<double> timeSteps = new HashSet<double>();
-
-		//	foreach (string resultFilename in resultFilenames)
-		//	{
-		//		using (IDataFileParser dataParser = DataParserFactory.Create(resultFilename))
-		//		{
-		//			DataInfo dataInfo;
-		//			while ((dataInfo = dataParser.ReadNextResult()) != null)
-		//			{
-		//				if (dataInfo.Location != DataLocation.Nodes)
-		//				{
-		//					throw new NotSupportedException($"{dataInfo.Location} location is not supported.");
-		//				}
-
-		//				double[][] values = new double[dataInfo.DataType.ComponentCount][];
-		//				for (int i = 0; i < dataInfo.DataType.ComponentCount; i++) // init array
-		//					values[i] = new double[nodeIdMap.Count];
-		//				foreach (NodeValue nodeValue in dataParser.ReadResultBlock())
-		//				{
-		//					int idInLayer;
-		//					if (nodeIdMap.TryGetValue(nodeValue.EntityNumber, out idInLayer))
-		//					{
-		//						for (int i = 0; i < dataInfo.DataType.ComponentCount; i++)
-		//						{
-		//							values[i][idInLayer - 1] = nodeValue.ValueComponents[i];
-		//						}
-		//					}
-		//				}
-
-		//				for (int i = 0; i < dataInfo.DataType.ComponentCount; i++)
-		//				{
-		//					ResultFile resultFile = new ResultFile
-		//					{
-		//						LayerId = layer.Id,
-		//						ResultName = dataInfo.DataType.Name,
-		//						ComponentName = dataInfo.DataType.Components[i].Name,
-		//						TimeStep = dataInfo.Time,
-		//						CompressionLevel = 0, // no compression
-		//						Data = convertArrayToBase64String(values[i]), // TODO: add wavelet transform
-		//					};
-
-		//					string resultJsonFilePrefix = $"{layer.Name}-{resultFile.ResultName}-{resultFile.ComponentName}-{resultFile.TimeStep}";
-		//					string resultJsonFilename = writeJsonFile(Path.GetDirectoryName(meshFilename), resultFile.LayerId, resultJsonFilePrefix, "result", resultFile);
-
-		//					ResultDescriptor resultDescriptor = new ResultDescriptor
-		//					{
-		//						ResultName = dataInfo.DataType.Name,
-		//						ComponentName = dataInfo.DataType.Components[i].Name,
-		//						TimeStep = dataInfo.Time,
-		//						FileName = Path.GetFileName(resultJsonFilename),
-		//					};
-
-		//					resultDescriptors.Add(resultDescriptor);
-		//				}
-
-		//				timeSteps.Add(dataInfo.Time);
-		//			}
-		//		}
-		//	}
-
-		//	ResultSummaryFile resultSummaryFile = new ResultSummaryFile
-		//	{
-		//		LayerId = layer.Id,
-		//		TimeSteps = timeSteps.OrderBy(t => t).ToArray(),
-		//		ResultDescriptors = resultDescriptors.ToArray(),
-		//	};
-
-		//	layer.ResultSummaryFile = resultSummaryFile;
-
-		//	return layer;
-		//}
-
-		////private static string convertDoubleArrayToBase64String(double[] values)
-		////{
-		////	//byte[] bytes = values.SelectMany(value => BitConverter.GetBytes(value)).ToArray();
-		////	byte[] bytes = new byte[values.Length * sizeof(double)];
-		////	Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
-		////	return Convert.ToBase64String(bytes);
-		////}
-
-		//private static string convertArrayToBase64String<TItem>(TItem[] values) where TItem : struct
-		//{
-		//	byte[] bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
-		//	Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
-		//	return Convert.ToBase64String(bytes);
-		//}
-
-		//private static MeshFile createMeshFile(Mesh mesh, out Dictionary<int, int> nodeIdMap)
-		//{
-		//	MeshFile meshFile = new MeshFile();
-
-		//	// find triangle faces
-		//	List<Node> points = new List<Node>();
-		//	nodeIdMap = new Dictionary<int, int>();
-		//	List<int> triangleConnectivity = new List<int>();
-		//	foreach (Element2D face in mesh.Faces)
-		//	{
-		//		foreach (Node node in face.IterateThroughAllNodes())
-		//		{
-		//			if (!nodeIdMap.ContainsKey(node.ID))
-		//			{
-		//				points.Add(node);
-		//				nodeIdMap[node.ID] = points.Count;
-		//			}
-		//		}
-		//		Triangle triangle = face as Triangle;
-		//		if (triangle != null)
-		//		{
-		//			triangleConnectivity.Add(nodeIdMap[triangle.Node1.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[triangle.Node2.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[triangle.Node3.ID]);
-		//		}
-		//		else
-		//		{
-		//			Quadrilateral quad = (Quadrilateral)face;
-		//			// first half
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node1.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node2.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node3.ID]);
-		//			// second half
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node1.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node3.ID]);
-		//			triangleConnectivity.Add(nodeIdMap[quad.Node4.ID]);
-		//		}
-		//	}
-		//	List<int> edgeConnectivity = new List<int>();
-		//	foreach (WingedEdge edge in mesh.Edges)
-		//	{
-		//		if (edge.FeatureAngle >= mesh.HardBorderLimit)
-		//		{
-		//			edgeConnectivity.Add(nodeIdMap[edge.BeginNode.ID]);
-		//			edgeConnectivity.Add(nodeIdMap[edge.EndNode.ID]);
-		//		}
-		//	}
-
-		//	double[] pointCoordinates = new double[points.Count * 3];
-		//	for (int i = 0; i < points.Count; i++)
-		//	{
-		//		Vector3 transformedPosition = (points[i].Position / mesh.ResizeFactor) + mesh.PositionOffset;
-		//		pointCoordinates[i * 3 + 0] = transformedPosition.X;
-		//		pointCoordinates[i * 3 + 1] = transformedPosition.Y;
-		//		pointCoordinates[i * 3 + 2] = transformedPosition.Z;
-		//	}
-		//	meshFile.PointCoordinates = convertArrayToBase64String(pointCoordinates);
-		//	meshFile.TriangleConnectivity = convertArrayToBase64String(triangleConnectivity.ToArray());
-		//	meshFile.EdgeConnectivity = convertArrayToBase64String(edgeConnectivity.ToArray());
-
-		//	return meshFile;
-		//}
-
-		//private static string writeJsonFile(string path, Guid layerId, string fileDescription, string fileType, object objectToSerialize)
-		//{
-		//	string filename = Path.Combine(path, createUniqueFileName(layerId, fileDescription, fileType, "json"));
-		//	string json = JsonConvert.SerializeObject(objectToSerialize, Formatting.Indented, new NotIndentedArrayJsonConverter());
-		//	File.WriteAllText(filename, json, Encoding.UTF8);
-		//	return filename;
-		//}
-
-		//private static string createUniqueFileName(Guid guid, string description, string suffix, string extension)
-		//{
-		//	Regex regex = new Regex("[^a-zA-Z0-9-]");
-		//	string descriptionNormalized = regex.Replace(description, "");
-		//	string suffixNormalized = regex.Replace(suffix, "");
-
-		//	return $"{guid.ToString()}_{descriptionNormalized}.{suffixNormalized}.{extension}";
-		//}
 	}
 }
