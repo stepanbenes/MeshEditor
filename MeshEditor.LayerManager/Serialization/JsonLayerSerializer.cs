@@ -11,7 +11,7 @@ namespace MeshEditor.LayerManager.Serialization
 {
 	public class JsonLayerSerializer : ILayerSerializer
 	{
-		public static readonly string FileExtension = ".json";
+		public string FileExtension => ".json";
 
 		public void Serialize<T>(T layerObject, Stream stream)
 		{

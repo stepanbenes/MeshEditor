@@ -4,25 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Data;
+using MeshEditor.LayerManager.Data;
 using OpenTK;
 
 namespace MeshEditor.IO
 {
 	class JsonMeshParser : JsonFileParserBase, IMeshFileParser
 	{
-
-		private class MeshFile
-		{
-			public Guid LayerId { get; set; }
-			public int NumberOfPoints { get; set; }
-			public int NumberOfTriangles { get; set; }
-			public int NumberOfEdges { get; set; }
-			public string PointCoordinates { get; set; }
-			public string TriangleConnectivity { get; set; }
-			public string EdgeConnectivity { get; set; }
-		}
-
-		MeshFile meshFile;
+		LayerMesh meshFile;
 		int nodeCount, elementCount;
 
 		public JsonMeshParser(string filename)
@@ -37,7 +26,7 @@ namespace MeshEditor.IO
 		{
 			if (meshFile == null)
 			{
-				meshFile = ParseInput<MeshFile>();
+				meshFile = ParseInput<LayerMesh>();
 			}
 
 			float[] coordinates = convertBase64StringToArray<float>(meshFile.PointCoordinates);
@@ -55,7 +44,7 @@ namespace MeshEditor.IO
 		{
 			if (meshFile == null)
 			{
-				meshFile = ParseInput<MeshFile>();
+				meshFile = ParseInput<LayerMesh>();
 			}
 
 			int[] connectivity = convertBase64StringToArray<int>(meshFile.TriangleConnectivity);

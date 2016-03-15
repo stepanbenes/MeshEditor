@@ -52,7 +52,7 @@ namespace MeshEditor.LayerManager
 			LayerMesh layerMesh = createLayerMeshFrom(geometry, layerId);
 			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{layerId}.layer");
 
-			StoreLayerFile(layerMesh, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.mesh")));
+			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
 
 			var resultDescriptors = new List<ResultDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
@@ -66,7 +66,7 @@ namespace MeshEditor.LayerManager
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
 
-					StoreLayerFile(layerResult, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.{layerResult.Index}.result")));
+					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.result");
 				}
 				dataIndex += dataField.NumberOfComponents;
 			}
@@ -74,7 +74,7 @@ namespace MeshEditor.LayerManager
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
 			layerSummary.Results = resultDescriptors.ToArray();
 
-			StoreLayerFile(layerSummary, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.layer")));
+			StoreLayerFile(layerSummary, projectLocation, layerDirectory, $"{layerId}.layer");
 
 			return layerId;
 		}

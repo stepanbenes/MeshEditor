@@ -49,8 +49,9 @@ namespace MeshEditor.LayerManager
 
 		#region Protected methods
 
-		protected void StoreLayerFile<T>(T layerObject, Uri uri)
+		protected void StoreLayerFile<T>(T layerObject, Uri projectLocation, string recordName, string layerDirectory = null)
 		{
+			Uri uri = new Uri(projectLocation, Path.Combine(layerDirectory ?? "", recordName + layerSerializer.FileExtension));
 			using (Stream stream = storageService.Save(uri))
 			{
 				layerSerializer.Serialize(layerObject, stream);

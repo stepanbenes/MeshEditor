@@ -161,6 +161,10 @@
       <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
       <Name>MeshEditor.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
+      <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
+      <Name>MeshEditor.LayerManager</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

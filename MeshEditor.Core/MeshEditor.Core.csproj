@@ -219,6 +219,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
+      <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
+      <Name>MeshEditor.LayerManager</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.OpenTKCompatibility\MeshEditor.OpenTKCompatibility.csproj">
       <Project>{3ED73469-9212-4EC7-B450-EC243B344A39}</Project>
       <Name>MeshEditor.OpenTKCompatibility</Name>

@@ -6,24 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.IO;
+using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.DataVisualizer.IO
 {
 	class JsonDataFileParser : JsonFileParserBase, IDataFileParser
 	{
-		private class ResultFile
-		{
-			public Guid LayerId { get; set; }
-			public string FieldName { get; set; }
-			public string ComponentName { get; set; }
-			public int Index { get; set; }
-			public double[] TimeSteps { get; set; }
-			public string Location { get; set; }
-			public Dictionary<string, object> Compression { get; set; }
-			public string Data { get; set; }
-		}
-
-		ResultFile resultFile;
+		LayerResult resultFile;
 
 		public JsonDataFileParser(string filename)
 		 : base(filename)
@@ -35,7 +24,7 @@ namespace MeshEditor.DataVisualizer.IO
 		{
 			if (resultFile == null)
 			{
-				resultFile = ParseInput<ResultFile>();
+				resultFile = ParseInput<LayerResult>();
 				DataType dataType = new DataType($"{resultFile.FieldName}-{resultFile.ComponentName}", Filename, 0, DataType.CompoundTypes.Scalar, resultFile.ComponentName);
 				return new DataInfo(dataType, "", resultFile.TimeSteps.Single(), DataLocation.Nodes);
 			}
