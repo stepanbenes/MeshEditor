@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Data;
 using MeshEditor.LayerManager;
+using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;

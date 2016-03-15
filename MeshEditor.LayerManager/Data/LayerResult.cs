@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
@@ -14,9 +16,10 @@ namespace MeshEditor.LayerManager.Data
 		public int Index { get; set; }
 		public double[] TimeSteps { get; set; }
 
-		public string Location { get; set; }
+		[JsonConverter(typeof(StringEnumConverter))]
+		public DataLocationType Location { get; set; }
 
-		public Dictionary<string, object> Compression { get; set; }
+		public CompressionDescriptor Compression { get; set; }
 
 		/// <summary>
 		/// double array data in Base64 string format

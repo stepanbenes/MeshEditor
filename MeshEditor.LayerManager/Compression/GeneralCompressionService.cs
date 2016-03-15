@@ -9,7 +9,7 @@ namespace MeshEditor.LayerManager.Compression
 {
 	internal class GeneralCompressionService : ICompressionService
 	{
-		public byte[] Compress(double[] dataValues, Dictionary<string, object> compressionParameters)
+		public byte[] Compress(double[] dataValues, CompressionDescriptor compressionParameters)
 		{
 			//if ((string)compressionParameters["precision"] == "Single")
 			//{
@@ -17,9 +17,9 @@ namespace MeshEditor.LayerManager.Compression
 			//	// copy to byte array...
 			//}
 
-			compressionParameters["level"] = 0; // no compression, only copying data to byte array
-			compressionParameters["type"] = "Double"; // or Single, or Int32, ...
-			compressionParameters["dimensions"] = new int[] { dataValues.Length, 1 /* time steps count */ };
+			compressionParameters.Level = 0; // no compression, only copying data to byte array
+			compressionParameters.DataType = DataArrayType.Float64;
+			compressionParameters.Dimensions = new int[] { dataValues.Length, 1 /* time steps count */ };
 
 			// ignoring parameters
 
@@ -28,30 +28,18 @@ namespace MeshEditor.LayerManager.Compression
 			return bytes;
 		}
 
-		public double[] Decompress(byte[] compressedData, Dictionary<string, object> compressionParameters)
+		public double[] Decompress(byte[] compressedData, CompressionDescriptor compressionParameters)
 		{
-			int level = 0;
-			string type = "Double";
-			int[] dimensions = null;
-
-			object parameter;
-			if (compressionParameters.TryGetValue("level", out parameter))
-				level = (int)parameter;
-			if (compressionParameters.TryGetValue("type", out parameter))
-				type = (string)parameter;
-			if (compressionParameters.TryGetValue("dimensions", out parameter))
-				dimensions = (int[])parameter;
-
-			if (dimensions?.Length != 2 || dimensions[0] < 0 || dimensions[1] < 1)
+			if (compressionParameters.Dimensions?.Length != 2 || compressionParameters.Dimensions[0] < 0 || compressionParameters.Dimensions[1] < 1)
 				throw new Exception("Unknown dimensions");
-			if (dimensions[1] > 1)
+			if (compressionParameters.Dimensions[1] > 1)
 				throw new NotImplementedException();
-			if (level != 0)
+			if (compressionParameters.Level != 0)
 				throw new NotImplementedException();
-			if (type != "Double")
+			if (compressionParameters.DataType != DataArrayType.Float64)
 				throw new NotImplementedException();
 
-			double[] values = new double[dimensions[0]];
+			double[] values = new double[compressionParameters.Dimensions[0]];
 			Buffer.BlockCopy(compressedData, 0, values, 0, compressedData.Length);
 			return values;
 		}

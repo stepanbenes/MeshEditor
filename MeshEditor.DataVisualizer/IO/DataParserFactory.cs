@@ -28,7 +28,7 @@ namespace MeshEditor.DataVisualizer.IO
 				case ".pvd": // ParaView Data file format, collection of pointers to VTK files
 					return new ParaViewDataFileParser(filename);
 				case ".json":
-					return new JsonDataFileParser(filename);
+					return new LayerResultFileParser(filename);
 
 				default:
 					throw new FileParserException($"This data format is not supported ({extension}).", filename);

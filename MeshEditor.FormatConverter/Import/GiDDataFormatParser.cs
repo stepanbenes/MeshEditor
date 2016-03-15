@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
 
@@ -82,7 +83,7 @@ namespace MeshEditor.FormatConverter.Import
 				(
 					DataValues,
 					Ids,
-					NumberOfComponents.Value,
+					data.NumberOfComponents,
 					geometry,
 					targetDataLocation,
 					Location.Value,

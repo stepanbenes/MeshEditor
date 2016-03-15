@@ -47,6 +47,11 @@
     <Compile Include="Common\ArrayExtensions.cs" />
     <Compile Include="Compression\GeneralCompressionService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
+    <Compile Include="Data\CellType.cs" />
+    <Compile Include="Data\CompressionDescriptor.cs" />
+    <Compile Include="Data\DataArrayType.cs" />
+    <Compile Include="Data\DataLocationType.cs" />
+    <Compile Include="Data\FieldType.cs" />
     <Compile Include="Data\LayerMesh.cs" />
     <Compile Include="Data\LayerResult.cs" />
     <Compile Include="Data\ResultDescriptor.cs" />

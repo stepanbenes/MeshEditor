@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Common;
+using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.FormatConverter.Import
 {
@@ -329,10 +330,13 @@ namespace MeshEditor.FormatConverter.Import
 							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 							{
 								int pointId = ids[idIndex];
-								int pointIndex = geometry.PointIdIndexMap[pointId];
-								for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+								int pointIndex;
+								if (geometry.PointIdIndexMap.TryGetValue(pointId, out pointIndex))
 								{
-									result[pointIndex * numberOfComponents + componentIndex] = values[idIndex * numberOfComponents + componentIndex];
+									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+									{
+										result[pointIndex * numberOfComponents + componentIndex] = values[idIndex * numberOfComponents + componentIndex];
+									}
 								}
 							}
 							break;
@@ -406,15 +410,18 @@ namespace MeshEditor.FormatConverter.Import
 							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 							{
 								int cellId = ids[idIndex];
-								int cellIndex = geometry.CellIdIndexMap[cellId];
-								for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+								int cellIndex;
+								if (geometry.CellIdIndexMap.TryGetValue(cellId, out cellIndex))
 								{
-									double aggregate = 0.0;
-									for (int gpIndex = 0; gpIndex < gaussPoints.NumberOfGaussPoints; gpIndex++)
+									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 									{
-										aggregate += values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + componentIndex * numberOfComponents + gpIndex];
+										double aggregate = 0.0;
+										for (int gpIndex = 0; gpIndex < gaussPoints.NumberOfGaussPoints; gpIndex++)
+										{
+											aggregate += values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + componentIndex * numberOfComponents + gpIndex];
+										}
+										result[cellIndex * numberOfComponents + componentIndex] = aggregate / gaussPoints.NumberOfGaussPoints;
 									}
-									result[cellIndex * numberOfComponents + componentIndex] = aggregate / gaussPoints.NumberOfGaussPoints;
 								}
 							}
 							break;

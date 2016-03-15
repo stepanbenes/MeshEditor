@@ -74,7 +74,7 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 
 			LayerMesh layerMesh = createLayerMeshFromGeometry(geometry, layerId);
-			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{layerId}.layer");
+			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer");
 
 			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
 
@@ -90,7 +90,7 @@ namespace MeshEditor.LayerManager
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
 
-					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{dataIndex}.result");
+					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.result");
 				}
 				dataIndex += dataField.NumberOfComponents;
 			}
@@ -112,6 +112,15 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
+		public IEnumerable<DataDescription> LoadData(Uri uri)
+		{
+			using (Stream stream = storageService.Load(uri))
+			{
+				LayerResult layerResult = layerSerializer.Deserialize<LayerResult>(stream);
+				return createDataDescriptionFromLayerResult(layerResult);
+			}
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -125,14 +134,14 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		protected string CompressData(double[] dataValues, out Dictionary<string, object> compressionParameters)
+		protected string CompressData(double[] dataValues, out CompressionDescriptor compressionParameters)
 		{
-			compressionParameters = new Dictionary<string, object>(); // works as in/out bag of parameters that should be then written to output layer file
+			compressionParameters = new CompressionDescriptor(); // works as in/out bag of parameters that should be then written to output layer file
 			byte[] compressedData = compressionService.Compress(dataValues, compressionParameters);
 			return Convert.ToBase64String(compressedData);
 		}
 
-		protected double[] DecompressData(string encodedData, Dictionary<string, object> compressionParameters)
+		protected double[] DecompressData(string encodedData, CompressionDescriptor compressionParameters)
 		{
 			byte[] compressedData = Convert.FromBase64String(encodedData);
 			return compressionService.Decompress(compressedData, compressionParameters);
@@ -203,7 +212,7 @@ namespace MeshEditor.LayerManager
 					ComponentName = dataField.ComponentNames?[componentIndex],
 					Index = dataIndex + componentIndex,
 					TimeSteps = new[] { dataField.TimeStep ?? 0 },
-					Location = dataField.LocationType.ToString()
+					Location = dataField.LocationType
 				};
 
 				double[] allValues = dataField.Data;
@@ -214,13 +223,28 @@ namespace MeshEditor.LayerManager
 					componentValues[hip] = allValues[hop];
 				}
 
-				Dictionary<string, object> compressionParameters;
+				CompressionDescriptor compressionParameters;
 
 				layerResult.Data = CompressData(componentValues, out compressionParameters);
 				layerResult.Compression = compressionParameters;
 
 				yield return layerResult;
 			}
+		}
+
+		private IEnumerable<DataDescription> createDataDescriptionFromLayerResult(LayerResult layerResult)
+		{
+			DataDescription data = new DataDescription();
+
+			data.Name = layerResult.FieldName;
+			data.TimeStep = layerResult.TimeSteps.Single();
+			data.ComponentNames = new[] { layerResult.ComponentName };
+			data.FieldType = FieldType.Scalar;
+			data.LocationType = DataLocationType.Points;
+			data.NumberOfComponents = 1;
+			data.Data = DecompressData(layerResult.Data, layerResult.Compression);
+
+			yield return data;
 		}
 
 		#endregion

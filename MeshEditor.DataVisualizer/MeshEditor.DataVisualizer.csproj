@@ -59,7 +59,7 @@
     <Compile Include="Data\ScalarDataDisplayMethod.cs" />
     <Compile Include="Graphics\VectorField.cs" />
     <Compile Include="IO\DataParserFactory.cs" />
-    <Compile Include="IO\JsonDataFileParser.cs" />
+    <Compile Include="IO\LayerResultFileParser.cs" />
     <Compile Include="IO\ParaViewDataFileParser.cs" />
     <Compile Include="IO\PositionAwareStreamReader.cs" />
     <Compile Include="IO\VTKXmlDataFileParser.cs" />

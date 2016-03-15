@@ -104,7 +104,6 @@
     <Compile Include="Graphics\VBO.cs" />
     <Compile Include="IO\GiDMshFileFormatParser.cs" />
     <Compile Include="IO\GiDMshFileFormatSaver.cs" />
-    <Compile Include="IO\JsonFileParserBase.cs" />
     <Compile Include="IO\LayerMeshFileParser.cs" />
     <Compile Include="IO\MeshParserFactory.cs" />
     <Compile Include="IO\MeshSaverFactory.cs" />

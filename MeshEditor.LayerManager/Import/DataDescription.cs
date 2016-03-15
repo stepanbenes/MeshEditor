@@ -3,23 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.LayerManager.Import
 {
-	public enum FieldType
-	{
-		Scalar = 1,
-		Vector = 2,
-		Tensor = 3,
-	}
-
-	public enum DataLocationType
-	{
-		Points = 1,
-		CellPoints = 2,
-		Cells = 3,
-	}
-
 	public class DataDescription
 	{
 		public string Name { get; set; }
