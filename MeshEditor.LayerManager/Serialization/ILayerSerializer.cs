@@ -10,7 +10,7 @@ namespace MeshEditor.LayerManager.Serialization
 {
 	public interface ILayerSerializer
 	{
-		void Serialize<T>(T layerObject, string recordName, IStorageService storage);
-		T Deserialize<T>(string recordName, IStorageService storage);
+		void Serialize<T>(T layerObject, Stream stream);
+		T Deserialize<T>(Stream stream);
 	}
 }

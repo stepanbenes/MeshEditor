@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace MeshEditor.LayerManager
 			ICompressionService compressionService = null)
 		{
 			this.storageService = storageService;
-			this.layerSerializer = layerSerializer ?? new MemorySerializer();
+			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
 			this.compressionService = compressionService ?? new GeneralCompressionService();
 		}
 
@@ -48,9 +49,19 @@ namespace MeshEditor.LayerManager
 
 		#region Protected methods
 
-		protected void StoreLayerFile<T>(T layerFile, string recordName)
+		protected void StoreLayerFile<T>(T layerObject, Uri uri)
 		{
-			layerSerializer.Serialize(layerFile, recordName, storageService);
+			if (storageService == null)
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				using (Stream stream = storageService.Save(uri))
+				{
+					layerSerializer.Serialize(layerObject, stream);
+				}
+			}
 		}
 
 		protected string CompressData(double[] dataValues, out Dictionary<string, object> compressionParameters)

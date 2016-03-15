@@ -14,20 +14,20 @@ namespace MeshEditor.FormatConverter.Import
 	class VTKXmlDataFormatParser : VTKXmlFormatParserBase, IDataImportService
 	{
 		IStorageService storageService;
-		IEnumerable<string> filenames;
+		IEnumerable<Uri> uris;
 
-		public VTKXmlDataFormatParser(IStorageService storageService, IEnumerable<string> filenames)
+		public VTKXmlDataFormatParser(IStorageService storageService, IEnumerable<Uri> uris)
 		{
 			this.storageService = storageService;
-			this.filenames = filenames;
+			this.uris = uris;
 		}
 
 		public IEnumerable<DataDescription> ReadData(GeometryDescription ignored)
 		{
-			foreach (string filename in filenames)
+			foreach (Uri uri in uris)
 			{
 				string fileType;
-				using (Stream fileStream = storageService.Load(filename))
+				using (Stream fileStream = storageService.Load(uri))
 				using (XmlReader input = InitInput(fileStream, out fileType))
 				{
 					Debug.Assert(input != null);
@@ -102,7 +102,7 @@ namespace MeshEditor.FormatConverter.Import
 						DataDescription dataDescription = new DataDescription
 						{
 							Name = dataArrayName,
-							TimeStep = tryGetOrdinalFromFileName(filename),
+							TimeStep = tryGetOrdinalFromFileName(uri.LocalPath),
 							NumberOfComponents = numberOfComponents,
 							ComponentNames = null, // or new string[NumberOfDataComponents]
 							FieldType = fieldType,

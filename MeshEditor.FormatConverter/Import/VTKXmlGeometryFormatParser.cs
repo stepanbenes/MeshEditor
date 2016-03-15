@@ -14,18 +14,18 @@ namespace MeshEditor.FormatConverter.Import
 	class VTKXmlGeometryFormatParser : VTKXmlFormatParserBase, IGeometryImportService
 	{
 		IStorageService storageService;
-		string filename;
+		Uri uri;
 
-		public VTKXmlGeometryFormatParser(IStorageService storageService, string filename)
+		public VTKXmlGeometryFormatParser(IStorageService storageService, Uri uri)
 		{
 			this.storageService = storageService;
-			this.filename = filename;
+			this.uri = uri;
 		}
 
 		public GeometryDescription ReadGeometry()
 		{
 			string fileType;
-			using (Stream fileStream = storageService.Load(filename))
+			using (Stream fileStream = storageService.Load(uri))
 			using (XmlReader input = InitInput(fileStream, out fileType))
 			{
 				Debug.Assert(input != null);

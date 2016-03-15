@@ -11,49 +11,20 @@ namespace MeshEditor.LayerManager.Storage
 {
 	public class LocalFileSystemStorageService : IStorageService
 	{
-		string directoryName;
-
-		public LocalFileSystemStorageService(string directoryName)
+		public Stream Load(Uri uri)
 		{
-			this.directoryName = directoryName;
+			return new FileStream(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 
-		public Stream Load(string fileName)
+		public Stream Save(Uri uri)
 		{
-			Debug.Assert(!Path.IsPathRooted(fileName));
-			Debug.Assert(!string.IsNullOrEmpty(fileName));
-			Debug.Assert(Path.HasExtension(fileName));
-
-			return new FileStream(Path.Combine(directoryName, fileName), FileMode.Open, FileAccess.Read, FileShare.Read);
-		}
-
-		public Stream Load(string recordName, string fileExtension)
-		{
-			Debug.Assert(!Path.IsPathRooted(recordName));
-			Debug.Assert(!string.IsNullOrEmpty(recordName));
-			Debug.Assert(!string.IsNullOrEmpty(fileExtension));
-			Debug.Assert(fileExtension.StartsWith("."));
-
-			return Load(recordName + fileExtension);
-		}
-
-		public Stream Save(string fileName)
-		{
-			Debug.Assert(!Path.IsPathRooted(fileName));
-			Debug.Assert(!string.IsNullOrEmpty(fileName));
-			Debug.Assert(Path.HasExtension(fileName));
-
-			return new FileStream(Path.Combine(directoryName, fileName), FileMode.OpenOrCreate/**/, FileAccess.Write, FileShare.None);
-		}
-
-		public Stream Save(string recordName, string fileExtension)
-		{
-			Debug.Assert(!Path.IsPathRooted(recordName));
-			Debug.Assert(!string.IsNullOrEmpty(recordName));
-			Debug.Assert(!string.IsNullOrEmpty(fileExtension));
-			Debug.Assert(fileExtension.StartsWith("."));
-
-			return Save(recordName + fileExtension);
+			string localPath = uri.LocalPath;
+			string directory = Path.GetDirectoryName(localPath);
+			if (!Directory.Exists(directory))
+			{
+				Directory.CreateDirectory(directory);
+			}
+			return new FileStream(localPath, FileMode.OpenOrCreate/**/, FileAccess.Write, FileShare.None);
 		}
 	}
 }

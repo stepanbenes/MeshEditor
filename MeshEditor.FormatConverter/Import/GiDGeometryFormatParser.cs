@@ -37,12 +37,12 @@ namespace MeshEditor.FormatConverter.Import
 		#region Fields, constructor
 
 		IStorageService storageService;
-		string filename;
+		Uri uri;
 
-		public GiDGeometryFormatParser(IStorageService storageService, string filename)
+		public GiDGeometryFormatParser(IStorageService storageService, Uri uri)
 		{
 			this.storageService = storageService;
-			this.filename = filename;
+			this.uri = uri;
 		}
 
 		#endregion
@@ -61,7 +61,7 @@ namespace MeshEditor.FormatConverter.Import
 			Dictionary<int, int> nodeIdIndexMap = new Dictionary<int, int>();
 			Dictionary<int, int> elementIdIndexMap = new Dictionary<int, int>();
 
-			using (Stream fileStream = storageService.Load(filename))
+			using (Stream fileStream = storageService.Load(uri))
 			using (TextReader reader = new StreamReader(fileStream))
 			{
 				string line;

@@ -113,12 +113,12 @@ namespace MeshEditor.FormatConverter.Import
 		#region Fields, Constructor
 
 		IStorageService storageService;
-		IEnumerable<string> filenames;
+		IEnumerable<Uri> uris;
 
-		public GiDDataFormatParser(IStorageService storageService, IEnumerable<string> filenames)
+		public GiDDataFormatParser(IStorageService storageService, IEnumerable<Uri> uris)
 		{
 			this.storageService = storageService;
-			this.filenames = filenames;
+			this.uris = uris;
 		}
 
 		#endregion
@@ -129,9 +129,9 @@ namespace MeshEditor.FormatConverter.Import
 		{
 			// TODO: replace asserts with throws
 
-			foreach (string filename in filenames)
+			foreach (Uri uri in uris)
 			{
-				using (Stream fileStream = storageService.Load(filename))
+				using (Stream fileStream = storageService.Load(uri))
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;

@@ -9,9 +9,7 @@ namespace MeshEditor.LayerManager.Storage
 {
 	public interface IStorageService
 	{
-		Stream Save(string fileName);
-		Stream Save(string recordName, string fileExtension);
-		Stream Load(string fileName);
-		Stream Load(string recordName, string fileExtension);
+		Stream Save(Uri uri);
+		Stream Load(Uri uri);
 	}
 }

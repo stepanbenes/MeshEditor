@@ -12,19 +12,19 @@ namespace MeshEditor.FormatConverter.Import
 {
 	static class DataFormatParserFactory
 	{
-		public static IDataImportService Create(IStorageService storageService, IEnumerable<string> filenames)
+		public static IDataImportService Create(IStorageService storageService, IEnumerable<Uri> uris)
 		{
-			Debug.Assert(filenames != null);
-			Debug.Assert(filenames.Count() > 0);
+			Debug.Assert(uris != null);
+			Debug.Assert(uris.Count() > 0);
 
-			var extension = Path.GetExtension(filenames.First()).ToLower();
+			var extension = Path.GetExtension(uris.First().LocalPath).ToLower();
 			// pick the right loader according to filename extension
 			switch (extension)
 			{
 				case ".res": // GiD results 
-					return new GiDDataFormatParser(storageService, filenames);
+					return new GiDDataFormatParser(storageService, uris);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlDataFormatParser(storageService, filenames);
+					return new VTKXmlDataFormatParser(storageService, uris);
 
 				default:
 					throw new NotSupportedException();

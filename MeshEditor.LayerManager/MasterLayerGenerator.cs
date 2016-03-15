@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace MeshEditor.LayerManager
 
 		#region Public methods
 
-		public Guid Generate(/*Guid projectGuid, */ string projectName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public Guid Generate(string projectName, Uri projectLocation, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
 			if (geometryImportService == null)
 			{
@@ -49,8 +50,9 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 
 			LayerMesh layerMesh = createLayerMeshFrom(geometry, layerId);
+			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{layerId}.layer");
 
-			StoreLayerFile(layerMesh, $"{layerId}.mesh");
+			StoreLayerFile(layerMesh, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.mesh")));
 
 			var resultDescriptors = new List<ResultDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
@@ -64,7 +66,7 @@ namespace MeshEditor.LayerManager
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
 
-					StoreLayerFile(layerResult, $"{layerId}.{layerResult.Index}.result");
+					StoreLayerFile(layerResult, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.{layerResult.Index}.result")));
 				}
 				dataIndex += dataField.NumberOfComponents;
 			}
@@ -72,7 +74,7 @@ namespace MeshEditor.LayerManager
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
 			layerSummary.Results = resultDescriptors.ToArray();
 
-			StoreLayerFile(layerSummary, $"{layerId}.summary");
+			StoreLayerFile(layerSummary, new Uri(projectLocation, Path.Combine(layerDirectory, $"{layerId}.layer")));
 
 			return layerId;
 		}
