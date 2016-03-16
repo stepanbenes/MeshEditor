@@ -26,91 +26,32 @@ namespace MeshEditor.LayerManager.Import
 		{
 			foreach (Uri uri in uris)
 			{
-				string fileType;
+				double? timeStep = tryGetOrdinalFromFileName(uri.LocalPath);
 				using (Stream fileStream = storageService.Load(uri))
-				using (XmlReader input = InitInput(fileStream, out fileType))
 				{
-					Debug.Assert(input != null);
-					if (fileType?.ToLower() != "unstructuredgrid")
+					string fileType;
+					using (XmlReader input = InitInput(fileStream, out fileType))
 					{
-						throw new FormatException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.");
-					}
-
-					int numberOfPoints, numberOfCells;
-					Dictionary<string, FieldType> fieldNameTypeMap;
-					readToPointDataElement(input, out numberOfPoints, out numberOfCells, out fieldNameTypeMap);
-
-					while (true)
-					{
-						if (!input.ReadToDescendant("DataArray") && !input.ReadToNextSibling("DataArray"))
+						Debug.Assert(input != null);
+						if (fileType?.ToLower() != "unstructuredgrid")
 						{
-							break; // end of PointData, no DataArray found in this element
+							throw new FormatException($"VTK file type '{fileType}' is not supported. Only 'UnstructuredGrid' type is supported.");
 						}
 
-						string dataArrayName = null;
-						int numberOfComponents = 1; // one component is default in case of missing attribute
-						DataArrayFormat? currentDataArrayFormat = null;
-						DataArrayType? currentDataArrayType = null;
-						while (input.MoveToNextAttribute())
+						int numberOfPoints, numberOfCells;
+						readToPieceElement(input, out numberOfPoints, out numberOfCells);
+
+						foreach (var dataDescription in parseDataArraysInLocation(input, DataLocationType.Points, timeStep))
 						{
-							switch (input.Name.ToLower())
-							{
-								case "type":
-									currentDataArrayType = TryParseDataArrayType(input.Value);
-									break;
-								case "name":
-									dataArrayName = input.Value;
-									break;
-								case "numberofcomponents":
-									numberOfComponents = ParseInt32(input.Value);
-									break;
-								case "format":
-									currentDataArrayFormat = TryParseDataArrayFormat(input.Value);
-									break;
-							}
+							Debug.Assert(dataDescription.Data.Length == numberOfPoints * dataDescription.NumberOfComponents);
+							yield return dataDescription;
 						}
 
-						if (!currentDataArrayType.HasValue)
+						foreach (var dataDescription in parseDataArraysInLocation(input, DataLocationType.Cells, timeStep))
 						{
-							throw new FormatException("Unknown data type.");
+							Debug.Assert(dataDescription.Data.Length == numberOfCells * dataDescription.NumberOfComponents);
+							yield return dataDescription;
 						}
-
-						if (!currentDataArrayFormat.HasValue)
-						{
-							throw new FormatException("Unknown data format.");
-						}
-
-						if (currentDataArrayFormat != DataArrayFormat.Ascii)
-						{
-							throw new FormatException("Only Ascii data array format is supported.");
-						}
-
-						input.MoveToElement(); // move attributes back to beginning of the DataArray element
-
-						FieldType fieldType;
-						if (!fieldNameTypeMap.TryGetValue(dataArrayName, out fieldType))
-						{
-							throw new FormatException($"Data array with name '{dataArrayName}' was not found.");
-						}
-
-						// -----------------------
-
-						double[] values = ParseFloat64DataArray(input, currentDataArrayFormat.Value, currentDataArrayType.Value);
-
-						Debug.Assert(values.Length == numberOfPoints * numberOfComponents);
-						
-						DataDescription dataDescription = new DataDescription
-						{
-							Name = dataArrayName,
-							TimeStep = tryGetOrdinalFromFileName(uri.LocalPath),
-							NumberOfComponents = numberOfComponents,
-							ComponentNames = null, // or new string[NumberOfDataComponents]
-							FieldType = fieldType,
-							Location = DataLocationType.Points, /**/
-							Data = values
-						};
-
-						yield return dataDescription;
 					}
 				}
 			}
@@ -119,6 +60,83 @@ namespace MeshEditor.LayerManager.Import
 		}
 
 		#region Private methods
+
+		private static IEnumerable<DataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double? timeStep)
+		{
+			Dictionary<string, FieldType> fieldNameTypeMap;
+			readToDataElement(input, location, out fieldNameTypeMap);
+
+			while (true)
+			{
+				if (!input.ReadToDescendant("DataArray") && !input.ReadToNextSibling("DataArray"))
+				{
+					break; // end of PointData, no DataArray found in this element
+				}
+
+				string dataArrayName = null;
+				int numberOfComponents = 1; // one component is default in case of missing attribute
+				DataArrayFormat? currentDataArrayFormat = null;
+				DataArrayType? currentDataArrayType = null;
+				while (input.MoveToNextAttribute())
+				{
+					switch (input.Name.ToLower())
+					{
+						case "type":
+							currentDataArrayType = TryParseDataArrayType(input.Value);
+							break;
+						case "name":
+							dataArrayName = input.Value;
+							break;
+						case "numberofcomponents":
+							numberOfComponents = ParseInt32(input.Value);
+							break;
+						case "format":
+							currentDataArrayFormat = TryParseDataArrayFormat(input.Value);
+							break;
+					}
+				}
+
+				if (!currentDataArrayType.HasValue)
+				{
+					throw new FormatException("Unknown data type.");
+				}
+
+				if (!currentDataArrayFormat.HasValue)
+				{
+					throw new FormatException("Unknown data format.");
+				}
+
+				if (currentDataArrayFormat != DataArrayFormat.Ascii)
+				{
+					throw new FormatException("Only Ascii data array format is supported.");
+				}
+
+				input.MoveToElement(); // move attributes back to beginning of the DataArray element
+
+				FieldType fieldType;
+				if (!fieldNameTypeMap.TryGetValue(dataArrayName, out fieldType))
+				{
+					throw new FormatException($"Data array with name '{dataArrayName}' was not found.");
+				}
+
+				// -----------------------
+
+				double[] values = ParseFloat64DataArray(input, currentDataArrayFormat.Value, currentDataArrayType.Value);
+
+				DataDescription dataDescription = new DataDescription
+				{
+					Name = dataArrayName,
+					TimeStep = timeStep,
+					NumberOfComponents = numberOfComponents,
+					ComponentNames = null, // or new string[NumberOfDataComponents]
+					FieldType = fieldType,
+					Location = location,
+					Data = values
+				};
+
+				yield return dataDescription;
+			}
+		}
 
 		private static int? tryGetOrdinalFromFileName(string filename)
 		{
@@ -129,7 +147,7 @@ namespace MeshEditor.LayerManager.Import
 			return null;
 		}
 
-		private static void readToPointDataElement(XmlReader input, out int numberOfPoints, out int numberOfCells, out Dictionary<string, FieldType> fieldNameTypeMap)
+		private static void readToPieceElement(XmlReader input, out int numberOfPoints, out int numberOfCells)
 		{
 			if (!input.ReadToDescendant("UnstructuredGrid"))
 			{
@@ -160,10 +178,27 @@ namespace MeshEditor.LayerManager.Import
 			{
 				ThrowElementIsMissing("Piece");
 			}
+		}
 
-			if (!input.ReadToDescendant("PointData"))
+		private static void readToDataElement(XmlReader input, DataLocationType location, out Dictionary<string, FieldType> fieldNameTypeMap)
+		{
+			string elementName;
+			switch (location)
 			{
-				ThrowElementIsMissing("PointData");
+				case DataLocationType.Points:
+					elementName = "PointData";
+					break;
+				case DataLocationType.Cells:
+					elementName = "CellData";
+					break;
+				case DataLocationType.CellPoints:
+				default:
+					throw new NotSupportedException();
+			}
+
+			if (!input.ReadToFollowing(elementName))
+			{
+				ThrowElementIsMissing(elementName);
 			}
 
 			fieldNameTypeMap = new Dictionary<string, FieldType>();
@@ -193,7 +228,7 @@ namespace MeshEditor.LayerManager.Import
 				}
 			}
 
-			input.MoveToElement(); // move from attribute back to Piece element
+			input.MoveToElement(); // move from attributes back to element
 		}
 
 		#endregion
