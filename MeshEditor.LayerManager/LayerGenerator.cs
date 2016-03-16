@@ -74,7 +74,7 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 
 			LayerMesh layerMesh = createLayerMeshFromGeometry(geometry, layerId);
-			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer");
+			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer"); // TODO: make valid file name from projectName
 
 			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
 

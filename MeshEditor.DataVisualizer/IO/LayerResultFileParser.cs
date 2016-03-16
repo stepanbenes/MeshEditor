@@ -48,7 +48,7 @@ namespace MeshEditor.DataVisualizer.IO
 
 			DataDescription data = dataEnumerator.Current;
 
-			DataType dataType = new DataType(data.Name, Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), data.ComponentNames);
+			DataType dataType = new DataType(data.Name + ": " + data.ComponentNames.Single(), Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), data.ComponentNames);
 			DataInfo dataInfo = new DataInfo(dataType, null, data.TimeStep ?? 0, convertLocationTypeToDataLocation(data.Location));
 			return dataInfo;
 		}
@@ -62,9 +62,18 @@ namespace MeshEditor.DataVisualizer.IO
 
 			DataDescription data = dataEnumerator.Current;
 
+			if (data.NumberOfComponents != 1)
+			{
+				throw new NotSupportedException();
+			}
+
 			for (int index = 0; index < data.Data.Length; index += data.NumberOfComponents)
 			{
-				yield return new NodeValue(index, Functions.GetSliceOfArray(data.Data, index, data.NumberOfComponents));
+				double value = data.Data[index];
+				if (!double.IsNaN(value))
+				{
+					yield return new NodeValue(index, new[] { value });
+				}
 			}
 		}
 
