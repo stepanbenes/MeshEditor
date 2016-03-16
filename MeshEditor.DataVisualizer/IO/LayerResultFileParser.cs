@@ -49,7 +49,7 @@ namespace MeshEditor.DataVisualizer.IO
 			DataDescription data = dataEnumerator.Current;
 
 			DataType dataType = new DataType(data.Name, Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), data.ComponentNames);
-			DataInfo dataInfo = new DataInfo(dataType, null, data.TimeStep ?? 0, convertLocationTypeToDataLocation(data.LocationType));
+			DataInfo dataInfo = new DataInfo(dataType, null, data.TimeStep ?? 0, convertLocationTypeToDataLocation(data.Location));
 			return dataInfo;
 		}
 

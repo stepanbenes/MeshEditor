@@ -212,7 +212,7 @@ namespace MeshEditor.LayerManager
 					ComponentName = dataField.ComponentNames?[componentIndex],
 					Index = dataIndex + componentIndex,
 					TimeSteps = new[] { dataField.TimeStep ?? 0 },
-					Location = dataField.LocationType
+					Location = dataField.Location
 				};
 
 				double[] allValues = dataField.Data;
@@ -240,7 +240,7 @@ namespace MeshEditor.LayerManager
 			data.TimeStep = layerResult.TimeSteps.Single();
 			data.ComponentNames = new[] { layerResult.ComponentName };
 			data.FieldType = FieldType.Scalar;
-			data.LocationType = DataLocationType.Points;
+			data.Location = layerResult.Location;
 			data.NumberOfComponents = 1;
 			data.Data = DecompressData(layerResult.Data, layerResult.Compression);
 

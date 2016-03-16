@@ -107,7 +107,7 @@ namespace MeshEditor.FormatConverter.Import
 							NumberOfComponents = numberOfComponents,
 							ComponentNames = null, // or new string[NumberOfDataComponents]
 							FieldType = fieldType,
-							LocationType = DataLocationType.Points, /**/
+							Location = DataLocationType.Points, /**/
 							Data = values
 						};
 

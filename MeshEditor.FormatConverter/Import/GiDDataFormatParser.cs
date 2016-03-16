@@ -75,7 +75,7 @@ namespace MeshEditor.FormatConverter.Import
 					TimeStep = TimeStep,
 					ComponentNames = finalComponentNames,
 					FieldType = FieldType.Value,
-					LocationType = targetDataLocation,
+					Location = targetDataLocation,
 					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
 				};
 

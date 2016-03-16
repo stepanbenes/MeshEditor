@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.Import
 		public string[] ComponentNames { get; set; }
 
 		public FieldType FieldType { get; set; }
-		public DataLocationType LocationType { get; set; }
+		public DataLocationType Location { get; set; }
 		
 		public int NumberOfComponents { get; set; }
 
