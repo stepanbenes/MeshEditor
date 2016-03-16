@@ -7,8 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using MeshEditor.LayerManager.Data;
 
-namespace MeshEditor.FormatConverter.Import
+namespace MeshEditor.LayerManager.Import
 {
 	abstract class VTKXmlFormatParserBase : FormatParserBase
 	{
@@ -16,14 +17,6 @@ namespace MeshEditor.FormatConverter.Import
 		{
 			Ascii,
 			Binary
-		}
-
-		protected enum DataArrayType
-		{
-			Float64,
-			Float32,
-			Int32,
-			UInt8
 		}
 
 		#region Static members

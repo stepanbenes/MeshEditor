@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.FormatConverter.Import
+namespace MeshEditor.LayerManager.Import
 {
 	abstract class FormatParserBase
 	{
-
 		#region Protected methods
 
 		protected static int ParseInt32(string text)

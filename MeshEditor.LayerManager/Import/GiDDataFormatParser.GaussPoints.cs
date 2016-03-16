@@ -4,11 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Common;
 using MeshEditor.LayerManager.Data;
 
-namespace MeshEditor.FormatConverter.Import
+namespace MeshEditor.LayerManager.Import
 {
 	partial class GiDDataFormatParser
 	{

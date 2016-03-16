@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
 
-namespace MeshEditor.FormatConverter.Import
+namespace MeshEditor.LayerManager
 {
-	static class GeometryFormatParserFactory
+	public static class GeometryFormatParserFactory
 	{
 		public static IGeometryImportService Create(IStorageService storageService, Uri uri)
 		{

@@ -6,7 +6,6 @@ using System.Threading;
 using System.Globalization;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Import;
-using MeshEditor.FormatConverter.Import;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.LayerManager.Serialization;
 
