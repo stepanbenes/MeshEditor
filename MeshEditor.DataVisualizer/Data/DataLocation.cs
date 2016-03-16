@@ -8,8 +8,8 @@ namespace MeshEditor.DataVisualizer.Data
 	public enum DataLocation
 	{
 		Nodes,
-		GaussPoints
-		//ElementNodes,
-		//Elements,
+		GaussPoints,
+		ElementNodes,
+		Elements,
 	}
 }

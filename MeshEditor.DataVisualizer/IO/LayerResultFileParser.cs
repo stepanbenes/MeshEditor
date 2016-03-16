@@ -68,12 +68,24 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new NotSupportedException();
 			}
 
-			for (int index = 0; index < data.Data.Length; index += data.NumberOfComponents)
+			for (int index = 0; index < data.Data.Length; index++)
 			{
 				double value = data.Data[index];
 				if (!double.IsNaN(value))
 				{
-					yield return new NodeValue(index, new[] { value });
+					switch (data.Location)
+					{
+						case DataLocationType.Points:
+							yield return new NodeValue(index, new[] { value });
+							break;
+						case DataLocationType.Cells:
+							yield return new ElementValue(index, new[,] { { value } });
+							break;
+						case DataLocationType.CellPoints:
+						default:
+							throw new NotSupportedException();
+					}
+					
 				}
 			}
 		}
@@ -101,8 +113,10 @@ namespace MeshEditor.DataVisualizer.IO
 			{
 				case DataLocationType.Points:
 					return DataLocation.Nodes;
-				case DataLocationType.CellPoints:
 				case DataLocationType.Cells:
+					return DataLocation.Elements;
+				case DataLocationType.CellPoints:
+					return DataLocation.ElementNodes;
 				default:
 					throw new NotSupportedException();
 			}

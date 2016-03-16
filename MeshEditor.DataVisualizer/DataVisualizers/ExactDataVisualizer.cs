@@ -20,12 +20,11 @@ namespace MeshEditor.DataVisualizer
 		#region Fields
 
 		protected Dictionary<int, Dictionary<int, double>> nodeValues;
-		//Dictionary<int, Dictionary<Element, Dictionary<Node, double>>> elementNodeValues;
+		Dictionary<int, Dictionary<int, double>> elementValues;
+		Dictionary<int, Dictionary<int, Dictionary<int, double>>> elementNodeValues;
 		Dictionary<int, IntervalD> dataValueRangeMap;
 
 		int dataRecordsCount;
-
-		//public bool ShowElementNodesValues { get; set; }
 
 		#endregion
 
@@ -35,7 +34,6 @@ namespace MeshEditor.DataVisualizer
 		{
 			base.Initialize(mesh);
 			this.dataRecordsCount = 0;
-			//ShowElementNodesValues = false; // TODO: deal with element nodes feature
 		}
 
 		public override void LoadData(IApproximationParameters approximationParameters, string[] filenames, LongOpNotifier longOpNotifier)
@@ -48,12 +46,13 @@ namespace MeshEditor.DataVisualizer
 			// --- INIT MAPS ---------------------------------------------
 			if (nodeValues == null)
 				nodeValues = new Dictionary<int, Dictionary<int, double>>();
-			//if (elementNodeValues == null)
-			//	elementNodeValues = new Dictionary<int, Dictionary<Element, Dictionary<Node, double>>>();
+			if (elementNodeValues == null)
+				elementNodeValues = new Dictionary<int, Dictionary<int, Dictionary<int, double>>>();
+			if (elementValues == null)
+				elementValues = new Dictionary<int, Dictionary<int, double>>();
 			if (dataValueRangeMap == null)
 				dataValueRangeMap = new Dictionary<int, IntervalD>();
 			createNodeIndexMap(approximationParameters.LoadInternalEntities);
-			//Dictionary<int, Element> elementMap = null;
 			// -----------------------------------------------------------
 
 			foreach (string filename in filenames)
@@ -77,19 +76,22 @@ namespace MeshEditor.DataVisualizer
 
 						longOpNotifier.ReportProgress((int)dataParser.PercentageRead, taskName, operationName: string.Format("Time: {0}  Data: {1}", dataInfo.Time, dataInfo.DataType.Name));
 
-						if (dataInfo.Location == DataLocation.GaussPoints)
+						switch (dataInfo.Location)
 						{
-							throw new NotSupportedException("Gauss-point location not yet supported.");
-							//if (elementMap == null)
-							//	elementMap = createElementMap();
-							//fillElementNodeValues(dataInfo, dataParser.ReadResultBlock(), elementMap, dataInfo.LocationInfo, approximationParameters.GPExptrapolationStrategy);
+							case DataLocation.Nodes:
+								fillNodeValues(dataInfo, dataParser.ReadResultBlock());
+								break;
+							case DataLocation.GaussPoints:
+								throw new NotSupportedException("Gauss-point location not yet supported.");
+							case DataLocation.ElementNodes:
+								throw new NotImplementedException();
+							case DataLocation.Elements:
+								fillElementValues(dataInfo, dataParser.ReadResultBlock());
+								break;
+							default:
+								break;
 						}
-						else // DataLocation.Nodes
-						{
-							Debug.Assert(dataInfo.Location == DataLocation.Nodes);
-							fillNodeValues(dataInfo, dataParser.ReadResultBlock());
-						}
-						
+
 						DataIndexMap[dataInfo] = dataIndexCounter;
 						dataIndexCounter += dataInfo.DataType.ComponentCount;
 					}
@@ -104,23 +106,21 @@ namespace MeshEditor.DataVisualizer
 
 		public override int GetDataColor(Node node, Element element)
 		{
-			//if (ShowElementNodesValues)
-			//{
-			//	Debug.Assert(element != null);
-			//	Dictionary<Element, Dictionary<Node, double>> dict;
-			//	if (elementNodeValues.TryGetValue(Settings.ScalarDataIndex.Index, out dict))
-			//	{
-			//		double value;
-			//		if (dict.ContainsKey(element) && dict[element].TryGetValue(node, out value))
-			//			return GetColorForDataValue(value);
-			//	}
-			//}
-			//else
-			//{
-				Debug.Assert(nodeValues.ContainsKey(Settings.ScalarDataIndex.Index));
+			if (nodeValues.ContainsKey(Settings.ScalarDataIndex.Index))
+			{
 				return GetColorForDataValue(GetDataValue(node, Settings.ScalarDataIndex));
-			//}
-			//return ColorScale.UndefinedValueColor;
+			}
+			if (elementValues.ContainsKey(Settings.ScalarDataIndex.Index))
+			{
+				double value;
+				if (elementValues[Settings.ScalarDataIndex.Index].TryGetValue(element.ID, out value))
+					return GetColorForDataValue(value);
+			}
+			if (elementNodeValues.ContainsKey(Settings.ScalarDataIndex.Index))
+			{
+				throw new NotImplementedException();
+			}
+			return ColorScale.UndefinedValueColor;
 		}
 
 		public override double GetDataValue(Node node, DataIndex dataIndex)
@@ -263,45 +263,36 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		//private void fillElementNodeValues(DataInfo dataInfo, IEnumerable<DataValue> dataValues, Dictionary<int, Element> elementMap, GaussPointsInfo gaussPointsInfo, GaussPointsExtrapolationStrategy strategy)
-		//{
-		//	Debug.Assert(dataInfo != null);
-		//	Debug.Assert(dataValues != null);
-		//	Debug.Assert(elementMap != null);
-		//	Debug.Assert(gaussPointsInfo != null);
+		private void fillElementValues(DataInfo dataInfo, IEnumerable<DataValue> dataValues)
+		{
+			Debug.Assert(dataInfo != null);
+			Debug.Assert(dataValues != null);
 
-		//	foreach (ElementValue elementValue in dataValues)
-		//	{
-		//		if (!elementMap.ContainsKey(elementValue.EntityNumber))
-		//			continue;
-		//		for (int componentIndex = 0; componentIndex < dataInfo.DataType.ComponentCount; componentIndex++)
-		//		{
-		//			Dictionary<Element, Dictionary<Node, double>> dict;
-		//			if (!elementNodeValues.TryGetValue(dataIndexCounter + componentIndex, out dict))
-		//				dict = elementNodeValues[dataIndexCounter + componentIndex] = new Dictionary<Element, Dictionary<Node, double>>();
-		//			//if (!dict.ContainsKey(elementMap[elementValue.EntityNumber]))
-		//			//	dataRecordsCount++;
+			foreach (ElementValue elementValue in dataValues)
+			{
+				for (int componentIndex = 0; componentIndex < dataInfo.DataType.ComponentCount; componentIndex++)
+				{
+					Dictionary<int, double> dict;
+					if (!elementValues.TryGetValue(dataIndexCounter + componentIndex, out dict))
+						dict = elementValues[dataIndexCounter + componentIndex] = new Dictionary<int, double>();
+					if (!dict.ContainsKey(elementValue.EntityNumber))
+						dataRecordsCount++;
 
-		//			double[] gaussPointValues = new double[elementValue.ValueComponents.GetLength(0)];
-		//			if (elementValue.ValueComponents.GetLength(1) > componentIndex) // check if component is specified, if not default value will be zero
-		//			{
-		//				for (int i = 0; i < gaussPointValues.Length; i++)
-		//					gaussPointValues[i] = elementValue.ValueComponents[i, componentIndex];
-		//			}
+					Debug.Assert(elementValue.ValueComponents.GetLength(0) == 1);
 
-		//			Element element = elementMap[elementValue.EntityNumber];
-		//			Dictionary<Node, double> valueMap = gaussPointsInfo.ExtrapolateElementGaussPointValuesToNodes(element, gaussPointValues, strategy);
-		//			dict[element] = valueMap;
+					double value = elementValue.ValueComponents[0, componentIndex];
 
-		//			// min max value range
-		//			IntervalD range;
-		//			if (!dataValueRangeMap.TryGetValue(dataIndexCounter + componentIndex, out range))
-		//				range = IntervalD.InvertedMaxMin;
-		//			range.MergeWith(valueMap.Values);
-		//			dataValueRangeMap[dataIndexCounter + componentIndex] = range;
-		//		}
-		//	}
-		//}
+					dict[elementValue.EntityNumber] = value;
+
+					// min max value range
+					IntervalD range;
+					if (!dataValueRangeMap.TryGetValue(dataIndexCounter + componentIndex, out range))
+						range = IntervalD.InvertedMaxMin;
+					range.MergeWith(value);
+					dataValueRangeMap[dataIndexCounter + componentIndex] = range;
+				}
+			}
+		}
 
 		private void createValueMapForVectorMagnitudes()
 		{

@@ -279,8 +279,6 @@ namespace MeshEditor.FormatConverter.Import
 									if (parserData.NumberOfComponents == null)
 										parserData.NumberOfComponents = tokens.Length - 1;
 
-									Debug.Assert(parserData.NumberOfComponents == tokens.Length - 1); // fill in missing values?
-
 									// save id (point's or element's) to list, it will be useful after reading all data in this block
 
 									int numberOfLinesPerRecord = parserData.LocationName == null ? 1 : parserData.GaussPointsDescriptions[parserData.LocationName].NumberOfGaussPoints;
@@ -288,11 +286,11 @@ namespace MeshEditor.FormatConverter.Import
 									{
 										int id = ParseInt32(tokens[0]);
 										parserData.Ids.Add(id);
-										parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)));
+										parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)).Concat(zeroes((parserData.NumberOfComponents ?? 0) - (tokens.Length - 1)))); // fill in missing values
 									}
 									else
 									{
-										parserData.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)));
+										parserData.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)).Concat(zeroes((parserData.NumberOfComponents ?? 0) - tokens.Length))); // fill in missing values
 									}
 								}
 								break;
@@ -300,6 +298,13 @@ namespace MeshEditor.FormatConverter.Import
 					}
 				}
 			}
+		}
+
+		private static IEnumerable<double> zeroes(int count)
+		{
+			if (count <= 0)
+				return Enumerable.Empty<double>();
+			return Enumerable.Repeat(0.0, count);
 		}
 
 		#endregion
