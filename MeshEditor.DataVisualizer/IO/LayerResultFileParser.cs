@@ -48,7 +48,8 @@ namespace MeshEditor.DataVisualizer.IO
 
 			DataDescription data = dataEnumerator.Current;
 
-			DataType dataType = new DataType(data.Name + ": " + data.ComponentNames.Single(), Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), data.ComponentNames);
+			string componentName = data.ComponentNames.Single() ?? System.IO.Path.GetFileNameWithoutExtension(Filename);
+			DataType dataType = new DataType(data.Name + ": " + componentName, Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), componentName);
 			DataInfo dataInfo = new DataInfo(dataType, null, data.TimeStep ?? 0, convertLocationTypeToDataLocation(data.Location));
 			return dataInfo;
 		}
