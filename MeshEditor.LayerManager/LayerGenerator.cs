@@ -83,7 +83,7 @@ namespace MeshEditor.LayerManager
 			int dataIndex = 1;
 			foreach (var dataField in dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>())
 			{
-				foreach (var layerResult in createLayerResultFrom(dataField, layerId, dataIndex))
+				foreach (var layerResult in createLayerResultFromDataDescription(dataField, layerId, dataIndex))
 				{
 					resultDescriptors.Add(ResultDescriptor.CreateFrom(layerResult));
 
@@ -147,21 +147,37 @@ namespace MeshEditor.LayerManager
 			return compressionService.Decompress(compressedData, compressionParameters);
 		}
 
-		protected static string ConvertArrayToBase64String<TItem>(TItem[] values) where TItem : struct
+		protected static string ConvertArrayToBase64String<T>(T[] values) where T : struct
 		{
-			Debug.Assert(typeof(TItem) != typeof(byte));
-			byte[] bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
-			Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+			// determine the correct type
+			Type itemType = typeof(T);
+			Type actualType = itemType.IsEnum ? Enum.GetUnderlyingType(itemType) : itemType;
+			byte[] bytes;
+			if (actualType != typeof(byte))
+			{
+				bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf(actualType)];
+				Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+			}
+			else
+			{
+				bytes = (byte[])(object)values; // evade C# array cast limitation
+			}
 			return Convert.ToBase64String(bytes);
 		}
 
-		protected static TItem[] ConvertBase64StringToArray<TItem>(string base64String) where TItem : struct
+		protected static T[] ConvertBase64StringToArray<T>(string base64String) where T : struct
 		{
-			Debug.Assert(typeof(TItem) != typeof(byte));
+			// determine the correct type
+			Type itemType = typeof(T);
+			Type actualType = itemType.IsEnum ? Enum.GetUnderlyingType(itemType) : itemType;
 			byte[] bytes = Convert.FromBase64String(base64String);
-			TItem[] values = new TItem[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf<TItem>()];
-			Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
-			return values;
+			if (actualType != typeof(byte))
+			{
+				T[] values = new T[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf<T>()];
+				Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+				return values;
+			}
+			return (T[])(object)bytes; // evade C# array cast limitation
 		}
 
 		#endregion
@@ -175,14 +191,20 @@ namespace MeshEditor.LayerManager
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
 			layerMesh.PointCoordinates = ConvertArrayToBase64String(geometry.PointCoordinates);
 
-			MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
-			faceGenerator.ProcessGeometry(geometry);
+			layerMesh.NumberOfCells = geometry.NumberOfCells;
 
-			layerMesh.NumberOfTriangles = faceGenerator.NumberOfTriangles;
-			layerMesh.TriangleConnectivity = ConvertArrayToBase64String(faceGenerator.TriangleConnectivity);
+			layerMesh.CellConnectivity = ConvertArrayToBase64String(geometry.CellConnectivity);
+			layerMesh.CellOffsets = ConvertArrayToBase64String(geometry.CellOffsets);
+			layerMesh.CellTypes = ConvertArrayToBase64String(geometry.CellTypes);
+			
+			// TODO: ommit offsets and types if all cells are linear triangles
 
-			layerMesh.NumberOfEdges = faceGenerator.NumberOfEdges;
-			layerMesh.EdgeConnectivity = ConvertArrayToBase64String(faceGenerator.EdgeConnectivity);
+			//MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
+			//faceGenerator.ProcessGeometry(geometry);
+			//layerMesh.NumberOfTriangles = faceGenerator.NumberOfTriangles;
+			//layerMesh.TriangleConnectivity = ConvertArrayToBase64String(faceGenerator.TriangleConnectivity);
+			//layerMesh.NumberOfEdges = faceGenerator.NumberOfEdges;
+			//layerMesh.EdgeConnectivity = ConvertArrayToBase64String(faceGenerator.EdgeConnectivity);
 
 			return layerMesh;
 		}
@@ -193,14 +215,14 @@ namespace MeshEditor.LayerManager
 
 			geometry.PointCoordinates = ConvertBase64StringToArray<float>(layerMesh.PointCoordinates);
 			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
-			geometry.CellConnectivity = ConvertBase64StringToArray<int>(layerMesh.TriangleConnectivity);
-			geometry.CellOffsets = Enumerable.Range(1, layerMesh.NumberOfTriangles).Select(i => i * 3).ToArray();
-			geometry.CellTypes = Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfTriangles).ToArray();
+			geometry.CellConnectivity = ConvertBase64StringToArray<int>(layerMesh.CellConnectivity);
+			geometry.CellOffsets = (layerMesh.CellOffsets != null) ? ConvertBase64StringToArray<int>(layerMesh.CellOffsets) : Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * 3).ToArray();
+			geometry.CellTypes = (layerMesh.CellTypes != null) ? ConvertBase64StringToArray<CellType>(layerMesh.CellTypes) : Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfCells).ToArray();
 
 			return geometry;
 		}
 
-		private IEnumerable<LayerResult> createLayerResultFrom(DataDescription dataField, Guid layerId, int dataIndex)
+		private IEnumerable<LayerResult> createLayerResultFromDataDescription(DataDescription dataField, Guid layerId, int dataIndex)
 		{
 			int numberOfComponents = dataField.NumberOfComponents;
 			for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
