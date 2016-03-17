@@ -76,12 +76,12 @@ namespace MeshEditor.DataVisualizer.IO
 					switch (data.Location)
 					{
 						case DataLocationType.Points:
+						case DataLocationType.CellPoints:
 							yield return new NodeValue(index, new[] { value });
 							break;
 						case DataLocationType.Cells:
 							yield return new ElementValue(index, new[,] { { value } });
 							break;
-						case DataLocationType.CellPoints:
 						default:
 							throw new NotSupportedException();
 					}

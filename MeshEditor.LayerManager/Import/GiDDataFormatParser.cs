@@ -65,7 +65,21 @@ namespace MeshEditor.LayerManager.Import
 
 			public DataDescription CreateDataDescription(GeometryDescription geometry)
 			{
-				DataLocationType targetDataLocation = (Location == FileDataLocation.GaussPoints) ? DataLocationType.Cells : DataLocationType.Points; /**/
+				Debug.Assert(Location.HasValue);
+
+				// TODO: This should be user-controlled
+				DataLocationType targetDataLocation;
+				switch (Location)
+				{
+					case FileDataLocation.Nodes:
+						targetDataLocation = DataLocationType.Points  /*or Cells*/;
+						break;
+					case FileDataLocation.GaussPoints:
+						targetDataLocation = (GaussPointsDescriptions[LocationName].NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
+						break;
+					default:
+						throw new NotSupportedException();
+				}
 
 				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
 				DataDescription data = new DataDescription
@@ -78,8 +92,7 @@ namespace MeshEditor.LayerManager.Import
 					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
 				};
 
-				data.Data = convertValues
-				(
+				data.Data = convertValues(
 					DataValues,
 					Ids,
 					data.NumberOfComponents,
@@ -291,6 +304,7 @@ namespace MeshEditor.LayerManager.Import
 									{
 										parserData.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)).Concat(zeroes((parserData.NumberOfComponents ?? 0) - tokens.Length))); // fill in missing values
 									}
+									parserData.LineCounter++;
 								}
 								break;
 						}

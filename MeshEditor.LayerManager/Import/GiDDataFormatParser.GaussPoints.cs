@@ -281,6 +281,362 @@ namespace MeshEditor.LayerManager.Import
 				gaussPointIndex++;
 			}
 
+			public int GetIndexOfNearestGaussPoint(CellType cellType, int cellPointIndex)
+			{
+				double x, y = 0.0, z = 0.0; // natural coordinates
+				switch (cellType)
+				{
+					case CellType.LineLinear:
+					case CellType.LineQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = 0.0;
+								break;
+							case 1:
+								x = 1.0;
+								break;
+							case 2:
+								x = 0.5;
+								break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.TriangleLinear:
+					case CellType.TriangleQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = 0.0;
+								y = 0.0;
+								break;
+							case 1:
+								x = 1.0;
+								y = 0.0;
+								break;
+							case 2:
+								x = 0.0;
+								y = 1.0;
+								break;
+							case 3:
+								x = 0.5;
+								y = 0.0;
+								break;
+							case 4:
+								x = 0.5;
+								y = 0.5;
+								break;
+							case 5:
+								x = 0.0;
+								y = 0.5;
+								break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.QuadLinear:
+					case CellType.QuadQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = -1.0;
+								y = -1.0;
+								break;
+							case 1:
+								x = 1.0;
+								y = -1.0;
+								break;
+							case 2:
+								x = 1.0;
+								y = 1.0;
+								break;
+							case 3:
+								x = -1.0;
+								y = 1.0;
+								break;
+							case 4:
+								x = 0.0;
+								y = -1.0;
+								break;
+							case 5:
+								x = 1.0;
+								y = 0.0;
+								break;
+							case 6:
+								x = 0.0;
+								y = 1.0;
+								break;
+							case 7:
+								x = -1.0;
+								y = 0.0;
+								break;
+							//case 8:
+							//	x = 0.0;
+							//	y = 0.0;
+							//	break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.TetraLinear:
+					case CellType.TetraQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = 0.0;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 1:
+								x = 1.0;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 2:
+								x = 0.0;
+								y = 1.0;
+								z = 0.0;
+								break;
+							case 3:
+								x = 0.0;
+								y = 0.0;
+								z = 1.0;
+								break;
+							case 4:
+								x = 0.5;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 5:
+								x = 0.5;
+								y = 0.5;
+								z = 0.0;
+								break;
+							case 6:
+								x = 0.0;
+								y = 0.5;
+								z = 0.0;
+								break;
+							case 7:
+								x = 0.0;
+								y = 0.0;
+								z = 0.5;
+								break;
+							case 8:
+								x = 0.5;
+								y = 0.0;
+								z = 0.5;
+								break;
+							case 9:
+								x = 0.0;
+								y = 0.5;
+								z = 0.5;
+								break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.WedgeLinear:
+					case CellType.WedgeQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = 0.0;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 1:
+								x = 1.0;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 2:
+								x = 0.0;
+								y = 1.0;
+								z = 0.0;
+								break;
+							case 3:
+								x = 0.0;
+								y = 0.0;
+								z = 1.0;
+								break;
+							case 4:
+								x = 1.0;
+								y = 0.0;
+								z = 1.0;
+								break;
+							case 5:
+								x = 0.0;
+								y = 1.0;
+								z = 1.0;
+								break;
+							case 6:
+								x = 0.5;
+								y = 0.0;
+								z = 0.0;
+								break;
+							case 7:
+								x = 0.5;
+								y = 0.5;
+								z = 0.0;
+								break;
+							case 8:
+								x = 0.0;
+								y = 0.5;
+								z = 0.0;
+								break;
+							case 9:
+								x = 0.0;
+								y = 0.0;
+								z = 0.5;
+								break;
+							case 10:
+								x = 1.0;
+								y = 0.0;
+								z = 0.5;
+								break;
+							case 11:
+								x = 0.0;
+								y = 1.0;
+								z = 0.5;
+								break;
+							case 12:
+								x = 0.5;
+								y = 0.0;
+								z = 1.0;
+								break;
+							case 13:
+								x = 0.5;
+								y = 0.5;
+								z = 1.0;
+								break;
+							case 14:
+								x = 0.0;
+								y = 0.5;
+								z = 1.0;
+								break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.HexaLinear:
+					case CellType.HexaQuadratic:
+						switch (cellPointIndex)
+						{
+							case 0:
+								x = -1.0;
+								y = -1.0;
+								z = -1.0;
+								break;
+							case 1:
+								x = 1.0;
+								y = -1.0;
+								z = -1.0;
+								break;
+							case 2:
+								x = 1.0;
+								y = 1.0;
+								z = -1.0;
+								break;
+							case 3:
+								x = -1.0;
+								y = 1.0;
+								z = -1.0;
+								break;
+							case 4:
+								x = -1.0;
+								y = -1.0;
+								z = 1.0;
+								break;
+							case 5:
+								x = 1.0;
+								y = -1.0;
+								z = 1.0;
+								break;
+							case 6:
+								x = 1.0;
+								y = 1.0;
+								z = 1.0;
+								break;
+							case 7:
+								x = -1.0;
+								y = 1.0;
+								z = 1.0;
+								break;
+
+							case 8:
+								x = 0.0;
+								y = -1.0;
+								z = -1.0;
+								break;
+							case 9:
+								x = 1.0;
+								y = 0.0;
+								z = -1.0;
+								break;
+							case 10:
+								x = 0.0;
+								y = 1.0;
+								z = -1.0;
+								break;
+							case 11:
+								x = -1.0;
+								y = 0.0;
+								z = -1.0;
+								break;
+							case 12:
+								x = -1.0;
+								y = -1.0;
+								z = 0.0;
+								break;
+							case 13:
+								x = 1.0;
+								y = -1.0;
+								z = 0.0;
+								break;
+							case 14:
+								x = 1.0;
+								y = 1.0;
+								z = 0.0;
+								break;
+							case 15:
+								x = -1.0;
+								y = 1.0;
+								z = 0.0;
+								break;
+							case 16:
+								x = 0.0;
+								y = -1.0;
+								z = 1.0;
+								break;
+							case 17:
+								x = 1.0;
+								y = 0.0;
+								z = 1.0;
+								break;
+							case 18:
+								x = 0.0;
+								y = 1.0;
+								z = 1.0;
+								break;
+							case 19:
+								x = -1.0;
+								y = 0.0;
+								z = 1.0;
+								break;
+							default:
+								throw new NotSupportedException();
+						}
+						break;
+					case CellType.Undefined:
+					case CellType.Point:
+					default:
+						throw new NotSupportedException();
+				}
+				return getIndexOfNearestGaussPoint(x, y, z);
+			}
+
 			#endregion
 
 			#region Private methods
@@ -303,6 +659,27 @@ namespace MeshEditor.LayerManager.Import
 					default:
 						throw new NotSupportedException($"This element type is not supported ({ElementType}).");
 				}
+			}
+
+			private int getIndexOfNearestGaussPoint(double x, double y, double z)
+			{
+				Debug.Assert(naturalCoordinates?.Length > 0);
+				int index = -1;
+				double smallestDistanceSquared = double.MaxValue;
+				int dimension = naturalCoordinates.GetLength(1);
+				for (int i = 0; i < NumberOfGaussPoints; i++)
+				{
+					double xDiff = naturalCoordinates[i, 0] - x;
+					double yDiff = dimension > 1 ? naturalCoordinates[i, 1] - y : 0.0;
+					double zDiff = dimension > 2 ? naturalCoordinates[i, 2] - z : 0.0;
+					double distanceSquared = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
+					if (distanceSquared < smallestDistanceSquared)
+					{
+						smallestDistanceSquared = distanceSquared;
+						index = i;
+					}
+				}
+				return index;
 			}
 
 			#endregion
@@ -385,6 +762,7 @@ namespace MeshEditor.LayerManager.Import
 					}
 					break;
 				case DataLocationType.CellPoints:
+					result = createEmptyValueArray(geometry.CellConnectivity.Length * numberOfComponents);
 					switch (fileLocation)
 					{
 						case FileDataLocation.Nodes:
@@ -393,11 +771,30 @@ namespace MeshEditor.LayerManager.Import
 
 							// TODO: add parameter specifying extrapolation strategy
 
-							throw new NotImplementedException();
-
+							int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
+							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
+							{
+								int cellId = ids[idIndex];
+								int cellIndex;
+								if (geometry.CellIdIndexMap.TryGetValue(cellId, out cellIndex))
+								{
+									int previousCellOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
+									int cellOffset = geometry.CellOffsets[cellIndex];
+									for (int offset = previousCellOffset; offset < cellOffset; offset++)
+									{
+										int nearestGaussPointIndex = gaussPoints.GetIndexOfNearestGaussPoint(geometry.CellTypes[cellIndex], offset - previousCellOffset);
+										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+										{
+											result[offset * numberOfComponents + componentIndex] = values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + nearestGaussPointIndex * numberOfComponents + componentIndex];
+										}
+									}
+								}
+							}
+							break;
 						default:
 							throw new NotSupportedException();
 					}
+					break;
 				case DataLocationType.Cells:
 					result = createEmptyValueArray(geometry.NumberOfCells * numberOfComponents);
 					switch (fileLocation)
@@ -417,7 +814,7 @@ namespace MeshEditor.LayerManager.Import
 										double aggregate = 0.0;
 										for (int gpIndex = 0; gpIndex < gaussPoints.NumberOfGaussPoints; gpIndex++)
 										{
-											aggregate += values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + componentIndex * numberOfComponents + gpIndex];
+											aggregate += values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + gpIndex * numberOfComponents + componentIndex];
 										}
 										result[cellIndex * numberOfComponents + componentIndex] = aggregate / gaussPoints.NumberOfGaussPoints;
 									}

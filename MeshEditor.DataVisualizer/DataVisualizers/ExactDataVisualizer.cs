@@ -24,6 +24,8 @@ namespace MeshEditor.DataVisualizer
 		Dictionary<int, Dictionary<int, Dictionary<int, double>>> elementNodeValues;
 		Dictionary<int, IntervalD> dataValueRangeMap;
 
+		Dictionary<int, KeyValuePair<Element, Node>> elementNodeIndexMap;
+
 		int dataRecordsCount;
 
 		#endregion
@@ -34,6 +36,11 @@ namespace MeshEditor.DataVisualizer
 		{
 			base.Initialize(mesh);
 			this.dataRecordsCount = 0;
+			nodeValues = new Dictionary<int, Dictionary<int, double>>();
+			elementNodeValues = new Dictionary<int, Dictionary<int, Dictionary<int, double>>>();
+			elementValues = new Dictionary<int, Dictionary<int, double>>();
+			dataValueRangeMap = new Dictionary<int, IntervalD>();
+			createElementNodeIndexMap(mesh);
 		}
 
 		public override void LoadData(IApproximationParameters approximationParameters, string[] filenames, LongOpNotifier longOpNotifier)
@@ -44,14 +51,6 @@ namespace MeshEditor.DataVisualizer
 				return;
 
 			// --- INIT MAPS ---------------------------------------------
-			if (nodeValues == null)
-				nodeValues = new Dictionary<int, Dictionary<int, double>>();
-			if (elementNodeValues == null)
-				elementNodeValues = new Dictionary<int, Dictionary<int, Dictionary<int, double>>>();
-			if (elementValues == null)
-				elementValues = new Dictionary<int, Dictionary<int, double>>();
-			if (dataValueRangeMap == null)
-				dataValueRangeMap = new Dictionary<int, IntervalD>();
 			createNodeIndexMap(approximationParameters.LoadInternalEntities);
 			// -----------------------------------------------------------
 
@@ -84,7 +83,8 @@ namespace MeshEditor.DataVisualizer
 							case DataLocation.GaussPoints:
 								throw new NotSupportedException("Gauss-point location not yet supported.");
 							case DataLocation.ElementNodes:
-								throw new NotImplementedException();
+								fillElementNodeValues(dataInfo, dataParser.ReadResultBlock());
+								break;
 							case DataLocation.Elements:
 								fillElementValues(dataInfo, dataParser.ReadResultBlock());
 								break;
@@ -118,7 +118,13 @@ namespace MeshEditor.DataVisualizer
 			}
 			if (elementNodeValues.ContainsKey(Settings.ScalarDataIndex.Index))
 			{
-				throw new NotImplementedException();
+				Dictionary<int, double> elementMap;
+				if (elementNodeValues[Settings.ScalarDataIndex.Index].TryGetValue(element.ID, out elementMap))
+				{
+					double value;
+					if (elementMap.TryGetValue(node.ID, out value))
+						return GetColorForDataValue(value);
+				}
 			}
 			return ColorScale.UndefinedValueColor;
 		}
@@ -294,6 +300,43 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
+		private void fillElementNodeValues(DataInfo dataInfo, IEnumerable<DataValue> dataValues)
+		{
+			Debug.Assert(dataInfo != null);
+			Debug.Assert(dataValues != null);
+
+			foreach (NodeValue elementNodeValue in dataValues)
+			{
+				var locationPair = elementNodeIndexMap[elementNodeValue.EntityNumber];
+				int elementId = locationPair.Key.ID;
+				int nodeId = locationPair.Value.ID;
+				for (int componentIndex = 0; componentIndex < dataInfo.DataType.ComponentCount; componentIndex++)
+				{
+					Dictionary<int, Dictionary<int, double>> elementDictionary;
+					if (!elementNodeValues.TryGetValue(dataIndexCounter + componentIndex, out elementDictionary))
+						elementDictionary = elementNodeValues[dataIndexCounter + componentIndex] = new Dictionary<int, Dictionary<int, double>>();
+
+
+					Dictionary<int, double> dict;
+					if (!elementDictionary.TryGetValue(elementId, out dict))
+						dict = elementDictionary[elementId] = new Dictionary<int, double>();
+					if (!dict.ContainsKey(nodeId))
+						dataRecordsCount++;
+
+					double value = (elementNodeValue.ValueComponents.Length > componentIndex) ? elementNodeValue.ValueComponents[componentIndex] : 0.0; // check if component is specified, if not insert default value (zero)
+
+					dict[nodeId] = value;
+
+					// min max value range
+					IntervalD range;
+					if (!dataValueRangeMap.TryGetValue(dataIndexCounter + componentIndex, out range))
+						range = IntervalD.InvertedMaxMin;
+					range.MergeWith(value);
+					dataValueRangeMap[dataIndexCounter + componentIndex] = range;
+				}
+			}
+		}
+
 		private void createValueMapForVectorMagnitudes()
 		{
 			Debug.Assert(Settings.ScalarDataIndex.Index < 0 && !nodeValues.ContainsKey(Settings.ScalarDataIndex.Index));
@@ -313,6 +356,21 @@ namespace MeshEditor.DataVisualizer
 
 			nodeValues[Settings.ScalarDataIndex.Index] = vectorLenghtMap; // setup new dataValue
 			dataValueRangeMap[Settings.ScalarDataIndex.Index] = valueRange; // setup range of new dataValue
+		}
+
+		private void createElementNodeIndexMap(Mesh mesh)
+		{
+			elementNodeIndexMap = new Dictionary<int, KeyValuePair<Element, Node>>();
+			int offset = 0;
+			foreach (Element element in mesh.Elements)
+			{
+				foreach (Node elementNode in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
+				{
+					elementNodeIndexMap[offset] = new KeyValuePair<Element, Node>(element, elementNode);
+					offset++;
+				}
+				
+			}
 		}
 
 		#endregion

@@ -240,6 +240,8 @@ namespace MeshEditor.LayerManager
 				double[] allValues = dataField.Data;
 				double[] componentValues = new double[dataField.Data.Length / numberOfComponents];
 
+				// TODO: throw away all-NaN arrays and compact single-value arrays
+
 				for (int hip = 0, hop = componentIndex; hop < allValues.Length; hip += 1, hop += numberOfComponents)
 				{
 					componentValues[hip] = allValues[hop];
