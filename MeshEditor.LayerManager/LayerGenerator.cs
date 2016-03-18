@@ -150,9 +150,11 @@ namespace MeshEditor.LayerManager
 			layerMesh.CellConnectivity = compressionService.Encode(geometry.CellConnectivity);
 
 			// TODO: set offsets and types to null if all cells are linear triangles
-			layerMesh.CellOffsets = compressionService.Encode(geometry.CellOffsets);
-			layerMesh.CellTypes = compressionService.TrimAndEncode(convertCellTypeArrayToByteArray(geometry.CellTypes));
-
+			if (!geometry.CellTypes.All(cellType => cellType == CellType.TriangleLinear))
+			{
+				layerMesh.CellOffsets = compressionService.Encode(geometry.CellOffsets);
+				layerMesh.CellTypes = compressionService.TrimAndEncode(convertCellTypeArrayToByteArray(geometry.CellTypes));
+			}
 
 			//MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
 			//faceGenerator.ProcessGeometry(geometry);

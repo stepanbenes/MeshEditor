@@ -278,8 +278,10 @@ namespace MeshEditor.LayerManager.Import
 									Debug.Assert(line.Substring(EndToken.Length).TrimStart().StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase));
 									state = ParserState.Init;
 
-									var dataDescription = parserData.CreateDataDescription(correspondingGeometry);
-									yield return dataDescription;
+									if (parserData.DataValues.Count > 0)
+									{
+										yield return parserData.CreateDataDescription(correspondingGeometry);
+									}
 
 									parserData.ClearResultBlockData();
 								}
