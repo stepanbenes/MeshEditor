@@ -87,8 +87,7 @@ namespace MeshEditor.Construction
 					};
 				}
 				// ====================================================================================
-				try
-				{
+
 					// nacti uzly
 					int processedNodes = 0;
 					foreach (Node n in meshFileParser.ReadNodes())
@@ -110,11 +109,7 @@ namespace MeshEditor.Construction
 							}
 						}
 					}
-				}
-				catch (ArgumentException ex)
-				{
-					throw new MeshConstructingException("There are two nodes with same index.", ex);
-				}
+				
 
 				Vector3 meshPositionOffset;
 				float meshResizeFactor;
@@ -595,6 +590,11 @@ namespace MeshEditor.Construction
 
 		private void processNode(Node n, MeshStatistics statistics)
 		{
+			if (nodes.ContainsKey(n.ID))
+			{
+				throw new MeshConstructingException("There are two nodes with same index.");
+			}
+	
 			// add to nodes dictionary
 			nodes.Add(n.ID, n);
 

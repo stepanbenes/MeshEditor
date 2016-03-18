@@ -45,7 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ArrayExtensions.cs" />
-    <Compile Include="Compression\GeneralCompressionService.cs" />
+    <Compile Include="Compression\GenericCompressionService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
     <Compile Include="DataFormatParserFactory.cs" />
     <Compile Include="Data\CellType.cs" />

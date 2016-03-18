@@ -9,10 +9,12 @@ namespace MeshEditor.LayerManager.Compression
 {
 	public interface ICompressionService
 	{
-		byte[] Compress(double[] dataValues, CompressionDescriptor compressionParameters);
-		//byte[] Compress(float[] dataValues, Dictionary<string, object> compressionParameters);
-		//byte[] Compress(double[,] dataValues, Dictionary<string, object> compressionParameters);
-		double[] Decompress(byte[] compressedData, CompressionDescriptor compressionParameters);
-		//double[,] DecompressMatrix(byte[] compressedData, Dictionary<string, object> compressionParameters);
+		string TrimAndEncode<T>(T[] values) where T : struct;
+		T[] DecodeAndExpand<T>(string data, int requestedLength) where T : struct;
+		string Encode<T>(T[] values) where T : struct;
+		T[] Decode<T>(string data) where T : struct;
+
+		string CompressAndEncode(double[] values, out CompressionDescriptor compressionParameters);
+		double[] DecodeAndDecompress(string data, CompressionDescriptor compressionParameters);
 	}
 }

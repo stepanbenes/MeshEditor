@@ -14,5 +14,6 @@ namespace MeshEditor.LayerManager.Data
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataArrayType DataType { get; set; }
 		public int[] Dimensions { get; set; }
+		public int Offset { get; set; }
 	}
 }

@@ -29,7 +29,7 @@ namespace MeshEditor.LayerManager
 		{
 			this.storageService = storageService ?? new LocalFileSystemStorageService();
 			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
-			this.compressionService = compressionService ?? new GeneralCompressionService();
+			this.compressionService = compressionService ?? new GenericCompressionService();
 		}
 
 		#endregion
@@ -134,52 +134,6 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		protected string CompressData(double[] dataValues, out CompressionDescriptor compressionParameters)
-		{
-			compressionParameters = new CompressionDescriptor(); // works as in/out bag of parameters that should be then written to output layer file
-			byte[] compressedData = compressionService.Compress(dataValues, compressionParameters);
-			return Convert.ToBase64String(compressedData);
-		}
-
-		protected double[] DecompressData(string encodedData, CompressionDescriptor compressionParameters)
-		{
-			byte[] compressedData = Convert.FromBase64String(encodedData);
-			return compressionService.Decompress(compressedData, compressionParameters);
-		}
-
-		protected static string ConvertArrayToBase64String<T>(T[] values) where T : struct
-		{
-			// determine the correct type
-			Type itemType = typeof(T);
-			Type actualType = itemType.IsEnum ? Enum.GetUnderlyingType(itemType) : itemType;
-			byte[] bytes;
-			if (actualType != typeof(byte))
-			{
-				bytes = new byte[values.Length * System.Runtime.InteropServices.Marshal.SizeOf(actualType)];
-				Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
-			}
-			else
-			{
-				bytes = (byte[])(object)values; // evade C# array cast limitation
-			}
-			return Convert.ToBase64String(bytes);
-		}
-
-		protected static T[] ConvertBase64StringToArray<T>(string base64String) where T : struct
-		{
-			// determine the correct type
-			Type itemType = typeof(T);
-			Type actualType = itemType.IsEnum ? Enum.GetUnderlyingType(itemType) : itemType;
-			byte[] bytes = Convert.FromBase64String(base64String);
-			if (actualType != typeof(byte))
-			{
-				T[] values = new T[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf<T>()];
-				Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
-				return values;
-			}
-			return (T[])(object)bytes; // evade C# array cast limitation
-		}
-
 		#endregion
 
 		#region Private methods
@@ -189,15 +143,16 @@ namespace MeshEditor.LayerManager
 			LayerMesh layerMesh = new LayerMesh { LayerId = layerId };
 
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
-			layerMesh.PointCoordinates = ConvertArrayToBase64String(geometry.PointCoordinates);
+			layerMesh.PointCoordinates = compressionService.Encode(geometry.PointCoordinates);
 
 			layerMesh.NumberOfCells = geometry.NumberOfCells;
 
-			layerMesh.CellConnectivity = ConvertArrayToBase64String(geometry.CellConnectivity);
-			layerMesh.CellOffsets = ConvertArrayToBase64String(geometry.CellOffsets);
-			layerMesh.CellTypes = ConvertArrayToBase64String(geometry.CellTypes);
-			
-			// TODO: ommit offsets and types if all cells are linear triangles
+			layerMesh.CellConnectivity = compressionService.Encode(geometry.CellConnectivity);
+
+			// TODO: set offsets and types to null if all cells are linear triangles
+			layerMesh.CellOffsets = compressionService.Encode(geometry.CellOffsets);
+			layerMesh.CellTypes = compressionService.TrimAndEncode(convertCellTypeArrayToByteArray(geometry.CellTypes));
+
 
 			//MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
 			//faceGenerator.ProcessGeometry(geometry);
@@ -213,11 +168,11 @@ namespace MeshEditor.LayerManager
 		{
 			GeometryDescription geometry = new GeometryDescription();
 
-			geometry.PointCoordinates = ConvertBase64StringToArray<float>(layerMesh.PointCoordinates);
+			geometry.PointCoordinates = compressionService.Decode<float>(layerMesh.PointCoordinates);
 			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
-			geometry.CellConnectivity = ConvertBase64StringToArray<int>(layerMesh.CellConnectivity);
-			geometry.CellOffsets = (layerMesh.CellOffsets != null) ? ConvertBase64StringToArray<int>(layerMesh.CellOffsets) : Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * 3).ToArray();
-			geometry.CellTypes = (layerMesh.CellTypes != null) ? ConvertBase64StringToArray<CellType>(layerMesh.CellTypes) : Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfCells).ToArray();
+			geometry.CellConnectivity = compressionService.Decode<int>(layerMesh.CellConnectivity);
+			geometry.CellOffsets = (layerMesh.CellOffsets != null) ? compressionService.Decode<int>(layerMesh.CellOffsets) : Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * 3).ToArray();
+			geometry.CellTypes = (layerMesh.CellTypes != null) ? convertByteArrayToCellTypeArray(compressionService.DecodeAndExpand<byte>(layerMesh.CellTypes, layerMesh.NumberOfCells)) : Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfCells).ToArray();
 
 			return geometry;
 		}
@@ -249,7 +204,7 @@ namespace MeshEditor.LayerManager
 
 				CompressionDescriptor compressionParameters;
 
-				layerResult.Data = CompressData(componentValues, out compressionParameters);
+				layerResult.Data = compressionService.CompressAndEncode(componentValues, out compressionParameters);
 				layerResult.Compression = compressionParameters;
 
 				yield return layerResult;
@@ -266,9 +221,29 @@ namespace MeshEditor.LayerManager
 			data.FieldType = FieldType.Scalar;
 			data.Location = layerResult.Location;
 			data.NumberOfComponents = 1;
-			data.Data = DecompressData(layerResult.Data, layerResult.Compression);
+			data.Data = compressionService.DecodeAndDecompress(layerResult.Data, layerResult.Compression);
 
 			yield return data;
+		}
+
+		private static byte[] convertCellTypeArrayToByteArray(CellType[] source)
+		{
+			byte[] result = new byte[source.Length];
+			for (int i = 0; i < source.Length; i++)
+			{
+				result[i] = (byte)source[i];
+			}
+			return result;
+		}
+
+		private static CellType[] convertByteArrayToCellTypeArray(byte[] source)
+		{
+			CellType[] result = new CellType[source.Length];
+			for (int i = 0; i < source.Length; i++)
+			{
+				result[i] = (CellType)source[i];
+			}
+			return result;
 		}
 
 		#endregion
