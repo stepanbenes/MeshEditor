@@ -138,6 +138,8 @@ namespace MeshEditor.LayerManager
 
 		#region Private methods
 
+		private static readonly CellType DefaultCellType = CellType.TriangleLinear;
+
 		private LayerMesh createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
 		{
 			LayerMesh layerMesh = new LayerMesh { LayerId = layerId };
@@ -150,10 +152,13 @@ namespace MeshEditor.LayerManager
 			layerMesh.CellConnectivity = compressionService.Encode(geometry.CellConnectivity);
 
 			// TODO: set offsets and types to null if all cells are linear triangles
-			if (!geometry.CellTypes.All(cellType => cellType == CellType.TriangleLinear))
+			if (!geometry.CellTypes.All(cellType => cellType == DefaultCellType))
 			{
-				layerMesh.CellOffsets = compressionService.Encode(geometry.CellOffsets);
 				layerMesh.CellTypes = compressionService.TrimAndEncode(convertCellTypeArrayToByteArray(geometry.CellTypes));
+			}
+			else
+			{
+				layerMesh.CellTypes = null;
 			}
 
 			//MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
@@ -173,8 +178,24 @@ namespace MeshEditor.LayerManager
 			geometry.PointCoordinates = compressionService.Decode<float>(layerMesh.PointCoordinates);
 			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
 			geometry.CellConnectivity = compressionService.Decode<int>(layerMesh.CellConnectivity);
-			geometry.CellOffsets = (layerMesh.CellOffsets != null) ? compressionService.Decode<int>(layerMesh.CellOffsets) : Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * 3).ToArray();
-			geometry.CellTypes = (layerMesh.CellTypes != null) ? convertByteArrayToCellTypeArray(compressionService.DecodeAndExpand<byte>(layerMesh.CellTypes, layerMesh.NumberOfCells)) : Enumerable.Repeat(CellType.TriangleLinear, layerMesh.NumberOfCells).ToArray();
+
+			if (layerMesh.CellTypes != null)
+			{
+				geometry.CellTypes = convertByteArrayToCellTypeArray(compressionService.DecodeAndExpand<byte>(layerMesh.CellTypes, layerMesh.NumberOfCells));
+				var offsets = new int[layerMesh.NumberOfCells];
+				for (int i = 0, offset = 0; i < offsets.Length; i++)
+				{
+					offset += GeometryDescription.MapCellTypeToNumberOfPoints(geometry.CellTypes[i]);
+					offsets[i] = offset;
+				}
+				geometry.CellOffsets = offsets;
+			}
+			else
+			{
+				int numberOfPointsPerCell = GeometryDescription.MapCellTypeToNumberOfPoints(DefaultCellType);
+				geometry.CellTypes = Enumerable.Repeat(DefaultCellType, layerMesh.NumberOfCells).ToArray();
+				geometry.CellOffsets = Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * numberOfPointsPerCell).ToArray();
+			}
 
 			return geometry;
 		}

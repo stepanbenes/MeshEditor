@@ -16,7 +16,6 @@ namespace MeshEditor.LayerManager.Data
 
 		public string PointCoordinates { get; set; }
 		public string CellConnectivity { get; set; }
-		public string CellOffsets { get; set; }
 		public string CellTypes { get; set; }
 		public string EdgeConnectivity { get; set; }
 	}
