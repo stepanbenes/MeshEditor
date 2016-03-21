@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace MeshEditor.LayerManager.Data
 {
@@ -15,8 +16,13 @@ namespace MeshEditor.LayerManager.Data
 		public int NumberOfEdges { get; set; }
 
 		public string PointCoordinates { get; set; }
+
 		public string CellConnectivity { get; set; }
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string CellTypes { get; set; }
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string EdgeConnectivity { get; set; }
 	}
 }

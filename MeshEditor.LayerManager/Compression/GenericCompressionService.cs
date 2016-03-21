@@ -40,9 +40,12 @@ namespace MeshEditor.LayerManager.Compression
 		public string CompressAndEncode(double[] values, out CompressionDescriptor compressionParameters)
 		{
 			int offset;
-			double[] shrinkedValues = trim(values, out offset);
+			double? defaultValue;
+			double[] shrinkedValues = trim(values, out offset, out defaultValue);
 			double[] compressedData = compress(shrinkedValues, out compressionParameters);
-			compressionParameters.Offset = offset;
+			compressionParameters.DataOffset = offset;
+			compressionParameters.DataLength = shrinkedValues.Length;
+			compressionParameters.DefaultDataValue = defaultValue;
 			compressionParameters.Dimensions = new[] { /*original length:*/ values.Length, /*time steps:*/ 1 };
 			return Encode(compressedData);
 		}
@@ -60,7 +63,7 @@ namespace MeshEditor.LayerManager.Compression
 
 			double[] compressedData = Decode<double>(data);
 			double[] values = decompress(compressedData, compressionParameters);
-			return expand(values, compressionParameters.Dimensions[0], compressionParameters.Offset);
+			return expand(values, compressionParameters.Dimensions[0], compressionParameters.DataOffset, compressionParameters.DefaultDataValue ?? double.NaN);
 		}
 
 		#endregion
@@ -117,7 +120,9 @@ namespace MeshEditor.LayerManager.Compression
 		private static T[] trimEnd<T>(T[] values) where T : struct
 		{
 			if (values.Length == 0)
+			{
 				return values;
+			}
 			int endOffset = values.Length - 1;
 			for (int i = values.Length - 2; i >= 0; i--)
 			{
@@ -130,8 +135,10 @@ namespace MeshEditor.LayerManager.Compression
 				}
 			}
 			if (endOffset == 0)
+			{
 				return values;
-			T[] trimmedValues = new T[values.Length - endOffset];
+			}
+			T[] trimmedValues = new T[values.Length - endOffset]; // trimmed value is last value in trimmed array
 			Array.Copy(values, trimmedValues, trimmedValues.Length);
 			return trimmedValues;
 		}
@@ -155,44 +162,63 @@ namespace MeshEditor.LayerManager.Compression
 			return expandedValues;
 		}
 
-		private static T[] trim<T>(T[] values, out int offset) where T : struct
+		private static T[] trim<T>(T[] values, out int offset, out T? defaultValue) where T : struct
 		{
 			if (values.Length == 0)
 			{
 				offset = 0;
+				defaultValue = null;
 				return values;
 			}
-			int beginOffset = values.Length - 1;
-			for (int i = 1; i < values.Length; i++)
+			T testValue = values[0];
+			int beginOffset = 0;
+
+			for (int index = 1; index < values.Length; index++)
 			{
-				if (!values[0].Equals(values[i]))
+				if (testValue.Equals(values[index]))
 				{
-					beginOffset = i - 1;
+					beginOffset = index + 1;
+				}
+				else
+				{
 					break;
 				}
 			}
+
+			if (beginOffset == 0)
+			{
+				testValue = values[values.Length - 1];
+			}
+
 			int endOffset = 0;
-			for (int i = values.Length - 2; i >= beginOffset; i--)
+			for (int index = values.Length - ((beginOffset == 0) ? 2 : 1); index >= beginOffset; index--)
 			{
-				if (!values[values.Length - 1].Equals(values[i]))
+				if (testValue.Equals(values[index]))
 				{
-					endOffset = values.Length - i - 2;
+					endOffset = values.Length - index;
+				}
+				else
+				{
 					break;
 				}
 			}
-			Debug.Assert(beginOffset + endOffset < values.Length);
+
+			Debug.Assert(beginOffset + endOffset <= values.Length);
 			if (beginOffset + endOffset == 0)
 			{
 				offset = 0;
+				defaultValue = null;
 				return values;
 			}
+
 			T[] trimmedValues = new T[values.Length - beginOffset - endOffset];
 			Array.Copy(values, beginOffset, trimmedValues, 0, trimmedValues.Length);
 			offset = beginOffset;
+			defaultValue = testValue;
 			return trimmedValues;
 		}
 
-		private T[] expand<T>(T[] values, int length, int offset) where T : struct
+		private T[] expand<T>(T[] values, int length, int offset, T defaultValue) where T : struct
 		{
 			if (length == values.Length)
 				return values;
@@ -201,13 +227,18 @@ namespace MeshEditor.LayerManager.Compression
 
 			T[] expandedValues = new T[length];
 			if (values.Length == 0)
+			{
+				if (!defaultValue.Equals(default(T)))
+				{
+					expandedValues.Fill(defaultValue);
+				}
 				return expandedValues;
+			}
 
 			// copy beginning
-			T firstValue = values[0];
 			for (int i = 0; i < offset; i++)
 			{
-				expandedValues[i] = firstValue;
+				expandedValues[i] = defaultValue;
 			}
 
 			// copy middle - valuable data
@@ -217,10 +248,9 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			// copy end
-			T lastValue = values[values.Length - 1];
 			for (int i = values.Length + offset; i < length; i++)
 			{
-				expandedValues[i] = lastValue;
+				expandedValues[i] = defaultValue;
 			}
 
 			return expandedValues;
