@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
+using MeshEditor.LayerManager.DataTransformation;
 using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
@@ -19,17 +19,20 @@ namespace MeshEditor.LayerManager
 		#region Fields, constructor
 
 		IStorageService storageService;
-		ICompressionService compressionService;
 		ILayerSerializer layerSerializer;
+		ICompressionService compressionService;
+		IEncodingService encodingService;
 
 		public LayerGenerator(
 			IStorageService storageService = null,
 			ILayerSerializer layerSerializer = null,
-			ICompressionService compressionService = null)
+			ICompressionService compressionService = null,
+			IEncodingService encodingService = null)
 		{
 			this.storageService = storageService ?? new LocalFileSystemStorageService();
 			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
-			this.compressionService = compressionService ?? new GenericCompressionService();
+			this.compressionService = compressionService ?? new TransparentCompressionService();
+			this.encodingService = encodingService ?? new Base64EncodingService();
 		}
 
 		#endregion
@@ -71,28 +74,33 @@ namespace MeshEditor.LayerManager
 				Filters = null,
 			};
 
-			GeometryDescription geometry = geometryImportService.ReadGeometry();
-
-			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer"); // TODO: make valid file name from projectName
-
+			GeometryDescription geometry = geometryImportService.ReadGeometry();
+			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
 
-			var resultDescriptors = new List<ResultDescriptor>();
+			int attributeIndex = 1, resultIndex = 1;
+
+			if (geometry.CellAttributes != null)
+			{
+				DataLayerFile layerElementProperties = createAttributeLayerFile(geometry.CellAttributes, "ElementProperties", DataLocationType.Cells, layerId, attributeIndex);
+				StoreLayerFile(layerElementProperties, projectLocation, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
+				attributeIndex++;
+				layerSummary.Attributes = new[] { DataLayerDescriptor.CreateFrom(layerElementProperties) };
+			}
+
+			var resultDescriptors = new List<DataLayerDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
-			int dataIndex = 1;
 			foreach (var dataField in dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>())
 			{
-				foreach (var layerResult in createLayerResultFromDataDescription(dataField, layerId, dataIndex))
+				foreach (var layerResult in createLayerResultFromDataDescription(dataField, layerId, resultIndex))
 				{
-					resultDescriptors.Add(ResultDescriptor.CreateFrom(layerResult));
-
+					resultDescriptors.Add(DataLayerDescriptor.CreateFrom(layerResult));
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
-
-					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.data");
+					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.result");
 				}
-				dataIndex += dataField.NumberOfComponents;
+				resultIndex += dataField.NumberOfComponents;
 			}
 
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
@@ -145,16 +153,16 @@ namespace MeshEditor.LayerManager
 			MeshLayerFile layerMesh = new MeshLayerFile { LayerId = layerId };
 
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
-			layerMesh.PointCoordinates = compressionService.Encode(geometry.PointCoordinates);
+			layerMesh.PointCoordinates = encodeGeometryDataArray(geometry.PointCoordinates, trimEnd: false);
 
 			layerMesh.NumberOfCells = geometry.NumberOfCells;
 
-			layerMesh.CellConnectivity = compressionService.Encode(geometry.CellConnectivity);
+			layerMesh.CellConnectivity = encodeGeometryDataArray(geometry.CellConnectivity, trimEnd: false);
 
 			// TODO: set offsets and types to null if all cells are linear triangles
 			if (!geometry.CellTypes.All(cellType => cellType == DefaultCellType))
 			{
-				layerMesh.CellTypes = compressionService.TrimAndEncode(convertCellTypeArrayToByteArray(geometry.CellTypes));
+				layerMesh.CellTypes = encodeGeometryDataArray(geometry.CellTypes.Select(t => (byte)t).ToArray(), trimEnd: true);
 			}
 			else
 			{
@@ -171,17 +179,37 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
+		private DataLayerFile createAttributeLayerFile(int[] attributeValues, string attributeName, DataLocationType location, Guid layerId, int dataIndex)
+		{
+			Debug.Assert(attributeValues != null);
+
+			DataLayerFile attributeLayer = new DataLayerFile
+			{
+				LayerId = layerId,
+				FieldName = attributeName,
+				ComponentName = null,
+				Index = dataIndex,
+				TimeSteps = null,
+				Location = location
+			};
+
+			EncodingParameters encoding;
+			attributeLayer.Data = encodeAttributes(attributeValues, out encoding);
+			attributeLayer.Encoding = encoding;
+			return attributeLayer;
+		}
+
 		private GeometryDescription createGeometryFromLayerMesh(MeshLayerFile layerMesh)
 		{
 			GeometryDescription geometry = new GeometryDescription();
 
-			geometry.PointCoordinates = compressionService.Decode<float>(layerMesh.PointCoordinates);
+			geometry.PointCoordinates = decodeGeometryDataArray<float>(layerMesh.PointCoordinates, expandEnd: false);
 			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
-			geometry.CellConnectivity = compressionService.Decode<int>(layerMesh.CellConnectivity);
+			geometry.CellConnectivity = decodeGeometryDataArray<int>(layerMesh.CellConnectivity, expandEnd: false);
 
 			if (layerMesh.CellTypes != null)
 			{
-				geometry.CellTypes = convertByteArrayToCellTypeArray(compressionService.DecodeAndExpand<byte>(layerMesh.CellTypes, layerMesh.NumberOfCells));
+				geometry.CellTypes = decodeGeometryDataArray<byte>(layerMesh.CellTypes, expandEnd: true, originalLength: layerMesh.NumberOfCells).Select(b => (CellType)b).ToArray();
 				var offsets = new int[layerMesh.NumberOfCells];
 				for (int i = 0, offset = 0; i < offsets.Length; i++)
 				{
@@ -218,17 +246,15 @@ namespace MeshEditor.LayerManager
 				double[] allValues = dataField.Data;
 				double[] componentValues = new double[dataField.Data.Length / numberOfComponents];
 
-				// TODO: throw away all-NaN arrays and compact single-value arrays
-
 				for (int hip = 0, hop = componentIndex; hop < allValues.Length; hip += 1, hop += numberOfComponents)
 				{
 					componentValues[hip] = allValues[hop];
 				}
 
-				CompressionDescriptor compressionParameters;
+				EncodingParameters encoding;
 
-				layerResult.Data = compressionService.CompressAndEncode(componentValues, out compressionParameters);
-				layerResult.Compression = compressionParameters;
+				layerResult.Data = compressAndEncodeDataValues(componentValues, out encoding);
+				layerResult.Encoding = encoding;
 
 				yield return layerResult;
 			}
@@ -239,34 +265,48 @@ namespace MeshEditor.LayerManager
 			DataDescription data = new DataDescription();
 
 			data.Name = layerResult.FieldName;
-			data.TimeStep = layerResult.TimeSteps.Single();
+			data.TimeStep = layerResult.TimeSteps?.Single();
 			data.ComponentNames = new[] { layerResult.ComponentName };
 			data.FieldType = FieldType.Scalar;
 			data.Location = layerResult.Location;
 			data.NumberOfComponents = 1;
-			data.Data = compressionService.DecodeAndDecompress(layerResult.Data, layerResult.Compression);
+			data.Data = decodeAndDecompressData(layerResult.Data, layerResult.Encoding);
 
 			yield return data;
 		}
 
-		private static byte[] convertCellTypeArrayToByteArray(CellType[] source)
+		private string compressAndEncodeDataValues(double[] dataValues, out EncodingParameters encodingParameters)
 		{
-			byte[] result = new byte[source.Length];
-			for (int i = 0; i < source.Length; i++)
-			{
-				result[i] = (byte)source[i];
-			}
-			return result;
+			double[] compressedValues = compressionService.Compress(dataValues);
+			return encodingService.Encode(compressedValues, TrimOptions.BeginEnd, out encodingParameters);
 		}
 
-		private static CellType[] convertByteArrayToCellTypeArray(byte[] source)
+		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters)
 		{
-			CellType[] result = new CellType[source.Length];
-			for (int i = 0; i < source.Length; i++)
-			{
-				result[i] = (CellType)source[i];
-			}
-			return result;
+			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
+			return compressionService.Decompress(compressedValues);
+		}
+
+		private string encodeAttributes(int[] attributes, out EncodingParameters encodingParameters)
+		{
+			return encodingService.Encode(attributes, TrimOptions.BeginEnd, out encodingParameters);
+		}
+
+		private int[] decodeAttributes(string data, EncodingParameters encodingParameters)
+		{
+			return encodingService.Decode<int>(data, TrimOptions.BeginEnd, encodingParameters);
+		}
+
+		private string encodeGeometryDataArray<T>(T[] geometryData, bool trimEnd) where T : struct
+		{
+			EncodingParameters ignored;
+			return encodingService.Encode(geometryData, trimEnd ? TrimOptions.End : TrimOptions.None, out ignored);
+		}
+
+		private T[] decodeGeometryDataArray<T>(string data, bool expandEnd, int originalLength = 0) where T : struct
+		{
+			EncodingParameters encodingParameters = new EncodingParameters { OriginalLength = originalLength, Length = originalLength };
+			return encodingService.Decode<T>(data, expandEnd ? TrimOptions.End : TrimOptions.None, encodingParameters);
 		}
 
 		#endregion

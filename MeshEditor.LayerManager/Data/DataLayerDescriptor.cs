@@ -8,7 +8,7 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	internal interface IResultDescription
+	internal interface IDataLayerDescription
 	{
 		string FieldName { get; set; }
 		string ComponentName { get; set; }
@@ -17,19 +17,19 @@ namespace MeshEditor.LayerManager.Data
 		DataLocationType Location { get; set; }
 	}
 
-	public class ResultDescriptor : IResultDescription
+	public class DataLayerDescriptor : IDataLayerDescription
 	{
-		public ResultDescriptor()
+		public DataLayerDescriptor()
 		{ }
 
-		internal static ResultDescriptor CreateFrom(IResultDescription source)
+		internal static DataLayerDescriptor CreateFrom(IDataLayerDescription source)
 		{
-			return new ResultDescriptor
+			return new DataLayerDescriptor
 			{
 				FieldName = source.FieldName,
 				ComponentName = source.ComponentName,
 				Index = source.Index,
-				TimeSteps = source.TimeSteps.ToArray(),
+				TimeSteps = source.TimeSteps?.ToArray(),
 				Location = source.Location
 			};
 		}
@@ -37,7 +37,10 @@ namespace MeshEditor.LayerManager.Data
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
 		public int Index { get; set; }
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public double[] TimeSteps { get; set; }
+
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataLocationType Location { get; set; }
 	}

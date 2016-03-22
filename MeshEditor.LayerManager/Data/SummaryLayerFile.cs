@@ -16,6 +16,8 @@ namespace MeshEditor.LayerManager.Data
 		public FilterDescriptor[] Filters { get; set; }
 
 		public double[] TimeSteps { get; set; }
-		public ResultDescriptor[] Results { get; set; }
+
+		public DataLayerDescriptor[] Attributes { get; set; }
+		public DataLayerDescriptor[] Results { get; set; }
 	}
 }

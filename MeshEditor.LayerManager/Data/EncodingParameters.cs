@@ -8,15 +8,18 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class CompressionDescriptor
+	public class EncodingParameters
 	{
-		public int Level { get; set; }
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataArrayType DataType { get; set; }
-		public int[] Dimensions { get; set; }
-		public int DataOffset { get; set; }
-		public int DataLength { get; set; }
+
+		public int OriginalLength { get; set; }
+
+		public int Offset { get; set; }
+
+		public int Length { get; set; }
+
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public double? DefaultDataValue { get; set; }
+		public string DefaultValue { get; set; }
 	}
 }

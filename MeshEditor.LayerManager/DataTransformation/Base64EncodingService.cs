@@ -6,84 +6,88 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Common;
 using System.Diagnostics;
+using System.Globalization;
 
-namespace MeshEditor.LayerManager.Compression
+namespace MeshEditor.LayerManager.DataTransformation
 {
-	internal class GenericCompressionService : ICompressionService
+	internal class Base64EncodingService : IEncodingService
 	{
 		#region Public methods
 
-		public string TrimAndEncode<T>(T[] values) where T : struct
+		public string Encode<T>(T[] values, TrimOptions trimOptions, out EncodingParameters encodingParameters) where T : struct
 		{
-			T[] trimmedValues = trimEnd(values);
-			return Encode(trimmedValues);
-		}
+			encodingParameters = new EncodingParameters
+			{
+				OriginalLength = values.Length,
+				DataType = convertTypeToDataArrayType(typeof(T)),
+			};
 
-		public T[] DecodeAndExpand<T>(string data, int requestedLength) where T : struct
-		{
-			T[] values = Decode<T>(data);
-			return expandEnd(values, requestedLength);
-		}
-
-		public string Encode<T>(T[] values) where T : struct
-		{
-			byte[] bytes = scatterArrayToBytes(values);
+			T[] valuesToConvert;
+			switch (trimOptions)
+			{
+				case TrimOptions.None:
+					valuesToConvert = values;
+					break;
+				case TrimOptions.End:
+					valuesToConvert = trimEnd(values);
+					break;
+				case TrimOptions.BeginEnd:
+					int offset;
+					T? defaultValue;
+					valuesToConvert = trim(values, out offset, out defaultValue);
+					encodingParameters.Offset = offset;
+					encodingParameters.DefaultValue = defaultValue.HasValue ? Convert.ToString(defaultValue.Value, CultureInfo.InvariantCulture) : null;
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+			encodingParameters.Length = valuesToConvert.Length;
+			byte[] bytes = scatterArrayToBytes(valuesToConvert);
 			return Convert.ToBase64String(bytes);
 		}
 
-		public T[] Decode<T>(string data) where T : struct
+		public T[] Decode<T>(string data, TrimOptions trimOptions, EncodingParameters encodingParameters) where T : struct
 		{
+			Debug.Assert(encodingParameters != null);
 			byte[] bytes = Convert.FromBase64String(data);
-			return gatherArrayOfBytes<T>(bytes);
-		}
-
-		public string CompressAndEncode(double[] values, out CompressionDescriptor compressionParameters)
-		{
-			int offset;
-			double? defaultValue;
-			double[] shrinkedValues = trim(values, out offset, out defaultValue);
-			double[] compressedData = compress(shrinkedValues, out compressionParameters);
-			compressionParameters.DataOffset = offset;
-			compressionParameters.DataLength = shrinkedValues.Length;
-			compressionParameters.DefaultDataValue = defaultValue;
-			compressionParameters.Dimensions = new[] { /*original length:*/ values.Length, /*time steps:*/ 1 };
-			return Encode(compressedData);
-		}
-
-		public double[] DecodeAndDecompress(string data, CompressionDescriptor compressionParameters)
-		{
-			if (compressionParameters.Dimensions?.Length != 2 || compressionParameters.Dimensions[0] < 0 || compressionParameters.Dimensions[1] < 1)
-				throw new Exception("Unknown dimensions");
-			if (compressionParameters.Dimensions[1] > 1)
-				throw new NotImplementedException();
-			if (compressionParameters.Level != 0)
-				throw new NotImplementedException();
-			if (compressionParameters.DataType != DataArrayType.Float64)
-				throw new NotImplementedException();
-
-			double[] compressedData = Decode<double>(data);
-			double[] values = decompress(compressedData, compressionParameters);
-			return expand(values, compressionParameters.Dimensions[0], compressionParameters.DataOffset, compressionParameters.DefaultDataValue ?? double.NaN);
+			T[] values = gatherArrayOfBytes<T>(bytes);
+			T[] result;
+			switch (trimOptions)
+			{
+				case TrimOptions.None:
+					result = values;
+					break;
+				case TrimOptions.End:
+					result = expandEnd(values, encodingParameters.OriginalLength);
+					break;
+				case TrimOptions.BeginEnd:
+					Debug.Assert(encodingParameters.DataType == convertTypeToDataArrayType(typeof(T)));
+					T defaultValue = string.IsNullOrEmpty(encodingParameters.DefaultValue) ? default(T) : (T)Convert.ChangeType(encodingParameters.DefaultValue, typeof(T));
+					result = expand(values, encodingParameters.OriginalLength, encodingParameters.Offset, defaultValue);
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+			return result;
 		}
 
 		#endregion
 
 		#region Private methods
 
-		private static double[] compress(double[] dataValues, out CompressionDescriptor compressionParameters)
+		private DataArrayType convertTypeToDataArrayType(Type type)
 		{
-			compressionParameters = new CompressionDescriptor();
-
-			compressionParameters.Level = 0; // no compression, only copying data to byte array
-			compressionParameters.DataType = DataArrayType.Float64;
-
-			return dataValues; // do nothing
+			if (type == typeof(double))
+				return DataArrayType.Float64;
+			if (type == typeof(float))
+				return DataArrayType.Float32;
+			if (type == typeof(int))
+				return DataArrayType.Int32;
+			if (type == typeof(byte))
+				return DataArrayType.UInt8;
+			throw new NotSupportedException();
 		}
 
-		private static double[] decompress(double[] compressedData, CompressionDescriptor compressionParameters)
-		{
-			return compressedData; // do nothing
-		}
 
 		private static byte[] scatterArrayToBytes<T>(T[] values) where T : struct
 		{

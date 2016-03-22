@@ -55,6 +55,7 @@ namespace MeshEditor.LayerManager.Import
 			List<int> cellConnectivity = new List<int>();
 			List<int> cellOffsets = new List<int>();
 			List<CellType> cellTypes = new List<CellType>();
+			List<int> cellAttributes = new List<int>();
 
 			int dimension = 0;
 			int currentLineNumber = 0;
@@ -165,10 +166,15 @@ namespace MeshEditor.LayerManager.Import
 										int nodeIndex = nodeIdIndexMap[nodeId];
 										cellConnectivity.Add(nodeIndex);
 									}
-									//if (parts.Length > nnode + 1)
-									//{
-									//	int elementProperty = ParseInt32(parts[nnode + 1]); // read optional material number
-									//}
+									if (parts.Length > nnode + 1)
+									{
+										int elementProperty = ParseInt32(parts[nnode + 1]); // read optional material number
+										cellAttributes.Add(elementProperty);
+									}
+									else
+									{
+										cellAttributes.Add(0);
+									}
 								}
 								break;
 						}
@@ -177,7 +183,9 @@ namespace MeshEditor.LayerManager.Import
 			}
 
 			if (dimension != 2 && dimension != 3)
+			{
 				throw new NotSupportedException($"This dimension is not supported ({dimension}).");
+			}
 
 			GeometryDescription geometry = new GeometryDescription
 			{
@@ -187,7 +195,8 @@ namespace MeshEditor.LayerManager.Import
 				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
 				PointIdIndexMap = nodeIdIndexMap,
-				CellIdIndexMap = elementIdIndexMap
+				CellIdIndexMap = elementIdIndexMap,
+				CellAttributes = (cellAttributes.Count > 0) ? cellAttributes.ToArray() : null
 			};
 			return geometry;
 		}
