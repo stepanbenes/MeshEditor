@@ -8,7 +8,7 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class LayerResult : IResultDescription
+	public class DataLayerFile : IResultDescription
 	{
 		public Guid LayerId { get; set; }
 		public string FieldName { get; set; }

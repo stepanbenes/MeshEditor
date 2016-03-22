@@ -63,7 +63,7 @@ namespace MeshEditor.LayerManager
 
 			Guid layerId = Guid.NewGuid();
 
-			LayerSummary layerSummary = new LayerSummary
+			SummaryLayerFile layerSummary = new SummaryLayerFile
 			{
 				Id = layerId,
 				Name = projectName,
@@ -73,7 +73,7 @@ namespace MeshEditor.LayerManager
 
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 
-			LayerMesh layerMesh = createLayerMeshFromGeometry(geometry, layerId);
+			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer"); // TODO: make valid file name from projectName
 
 			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
@@ -90,7 +90,7 @@ namespace MeshEditor.LayerManager
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
 
-					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.result");
+					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.data");
 				}
 				dataIndex += dataField.NumberOfComponents;
 			}
@@ -107,7 +107,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream stream = storageService.Load(uri))
 			{
-				LayerMesh layerMesh = layerSerializer.Deserialize<LayerMesh>(stream);
+				MeshLayerFile layerMesh = layerSerializer.Deserialize<MeshLayerFile>(stream);
 				return createGeometryFromLayerMesh(layerMesh);
 			}
 		}
@@ -116,7 +116,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream stream = storageService.Load(uri))
 			{
-				LayerResult layerResult = layerSerializer.Deserialize<LayerResult>(stream);
+				DataLayerFile layerResult = layerSerializer.Deserialize<DataLayerFile>(stream);
 				return createDataDescriptionFromLayerResult(layerResult);
 			}
 		}
@@ -140,9 +140,9 @@ namespace MeshEditor.LayerManager
 
 		private static readonly CellType DefaultCellType = CellType.TriangleLinear;
 
-		private LayerMesh createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
+		private MeshLayerFile createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
 		{
-			LayerMesh layerMesh = new LayerMesh { LayerId = layerId };
+			MeshLayerFile layerMesh = new MeshLayerFile { LayerId = layerId };
 
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
 			layerMesh.PointCoordinates = compressionService.Encode(geometry.PointCoordinates);
@@ -171,7 +171,7 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
-		private GeometryDescription createGeometryFromLayerMesh(LayerMesh layerMesh)
+		private GeometryDescription createGeometryFromLayerMesh(MeshLayerFile layerMesh)
 		{
 			GeometryDescription geometry = new GeometryDescription();
 
@@ -200,12 +200,12 @@ namespace MeshEditor.LayerManager
 			return geometry;
 		}
 
-		private IEnumerable<LayerResult> createLayerResultFromDataDescription(DataDescription dataField, Guid layerId, int dataIndex)
+		private IEnumerable<DataLayerFile> createLayerResultFromDataDescription(DataDescription dataField, Guid layerId, int dataIndex)
 		{
 			int numberOfComponents = dataField.NumberOfComponents;
 			for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 			{
-				LayerResult layerResult = new LayerResult
+				DataLayerFile layerResult = new DataLayerFile
 				{
 					LayerId = layerId,
 					FieldName = dataField.Name,
@@ -234,7 +234,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<DataDescription> createDataDescriptionFromLayerResult(LayerResult layerResult)
+		private IEnumerable<DataDescription> createDataDescriptionFromLayerResult(DataLayerFile layerResult)
 		{
 			DataDescription data = new DataDescription();
 

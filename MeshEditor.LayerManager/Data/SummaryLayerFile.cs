@@ -7,7 +7,7 @@ using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class LayerSummary
+	public class SummaryLayerFile
 	{
 		public Guid Id { get; set; }
 		public string Name { get; set; }

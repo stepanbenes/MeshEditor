@@ -765,8 +765,6 @@ namespace MeshEditor.LayerManager.Import
 					result = createEmptyValueArray(geometry.CellConnectivity.Length * numberOfComponents);
 					switch (fileLocation)
 					{
-						case FileDataLocation.Nodes:
-							throw new NotImplementedException();
 						case FileDataLocation.GaussPoints:
 
 							// TODO: add parameter specifying extrapolation strategy
@@ -791,6 +789,7 @@ namespace MeshEditor.LayerManager.Import
 								}
 							}
 							break;
+						case FileDataLocation.Nodes:
 						default:
 							throw new NotSupportedException();
 					}
@@ -799,9 +798,9 @@ namespace MeshEditor.LayerManager.Import
 					result = createEmptyValueArray(geometry.NumberOfCells * numberOfComponents);
 					switch (fileLocation)
 					{
-						case FileDataLocation.Nodes:
+						case FileDataLocation.Nodes: // TODO: do arithmetic mean of values in all nodes of a cell
 							throw new NotImplementedException();
-						case FileDataLocation.GaussPoints: // do arithmetic mean of all gauss points in a cell
+						case FileDataLocation.GaussPoints: // do arithmetic mean of all values in gauss points if a cell
 							int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
 							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 							{
@@ -812,11 +811,11 @@ namespace MeshEditor.LayerManager.Import
 									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 									{
 										double aggregate = 0.0;
-										for (int gpIndex = 0; gpIndex < gaussPoints.NumberOfGaussPoints; gpIndex++)
+										for (int gpIndex = 0; gpIndex < numberOfGaussPoints; gpIndex++)
 										{
-											aggregate += values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + gpIndex * numberOfComponents + componentIndex];
+											aggregate += values[idIndex * numberOfGaussPoints * numberOfComponents + gpIndex * numberOfComponents + componentIndex];
 										}
-										result[cellIndex * numberOfComponents + componentIndex] = aggregate / gaussPoints.NumberOfGaussPoints;
+										result[cellIndex * numberOfComponents + componentIndex] = aggregate / numberOfGaussPoints;
 									}
 								}
 							}

@@ -53,10 +53,10 @@
     <Compile Include="Data\DataArrayType.cs" />
     <Compile Include="Data\DataLocationType.cs" />
     <Compile Include="Data\FieldType.cs" />
-    <Compile Include="Data\LayerMesh.cs" />
-    <Compile Include="Data\LayerResult.cs" />
+    <Compile Include="Data\MeshLayerFile.cs" />
+    <Compile Include="Data\DataLayerFile.cs" />
     <Compile Include="Data\ResultDescriptor.cs" />
-    <Compile Include="Data\LayerSummary.cs" />
+    <Compile Include="Data\SummaryLayerFile.cs" />
     <Compile Include="Filters\FilterDescriptor.cs" />
     <Compile Include="Filters\FilterType.cs" />
     <Compile Include="Data\DataDescription.cs" />
