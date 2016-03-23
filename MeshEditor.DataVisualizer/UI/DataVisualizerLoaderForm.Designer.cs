@@ -33,17 +33,11 @@
 			this.listViewFiles = new System.Windows.Forms.ListView();
 			this.buttonRemove = new System.Windows.Forms.Button();
 			this.buttonUnload = new System.Windows.Forms.Button();
-			this.comboBoxApproximationMethod = new System.Windows.Forms.ComboBox();
 			this.buttonReload = new System.Windows.Forms.Button();
-			this.labelApproximationMethodHeader = new System.Windows.Forms.Label();
 			this.buttonLoad = new System.Windows.Forms.Button();
 			this.labelApproximationQualityText = new System.Windows.Forms.Label();
 			this.buttonClear = new System.Windows.Forms.Button();
-			this.comboBoxDataVisualizerType = new System.Windows.Forms.ComboBox();
-			this.label2 = new System.Windows.Forms.Label();
 			this.checkBoxLoadInternalEntities = new System.Windows.Forms.CheckBox();
-			this.textBoxKeyTimeSteps = new System.Windows.Forms.TextBox();
-			this.labelKeyTimeSteps = new System.Windows.Forms.Label();
 			this.checkBoxCompressTime = new System.Windows.Forms.CheckBox();
 			this.linkLabelApproximationQuality = new System.Windows.Forms.LinkLabel();
 			this.SuspendLayout();
@@ -107,17 +101,6 @@
 			this.buttonUnload.UseVisualStyleBackColor = true;
 			this.buttonUnload.Click += new System.EventHandler(this.buttonUnload_Click);
 			// 
-			// comboBoxApproximationMethod
-			// 
-			this.comboBoxApproximationMethod.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.comboBoxApproximationMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.comboBoxApproximationMethod.FormattingEnabled = true;
-			this.comboBoxApproximationMethod.Location = new System.Drawing.Point(174, 164);
-			this.comboBoxApproximationMethod.Name = "comboBoxApproximationMethod";
-			this.comboBoxApproximationMethod.Size = new System.Drawing.Size(156, 21);
-			this.comboBoxApproximationMethod.TabIndex = 8;
-			this.comboBoxApproximationMethod.SelectedIndexChanged += new System.EventHandler(this.comboBoxApproximationMethod_SelectedIndexChanged);
-			// 
 			// buttonReload
 			// 
 			this.buttonReload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -128,16 +111,6 @@
 			this.buttonReload.Text = "Reload";
 			this.buttonReload.UseVisualStyleBackColor = true;
 			this.buttonReload.Click += new System.EventHandler(this.buttonReload_Click);
-			// 
-			// labelApproximationMethodHeader
-			// 
-			this.labelApproximationMethodHeader.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.labelApproximationMethodHeader.AutoSize = true;
-			this.labelApproximationMethodHeader.Location = new System.Drawing.Point(171, 148);
-			this.labelApproximationMethodHeader.Name = "labelApproximationMethodHeader";
-			this.labelApproximationMethodHeader.Size = new System.Drawing.Size(111, 13);
-			this.labelApproximationMethodHeader.TabIndex = 10;
-			this.labelApproximationMethodHeader.Text = "Approximation method";
 			// 
 			// buttonLoad
 			// 
@@ -172,32 +145,11 @@
 			this.buttonClear.UseVisualStyleBackColor = true;
 			this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
 			// 
-			// comboBoxDataVisualizerType
-			// 
-			this.comboBoxDataVisualizerType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.comboBoxDataVisualizerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.comboBoxDataVisualizerType.FormattingEnabled = true;
-			this.comboBoxDataVisualizerType.Location = new System.Drawing.Point(15, 164);
-			this.comboBoxDataVisualizerType.Name = "comboBoxDataVisualizerType";
-			this.comboBoxDataVisualizerType.Size = new System.Drawing.Size(123, 21);
-			this.comboBoxDataVisualizerType.TabIndex = 15;
-			this.comboBoxDataVisualizerType.SelectedIndexChanged += new System.EventHandler(this.comboBoxDataVisualizerType_SelectedIndexChanged);
-			// 
-			// label2
-			// 
-			this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(12, 148);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(99, 13);
-			this.label2.TabIndex = 16;
-			this.label2.Text = "Data visualizer type";
-			// 
 			// checkBoxLoadInternalEntities
 			// 
 			this.checkBoxLoadInternalEntities.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkBoxLoadInternalEntities.AutoSize = true;
-			this.checkBoxLoadInternalEntities.Location = new System.Drawing.Point(15, 196);
+			this.checkBoxLoadInternalEntities.Location = new System.Drawing.Point(12, 160);
 			this.checkBoxLoadInternalEntities.Name = "checkBoxLoadInternalEntities";
 			this.checkBoxLoadInternalEntities.Size = new System.Drawing.Size(123, 17);
 			this.checkBoxLoadInternalEntities.TabIndex = 17;
@@ -205,30 +157,11 @@
 			this.checkBoxLoadInternalEntities.UseVisualStyleBackColor = true;
 			this.checkBoxLoadInternalEntities.CheckedChanged += new System.EventHandler(this.checkBoxLoadInternalEntities_CheckedChanged);
 			// 
-			// textBoxKeyTimeSteps
-			// 
-			this.textBoxKeyTimeSteps.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxKeyTimeSteps.Location = new System.Drawing.Point(174, 232);
-			this.textBoxKeyTimeSteps.Name = "textBoxKeyTimeSteps";
-			this.textBoxKeyTimeSteps.Size = new System.Drawing.Size(296, 20);
-			this.textBoxKeyTimeSteps.TabIndex = 18;
-			// 
-			// labelKeyTimeSteps
-			// 
-			this.labelKeyTimeSteps.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.labelKeyTimeSteps.AutoSize = true;
-			this.labelKeyTimeSteps.Location = new System.Drawing.Point(171, 216);
-			this.labelKeyTimeSteps.Name = "labelKeyTimeSteps";
-			this.labelKeyTimeSteps.Size = new System.Drawing.Size(75, 13);
-			this.labelKeyTimeSteps.TabIndex = 19;
-			this.labelKeyTimeSteps.Text = "Key time steps";
-			// 
 			// checkBoxCompressTime
 			// 
 			this.checkBoxCompressTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkBoxCompressTime.AutoSize = true;
-			this.checkBoxCompressTime.Location = new System.Drawing.Point(174, 196);
+			this.checkBoxCompressTime.Location = new System.Drawing.Point(174, 160);
 			this.checkBoxCompressTime.Name = "checkBoxCompressTime";
 			this.checkBoxCompressTime.Size = new System.Drawing.Size(94, 17);
 			this.checkBoxCompressTime.TabIndex = 20;
@@ -255,17 +188,11 @@
 			this.ClientSize = new System.Drawing.Size(482, 355);
 			this.Controls.Add(this.linkLabelApproximationQuality);
 			this.Controls.Add(this.checkBoxCompressTime);
-			this.Controls.Add(this.labelKeyTimeSteps);
-			this.Controls.Add(this.textBoxKeyTimeSteps);
 			this.Controls.Add(this.checkBoxLoadInternalEntities);
-			this.Controls.Add(this.label2);
-			this.Controls.Add(this.comboBoxDataVisualizerType);
 			this.Controls.Add(this.buttonClear);
 			this.Controls.Add(this.labelApproximationQualityText);
 			this.Controls.Add(this.buttonLoad);
-			this.Controls.Add(this.labelApproximationMethodHeader);
 			this.Controls.Add(this.buttonReload);
-			this.Controls.Add(this.comboBoxApproximationMethod);
 			this.Controls.Add(this.buttonUnload);
 			this.Controls.Add(this.buttonRemove);
 			this.Controls.Add(this.listViewFiles);
@@ -291,17 +218,11 @@
 		private System.Windows.Forms.ListView listViewFiles;
 		private System.Windows.Forms.Button buttonRemove;
 		private System.Windows.Forms.Button buttonUnload;
-		private System.Windows.Forms.ComboBox comboBoxApproximationMethod;
 		private System.Windows.Forms.Button buttonReload;
-		private System.Windows.Forms.Label labelApproximationMethodHeader;
 		private System.Windows.Forms.Button buttonLoad;
 		private System.Windows.Forms.Label labelApproximationQualityText;
 		private System.Windows.Forms.Button buttonClear;
-		private System.Windows.Forms.ComboBox comboBoxDataVisualizerType;
-		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.CheckBox checkBoxLoadInternalEntities;
-		private System.Windows.Forms.TextBox textBoxKeyTimeSteps;
-		private System.Windows.Forms.Label labelKeyTimeSteps;
 		private System.Windows.Forms.CheckBox checkBoxCompressTime;
 		private System.Windows.Forms.LinkLabel linkLabelApproximationQuality;
 	}

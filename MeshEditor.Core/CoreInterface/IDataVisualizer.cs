@@ -146,16 +146,6 @@ namespace MeshEditor.CoreInterface
 		}
 	}
 
-	public enum ApproximationMethod
-	{
-		Default = 0,
-		ConstantValue,
-		LinearRegression,
-		TrilinearRegression, // Least Squares Trilinear Interpolation
-		TrilinearInterpolation,
-		QuadraticRegression
-	}
-
 	public enum GaussPointsExtrapolationStrategy
 	{
 		NearestGaussPoint,
@@ -165,22 +155,9 @@ namespace MeshEditor.CoreInterface
 
 	public interface IApproximationParameters
 	{
-		ApproximationMethod Method { get; set; }
-		bool LoadInternalEntities { get; set; }
-
-		// --- relevant in TimetreeDataVisualizer only ---
-		bool CompressTime { get; set; }
-		double[] FixedTimes { get; set; }
-		// -----------------------------------------------
-		
-		GaussPointsExtrapolationStrategy GPExptrapolationStrategy { get; set; }
+		bool LoadInternalEntities { get; }
+		bool CompressTime { get; }
+		GaussPointsExtrapolationStrategy GPExptrapolationStrategy { get; }
 	}
 
-	public enum DataVisualizerTypes
-	{
-		Exact = 0,
-		Octree,
-		Timetree,
-		Wavelet,
-	}
 }

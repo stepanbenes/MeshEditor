@@ -53,7 +53,6 @@
   <ItemGroup>
     <Compile Include="DataVisualizers\WaveletDataVisualizer.cs" />
     <Compile Include="Data\DataIndex.cs" />
-    <Compile Include="Data\DataSequence.cs" />
     <Compile Include="Data\GaussPointsInfo.cs" />
     <Compile Include="Data\Interval.cs" />
     <Compile Include="Data\ScalarDataDisplayMethod.cs" />
@@ -68,7 +67,6 @@
     <Compile Include="DataVisualizers\ApproximationParameters.cs" />
     <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
     <Compile Include="DataVisualizers\ExactDataVisualizer.cs" />
-    <Compile Include="DataVisualizers\TimetreeDataVisualizer.cs" />
     <Compile Include="Data\ColorScale.cs" />
     <Compile Include="Data\DataLocation.cs" />
     <Compile Include="Data\DataType.cs" />
@@ -80,15 +78,6 @@
     <Compile Include="IO\GiDResFileParser.cs" />
     <Compile Include="IO\IDataFileParser.cs" />
     <Compile Include="Data\DataInfo.cs" />
-    <Compile Include="Mathematics\Common.cs" />
-    <Compile Include="Mathematics\Polynomial.cs" />
-    <Compile Include="Mathematics\Approximation.cs" />
-    <Compile Include="Mathematics\MatrixLibrary.cs" />
-    <Compile Include="Data\DataAbstract.cs" />
-    <Compile Include="Octree\LeafNode.cs" />
-    <Compile Include="Octree\InternalNode.cs" />
-    <Compile Include="Octree\TreeNode.cs" />
-    <Compile Include="DataVisualizers\OctreeDataVisualizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\AnimationCreatorForm.cs">
       <SubType>Form</SubType>
@@ -170,7 +159,6 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Octree\OctreeDataStructure.cd" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
