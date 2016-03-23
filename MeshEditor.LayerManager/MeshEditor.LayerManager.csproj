@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ArrayExtensions.cs" />
+    <Compile Include="Common\StringExtensions.cs" />
     <Compile Include="DataTransformation\TransparentCompressionService.cs" />
     <Compile Include="DataTransformation\Base64EncodingService.cs" />
     <Compile Include="DataTransformation\ICompressionService.cs" />

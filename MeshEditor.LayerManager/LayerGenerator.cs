@@ -39,17 +39,17 @@ namespace MeshEditor.LayerManager
 
 		#region Public methods
 
-		public void AppendData(Guid layer, IDataImportService dataImportService)
+		public void AppendDataToLayer(Uri layerFileUri, IDataImportService dataImportService)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void CompressTime(Guid layer, string fieldName = null, string componentName = null)
+		public void CompressTimeInLayer(Uri layerFileUri, string fieldName = null, string componentName = null)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Guid GenerateFrom(Guid parentLayer, FilterDescriptor filter)
+		public Guid GenerateFilterLayer(Uri layerFileUri, params FilterDescriptor[] filters)
 		{
 			Guid layerId = Guid.NewGuid();
 			// TODO: find parentLayer in storage and download summary
@@ -57,7 +57,7 @@ namespace MeshEditor.LayerManager
 			return layerId;
 		}
 
-		public Guid Generate(string projectName, Uri projectLocation, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public Guid GenerateMasterLayer(Uri location, string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
 			if (geometryImportService == null)
 			{
@@ -69,22 +69,22 @@ namespace MeshEditor.LayerManager
 			SummaryLayerFile layerSummary = new SummaryLayerFile
 			{
 				Id = layerId,
-				Name = projectName,
+				Name = layerName,
 				ParentId = null,
 				Filters = null,
 			};
 
-			string layerDirectory = Path.Combine(projectLocation.LocalPath, $"{projectName}.{layerId}.layer"); // TODO: make valid file name from projectName
+			string layerDirectory = Path.Combine(location.LocalPath, $"{layerId}.layer");
 			GeometryDescription geometry = geometryImportService.ReadGeometry();
 			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
-			StoreLayerFile(layerMesh, projectLocation, layerDirectory, $"{layerId}.mesh");
+			StoreLayerFile(layerMesh, location, layerDirectory, $"{layerId}.mesh");
 
 			int attributeIndex = 1, resultIndex = 1;
 
 			if (geometry.CellAttributes != null)
 			{
 				DataLayerFile layerElementProperties = createAttributeLayerFile(geometry.CellAttributes, "ElementProperties", DataLocationType.Cells, layerId, attributeIndex);
-				StoreLayerFile(layerElementProperties, projectLocation, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
+				StoreLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
 				attributeIndex++;
 				layerSummary.Attributes = new[] { DataLayerDescriptor.CreateFrom(layerElementProperties) };
 			}
@@ -98,7 +98,7 @@ namespace MeshEditor.LayerManager
 					resultDescriptors.Add(DataLayerDescriptor.CreateFrom(layerResult));
 					foreach (var timeStep in layerResult.TimeSteps)
 						timeStepsHashSet.Add(timeStep);
-					StoreLayerFile(layerResult, projectLocation, layerDirectory, $"{layerId}.{layerResult.Index}.result");
+					StoreLayerFile(layerResult, location, layerDirectory, $"{layerId}.{layerResult.Index}.result");
 				}
 				resultIndex += dataField.NumberOfComponents;
 			}
@@ -106,7 +106,7 @@ namespace MeshEditor.LayerManager
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
 			layerSummary.Results = resultDescriptors.ToArray();
 
-			StoreLayerFile(layerSummary, projectLocation, layerDirectory, $"{layerId}.layer");
+			StoreLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer");
 
 			return layerId;
 		}
@@ -133,9 +133,9 @@ namespace MeshEditor.LayerManager
 
 		#region Protected methods
 
-		protected void StoreLayerFile<T>(T layerObject, Uri projectLocation, string layerDirectory, string recordName)
+		protected void StoreLayerFile<T>(T layerObject, Uri location, string layerDirectory, string recordName)
 		{
-			Uri uri = new Uri(projectLocation, Path.Combine(layerDirectory ?? "", recordName + layerSerializer.FileExtension));
+			Uri uri = new Uri(location, Path.Combine(layerDirectory ?? "", recordName + layerSerializer.FileExtension));
 			using (Stream stream = storageService.Save(uri))
 			{
 				layerSerializer.Serialize(layerObject, stream);

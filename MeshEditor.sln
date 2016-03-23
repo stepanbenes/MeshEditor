@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{351018
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FormatConverter", "FormatConverter", "{F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LayerManager", "LayerManager", "{F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.LayerManager", "MeshEditor.LayerManager\MeshEditor.LayerManager.csproj", "{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}"
 EndProject
