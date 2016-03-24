@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
 using Newtonsoft.Json;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.LayerManager.Infrastructure
 {
-	class Project
+	public class Solution
 	{
 		public class LayerRecord
 		{
@@ -19,7 +19,7 @@ namespace MeshEditor.FormatConverter
 			public LayerRecord[] Children { get; set; }
 		}
 
-		public string Name { get; set; }
+		public string ProjectName { get; set; }
 		public LayerRecord[] Layers { get; set; }
 	}
 }

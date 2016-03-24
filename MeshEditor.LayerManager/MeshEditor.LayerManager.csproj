@@ -75,6 +75,7 @@
     <Compile Include="Import\VTKXmlDataFormatParser.cs" />
     <Compile Include="Import\VTKXmlFormatParserBase.cs" />
     <Compile Include="Import\VTKXmlGeometryFormatParser.cs" />
+    <Compile Include="Infrastructure\Solution.cs" />
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

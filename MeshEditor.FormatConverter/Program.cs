@@ -10,6 +10,7 @@ using MeshEditor.LayerManager.Storage;
 using MeshEditor.LayerManager.Common;
 using CommandLine;
 using Newtonsoft.Json;
+using MeshEditor.LayerManager.Infrastructure;
 
 namespace MeshEditor.FormatConverter
 {
@@ -59,10 +60,10 @@ namespace MeshEditor.FormatConverter
 			var layerGenerator = new LayerGenerator(storageService);
 			var masterLayerGuid = layerGenerator.GenerateMasterLayer(convertToUri(projectDirectoryName, currentDirectory), masterLayerName, geometryImportService, dataImportService);
 
-			Project project = new Project
+			Solution project = new Solution
 			{
-				Name = options.ProjectName,
-				Layers = new[] { new Project.LayerRecord { Id = masterLayerGuid, Name = masterLayerName } }
+				ProjectName = options.ProjectName,
+				Layers = new[] { new Solution.LayerRecord { Id = masterLayerGuid, Name = masterLayerName } }
 			};
 
 			string json = JsonConvert.SerializeObject(project, Formatting.Indented);
@@ -72,7 +73,7 @@ namespace MeshEditor.FormatConverter
 				Console.WriteLine(json);
 			}
 
-			File.WriteAllText(Path.Combine(currentDirectory, projectDirectoryName, $"{projectNameAsValidFileName}.project.json"), json, System.Text.Encoding.UTF8);
+			File.WriteAllText(Path.Combine(currentDirectory, projectDirectoryName, $"{projectNameAsValidFileName}.solution.json"), json, System.Text.Encoding.UTF8);
 
 			return 0;
 		}
