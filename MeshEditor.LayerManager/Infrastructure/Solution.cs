@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.Infrastructure
 		{
 			public Guid Id { get; set; }
 			public string Name { get; set; }
-			public FilterDescriptor[] Filters { get; set; }
+			public FilterBase Filter { get; set; }
 			[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 			public LayerRecord[] Children { get; set; }
 		}

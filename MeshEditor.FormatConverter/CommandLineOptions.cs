@@ -33,10 +33,13 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 0, MetaName = "Layer name", Required = true, HelpText = "Name of new layer")]
 		public string LayerName { get; set; }
 
-		[Option('p', "parent", Required = true, HelpText = "Parent layer guid")]
+		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid")]
 		public Guid ParentLayerId { get; set; }
 
-		[Option('f', "filters", Required = true, HelpText = "Filters to be applied on parent layer")]
-		public IEnumerable<string> Filters { get; set; }
+		[Option('f', "filter", Required = true, HelpText = "Filter to be applied on parent layer")]
+		public string Filter { get; set; }
+
+		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
+		public IEnumerable<string> FilterParameters { get; set; }
 	}
 }

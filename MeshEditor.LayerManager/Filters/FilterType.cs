@@ -8,9 +8,11 @@ namespace MeshEditor.LayerManager.Filters
 {
 	public enum FilterType
 	{
-		Surface = 1, // surface of the whole mesh
-		Slice = 2, // cross-section
-		Clip = 3, // crop
-		IsoSurface = 4, // surface with constant data value
+		Surface, // surface of the mesh
+		Slice, // cross-section
+		Clip, // crop
+		IsoSurface, // surface with constant data value
+		StreamLines,
+		AttributeSelection, // e.g. elements with specific property
 	}
 }

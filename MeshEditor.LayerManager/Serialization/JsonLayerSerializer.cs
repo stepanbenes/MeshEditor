@@ -31,6 +31,7 @@ namespace MeshEditor.LayerManager.Serialization
 			using (JsonTextReader jsonReader = new JsonTextReader(reader))
 			{
 				JsonSerializer jsonSerializer = new JsonSerializer();
+				jsonSerializer.Converters.Add(new KnownTypeConverter());
 				return jsonSerializer.Deserialize<T>(jsonReader);
 			}
 		}
