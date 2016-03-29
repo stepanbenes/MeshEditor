@@ -55,7 +55,7 @@ namespace MeshEditor.LayerManager.Import
 			List<int> cellConnectivity = new List<int>();
 			List<int> cellOffsets = new List<int>();
 			List<CellType> cellTypes = new List<CellType>();
-			List<int> cellAttributes = new List<int>();
+			List<int> elementProperties = new List<int>();
 
 			int dimension = 0;
 			int currentLineNumber = 0;
@@ -169,11 +169,11 @@ namespace MeshEditor.LayerManager.Import
 									if (parts.Length > nnode + 1)
 									{
 										int elementProperty = ParseInt32(parts[nnode + 1]); // read optional material number
-										cellAttributes.Add(elementProperty);
+										elementProperties.Add(elementProperty);
 									}
 									else
 									{
-										cellAttributes.Add(0);
+										elementProperties.Add(0);
 									}
 								}
 								break;
@@ -196,7 +196,7 @@ namespace MeshEditor.LayerManager.Import
 				CellTypes = cellTypes.ToArray(),
 				PointIdIndexMap = nodeIdIndexMap,
 				CellIdIndexMap = elementIdIndexMap,
-				CellAttributes = (cellAttributes.Count > 0) ? cellAttributes.ToArray() : null
+				CellAttributes = (elementProperties.Count > 0) ? new Dictionary<string, int[]> { ["ElementProperties"] = elementProperties.ToArray() } : new Dictionary<string, int[]>()
 			};
 			return geometry;
 		}

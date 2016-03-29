@@ -57,37 +57,41 @@ namespace MeshEditor.LayerManager
 			Uri parentLayerFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.layer.json");
 
 			// find parentLayer in storage and download summary
+			SummaryLayerFile parentLayer;
 			using (var stream = storageService.Load(parentLayerFileUri))
 			{
-				var parentLayer = layerSerializer.Deserialize<SummaryLayerFile>(stream);
-				Uri meshFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.mesh.json");
-
-				GeometryDescription geometry = LoadGeometry(meshFileUri);
-
-				switch (filter.Type)
-				{
-					case FilterType.Surface:
-					case FilterType.Slice:
-					case FilterType.Clip:
-					case FilterType.IsoSurface:
-					case FilterType.StreamLines:
-						throw new NotImplementedException();
-					case FilterType.AttributeSelection:
-						{
-							var attributeSelectionFilter = filter as AttributeSelectionFilter;
-							Debug.Assert(attributeSelectionFilter != null);
-							DataLayerDescriptor attribute = parentLayer.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-							Uri attributeDataFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.{attribute.Index}.attribute.json");
-							GeometryDescription filteredGeometry = filterGeometryByAttribute(geometry, attributeDataFileUri, attributeSelectionFilter.AttributeSelection);
-
-							var filteredDataDescriptions = Enumerable.Empty<DataDescription>(); // TODO: filter data by attribute
-							string name = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
-							return generateLayerFiles(location, name, filteredGeometry, filteredDataDescriptions, filter);
-						}
-					default:
-						throw new NotSupportedException();
-				}
+				parentLayer = layerSerializer.Deserialize<SummaryLayerFile>(stream);
 			}
+
+			Uri meshFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.mesh.json");
+			var attributeFileUris = parentLayer.Attributes.Select(a => new Uri(layerDirectoryUri, $"{parentLayerId}.{a.Index}.attribute.json"));
+
+			GeometryDescription originalGeometry = LoadGeometry(meshFileUri, attributeFileUris);
+			GeometryDescription filteredGeometry;
+			IEnumerable<DataDescription> filteredDataDescriptions;
+			string filterLayerName;
+
+			switch (filter.Type)
+			{
+				case FilterType.Surface:
+				case FilterType.Slice:
+				case FilterType.Clip:
+				case FilterType.IsoSurface:
+				case FilterType.StreamLines:
+					throw new NotImplementedException();
+				case FilterType.AttributeSelection:
+					var attributeSelectionFilter = (AttributeSelectionFilter)filter;
+					filteredGeometry = filterGeometryByCellAttribute(originalGeometry, attributeSelectionFilter.AttributeName, attributeSelectionFilter.AttributeSelection);
+					filterLayerName = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+
+			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
+			filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
+
+			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredDataDescriptions, filter);
 		}
 
 		public SummaryLayerFile GenerateMasterLayer(Uri location, string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
@@ -103,12 +107,21 @@ namespace MeshEditor.LayerManager
 			return layerFile;
 		}
 
-		public GeometryDescription LoadGeometry(Uri uri)
+		public GeometryDescription LoadGeometry(Uri meshFileUri, IEnumerable<Uri> attributeDataFileUris)
 		{
-			using (Stream stream = storageService.Load(uri))
+			using (Stream meshStream = storageService.Load(meshFileUri))
 			{
-				MeshLayerFile layerMesh = layerSerializer.Deserialize<MeshLayerFile>(stream);
-				return createGeometryFromLayerMesh(layerMesh);
+				MeshLayerFile layerMesh = layerSerializer.Deserialize<MeshLayerFile>(meshStream);
+				var attributeFiles = new List<DataLayerFile>();
+				foreach (Uri attributeDataFileUri in attributeDataFileUris)
+				{
+					using (Stream attributeStream = storageService.Load(attributeDataFileUri))
+					{
+						DataLayerFile layerAttributes = layerSerializer.Deserialize<DataLayerFile>(attributeStream);
+						attributeFiles.Add(layerAttributes);
+					}
+				}
+				return createGeometryFromLayerMesh(layerMesh, attributeFiles);
 			}
 		}
 
@@ -124,6 +137,16 @@ namespace MeshEditor.LayerManager
 		#endregion
 
 		#region Private methods
+
+		private IEnumerable<DataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<Uri> originalResultFileUris)
+		{
+			throw new NotImplementedException();
+
+			foreach (var data in originalResultFileUris.SelectMany(uri => LoadData(uri)))
+			{
+				// TODO
+			}
+		}
 
 		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, GeometryDescription geometry, IEnumerable<DataDescription> dataDescriptions, FilterBase filter)
 		{
@@ -146,10 +169,17 @@ namespace MeshEditor.LayerManager
 
 			if (geometry.CellAttributes != null)
 			{
-				DataLayerFile layerElementProperties = createAttributeLayerFile(geometry.CellAttributes, "ElementProperties", DataLocationType.Cells, layerId, attributeIndex);
-				storeLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
-				attributeIndex++;
-				layerSummary.Attributes = new[] { DataLayerDescriptor.CreateFrom(layerElementProperties) };
+				var attributeDescriptors = new List<DataLayerDescriptor>();
+				foreach (var pair in geometry.CellAttributes)
+				{
+					string attributeName = pair.Key;
+					int[] attributeValues = pair.Value;
+					DataLayerFile layerElementProperties = createAttributeLayerFile(attributeName, attributeValues, DataLocationType.Cells, layerId, attributeIndex);
+					storeLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
+					attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(layerElementProperties));
+					attributeIndex++;
+				}
+				layerSummary.Attributes = attributeDescriptors.ToArray();
 			}
 
 			var resultDescriptors = new List<DataLayerDescriptor>();
@@ -185,7 +215,7 @@ namespace MeshEditor.LayerManager
 
 			layerMesh.CellConnectivity = encodeGeometryDataArray(geometry.CellConnectivity, trimEnd: false);
 
-			// TODO: set offsets and types to null if all cells are linear triangles
+			// set cell types to null if all cells are of default type (e.g. linear triangles)
 			if (!geometry.CellTypes.All(cellType => cellType == DefaultCellType))
 			{
 				layerMesh.CellTypes = encodeGeometryDataArray(geometry.CellTypes.Select(t => (byte)t).ToArray(), trimEnd: true);
@@ -205,7 +235,7 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
-		private DataLayerFile createAttributeLayerFile(int[] attributeValues, string attributeName, DataLocationType location, Guid layerId, int dataIndex)
+		private DataLayerFile createAttributeLayerFile(string attributeName, int[] attributeValues, DataLocationType location, Guid layerId, int dataIndex)
 		{
 			Debug.Assert(attributeValues != null);
 
@@ -225,7 +255,7 @@ namespace MeshEditor.LayerManager
 			return attributeLayer;
 		}
 
-		private GeometryDescription createGeometryFromLayerMesh(MeshLayerFile layerMesh)
+		private GeometryDescription createGeometryFromLayerMesh(MeshLayerFile layerMesh, IEnumerable<DataLayerFile> attributeFiles)
 		{
 			GeometryDescription geometry = new GeometryDescription();
 
@@ -249,6 +279,14 @@ namespace MeshEditor.LayerManager
 				int numberOfPointsPerCell = GeometryDescription.MapCellTypeToNumberOfPoints(DefaultCellType);
 				geometry.CellTypes = Enumerable.Repeat(DefaultCellType, layerMesh.NumberOfCells).ToArray();
 				geometry.CellOffsets = Enumerable.Range(1, layerMesh.NumberOfCells).Select(i => i * numberOfPointsPerCell).ToArray();
+			}
+
+			// process cell attributes
+			geometry.CellAttributes = new Dictionary<string, int[]>();
+			foreach (DataLayerFile attributeFile in attributeFiles.Where(a => a.Location == DataLocationType.Cells))
+			{
+				int[] attributes = decodeAttributes(attributeFile.Data, attributeFile.Encoding);
+				geometry.CellAttributes[attributeFile.FieldName] = attributes;
 			}
 
 			return geometry;
@@ -301,70 +339,71 @@ namespace MeshEditor.LayerManager
 			yield return data;
 		}
 
-		private GeometryDescription filterGeometryByAttribute(GeometryDescription geometry, Uri attributeDataFileUri, int[] attributeSelection)
+		private GeometryDescription filterGeometryByCellAttribute(GeometryDescription geometry, string cellAttributeName, int[] attributeSelection)
 		{
-			using (Stream stream = storageService.Load(attributeDataFileUri))
+			List<CellType> cellTypes = new List<CellType>();
+			Dictionary<string, List<int>> cellAttributes = geometry.CellAttributes.ToDictionary(pair => pair.Key, pair => new List<int>());
+			HashSet<int> remainingPointIndices = new HashSet<int>();
+			List<int> cellConnectivity = new List<int>();
+			List<int> cellOffsets = new List<int>();
+			Dictionary<int, int> oldNewCellIndexMap = new Dictionary<int, int>();
+
+			int[] attributes = geometry.CellAttributes[cellAttributeName];
+
+			for (int cellIndex = 0, previousOffset = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				DataLayerFile layerResult = layerSerializer.Deserialize<DataLayerFile>(stream);
-				int[] attributes = decodeAttributes(layerResult.Data, layerResult.Encoding);
-
-				// ----------------
-
-				List<CellType> cellTypes = new List<CellType>();
-				List<int> cellAttributes = new List<int>();
-				HashSet<int> remainingPointIndices = new HashSet<int>();
-				List<int> cellConnectivity = new List<int>();
-				List<int> cellOffsets = new List<int>();
-
-				for (int cellIndex = 0, previousOffset = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
+				int currentOffset = geometry.CellOffsets[cellIndex];
+				if (attributeSelection.Contains(attributes[cellIndex]))
 				{
-					int currentOffset = geometry.CellOffsets[cellIndex];
-					if (attributeSelection.Contains(attributes[cellIndex]))
+					for (int offset = previousOffset; offset < currentOffset; offset++)
 					{
-						for (int offset = previousOffset; offset < currentOffset; offset++)
-						{
-							int pointIndex = geometry.CellConnectivity[offset];
-							remainingPointIndices.Add(pointIndex);
-							cellConnectivity.Add(pointIndex);
-						}
-						cellOffsets.Add(cellConnectivity.Count);
-						cellTypes.Add(geometry.CellTypes[cellIndex]);
-						cellAttributes.Add(attributes[cellIndex]);
+						int pointIndex = geometry.CellConnectivity[offset];
+						remainingPointIndices.Add(pointIndex);
+						cellConnectivity.Add(pointIndex);
 					}
-					previousOffset = currentOffset;
-				}
-
-				int numberOfCoordinates = geometry.NumberOfCoordinateComponents;
-				List<float> pointCoordinates = new List<float>();
-				Dictionary<int, int> oldNewPointIndexMap = new Dictionary<int, int>();
-				foreach (int oldPointIndex in remainingPointIndices.OrderBy(p => p))
-				{
-					for (int coordinateIndex = 0; coordinateIndex < numberOfCoordinates; coordinateIndex++)
+					cellOffsets.Add(cellConnectivity.Count);
+					cellTypes.Add(geometry.CellTypes[cellIndex]);
+					oldNewCellIndexMap[cellIndex] = oldNewCellIndexMap.Count;
+					foreach (var pair in cellAttributes)
 					{
-						pointCoordinates.Add(geometry.PointCoordinates[oldPointIndex * numberOfCoordinates + coordinateIndex]);
+						pair.Value.Add(geometry.CellAttributes[pair.Key][cellIndex]);
 					}
-					oldNewPointIndexMap[oldPointIndex] = oldNewPointIndexMap.Count;
 				}
-
-				// update cell connectivity (from old point indices to new point indices)
-				for (int i = 0; i < cellConnectivity.Count; i++)
-				{
-					int oldPointIndex = cellConnectivity[i];
-					int newPointIndex = oldNewPointIndexMap[oldPointIndex];
-					cellConnectivity[i] = newPointIndex;
-				}
-
-				GeometryDescription filteredGeometry = new GeometryDescription
-				{
-					NumberOfCoordinateComponents = numberOfCoordinates,
-					PointCoordinates = pointCoordinates.ToArray(),
-					CellConnectivity = cellConnectivity.ToArray(),
-					CellOffsets = cellOffsets.ToArray(),
-					CellTypes = cellTypes.ToArray(),
-					CellAttributes = cellAttributes.ToArray()
-				};
-				return filteredGeometry;
+				previousOffset = currentOffset;
 			}
+
+			int numberOfCoordinates = geometry.NumberOfCoordinateComponents;
+			List<float> pointCoordinates = new List<float>();
+			Dictionary<int, int> oldNewPointIndexMap = new Dictionary<int, int>();
+			foreach (int oldPointIndex in remainingPointIndices.OrderBy(p => p))
+			{
+				for (int coordinateIndex = 0; coordinateIndex < numberOfCoordinates; coordinateIndex++)
+				{
+					pointCoordinates.Add(geometry.PointCoordinates[oldPointIndex * numberOfCoordinates + coordinateIndex]);
+				}
+				oldNewPointIndexMap[oldPointIndex] = oldNewPointIndexMap.Count;
+			}
+
+			// update cell connectivity (from old point indices to new point indices)
+			for (int i = 0; i < cellConnectivity.Count; i++)
+			{
+				int oldPointIndex = cellConnectivity[i];
+				int newPointIndex = oldNewPointIndexMap[oldPointIndex];
+				cellConnectivity[i] = newPointIndex;
+			}
+
+			GeometryDescription filteredGeometry = new GeometryDescription
+			{
+				NumberOfCoordinateComponents = numberOfCoordinates,
+				PointCoordinates = pointCoordinates.ToArray(),
+				CellConnectivity = cellConnectivity.ToArray(),
+				CellOffsets = cellOffsets.ToArray(),
+				CellTypes = cellTypes.ToArray(),
+				CellAttributes = cellAttributes.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray()),
+				PointIdIndexMap = oldNewPointIndexMap,
+				CellIdIndexMap = oldNewCellIndexMap
+			};
+			return filteredGeometry;
 		}
 
 		private void storeLayerFile<T>(T layerObject, Uri location, string layerDirectory, string recordName)
