@@ -24,10 +24,10 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			return Parser.Default.ParseArguments<ImportOptions, AddOptions>(args)
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions>(args)
 				.MapResult(
 				(ImportOptions options) => runImportCommand(options),
-				(AddOptions options) => runAddCommand(options),
+				(FilterOptions options) => runFilterCommand(options),
 				errors => 1);
 
 			//if (args.Length < 1)
@@ -69,7 +69,7 @@ namespace MeshEditor.FormatConverter
 			return 0;
 		}
 
-		private static int runAddCommand(AddOptions options)
+		private static int runFilterCommand(FilterOptions options)
 		{
 			FilterBase filter;
 			FilterType filterType;
@@ -113,7 +113,7 @@ namespace MeshEditor.FormatConverter
 
 			IStorageService storageService = new LocalFileSystemStorageService();
 			var layerGenerator = new LayerGenerator(storageService);
-			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), options.ParentLayerId, filter);
+			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), options.ParentLayerId, filter, options.LayerName);
 
 			Solution.LayerRecord parentLayer = findLayerWithId(options.ParentLayerId, solution.Layers);
 			if (parentLayer == null)

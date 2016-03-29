@@ -27,19 +27,19 @@ namespace MeshEditor.FormatConverter
 		public IEnumerable<string> ResultFiles { get; set; }
 	}
 
-	[Verb("add", HelpText = "Add new layer based on parent layer")]
-	class AddOptions : Options
+	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
+	class FilterOptions : Options
 	{
-		[Value(index: 0, MetaName = "Layer name", Required = true, HelpText = "Name of new layer")]
-		public string LayerName { get; set; }
+		[Value(index: 0, MetaName = "Filter name", Required = true, HelpText = "Filter to be applied on parent layer")]
+		public string Filter { get; set; }
 
 		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid")]
 		public Guid ParentLayerId { get; set; }
 
-		[Option('f', "filter", Required = true, HelpText = "Filter to be applied on parent layer")]
-		public string Filter { get; set; }
-
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
+
+		[Option('n', "name", Required = false, HelpText = "Name of new layer")]
+		public string LayerName { get; set; }
 	}
 }
