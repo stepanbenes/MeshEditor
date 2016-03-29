@@ -53,7 +53,7 @@ namespace MeshEditor.LayerManager
 
 		public SummaryLayerFile GenerateFilterLayer(Uri location, Guid parentLayerId, FilterBase filter, string layerName = null)
 		{
-			Uri layerDirectoryUri = new Uri(location, $"{parentLayerId}.layer/");
+			Uri layerDirectoryUri = new Uri(location, $"{parentLayerId}/");
 			Uri parentLayerFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.layer.json");
 
 			// find parentLayer in storage and download summary
@@ -81,7 +81,7 @@ namespace MeshEditor.LayerManager
 							GeometryDescription filteredGeometry = filterGeometryByAttribute(geometry, attributeDataFileUri, attributeSelectionFilter.AttributeSelection);
 
 							var filteredDataDescriptions = Enumerable.Empty<DataDescription>(); // TODO: filter data by attribute
-							string name = layerName ?? $"{attributeSelectionFilter.AttributeName} {string.Join(", ", attributeSelectionFilter.AttributeSelection)} layer";
+							string name = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
 							return generateLayerFiles(location, name, filteredGeometry, filteredDataDescriptions, filter);
 						}
 					default:
@@ -137,7 +137,7 @@ namespace MeshEditor.LayerManager
 				Filter = filter,
 			};
 
-			string layerDirectory = $"{layerId}.layer";
+			string layerDirectory = $"{layerId}";
 
 			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			storeLayerFile(layerMesh, location, layerDirectory, $"{layerId}.mesh");
