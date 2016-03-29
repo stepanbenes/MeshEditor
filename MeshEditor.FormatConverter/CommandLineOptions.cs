@@ -34,8 +34,8 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 0, MetaName = "Filter type", Required = true, HelpText = "Filter to be applied on parent layer")]
 		public FilterType FilterType { get; set; }
 
-		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid")]
-		public Guid ParentLayerId { get; set; }
+		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
+		public string ParentLayer { get; set; }
 
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }

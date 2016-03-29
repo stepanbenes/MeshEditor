@@ -102,15 +102,24 @@ namespace MeshEditor.FormatConverter
 				solution = serializer.Deserialize<Solution>(stream);
 			}
 
+			Solution.LayerRecord parentLayer;
+			Guid guid;
+			if (Guid.TryParse(options.ParentLayer, out guid))
+			{
+				parentLayer = findLayer(solution.Layers, layer => layer.Id == guid);
+			}
+			else
+			{
+				parentLayer = findLayer(solution.Layers, layer => string.Equals(layer.Name, options.ParentLayer, StringComparison.InvariantCultureIgnoreCase));
+				if (parentLayer == null)
+				{
+					throw new Exception($"Layer '{options.ParentLayer}' not found.");
+				}
+			}
+
 			IStorageService storageService = new LocalFileSystemStorageService();
 			var layerGenerator = new LayerGenerator(storageService);
-			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), options.ParentLayerId, filter, options.LayerName);
-
-			Solution.LayerRecord parentLayer = findLayerWithId(options.ParentLayerId, solution.Layers);
-			if (parentLayer == null)
-			{
-				throw new FileNotFoundException();
-			}
+			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), parentLayer.Id, filter, options.LayerName);
 
 			SolutionBuilder.AddFilterLayer(parentLayer, filterLayer);
 
@@ -123,17 +132,17 @@ namespace MeshEditor.FormatConverter
 			return 0;
 		}
 
-		private static Solution.LayerRecord findLayerWithId(Guid layerId, IEnumerable<Solution.LayerRecord> layers)
+		private static Solution.LayerRecord findLayer(IEnumerable<Solution.LayerRecord> layers, Func<Solution.LayerRecord, bool> predicate)
 		{
 			Debug.Assert(layers != null);
 			foreach (var layer in layers)
 			{
-				if (layer.Id == layerId)
+				if (predicate(layer))
 					return layer;
 			}
 			foreach (var layer in layers)
 			{
-				var hit = findLayerWithId(layerId, layer.Children);
+				var hit = findLayer(layer.Children, predicate);
 				if (hit != null)
 					return hit;
 			}
