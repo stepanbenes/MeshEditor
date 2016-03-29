@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.FormatConverter
 {
@@ -30,8 +31,8 @@ namespace MeshEditor.FormatConverter
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
 	class FilterOptions : Options
 	{
-		[Value(index: 0, MetaName = "Filter name", Required = true, HelpText = "Filter to be applied on parent layer")]
-		public string Filter { get; set; }
+		[Value(index: 0, MetaName = "Filter type", Required = true, HelpText = "Filter to be applied on parent layer")]
+		public FilterType FilterType { get; set; }
 
 		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid")]
 		public Guid ParentLayerId { get; set; }
