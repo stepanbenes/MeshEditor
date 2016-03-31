@@ -22,20 +22,20 @@ namespace MeshEditor.LayerManager
 
 		IReadStorageService sourceStorage;
 		IWriteStorageService destinationStorage;
-		ILayerSerializer layerSerializer;
+		ISerializationService serializationService;
 		ICompressionService compressionService;
 		IEncodingService encodingService;
 
 		public LayerGenerator(
 			IReadStorageService sourceStorage = null,
 			IWriteStorageService destinationStorage = null,
-			ILayerSerializer layerSerializer = null,
+			ISerializationService serializationService = null,
 			ICompressionService compressionService = null,
 			IEncodingService encodingService = null)
 		{
 			this.sourceStorage = sourceStorage ?? new LocalFileSystemStorageService();
 			this.destinationStorage = destinationStorage ?? new LocalFileSystemStorageService();
-			this.layerSerializer = layerSerializer ?? new JsonLayerSerializer();
+			this.serializationService = serializationService ?? new JsonSerializationService();
 			this.compressionService = compressionService ?? new TransparentCompressionService();
 			this.encodingService = encodingService ?? new Base64EncodingService();
 		}
@@ -63,7 +63,7 @@ namespace MeshEditor.LayerManager
 			SummaryLayerFile parentLayer;
 			using (var stream = sourceStorage.Load(parentLayerFileUri))
 			{
-				parentLayer = layerSerializer.Deserialize<SummaryLayerFile>(stream);
+				parentLayer = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
 			Uri meshFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.mesh.json");
@@ -121,7 +121,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream meshStream = sourceStorage.Load(meshFileUri))
 			{
-				MeshLayerFile layerMesh = layerSerializer.Deserialize<MeshLayerFile>(meshStream);
+				MeshLayerFile layerMesh = serializationService.Deserialize<MeshLayerFile>(meshStream);
 				return createGeometryFromLayerMesh(layerMesh);
 			}
 		}
@@ -130,7 +130,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream stream = sourceStorage.Load(uri))
 			{
-				DataLayerFile layerResult = layerSerializer.Deserialize<DataLayerFile>(stream);
+				DataLayerFile layerResult = serializationService.Deserialize<DataLayerFile>(stream);
 				return createDataDescriptionFromLayerResult(layerResult);
 			}
 		}
@@ -139,7 +139,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream attributeStream = sourceStorage.Load(uri))
 			{
-				DataLayerFile layerAttributes = layerSerializer.Deserialize<DataLayerFile>(attributeStream);
+				DataLayerFile layerAttributes = serializationService.Deserialize<DataLayerFile>(attributeStream);
 				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
 			}
 		}
@@ -412,10 +412,10 @@ namespace MeshEditor.LayerManager
 
 		private void storeLayerFile<T>(T layerObject, Uri location, string layerDirectory, string recordName)
 		{
-			Uri uri = new Uri(location, Path.Combine(layerDirectory ?? "", recordName + layerSerializer.FileExtension));
+			Uri uri = new Uri(location, Path.Combine(layerDirectory ?? "", recordName + serializationService.FileExtension));
 			using (Stream stream = destinationStorage.Save(uri))
 			{
-				layerSerializer.Serialize(layerObject, stream);
+				serializationService.Serialize(layerObject, stream);
 			}
 		}
 

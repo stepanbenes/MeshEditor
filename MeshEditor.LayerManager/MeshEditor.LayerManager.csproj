@@ -83,10 +83,10 @@
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serialization\ILayerSerializer.cs" />
+    <Compile Include="Serialization\ISerializationService.cs" />
     <Compile Include="Serialization\KnownTypeJsonConverter.cs" />
     <Compile Include="Storage\IStorageService.cs" />
-    <Compile Include="Serialization\JsonLayerSerializer.cs" />
+    <Compile Include="Serialization\JsonSerializationService.cs" />
     <Compile Include="Serialization\NotIndentedArrayJsonConverter.cs" />
     <Compile Include="Storage\LocalFileSystemStorageService.cs" />
   </ItemGroup>

@@ -9,11 +9,11 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.LayerManager.Serialization
 {
-	public class JsonLayerSerializer : ILayerSerializer
+	public class JsonSerializationService : ISerializationService
 	{
 		public string FileExtension => ".json";
 
-		public void Serialize<T>(T layerObject, Stream stream)
+		public void Serialize<T>(T obj, Stream stream)
 		{
 			using (StreamWriter writer = new StreamWriter(stream))
 			using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
@@ -21,7 +21,7 @@ namespace MeshEditor.LayerManager.Serialization
 				JsonSerializer jsonSerializer = new JsonSerializer();
 				jsonSerializer.Formatting = Formatting.Indented;
 				jsonSerializer.Converters.Add(new NotIndentedArrayJsonConverter());
-				jsonSerializer.Serialize(jsonWriter, layerObject);
+				jsonSerializer.Serialize(jsonWriter, obj);
 			}
 		}
 

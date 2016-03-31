@@ -62,7 +62,7 @@ namespace MeshEditor.FormatConverter
 
 			using (Stream stream = localStorage.Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
-				ILayerSerializer serializer = new JsonLayerSerializer();
+				ISerializationService serializer = new JsonSerializationService();
 				serializer.Serialize(solution, stream);
 			}
 
@@ -100,7 +100,7 @@ namespace MeshEditor.FormatConverter
 			Solution solution;
 			using (Stream stream = localStorage.Load(new Uri(solutionFilePath)))
 			{
-				ILayerSerializer serializer = new JsonLayerSerializer();
+				ISerializationService serializer = new JsonSerializationService();
 				solution = serializer.Deserialize<Solution>(stream);
 			}
 
@@ -126,7 +126,7 @@ namespace MeshEditor.FormatConverter
 
 			using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
 			{
-				ILayerSerializer serializer = new JsonLayerSerializer();
+				ISerializationService serializer = new JsonSerializationService();
 				serializer.Serialize(solution, stream);
 			}
 

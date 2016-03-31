@@ -8,10 +8,10 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.LayerManager.Serialization
 {
-	public interface ILayerSerializer
+	public interface ISerializationService
 	{
 		string FileExtension { get; }
-		void Serialize<T>(T layerObject, Stream stream);
+		void Serialize<T>(T obj, Stream stream);
 		T Deserialize<T>(Stream stream);
 	}
 }
