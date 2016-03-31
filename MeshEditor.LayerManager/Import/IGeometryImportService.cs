@@ -10,6 +10,6 @@ namespace MeshEditor.LayerManager.Import
 {
 	public interface IGeometryImportService
 	{
-		GeometryDescription ReadGeometry();
+		GeometryDescription ReadGeometry(out IReadOnlyList<AttributeDescription> attributes);
 	}
 }

@@ -52,6 +52,7 @@
     <Compile Include="DataTransformation\ICompressionService.cs" />
     <Compile Include="DataFormatParserFactory.cs" />
     <Compile Include="DataTransformation\IEncodingService.cs" />
+    <Compile Include="Data\AttributeDescription.cs" />
     <Compile Include="Data\CellType.cs" />
     <Compile Include="Data\CompressionParameters.cs" />
     <Compile Include="Data\EncodingParameters.cs" />

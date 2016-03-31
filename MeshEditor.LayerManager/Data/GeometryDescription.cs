@@ -14,9 +14,6 @@ namespace MeshEditor.LayerManager.Data
 		public int[] CellOffsets { get; set; }
 		public CellType[] CellTypes { get; set; }
 
-		public Dictionary<string, int[]> CellAttributes { get; set; }
-
-
 		public Dictionary<int, int> PointIdIndexMap { get; set; } = null;
 		public Dictionary<int, int> CellIdIndexMap { get; set; } = null;
 

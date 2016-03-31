@@ -49,7 +49,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Public methods
 
-		public GeometryDescription ReadGeometry()
+		public GeometryDescription ReadGeometry(out IReadOnlyList<AttributeDescription> attributes)
 		{
 			List<float> pointCoordinates = new List<float>();
 			List<int> cellConnectivity = new List<int>();
@@ -196,8 +196,10 @@ namespace MeshEditor.LayerManager.Import
 				CellTypes = cellTypes.ToArray(),
 				PointIdIndexMap = nodeIdIndexMap,
 				CellIdIndexMap = elementIdIndexMap,
-				CellAttributes = (elementProperties.Count > 0) ? new Dictionary<string, int[]> { ["ElementProperties"] = elementProperties.ToArray() } : new Dictionary<string, int[]>()
 			};
+
+			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Data = elementProperties.ToArray() } };
+
 			return geometry;
 		}
 

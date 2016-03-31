@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.Import
 			this.uri = uri;
 		}
 
-		public GeometryDescription ReadGeometry()
+		public GeometryDescription ReadGeometry(out IReadOnlyList<AttributeDescription> attributes)
 		{
 			string fileType;
 			using (Stream fileStream = storageService.Load(uri))
@@ -123,6 +123,8 @@ namespace MeshEditor.LayerManager.Import
 				};
 
 				// TODO: catch all exceptions and convert them to FileParserException
+
+				attributes = new AttributeDescription[0]; // no attributes
 
 				return geometry;
 			}

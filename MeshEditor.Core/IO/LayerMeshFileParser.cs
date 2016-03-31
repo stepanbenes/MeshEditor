@@ -72,7 +72,8 @@ namespace MeshEditor.IO
 
 		private void loadGeometry()
 		{
-			geometry = new LayerGenerator().LoadGeometry(meshFileUri: new Uri(Filename), attributeDataFileUris: Enumerable.Empty<Uri>() /* TODO: load cell attributes */);
+			geometry = new LayerGenerator().LoadGeometry(meshFileUri: new Uri(Filename));
+			/* TODO: load cell attributes */
 		}
 
 		private static ElementType mapCellTypeToElementType(CellType cellType)
