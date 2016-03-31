@@ -43,13 +43,13 @@ namespace MeshEditor.LayerManager.Import
 
 						foreach (var dataDescription in parseDataArraysInLocation(input, DataLocationType.Points, timeStep))
 						{
-							Debug.Assert(dataDescription.Data.Length == numberOfPoints * dataDescription.NumberOfComponents);
+							Debug.Assert(dataDescription.Values.Length == numberOfPoints * dataDescription.NumberOfComponents);
 							yield return dataDescription;
 						}
 
 						foreach (var dataDescription in parseDataArraysInLocation(input, DataLocationType.Cells, timeStep))
 						{
-							Debug.Assert(dataDescription.Data.Length == numberOfCells * dataDescription.NumberOfComponents);
+							Debug.Assert(dataDescription.Values.Length == numberOfCells * dataDescription.NumberOfComponents);
 							yield return dataDescription;
 						}
 					}
@@ -131,7 +131,7 @@ namespace MeshEditor.LayerManager.Import
 					ComponentNames = null, // or new string[NumberOfDataComponents]
 					FieldType = fieldType,
 					Location = location,
-					Data = values
+					Values = values
 				};
 
 				yield return dataDescription;

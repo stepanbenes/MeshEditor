@@ -198,7 +198,7 @@ namespace MeshEditor.LayerManager.Import
 				CellIdIndexMap = elementIdIndexMap,
 			};
 
-			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Data = elementProperties.ToArray() } };
+			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Values = elementProperties.ToArray() } };
 
 			return geometry;
 		}

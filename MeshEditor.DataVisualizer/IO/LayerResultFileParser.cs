@@ -68,9 +68,9 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new NotSupportedException();
 			}
 
-			for (int index = 0; index < data.Data.Length; index++)
+			for (int index = 0; index < data.Values.Length; index++)
 			{
-				double value = data.Data[index];
+				double value = data.Values[index];
 				if (!double.IsNaN(value))
 				{
 					switch (data.Location)

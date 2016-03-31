@@ -187,7 +187,7 @@ namespace MeshEditor.LayerManager
 			var attributeDescriptors = new List<DataLayerDescriptor>();
 			foreach (var attribute in attributeDescriptions)
 			{
-				DataLayerFile layerElementProperties = createAttributeLayerFile(attribute.Name, attribute.Data, DataLocationType.Cells, layerId, attributeIndex);
+				DataLayerFile layerElementProperties = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
 				storeLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
 				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(layerElementProperties));
 				attributeIndex++;
@@ -311,8 +311,8 @@ namespace MeshEditor.LayerManager
 					Location = dataField.Location
 				};
 
-				double[] allValues = dataField.Data;
-				double[] componentValues = new double[dataField.Data.Length / numberOfComponents];
+				double[] allValues = dataField.Values;
+				double[] componentValues = new double[dataField.Values.Length / numberOfComponents];
 
 				for (int hip = 0, hop = componentIndex; hop < allValues.Length; hip += 1, hop += numberOfComponents)
 				{
@@ -338,7 +338,7 @@ namespace MeshEditor.LayerManager
 			data.FieldType = FieldType.Scalar;
 			data.Location = layerResult.Location;
 			data.NumberOfComponents = 1;
-			data.Data = decodeAndDecompressData(layerResult.Data, layerResult.Encoding);
+			data.Values = decodeAndDecompressData(layerResult.Data, layerResult.Encoding);
 
 			yield return data;
 		}
@@ -359,7 +359,7 @@ namespace MeshEditor.LayerManager
 			for (int cellIndex = 0, previousOffset = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
 				int currentOffset = geometry.CellOffsets[cellIndex];
-				if (selectionFilter.Contains(attribute.Data[cellIndex]))
+				if (selectionFilter.Contains(attribute.Values[cellIndex]))
 				{
 					for (int offset = previousOffset; offset < currentOffset; offset++)
 					{

@@ -10,6 +10,6 @@ namespace MeshEditor.LayerManager.Data
 	{
 		public string Name { get; set; }
 		public DataLocationType Location { get; set; }
-		public int[] Data { get; set; }
+		public int[] Values { get; set; }
 	}
 }

@@ -17,6 +17,6 @@ namespace MeshEditor.LayerManager.Data
 		
 		public int NumberOfComponents { get; set; }
 
-		public double[] Data { get; set; } // or float ?
+		public double[] Values { get; set; } // or float ?
 	}
 }

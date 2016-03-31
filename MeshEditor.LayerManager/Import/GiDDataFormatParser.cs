@@ -92,7 +92,7 @@ namespace MeshEditor.LayerManager.Import
 					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
 				};
 
-				data.Data = convertValues(
+				data.Values = convertValues(
 					DataValues,
 					Ids,
 					data.NumberOfComponents,
