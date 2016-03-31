@@ -31,11 +31,11 @@ namespace MeshEditor.FormatConverter
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
 	class FilterOptions : Options
 	{
-		[Value(index: 0, MetaName = "Filter type", Required = true, HelpText = "Filter to be applied on parent layer")]
-		public FilterType FilterType { get; set; }
-
-		[Value(index: 1, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
+		[Value(index: 0, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
 		public string ParentLayer { get; set; }
+
+		[Value(index: 1, MetaName = "Filter type", Required = true, HelpText = "Filter to be applied on parent layer")]
+		public FilterType FilterType { get; set; }
 
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
