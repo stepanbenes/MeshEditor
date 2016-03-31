@@ -13,10 +13,10 @@ namespace MeshEditor.LayerManager.Import
 {
 	class VTKXmlDataFormatParser : VTKXmlFormatParserBase, IDataImportService
 	{
-		IStorageService storageService;
+		IReadStorageService storageService;
 		IEnumerable<Uri> uris;
 
-		public VTKXmlDataFormatParser(IStorageService storageService, IEnumerable<Uri> uris)
+		public VTKXmlDataFormatParser(IReadStorageService storageService, IEnumerable<Uri> uris)
 		{
 			this.storageService = storageService;
 			this.uris = uris;

@@ -12,7 +12,7 @@ namespace MeshEditor.LayerManager
 {
 	public static class DataFormatParserFactory
 	{
-		public static IDataImportService Create(IStorageService storageService, IEnumerable<Uri> uris)
+		public static IDataImportService Create(IReadStorageService storageService, IEnumerable<Uri> uris)
 		{
 			Debug.Assert(uris != null);
 			Debug.Assert(uris.Count() > 0);

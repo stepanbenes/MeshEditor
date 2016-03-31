@@ -12,7 +12,7 @@ namespace MeshEditor.LayerManager
 {
 	public static class GeometryFormatParserFactory
 	{
-		public static IGeometryImportService Create(IStorageService storageService, Uri uri)
+		public static IGeometryImportService Create(IReadStorageService storageService, Uri uri)
 		{
 			Debug.Assert(uri != null);
 

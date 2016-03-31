@@ -36,10 +36,10 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Fields, constructor
 
-		IStorageService storageService;
+		IReadStorageService storageService;
 		Uri uri;
 
-		public GiDGeometryFormatParser(IStorageService storageService, Uri uri)
+		public GiDGeometryFormatParser(IReadStorageService storageService, Uri uri)
 		{
 			this.storageService = storageService;
 			this.uri = uri;

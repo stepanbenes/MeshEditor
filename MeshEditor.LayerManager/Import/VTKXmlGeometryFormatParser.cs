@@ -13,10 +13,10 @@ namespace MeshEditor.LayerManager.Import
 {
 	class VTKXmlGeometryFormatParser : VTKXmlFormatParserBase, IGeometryImportService
 	{
-		IStorageService storageService;
+		IReadStorageService storageService;
 		Uri uri;
 
-		public VTKXmlGeometryFormatParser(IStorageService storageService, Uri uri)
+		public VTKXmlGeometryFormatParser(IReadStorageService storageService, Uri uri)
 		{
 			this.storageService = storageService;
 			this.uri = uri;

@@ -7,9 +7,17 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Storage
 {
-	public interface IStorageService
+	public interface IStorageService : IReadStorageService, IWriteStorageService
+	{ }
+
+	public interface IReadStorageService
+	{
+		Stream Load(Uri uri);
+	}
+
+	public interface IWriteStorageService
 	{
 		Stream Save(Uri uri);
-		Stream Load(Uri uri);
+		// void Delete(Uri uri);
 	}
 }

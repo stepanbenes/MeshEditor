@@ -125,10 +125,10 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Fields, Constructor
 
-		IStorageService storageService;
+		IReadStorageService storageService;
 		IEnumerable<Uri> uris;
 
-		public GiDDataFormatParser(IStorageService storageService, IEnumerable<Uri> uris)
+		public GiDDataFormatParser(IReadStorageService storageService, IEnumerable<Uri> uris)
 		{
 			this.storageService = storageService;
 			this.uris = uris;

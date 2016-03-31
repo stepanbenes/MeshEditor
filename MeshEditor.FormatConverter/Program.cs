@@ -52,15 +52,15 @@ namespace MeshEditor.FormatConverter
 			string projectNameAsValidFileName = options.ProjectName.MakeAlphanumericFilename();
 			string currentDirectory = Directory.GetCurrentDirectory();
 
-			IStorageService storageService = new LocalFileSystemStorageService();
-			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(storageService, convertToUri(options.MeshFile, currentDirectory));
-			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(storageService, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
-			var layerGenerator = new LayerGenerator(storageService);
+			IStorageService localStorage = new LocalFileSystemStorageService();
+			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, currentDirectory));
+			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
+			var layerGenerator = new LayerGenerator();
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
 			var solution = SolutionBuilder.CreateFromMasterLayer(masterLayer, options.ProjectName);
 
-			using (Stream stream = new LocalFileSystemStorageService().Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
+			using (Stream stream = localStorage.Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
 				ILayerSerializer serializer = new JsonLayerSerializer();
 				serializer.Serialize(solution, stream);
@@ -95,8 +95,10 @@ namespace MeshEditor.FormatConverter
 			string currentDirectory = Directory.GetCurrentDirectory();
 			string solutionFilePath = Directory.EnumerateFiles(currentDirectory, "*.solution.json", SearchOption.TopDirectoryOnly).Single();
 
+			IStorageService localStorage = new LocalFileSystemStorageService();
+
 			Solution solution;
-			using (Stream stream = new LocalFileSystemStorageService().Load(new Uri(solutionFilePath)))
+			using (Stream stream = localStorage.Load(new Uri(solutionFilePath)))
 			{
 				ILayerSerializer serializer = new JsonLayerSerializer();
 				solution = serializer.Deserialize<Solution>(stream);
@@ -117,13 +119,12 @@ namespace MeshEditor.FormatConverter
 				}
 			}
 
-			IStorageService storageService = new LocalFileSystemStorageService();
-			var layerGenerator = new LayerGenerator(storageService);
+			var layerGenerator = new LayerGenerator();
 			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), parentLayer.Id, filter, options.LayerName);
 
 			SolutionBuilder.AddFilterLayer(parentLayer, filterLayer);
 
-			using (Stream stream = new LocalFileSystemStorageService().Save(new Uri(solutionFilePath)))
+			using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
 			{
 				ILayerSerializer serializer = new JsonLayerSerializer();
 				serializer.Serialize(solution, stream);
