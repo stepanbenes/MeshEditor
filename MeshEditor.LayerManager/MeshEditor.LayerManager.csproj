@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="Common\ArrayExtensions.cs" />
     <Compile Include="Common\StringExtensions.cs" />
+    <Compile Include="Compression\CompressionMethod.cs" />
+    <Compile Include="Compression\SVDCompressionService.cs" />
     <Compile Include="Compression\TransparentCompressionService.cs" />
     <Compile Include="Encoding\Base64EncodingService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
@@ -63,6 +65,7 @@
     <Compile Include="Data\DataLayerFile.cs" />
     <Compile Include="Data\DataLayerDescriptor.cs" />
     <Compile Include="Data\SummaryLayerFile.cs" />
+    <Compile Include="Encoding\TrimOptions.cs" />
     <Compile Include="Filters\AttributeSelectionFilter.cs" />
     <Compile Include="Filters\FilterBase.cs" />
     <Compile Include="Filters\FilterType.cs" />

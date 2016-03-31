@@ -15,6 +15,7 @@ using MeshEditor.LayerManager.Filters;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Serialization;
+using MeshEditor.LayerManager.Compression;
 
 namespace MeshEditor.FormatConverter
 {
@@ -55,7 +56,21 @@ namespace MeshEditor.FormatConverter
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, currentDirectory));
 			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
-			var layerGenerator = new LayerGenerator();
+			ICompressionService compressionService;
+			switch (options.CompressionMethod)
+			{
+				case CompressionMethod.None:
+					compressionService = null;
+					break;
+				case CompressionMethod.SVD:
+					compressionService = new SVDCompressionService();
+					break;
+				case CompressionMethod.WT:
+					throw new NotImplementedException();
+				default:
+					throw new NotSupportedException();
+			}
+			var layerGenerator = new LayerGenerator(compressionService: compressionService);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
 			var solution = SolutionBuilder.CreateFromMasterLayer(masterLayer, options.ProjectName);

@@ -7,13 +7,6 @@ using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.LayerManager.Encoding
 {
-	public enum TrimOptions
-	{
-		None,
-		End,
-		BeginEnd
-	}
-
 	public interface IEncodingService
 	{
 		string Encode<T>(T[] values, TrimOptions trimOptions, out EncodingParameters encodingParameters) where T : struct;

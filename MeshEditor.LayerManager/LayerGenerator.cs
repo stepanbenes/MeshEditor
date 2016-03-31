@@ -323,9 +323,10 @@ namespace MeshEditor.LayerManager
 					componentValues[hip] = allValues[hop];
 				}
 
+				CompressionParameters compression;
 				EncodingParameters encoding;
-
-				layerResult.Data = compressAndEncodeDataValues(componentValues, out encoding);
+				layerResult.Data = compressAndEncodeDataValues(componentValues, out compression, out encoding);
+				layerResult.Compression = compression;
 				layerResult.Encoding = encoding;
 
 				yield return layerResult;
@@ -342,7 +343,7 @@ namespace MeshEditor.LayerManager
 			data.FieldType = FieldType.Scalar;
 			data.Location = layerResult.Location;
 			data.NumberOfComponents = 1;
-			data.Values = decodeAndDecompressData(layerResult.Data, layerResult.Encoding);
+			data.Values = decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression);
 
 			yield return data;
 		}
@@ -420,16 +421,31 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private string compressAndEncodeDataValues(double[] dataValues, out EncodingParameters encodingParameters)
+		private string compressAndEncodeDataValues(double[] dataValues, out CompressionParameters compressionParameters, out EncodingParameters encodingParameters)
 		{
-			double[] compressedValues = compressionService.Compress(dataValues);
+			double[] compressedValues = compressionService.Compress(dataValues, out compressionParameters);
 			return encodingService.Encode(compressedValues, TrimOptions.BeginEnd, out encodingParameters);
 		}
 
-		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters)
+		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
+			ICompressionService selectedCompressionService;
+			switch (compressionParameters?.Method)
+			{
+				case CompressionMethod.SVD:
+					selectedCompressionService = new SVDCompressionService();
+					break;
+				case CompressionMethod.WT:
+					throw new NotImplementedException();
+				case CompressionMethod.None:
+				case null:
+					selectedCompressionService = new TransparentCompressionService();
+					break;
+				default:
+					throw new NotSupportedException();
+			}
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
-			return compressionService.Decompress(compressedValues);
+			return selectedCompressionService.Decompress(compressedValues, compressionParameters);
 		}
 
 		private string encodeAttributes(int[] attributes, out EncodingParameters encodingParameters)

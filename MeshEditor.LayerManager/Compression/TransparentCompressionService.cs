@@ -12,13 +12,15 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		#region Public methods
 
-		public double[] Compress(double[] dataValues)
+		public double[] Compress(double[] dataValues, out CompressionParameters parameters)
 		{
+			parameters = null;
 			return dataValues;
 		}
 
-		public double[] Decompress(double[] compressedData)
+		public double[] Decompress(double[] compressedData, CompressionParameters parameters)
 		{
+			Debug.Assert(parameters == null || parameters.Method == CompressionMethod.None);
 			return compressedData;
 		}
 

@@ -9,7 +9,7 @@ namespace MeshEditor.LayerManager.Compression
 {
 	public interface ICompressionService
 	{
-		double[] Compress(double[] dataValues);
-		double[] Decompress(double[] compressedData);
+		double[] Compress(double[] dataValues, out CompressionParameters parameters);
+		double[] Decompress(double[] compressedData, CompressionParameters parameters);
 	}
 }
