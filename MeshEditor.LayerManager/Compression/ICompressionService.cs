@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 
-namespace MeshEditor.LayerManager.DataTransformation
+namespace MeshEditor.LayerManager.Compression
 {
 	public interface ICompressionService
 	{

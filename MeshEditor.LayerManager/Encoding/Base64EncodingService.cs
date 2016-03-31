@@ -8,7 +8,7 @@ using MeshEditor.LayerManager.Common;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace MeshEditor.LayerManager.DataTransformation
+namespace MeshEditor.LayerManager.Encoding
 {
 	internal class Base64EncodingService : IEncodingService
 	{

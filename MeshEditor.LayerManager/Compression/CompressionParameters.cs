@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.LayerManager.Data
+namespace MeshEditor.LayerManager.Compression
 {
 	public class CompressionParameters
 	{

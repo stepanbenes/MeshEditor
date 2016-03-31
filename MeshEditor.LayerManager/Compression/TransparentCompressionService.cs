@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using System.Diagnostics;
 
-namespace MeshEditor.LayerManager.DataTransformation
+namespace MeshEditor.LayerManager.Compression
 {
 	internal class TransparentCompressionService : ICompressionService
 	{

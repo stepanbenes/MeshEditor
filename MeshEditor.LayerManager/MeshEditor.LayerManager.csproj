@@ -47,15 +47,15 @@
   <ItemGroup>
     <Compile Include="Common\ArrayExtensions.cs" />
     <Compile Include="Common\StringExtensions.cs" />
-    <Compile Include="DataTransformation\TransparentCompressionService.cs" />
-    <Compile Include="DataTransformation\Base64EncodingService.cs" />
-    <Compile Include="DataTransformation\ICompressionService.cs" />
+    <Compile Include="Compression\TransparentCompressionService.cs" />
+    <Compile Include="Encoding\Base64EncodingService.cs" />
+    <Compile Include="Compression\ICompressionService.cs" />
     <Compile Include="DataFormatParserFactory.cs" />
-    <Compile Include="DataTransformation\IEncodingService.cs" />
+    <Compile Include="Encoding\IEncodingService.cs" />
     <Compile Include="Data\AttributeDescription.cs" />
     <Compile Include="Data\CellType.cs" />
-    <Compile Include="Data\CompressionParameters.cs" />
-    <Compile Include="Data\EncodingParameters.cs" />
+    <Compile Include="Compression\CompressionParameters.cs" />
+    <Compile Include="Encoding\EncodingParameters.cs" />
     <Compile Include="Data\DataArrayType.cs" />
     <Compile Include="Data\DataLocationType.cs" />
     <Compile Include="Data\FieldType.cs" />

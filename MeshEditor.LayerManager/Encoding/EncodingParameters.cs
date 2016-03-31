@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace MeshEditor.LayerManager.Data
+namespace MeshEditor.LayerManager.Encoding
 {
 	public class EncodingParameters
 	{
