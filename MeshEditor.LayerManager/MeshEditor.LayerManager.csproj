@@ -48,6 +48,7 @@
     <Compile Include="Common\ArrayExtensions.cs" />
     <Compile Include="Common\StringExtensions.cs" />
     <Compile Include="Compression\CompressionMethod.cs" />
+    <Compile Include="Compression\CompressionServiceFactory.cs" />
     <Compile Include="Compression\SVDCompressionService.cs" />
     <Compile Include="Compression\TransparentCompressionService.cs" />
     <Compile Include="Encoding\Base64EncodingService.cs" />

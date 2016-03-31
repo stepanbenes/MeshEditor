@@ -429,21 +429,7 @@ namespace MeshEditor.LayerManager
 
 		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
-			ICompressionService selectedCompressionService;
-			switch (compressionParameters?.Method)
-			{
-				case CompressionMethod.SVD:
-					selectedCompressionService = new SVDCompressionService();
-					break;
-				case CompressionMethod.WT:
-					throw new NotImplementedException();
-				case CompressionMethod.None:
-				case null:
-					selectedCompressionService = new TransparentCompressionService();
-					break;
-				default:
-					throw new NotSupportedException();
-			}
+			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters?.Method ?? CompressionMethod.None);
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
 			return selectedCompressionService.Decompress(compressedValues, compressionParameters);
 		}

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Compression
 {
-	public class SVDCompressionService : ICompressionService
+	internal class SVDCompressionService : ICompressionService
 	{
 		public double[] Compress(double[] dataValues, out CompressionParameters parameters)
 		{

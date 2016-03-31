@@ -56,20 +56,7 @@ namespace MeshEditor.FormatConverter
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, currentDirectory));
 			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
-			ICompressionService compressionService;
-			switch (options.CompressionMethod)
-			{
-				case CompressionMethod.None:
-					compressionService = null;
-					break;
-				case CompressionMethod.SVD:
-					compressionService = new SVDCompressionService();
-					break;
-				case CompressionMethod.WT:
-					throw new NotImplementedException();
-				default:
-					throw new NotSupportedException();
-			}
+			ICompressionService compressionService = CompressionServiceFactory.Create(options.CompressionMethod);
 			var layerGenerator = new LayerGenerator(compressionService: compressionService);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
