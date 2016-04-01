@@ -7,29 +7,37 @@ using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.LayerManager.Infrastructure
 {
-	public class SolutionBuilder
+	public static class SolutionBuilder
 	{
-		public static Solution CreateFromMasterLayer(SummaryLayerFile masterLayer, string projectName)
+		public static Solution CreateSolutionFromMasterLayer(SummaryLayerFile masterLayer, string projectName)
 		{
 			Solution solution = new Solution
 			{
 				ProjectName = projectName,
-				Layers = new[] { new Solution.LayerRecord { Id = masterLayer.Id, Name = masterLayer.Name } }
+				Layers = new[]
+				{
+					new Solution.LayerRecord
+					{
+						Id = masterLayer.Id,
+						Name = masterLayer.Name,
+						Filter = null,
+						Children = null
+					}
+				}
 			};
 			return solution;
 		}
 
-		public static void AddFilterLayer(Solution.LayerRecord parentLayer, SummaryLayerFile filterLayer)
+		public static Solution.LayerRecord CreateLayerRecordFromFilterLayer(SummaryLayerFile filterLayer)
 		{
-			var children = parentLayer.Children?.ToList() ?? new List<Solution.LayerRecord>();
 			var newLayerRecord = new Solution.LayerRecord
 			{
 				Id = filterLayer.Id,
 				Name = filterLayer.Name,
 				Filter = filterLayer.Filter,
+				Children = null
 			};
-			children.Add(newLayerRecord);
-			parentLayer.Children = children.ToArray();
+			return newLayerRecord;
 		}
 	}
 }

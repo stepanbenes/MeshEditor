@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ArrayExtensions.cs" />
+    <Compile Include="Common\EnumerableExtensions.cs" />
     <Compile Include="Common\StringExtensions.cs" />
     <Compile Include="Compression\CompressionMethod.cs" />
     <Compile Include="Compression\CompressionServiceFactory.cs" />

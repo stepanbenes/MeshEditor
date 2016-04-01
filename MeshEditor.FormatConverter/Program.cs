@@ -60,7 +60,7 @@ namespace MeshEditor.FormatConverter
 			var layerGenerator = new LayerGenerator(compressionService: compressionService);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
-			var solution = SolutionBuilder.CreateFromMasterLayer(masterLayer, options.ProjectName);
+			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, options.ProjectName);
 
 			using (Stream stream = localStorage.Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
@@ -124,7 +124,8 @@ namespace MeshEditor.FormatConverter
 			var layerGenerator = new LayerGenerator();
 			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), parentLayer.Id, filter, options.LayerName);
 
-			SolutionBuilder.AddFilterLayer(parentLayer, filterLayer);
+			// convert filter layer to layer record and append it to parent layer's children
+			parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(SolutionBuilder.CreateLayerRecordFromFilterLayer(filterLayer)).ToArray();
 
 			using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
 			{
