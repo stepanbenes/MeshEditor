@@ -45,12 +45,12 @@ namespace MeshEditor.LayerManager
 
 		#region Public methods
 
-		public void AppendDataToLayer(Uri location, Guid ayerId, IDataImportService dataImportService)
+		public void AppendDataToLayer(Uri location, Guid layerId, IDataImportService dataImportService)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void CompressTimeInLayer(Uri location, Guid ayerId, string fieldName = null, string componentName = null)
+		public void CompressTimeInLayer(Uri location, Guid layerId, int? dataIndex)
 		{
 			throw new NotImplementedException();
 		}

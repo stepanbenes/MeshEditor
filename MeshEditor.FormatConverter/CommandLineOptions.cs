@@ -27,9 +27,6 @@ namespace MeshEditor.FormatConverter
 
 		[Option('r', "result", Required = false, HelpText = "Result files to be processed.")]
 		public IEnumerable<string> ResultFiles { get; set; }
-
-		[Option("compression", Required = false, HelpText = "Compression method")]
-		public CompressionMethod CompressionMethod { get; set; }
 	}
 
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
@@ -46,5 +43,18 @@ namespace MeshEditor.FormatConverter
 
 		[Option('n', "name", Required = false, HelpText = "Name of new layer")]
 		public string LayerName { get; set; }
+	}
+
+	[Verb("compress", HelpText = "Compress layer results")]
+	class CompressOptions : Options
+	{
+		[Value(index: 0, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
+		public string ParentLayer { get; set; }
+
+		[Option('c', "compression", Required = false, HelpText = "Compression method")]
+		public CompressionMethod Method { get; set; }
+
+		[Option('i', "index", Required = false, HelpText = "Data index to compress")]
+		public int? DataIndex { get; set; }
 	}
 }

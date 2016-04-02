@@ -29,6 +29,7 @@ namespace MeshEditor.FormatConverter
 				.MapResult(
 				(ImportOptions options) => runImportCommand(options),
 				(FilterOptions options) => runFilterCommand(options),
+				(CompressOptions options) => runCompressCommand(options),
 				errors => 1);
 
 			//if (args.Length < 1)
@@ -56,8 +57,7 @@ namespace MeshEditor.FormatConverter
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, currentDirectory));
 			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
-			ICompressionService compressionService = CompressionServiceFactory.Create(options.CompressionMethod);
-			var layerGenerator = new LayerGenerator(compressionService: compressionService);
+			var layerGenerator = new LayerGenerator();
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
 			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, options.ProjectName);
@@ -132,6 +132,13 @@ namespace MeshEditor.FormatConverter
 				ISerializationService serializer = new JsonSerializationService();
 				serializer.Serialize(solution, stream);
 			}
+
+			return 0;
+		}
+
+		private static int runCompressCommand(CompressOptions options)
+		{
+			throw new NotImplementedException();
 
 			return 0;
 		}
