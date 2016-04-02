@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,12 +42,60 @@ namespace MeshEditor.LayerManager.Common
 		/// <summary>
 		/// Returns empty enumerable if source sequence is null.
 		/// </summary>
-		public static IEnumerable<TSource> EmptyIfNull<TSource>(this IEnumerable<TSource> source)
+		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
 		{
 			if (source == null)
-				return Enumerable.Empty<TSource>();
+				return Enumerable.Empty<T>();
 
 			return source;
+		}
+
+		/// <summary>
+		/// Split an IEnumerable<T> into fixed-sized chunks.
+		/// see: http://stackoverflow.com/questions/13709626/split-an-ienumerablet-into-fixed-sized-chunks-return-an-ienumerableienumerab
+		/// </summary>
+		public static IEnumerable<IEnumerable<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
+		{
+			return new PartitionHelper<T>(items, partitionSize);
+		}
+
+		private sealed class PartitionHelper<T> : IEnumerable<IEnumerable<T>>
+		{
+			readonly IEnumerable<T> items;
+			readonly int partitionSize;
+			bool hasMoreItems;
+
+			internal PartitionHelper(IEnumerable<T> i, int ps)
+			{
+				items = i;
+				partitionSize = ps;
+			}
+
+			public IEnumerator<IEnumerable<T>> GetEnumerator()
+			{
+				using (var enumerator = items.GetEnumerator())
+				{
+					hasMoreItems = enumerator.MoveNext();
+					while (hasMoreItems)
+						yield return GetNextBatch(enumerator).ToList();
+				}
+			}
+
+			IEnumerable<T> GetNextBatch(IEnumerator<T> enumerator)
+			{
+				for (int i = 0; i < partitionSize; ++i)
+				{
+					yield return enumerator.Current;
+					hasMoreItems = enumerator.MoveNext();
+					if (!hasMoreItems)
+						yield break;
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
 		}
 	}
 }

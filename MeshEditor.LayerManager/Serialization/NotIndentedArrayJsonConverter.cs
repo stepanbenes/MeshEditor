@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.LayerManager.Serialization
 {
-	class NotIndentedArrayJsonConverter : JsonConverter
+	internal class NotIndentedArrayJsonConverter : JsonConverter
 	{
 		public override bool CanConvert(Type objectType)
 		{

@@ -423,15 +423,16 @@ namespace MeshEditor.LayerManager
 
 		private string compressAndEncodeDataValues(double[] dataValues, out CompressionParameters compressionParameters, out EncodingParameters encodingParameters)
 		{
-			double[] compressedValues = compressionService.Compress(dataValues, out compressionParameters);
+			double[] compressedValues = compressionService.Compress(new[] { dataValues }, rows: 1, columns: dataValues.Length, parameters: out compressionParameters);
 			return encodingService.Encode(compressedValues, TrimOptions.BeginEnd, out encodingParameters);
 		}
 
 		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
-			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters?.Method ?? CompressionMethod.None);
+			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method);
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
-			return selectedCompressionService.Decompress(compressedValues, compressionParameters);
+			IEnumerable<double[]> originalDataValues = selectedCompressionService.Decompress(compressedValues, compressionParameters);
+			return originalDataValues.Single();
 		}
 
 		private string encodeAttributes(int[] attributes, out EncodingParameters encodingParameters)

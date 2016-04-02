@@ -13,11 +13,11 @@ namespace MeshEditor.LayerManager.Serialization
 	/// Use KnownType Attribute to match a divierd class based on the class given to the serilaizer
 	/// Selected class will be the first class to match all properties in the json object.
 	/// </summary>
-	public class KnownTypeConverter : JsonConverter
+	internal class KnownTypeConverter : JsonConverter
 	{
 		public override bool CanConvert(Type objectType)
 		{
-			return System.Attribute.GetCustomAttributes(objectType).Any(v => v is KnownTypeAttribute);
+			return Attribute.GetCustomAttributes(objectType).Any(v => v is KnownTypeAttribute);
 		}
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -31,10 +31,10 @@ namespace MeshEditor.LayerManager.Serialization
 			JObject jObject = JObject.Load(reader);
 
 			// Create target object based on JObject
-			System.Attribute[] attrs = System.Attribute.GetCustomAttributes(objectType);  // Reflection. 
+			Attribute[] attrs = Attribute.GetCustomAttributes(objectType);  // Reflection. 
 
 			// Displaying output. 
-			foreach (System.Attribute attr in attrs)
+			foreach (Attribute attr in attrs)
 			{
 				if (attr is KnownTypeAttribute)
 				{
@@ -59,9 +59,14 @@ namespace MeshEditor.LayerManager.Serialization
 				}
 			}
 
-			throw new InvalidOperationException();
+			//throw new InvalidOperationException(); // no type found
 
-			// Populate the object properties
+			// Otherwise, populate the base type object properties
+			{
+				var target = Activator.CreateInstance(objectType);
+				serializer.Populate(jObject.CreateReader(), target);
+				return target;
+			}
 		}
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
