@@ -94,6 +94,8 @@
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFaceGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\EnumValueTypeSelectorAttribute.cs" />
+    <Compile Include="Serialization\EnumValueTypeSelectorJsonConverter.cs" />
     <Compile Include="Serialization\ISerializationService.cs" />
     <Compile Include="Serialization\KnownTypeJsonConverter.cs" />
     <Compile Include="Storage\IStorageService.cs" />
