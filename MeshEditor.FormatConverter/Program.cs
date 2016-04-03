@@ -31,21 +31,6 @@ namespace MeshEditor.FormatConverter
 				(FilterOptions options) => runFilterCommand(options),
 				(CompressOptions options) => runCompressCommand(options),
 				errors => 1);
-
-			//if (args.Length < 1)
-			//{
-			//	Console.WriteLine("Usage: {0} mesh-file [result-files]", Path.GetFileName(Assembly.GetExecutingAssembly().CodeBase));
-			//	Console.ReadKey();
-			//	return;
-			//}
-
-			//IStorageService storageService = new LocalFileSystemStorageService();
-			//IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(storageService, new Uri(args[0]));
-			//IDataImportService dataImportService = (args.Length > 1) ? DataFormatParserFactory.Create(storageService, args.Skip(1).Select(arg => new Uri(arg))) : null;
-
-			//new LayerGenerator(storageService).Generate(Path.GetFileNameWithoutExtension(args[0]), new Uri(Path.GetDirectoryName(args[0])), geometryImportService, dataImportService);
-
-			//Console.Write("Done.");
 		}
 
 		private static int runImportCommand(ImportOptions options)

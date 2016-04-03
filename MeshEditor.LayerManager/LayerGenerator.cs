@@ -50,7 +50,7 @@ namespace MeshEditor.LayerManager
 			throw new NotImplementedException();
 		}
 
-		public void CompressTimeInLayer(Uri location, Guid layerId, int? dataIndex)
+		public void CompressLayer(Uri location, Guid layerId, string field = null, string component = null)
 		{
 			throw new NotImplementedException();
 		}

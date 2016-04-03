@@ -20,6 +20,11 @@ namespace MeshEditor.LayerManager.Compression
 				Columns = columns,
 			};
 
+			if (rows == 1)
+			{
+				return dataValues.Single();
+			}
+
 			double[] result = new double[rows * columns];
 			int rowIndex = 0;
 			foreach (double[] rowValues in dataValues)

@@ -51,10 +51,13 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 0, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
 		public string ParentLayer { get; set; }
 
-		[Option('c', "compression", Required = false, HelpText = "Compression method")]
+		[Value(index: 1, Required = true, HelpText = "Compression method")]
 		public CompressionMethod Method { get; set; }
 
-		[Option('i', "index", Required = false, HelpText = "Data index to compress")]
-		public int? DataIndex { get; set; }
+		[Option('f', "field", Required = false, HelpText = "Name of field to compress")]
+		public string FieldName { get; set; }
+
+		[Option('c', "component", Required = false, HelpText = "Name of Component of field to compress")]
+		public string ComponentName { get; set; }
 	}
 }

@@ -54,7 +54,7 @@ namespace MeshEditor.LayerManager.Compression
 				Factor = factor,
 			};
 
-			if (rank == 0)
+			if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
 			{
 				return new double[0];
 			}
@@ -89,6 +89,11 @@ namespace MeshEditor.LayerManager.Compression
 			Debug.Assert(parameters is SVDCompressionParameters);
 			Debug.Assert(parameters.Method == CompressionMethod.SVD);
 			SVDCompressionParameters svdParameters = (SVDCompressionParameters)parameters;
+
+			if (svdParameters.Rank == 0) // if rank is zero, return matrix full of zeroes
+			{
+				return Enumerable.Repeat(new double[svdParameters.Columns] /*array full of zeroes*/, svdParameters.Rows);
+			}
 
 			// create matrices U, S, VT from compressedData
 			int uSize = svdParameters.Rows * svdParameters.Rank;
