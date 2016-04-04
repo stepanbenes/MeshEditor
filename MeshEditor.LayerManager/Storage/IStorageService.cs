@@ -18,6 +18,6 @@ namespace MeshEditor.LayerManager.Storage
 	public interface IWriteStorageService
 	{
 		Stream Save(Uri uri);
-		// void Delete(Uri uri);
+		void Delete(Uri uri);
 	}
 }

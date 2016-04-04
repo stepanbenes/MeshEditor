@@ -44,10 +44,7 @@ namespace MeshEditor.LayerManager.Common
 		/// </summary>
 		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
 		{
-			if (source == null)
-				return Enumerable.Empty<T>();
-
-			return source;
+			return source ?? Enumerable.Empty<T>();
 		}
 
 		/// <summary>
@@ -56,6 +53,10 @@ namespace MeshEditor.LayerManager.Common
 		/// </summary>
 		public static IEnumerable<IEnumerable<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
 		{
+			if (items == null)
+				throw new ArgumentNullException(nameof(items));
+			if (partitionSize <= 0)
+				throw new ArgumentOutOfRangeException(nameof(partitionSize));
 			return new PartitionHelper<T>(items, partitionSize);
 		}
 

@@ -34,12 +34,12 @@ namespace MeshEditor.LayerManager.Compression
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
 			// create matrix from input data values, replace possible NaN values with zeroes
-			Matrix A = DenseMatrix.OfRows(rows, columns, dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value)));
+			Matrix A = /* SparseMatrix ? */ DenseMatrix.OfRows(rows, columns, dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value)));
 			Debug.Assert(A.RowCount == rows);
 			Debug.Assert(A.ColumnCount == columns);
 
-			// use MathNet.Numerics' Svd factorization
-			var svd = A.Svd();
+			// use MathNet.Numerics' implementation of SVD factorization
+			var svd = SVD.Create(A);
 
 			int originalRank = svd.Rank;
 			int rank = originalRank;
@@ -69,9 +69,9 @@ namespace MeshEditor.LayerManager.Compression
 			//uColumnWise = null;
 
 			double[] sDiagonal = svd.S.ToArray(); // take newRank singular values
-			Debug.Assert(sDiagonal.Length == rank);
-			Array.Copy(sDiagonal, 0, result, offset, sDiagonal.Length);
-			offset += sDiagonal.Length;
+			Debug.Assert(sDiagonal.Length >= rank);
+			Array.Copy(sDiagonal, 0, result, offset, rank);
+			offset += rank;
 			//sDiagonal = null;
 
 			double[] vtColumnWise = svd.VT.EnumerateRows(0, rank).SelectMany(row => row).ToArray(); // take newRank rows of VT

@@ -11,6 +11,8 @@ namespace MeshEditor.FormatConverter
 {
 	abstract class Options
 	{
+		public abstract string ProjectName { get; set; }
+
 		// Omitting long name, default --verbose
 		[Option(HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
@@ -20,7 +22,7 @@ namespace MeshEditor.FormatConverter
 	class ImportOptions : Options
 	{
 		[Value(index: 0, MetaName = "Project name", Required = true, HelpText = "Name of new project")]
-		public string ProjectName { get; set; }
+		public override string ProjectName { get; set; }
 
 		[Option('m', "mesh", Required = true, HelpText = "Mesh file to be processed.")]
 		public string MeshFile { get; set; }
@@ -38,6 +40,9 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 1, MetaName = "Filter type", Required = true, HelpText = "Name of filter to be applied on the parent layer")]
 		public FilterType FilterType { get; set; }
 
+		[Option("project", Required = false, HelpText = "Project name")]
+		public override string ProjectName { get; set; }
+
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
 
@@ -48,16 +53,19 @@ namespace MeshEditor.FormatConverter
 	[Verb("compress", HelpText = "Compress layer results")]
 	class CompressOptions : Options
 	{
-		[Value(index: 0, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
-		public string ParentLayer { get; set; }
+		[Value(index: 0, MetaName = "Layer to compress", Required = true, HelpText = "Layer's guid or name")]
+		public string Layer { get; set; }
 
 		[Value(index: 1, Required = true, HelpText = "Compression method")]
 		public CompressionMethod Method { get; set; }
 
-		[Option('f', "field", Required = false, HelpText = "Name of field to compress")]
+		[Option("project", Required = false, HelpText = "Project name")]
+		public override string ProjectName { get; set; }
+
+		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }
 
-		[Option('c', "component", Required = false, HelpText = "Name of Component of field to compress")]
+		[Option("component", Required = false, HelpText = "Name of Component of field to compress")]
 		public string ComponentName { get; set; }
 	}
 }

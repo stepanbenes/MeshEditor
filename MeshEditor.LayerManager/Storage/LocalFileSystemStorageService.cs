@@ -24,7 +24,12 @@ namespace MeshEditor.LayerManager.Storage
 			{
 				Directory.CreateDirectory(directory);
 			}
-			return new FileStream(localPath, FileMode.OpenOrCreate/**/, FileAccess.Write, FileShare.None);
+			return new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None);
+		}
+
+		public void Delete(Uri uri)
+		{
+			File.Delete(uri.LocalPath);
 		}
 	}
 }

@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Compression;
+using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.FormatConverter
 {
@@ -25,7 +26,7 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			return Parser.Default.ParseArguments<ImportOptions, FilterOptions>(args)
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions>(args)
 				.MapResult(
 				(ImportOptions options) => runImportCommand(options),
 				(FilterOptions options) => runFilterCommand(options),
@@ -33,10 +34,11 @@ namespace MeshEditor.FormatConverter
 				errors => 1);
 		}
 
+		#region Commands
+
 		private static int runImportCommand(ImportOptions options)
 		{
 			const string masterLayerName = "master";
-			string projectNameAsValidFileName = options.ProjectName.MakeAlphanumericFilename();
 			string currentDirectory = Directory.GetCurrentDirectory();
 
 			IStorageService localStorage = new LocalFileSystemStorageService();
@@ -47,6 +49,7 @@ namespace MeshEditor.FormatConverter
 
 			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, options.ProjectName);
 
+			string projectNameAsValidFileName = options.ProjectName.MakeAlphanumericFilename();
 			using (Stream stream = localStorage.Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
 				ISerializationService serializer = new JsonSerializationService();
@@ -62,12 +65,11 @@ namespace MeshEditor.FormatConverter
 			switch (options.FilterType)
 			{
 				case FilterType.AttributeSelection:
+					filter = new AttributeSelectionFilter
 					{
-						var attributeFilter = new AttributeSelectionFilter();
-						attributeFilter.AttributeName = options.FilterParameters.First();
-						attributeFilter.AttributeSelection = options.FilterParameters.Skip(1).Select(p => int.Parse(p)).ToArray();
-						filter = attributeFilter;
-					}
+						AttributeName = options.FilterParameters.First(),
+						AttributeSelection = options.FilterParameters.Skip(1).Select(p => int.Parse(p)).ToArray()
+					};
 					break;
 				case FilterType.Surface:
 				case FilterType.Slice:
@@ -79,53 +81,110 @@ namespace MeshEditor.FormatConverter
 					throw new NotSupportedException();
 			}
 
-			string currentDirectory = Directory.GetCurrentDirectory();
-			string solutionFilePath = Directory.EnumerateFiles(currentDirectory, "*.solution.json", SearchOption.TopDirectoryOnly).Single();
+			string currentDirectory = Directory.GetCurrentDirectory() + "/";
 
-			IStorageService localStorage = new LocalFileSystemStorageService();
-
-			Solution solution;
-			using (Stream stream = localStorage.Load(new Uri(solutionFilePath)))
-			{
-				ISerializationService serializer = new JsonSerializationService();
-				solution = serializer.Deserialize<Solution>(stream);
-			}
-
-			Solution.LayerRecord parentLayer;
-			Guid guid;
-			if (Guid.TryParse(options.ParentLayer, out guid))
-			{
-				parentLayer = findLayer(solution.Layers, layer => layer.Id == guid);
-			}
-			else
-			{
-				parentLayer = findLayer(solution.Layers, layer => string.Equals(layer.Name, options.ParentLayer, StringComparison.InvariantCultureIgnoreCase));
-				if (parentLayer == null)
+			processLayerAndUpdateSolution(currentDirectory, options.ProjectName, options.ParentLayer,
+				parentLayer =>
 				{
-					throw new Exception($"Layer '{options.ParentLayer}' not found.");
+					var layerGenerator = new LayerGenerator();
+					var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory), parentLayer.Id, filter, options.LayerName);
+
+					// convert filter layer to layer record and append it to parent layer's children
+					var childLayer = SolutionBuilder.CreateLayerRecordFromFilterLayer(filterLayer);
+					parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(childLayer).ToArray();
 				}
-			}
-
-			var layerGenerator = new LayerGenerator();
-			var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(currentDirectory + "/"), parentLayer.Id, filter, options.LayerName);
-
-			// convert filter layer to layer record and append it to parent layer's children
-			parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(SolutionBuilder.CreateLayerRecordFromFilterLayer(filterLayer)).ToArray();
-
-			using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
-			{
-				ISerializationService serializer = new JsonSerializationService();
-				serializer.Serialize(solution, stream);
-			}
+			);
 
 			return 0;
 		}
 
 		private static int runCompressCommand(CompressOptions options)
 		{
-			throw new NotImplementedException();
+			string currentDirectory = Directory.GetCurrentDirectory() + "/";
+
+			processLayerAndUpdateSolution(currentDirectory, options.ProjectName, options.Layer,
+				layer =>
+				{
+					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method));
+					layerGenerator.CompressLayer(new Uri(currentDirectory), layer.Id, options.FieldName, options.ComponentName);
+				}
+			);
 
 			return 0;
+		}
+
+		#endregion
+
+		#region Helper methods
+
+		private static void processLayerAndUpdateSolution(string solutionDirectory, string optionalProjectName, string layerIdentifier, Action<Solution.LayerRecord> processLayerOperation)
+		{
+			var solutionFiles = Directory.EnumerateFiles(solutionDirectory, "*.solution.json", SearchOption.TopDirectoryOnly);
+			IStorageService localStorage = new LocalFileSystemStorageService();
+			ISerializationService serializer = new JsonSerializationService();
+			Solution solution = null;
+			string solutionFilePath = null;
+			if (optionalProjectName != null) // if project name is set, enumerate all solution files and find project name match
+			{
+				foreach (var path in solutionFiles)
+				{
+					Solution testSolution;
+					using (Stream stream = localStorage.Load(new Uri(path)))
+					{
+						testSolution = serializer.Deserialize<Solution>(stream);
+					}
+					if (optionalProjectName.Equals(testSolution.ProjectName))
+					{
+						if (solution != null)
+						{
+							throw new InvalidOperationException($"Directory contains more than one solution file with project name '{optionalProjectName}'");
+						}
+						solution = testSolution;
+						solutionFilePath = path;
+					}
+				}
+
+				if (solution == null)
+				{
+					throw new FileNotFoundException();
+				}
+
+				Debug.Assert(solutionFilePath != null);
+			}
+			else // if project name is NOT set, find single solution file in directory and load solution object
+			{
+				solutionFilePath = solutionFiles.Single();
+				using (Stream stream = localStorage.Load(new Uri(solutionFilePath)))
+				{
+					solution = serializer.Deserialize<Solution>(stream);
+				}
+			}
+
+			// find layer according to either provided layer guid or layer name
+			Solution.LayerRecord layer;
+			Guid guid;
+			if (Guid.TryParse(layerIdentifier, out guid))
+			{
+				layer = findLayer(solution.Layers, l => l.Id == guid);
+			}
+			else
+			{
+				layer = findLayer(solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
+			}
+
+			if (layer == null)
+			{
+				throw new Exception($"Layer '{layerIdentifier}' not found.");
+			}
+
+			// --------------------------
+			processLayerOperation(layer);
+			// --------------------------
+
+			using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
+			{
+				serializer.Serialize(solution, stream);
+			}
 		}
 
 		private static Solution.LayerRecord findLayer(IEnumerable<Solution.LayerRecord> layers, Func<Solution.LayerRecord, bool> predicate)
@@ -153,5 +212,7 @@ namespace MeshEditor.FormatConverter
 			}
 			return new Uri(Path.Combine(basePath, path));
 		}
+
+		#endregion
 	}
 }

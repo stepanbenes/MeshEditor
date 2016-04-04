@@ -17,12 +17,16 @@ namespace MeshEditor.LayerManager.Common
 
 		public static string MakeAlphanumericFilename(this string filename)
 		{
+			if (string.IsNullOrEmpty(filename))
+				return string.Empty;
 			Regex rgx = new Regex("[^a-zA-Z0-9]");
 			return rgx.Replace(filename, "_");
 		}
 
 		public static string MakeValidFilename(this string filename)
 		{
+			if (string.IsNullOrEmpty(filename))
+				return string.Empty;
 			StringBuilder text = new StringBuilder(filename);
 			foreach (char c in Path.GetInvalidFileNameChars())
 			{
