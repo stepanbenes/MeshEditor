@@ -38,13 +38,17 @@ namespace MeshEditor.FormatConverter
 
 		private static int runImportCommand(ImportOptions options)
 		{
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+			IProgress<OperationState> progress = options.Verbose ? createProgressReporter() : null;
+
 			const string masterLayerName = "master";
 			string currentDirectory = Directory.GetCurrentDirectory();
 
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, currentDirectory));
 			IDataImportService dataImportService = (options.ResultFiles != null) ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, currentDirectory))) : null;
-			var layerGenerator = new LayerGenerator();
+			var layerGenerator = new LayerGenerator(progressReporter: progress);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
 			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, options.ProjectName);
@@ -55,6 +59,10 @@ namespace MeshEditor.FormatConverter
 				ISerializationService serializer = new JsonSerializationService();
 				serializer.Serialize(solution, stream);
 			}
+
+			stopwatch.Stop();
+			clearCurrentConsoleLine();
+			Console.WriteLine($"Done in {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}.");
 
 			return 0;
 		}
@@ -202,6 +210,31 @@ namespace MeshEditor.FormatConverter
 					return hit;
 			}
 			return null;
+		}
+
+		private static IProgress<OperationState> createProgressReporter()
+		{
+			return new Progress<OperationState>
+				(
+					state =>
+					{
+						clearCurrentConsoleLine();
+						Console.Write(state.State);
+						if (state.PercentDone.HasValue)
+						{
+							Console.Write(state.PercentDone);
+						}
+						Console.Write(" ");
+					}
+				);
+		}
+
+		private static void clearCurrentConsoleLine()
+		{
+			int currentLine = Console.CursorTop;
+			Console.SetCursorPosition(0, currentLine);
+			Console.Write(new string(' ', Console.WindowWidth));
+			Console.SetCursorPosition(0, currentLine);
 		}
 
 		private static Uri convertToUri(string path, string basePath)

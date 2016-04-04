@@ -27,72 +27,42 @@ namespace MeshEditor.LayerManager
 		ISerializationService serializationService;
 		ICompressionService compressionService;
 		IEncodingService encodingService;
+		IProgress<OperationState> progressReporter;
 
 		public LayerGenerator(
 			IReadStorageService sourceStorage = null,
 			IWriteStorageService destinationStorage = null,
 			ISerializationService serializationService = null,
 			ICompressionService compressionService = null,
-			IEncodingService encodingService = null)
+			IEncodingService encodingService = null,
+			IProgress<OperationState> progressReporter = null)
 		{
 			this.sourceStorage = sourceStorage ?? new LocalFileSystemStorageService();
 			this.destinationStorage = destinationStorage ?? new LocalFileSystemStorageService();
 			this.serializationService = serializationService ?? new JsonSerializationService();
 			this.compressionService = compressionService ?? new TransparentCompressionService();
 			this.encodingService = encodingService ?? new Base64EncodingService();
+			this.progressReporter = progressReporter;
 		}
 
 		#endregion
 
 		#region Public methods
 
-		public void AppendDataToLayer(Uri location, Guid layerId, IDataImportService dataImportService)
+		#region Console app Entry points
+
+		public SummaryLayerFile GenerateMasterLayer(Uri location, string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
-			throw new NotImplementedException();
-		}
-
-		public void CompressLayer(Uri location, Guid layerId, string field = null, string component = null)
-		{
-			string layerDirectory = $"{layerId}/";
-			Uri layerFileUri = new Uri(location, $"{layerDirectory}{layerId}.layer.json");
-
-			// find layer in storage and download summary
-			SummaryLayerFile layerSummary;
-			using (var stream = sourceStorage.Load(layerFileUri))
+			if (geometryImportService == null)
 			{
-				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+				throw new ArgumentNullException(nameof(geometryImportService));
 			}
 
-			var resultGroups = from result in layerSummary.Results
-							   where (field == null || field == result.FieldName) && (component == null || component == result.ComponentName)
-							   group result by new { result.FieldName, result.ComponentName } into g
-							   select g;
-
-			var resultDescriptors = new List<DataLayerDescriptor>();
-			int dataIndex = 1;
-			foreach (var resultGroup in resultGroups)
-			{
-				Uri[] resultFileUris = resultGroup.Select(result => new Uri(location, $"{layerDirectory}{layerId}.{result.Index}.result.json")).ToArray();
-				Debug.Assert(resultFileUris.Length > 0);
-				DataDescription firstDataField = LoadData(resultFileUris[0]).Single();
-				IEnumerable<DataDescription> restDataFields = resultFileUris.Skip(1).Select(uri => LoadData(uri).Single());
-				DataLayerFile dataLayerFile = createLayerResultFromDataDescriptions(firstDataField, restDataFields, resultFileUris.Length, 0, layerId, dataIndex);
-
-				storeLayerFile(dataLayerFile, location, layerDirectory, $"{layerId}.{dataIndex}.result");
-
-				resultDescriptors.Add(DataLayerDescriptor.CreateFrom(dataLayerFile));
-				dataIndex += 1;
-			}
-
-			// delete all previous result files (not overwritten by new result files)
-			foreach (int dataIndexToDelete in layerSummary.Results.Select(r => r.Index).Where(i => i >= dataIndex))
-			{
-				Uri fileToDelete = new Uri(location, $"{layerDirectory}{layerId}.{dataIndexToDelete}.result.json");
-				destinationStorage.Delete(fileToDelete);
-			}
-
-			layerSummary.Results = resultDescriptors.ToArray(); // update descriptors
-			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer"); // save updated summary file
+			IReadOnlyList<AttributeDescription> attributeDescriptions;
+			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
+			IEnumerable<DataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>();
+			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, geometry, attributeDescriptions, dataDescriptions, filter: null);
+			return layerFile;
 		}
 
 		public SummaryLayerFile GenerateFilterLayer(Uri location, Guid parentLayerId, FilterBase filter, string layerName = null)
@@ -144,19 +114,56 @@ namespace MeshEditor.LayerManager
 			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions, filter);
 		}
 
-		public SummaryLayerFile GenerateMasterLayer(Uri location, string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public void CompressLayer(Uri location, Guid layerId, string field = null, string component = null)
 		{
-			if (geometryImportService == null)
+			string layerDirectory = $"{layerId}/";
+			Uri layerFileUri = new Uri(location, $"{layerDirectory}{layerId}.layer.json");
+
+			// find layer in storage and download summary
+			SummaryLayerFile layerSummary;
+			using (var stream = sourceStorage.Load(layerFileUri))
 			{
-				throw new ArgumentNullException(nameof(geometryImportService));
+				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
-			IReadOnlyList<AttributeDescription> attributeDescriptions;
-			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
-			IEnumerable<DataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>();
-			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, geometry, attributeDescriptions, dataDescriptions, filter: null);
-			return layerFile;
+			var resultGroups = from result in layerSummary.Results
+							   where (field == null || field == result.FieldName) && (component == null || component == result.ComponentName)
+							   group result by new { result.FieldName, result.ComponentName } into g
+							   select g;
+
+			var resultDescriptors = new List<DataLayerDescriptor>();
+			int dataIndex = 1;
+			foreach (var resultGroup in resultGroups)
+			{
+				Uri[] resultFileUris = resultGroup.Select(result => new Uri(location, $"{layerDirectory}{layerId}.{result.Index}.result.json")).ToArray();
+				Debug.Assert(resultFileUris.Length > 0);
+				DataDescription firstDataField = LoadData(resultFileUris[0]).Single();
+				IEnumerable<DataDescription> restDataFields = resultFileUris.Skip(1).Select(uri => LoadData(uri).Single());
+				DataLayerFile dataLayerFile = createLayerResultFromDataDescriptions(firstDataField, restDataFields, resultFileUris.Length, 0, layerId, dataIndex);
+
+				storeLayerFile(dataLayerFile, location, layerDirectory, $"{layerId}.{dataIndex}.result");
+
+				resultDescriptors.Add(DataLayerDescriptor.CreateFrom(dataLayerFile));
+				dataIndex += 1;
+			}
+
+			// delete all previous result files (not overwritten by new result files)
+			foreach (int dataIndexToDelete in layerSummary.Results.Select(r => r.Index).Where(i => i >= dataIndex))
+			{
+				Uri fileToDelete = new Uri(location, $"{layerDirectory}{layerId}.{dataIndexToDelete}.result.json");
+				destinationStorage.Delete(fileToDelete);
+			}
+
+			layerSummary.Results = resultDescriptors.ToArray(); // update descriptors
+			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer"); // save updated summary file
 		}
+
+		public void AppendDataToLayer(Uri location, Guid layerId, IDataImportService dataImportService)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
 
 		public GeometryDescription LoadGeometry(Uri meshFileUri)
 		{
@@ -223,6 +230,8 @@ namespace MeshEditor.LayerManager
 
 			string layerDirectory = $"{layerId}";
 
+			progressReporter?.Report(new OperationState("Generating mesh file"));
+
 			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			storeLayerFile(layerMesh, location, layerDirectory, $"{layerId}.mesh");
 
@@ -231,6 +240,8 @@ namespace MeshEditor.LayerManager
 			var attributeDescriptors = new List<DataLayerDescriptor>();
 			foreach (var attribute in attributeDescriptions)
 			{
+				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
+
 				DataLayerFile layerElementProperties = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
 				storeLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
 				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(layerElementProperties));
@@ -242,6 +253,8 @@ namespace MeshEditor.LayerManager
 			var timeStepsHashSet = new HashSet<double>();
 			foreach (var dataField in dataDescriptions)
 			{
+				progressReporter?.Report(new OperationState($"Generating result file for field '{dataField.Name}' (time step: {dataField.TimeStep})"));
+
 				for (int componentIndex = 0; componentIndex < dataField.NumberOfComponents; componentIndex++)
 				{
 					var layerResult = createLayerResultFromDataDescriptions(dataField, Enumerable.Empty<DataDescription>(), 1, componentIndex, layerId, resultIndex);
@@ -257,6 +270,8 @@ namespace MeshEditor.LayerManager
 
 			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
 			layerSummary.Results = resultDescriptors.ToArray();
+
+			progressReporter?.Report(new OperationState("Generating summary file"));
 
 			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer");
 
