@@ -40,19 +40,6 @@ namespace MeshEditor.LayerManager.Compression
 
 			// use MathNet.Numerics' implementation of SVD factorization
 			var svd = SVD.Create(A);
-			
-			//double factor = (double)rank * (rows + columns + 1) / (rows * columns);
-			//if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
-			//{
-			//	return new double[0];
-			//}
-
-			parameters = new SVDCompressionParameters
-			{
-				Rows = rows,
-				Columns = columns,
-				Rank = Math.Min(rows, columns)
-			};
 
 			Debug.Assert(svd.U.RowCount == rows);
 			Debug.Assert(svd.U.ColumnCount == rows);
@@ -60,23 +47,43 @@ namespace MeshEditor.LayerManager.Compression
 			Debug.Assert(svd.VT.RowCount == columns);
 			Debug.Assert(svd.VT.ColumnCount == columns);
 
-			// linearize vectors in matrice U, V, S to double array
-			double[] result = new double[svd.U.RowCount * svd.U.ColumnCount + svd.S.Count + svd.VT.RowCount * svd.VT.ColumnCount];
+			int rank = 1; /**/ //svd.Rank; // TODO: choose rank according to singular values' values
+			//double factor = (double)rank * (rows + columns + 1) / (rows * columns); // TODO: calculate compression factor
 
-			double[] uColumnWise = svd.U.EnumerateColumns().SelectMany(column => column).ToArray(); // take newRank columns of U
-			Debug.Assert(uColumnWise.Length == rows * rows);
+			parameters = new SVDCompressionParameters
+			{
+				Rows = rows,
+				Columns = columns,
+				Rank = rank,
+			};
+
+			if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
+			{
+				return new double[0];
+			}
+
+			int u_rows = rows;
+			int u_columns = rank;
+			int vt_rows = rank;
+			int vt_columns = columns;
+
+			// linearize vectors in matrice U, V, S to double array
+			double[] result = new double[u_rows * u_columns + rank + vt_rows * vt_columns];
+
+			double[] uColumnWise = svd.U.EnumerateColumns(0, u_columns).SelectMany(column => column).ToArray(); // take newRank columns of U
+			Debug.Assert(uColumnWise.Length == u_rows * u_columns);
 			Array.Copy(uColumnWise, result, uColumnWise.Length);
 			int offset = uColumnWise.Length;
 			//uColumnWise = null;
 
-			double[] sDiagonal = svd.S.ToArray(); // take newRank singular values
-			Debug.Assert(sDiagonal.Length == Math.Min(rows, columns));
+			double[] sDiagonal = svd.S.Take(rank).ToArray(); // take newRank singular values
+			Debug.Assert(sDiagonal.Length == rank);
 			Array.Copy(sDiagonal, 0, result, offset, sDiagonal.Length);
 			offset += sDiagonal.Length;
 			//sDiagonal = null;
 
-			double[] vtColumnWise = svd.VT.EnumerateRows().SelectMany(row => row).ToArray(); // take newRank rows of VT
-			Debug.Assert(vtColumnWise.Length == columns * columns);
+			double[] vtColumnWise = svd.VT.EnumerateRows(0, vt_rows).SelectMany(row => row).ToArray(); // take newRank rows of VT
+			Debug.Assert(vtColumnWise.Length == vt_rows * vt_columns);
 			Array.Copy(vtColumnWise, 0, result, offset, vtColumnWise.Length);
 			offset += vtColumnWise.Length;
 			//vtColumnWise = null;
@@ -97,14 +104,15 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			// create matrices U, S, VT from compressedData
-			int uSize = svdParameters.Rows * svdParameters.Rows;
-			int sSize = svdParameters.Rank;
-			int vtSize = svdParameters.Columns * svdParameters.Columns;
-			Debug.Assert(uSize + sSize + vtSize == compressedData.Length);
+			int u_size = svdParameters.Rows * svdParameters.Rank;
+			int s_size = svdParameters.Rank;
+			int vt_size = svdParameters.Rank * svdParameters.Columns;
+			Debug.Assert(u_size + s_size + vt_size == compressedData.Length);
 
-			Matrix U = DenseMatrix.OfColumnMajor(svdParameters.Rows, svdParameters.Rows, compressedData.Take(uSize));
-			Matrix S = DiagonalMatrix.OfDiagonal(svdParameters.Rows, svdParameters.Columns, compressedData.Skip(uSize).Take(sSize));
-			Matrix VT = DenseMatrix.OfRows(svdParameters.Columns, svdParameters.Columns, compressedData.Skip(uSize + sSize).Partition(svdParameters.Columns));
+			// TODO: get rid of Concat methods, simulate multiplication of complete matrices more efficiently
+			Matrix U = DenseMatrix.OfColumnMajor(svdParameters.Rows, svdParameters.Rows, compressedData.Take(u_size).Concat(Enumerable.Repeat(0.0, svdParameters.Rows * svdParameters.Rows - u_size)));
+			Matrix S = DiagonalMatrix.OfDiagonal(svdParameters.Rows, svdParameters.Columns, compressedData.Skip(u_size).Take(s_size).Concat(Enumerable.Repeat(0.0, Math.Min(svdParameters.Rows, svdParameters.Columns) - s_size)));
+			Matrix VT = DenseMatrix.OfRows(svdParameters.Columns, svdParameters.Columns, compressedData.Skip(u_size + s_size).Partition(svdParameters.Columns).Concat(Enumerable.Repeat(new double[svdParameters.Columns], svdParameters.Columns - svdParameters.Rank)));
 
 			// multiply UxSxVT to obtain approximaton of original matrix A
 			var US = U.Multiply(S);
