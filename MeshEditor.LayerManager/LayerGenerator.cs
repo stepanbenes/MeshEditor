@@ -137,8 +137,8 @@ namespace MeshEditor.LayerManager
 			{
 				Uri[] resultFileUris = resultGroup.Select(result => new Uri(location, $"{layerDirectory}{layerId}.{result.Index}.result.json")).ToArray();
 				Debug.Assert(resultFileUris.Length > 0);
-				DataDescription firstDataField = LoadData(resultFileUris[0]).Single();
-				IEnumerable<DataDescription> restDataFields = resultFileUris.Skip(1).Select(uri => LoadData(uri).Single());
+				DataDescription firstDataField = LoadData(resultFileUris[0]).Single(); // TODO: support already compressed results
+				IEnumerable<DataDescription> restDataFields = resultFileUris.Skip(1).Select(uri => LoadData(uri).Single()); // TODO: support already compressed results
 				DataLayerFile dataLayerFile = createLayerResultFromDataDescriptions(firstDataField, restDataFields, resultFileUris.Length, 0, layerId, dataIndex);
 
 				storeLayerFile(dataLayerFile, location, layerDirectory, $"{layerId}.{dataIndex}.result");
@@ -407,17 +407,21 @@ namespace MeshEditor.LayerManager
 
 		private IEnumerable<DataDescription> createDataDescriptionFromLayerResult(DataLayerFile layerResult)
 		{
-			DataDescription data = new DataDescription();
+			int timeStepIndex = 0;
+			foreach (double[] decompressedData in decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression))
+			{
+				DataDescription data = new DataDescription();
 
-			data.Name = layerResult.FieldName;
-			data.TimeStep = layerResult.TimeSteps?.Single();
-			data.ComponentNames = new[] { layerResult.ComponentName };
-			data.FieldType = FieldType.Scalar;
-			data.Location = layerResult.Location;
-			data.NumberOfComponents = 1;
-			data.Values = decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression);
+				data.Name = layerResult.FieldName;
+				data.TimeStep = layerResult.TimeSteps[timeStepIndex++];
+				data.ComponentNames = new[] { layerResult.ComponentName };
+				data.FieldType = FieldType.Scalar;
+				data.Location = layerResult.Location;
+				data.NumberOfComponents = 1;
+				data.Values = decompressedData;
 
-			yield return data;
+				yield return data;
+			}
 		}
 
 		private AttributeDescription createAttributeDescriptionFromDataLayerAttribute(DataLayerFile layerAttributes)
@@ -499,12 +503,12 @@ namespace MeshEditor.LayerManager
 			return encodingService.Encode(compressedValues, TrimOptions.BeginEnd, out encodingParameters);
 		}
 
-		private double[] decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
+		private IEnumerable<double[]> decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
 			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method);
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
 			IEnumerable<double[]> originalDataValues = selectedCompressionService.Decompress(compressedValues, compressionParameters);
-			return originalDataValues.Single();
+			return originalDataValues;
 		}
 
 		private string encodeAttributes(int[] attributes, out EncodingParameters encodingParameters)
