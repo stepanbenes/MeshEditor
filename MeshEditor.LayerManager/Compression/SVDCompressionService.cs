@@ -40,47 +40,48 @@ namespace MeshEditor.LayerManager.Compression
 
 			// use MathNet.Numerics' implementation of SVD factorization
 			var svd = SVD.Create(A);
-
-			int originalRank = svd.Rank;
-			int rank = originalRank;
-
-			double factor = (double)rank * (rows + columns + 1) / (rows * columns);
+			
+			//double factor = (double)rank * (rows + columns + 1) / (rows * columns);
+			//if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
+			//{
+			//	return new double[0];
+			//}
 
 			parameters = new SVDCompressionParameters
 			{
 				Rows = rows,
 				Columns = columns,
-				Rank = rank,
-				Factor = factor,
+				Rank = Math.Min(rows, columns)
 			};
 
-			if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
-			{
-				return new double[0];
-			}
+			Debug.Assert(svd.U.RowCount == rows);
+			Debug.Assert(svd.U.ColumnCount == rows);
+			Debug.Assert(svd.S.Count == Math.Min(rows, columns));
+			Debug.Assert(svd.VT.RowCount == columns);
+			Debug.Assert(svd.VT.ColumnCount == columns);
 
 			// linearize vectors in matrice U, V, S to double array
-			double[] result = new double[rank * (rows + columns + 1)];
+			double[] result = new double[svd.U.RowCount * svd.U.ColumnCount + svd.S.Count + svd.VT.RowCount * svd.VT.ColumnCount];
 
-			double[] uColumnWise = svd.U.EnumerateColumns(0, rank).SelectMany(column => column).ToArray(); // take newRank columns of U
-			Debug.Assert(uColumnWise.Length == rows * rank);
+			double[] uColumnWise = svd.U.EnumerateColumns().SelectMany(column => column).ToArray(); // take newRank columns of U
+			Debug.Assert(uColumnWise.Length == rows * rows);
 			Array.Copy(uColumnWise, result, uColumnWise.Length);
 			int offset = uColumnWise.Length;
 			//uColumnWise = null;
 
 			double[] sDiagonal = svd.S.ToArray(); // take newRank singular values
-			Debug.Assert(sDiagonal.Length >= rank);
-			Array.Copy(sDiagonal, 0, result, offset, rank);
-			offset += rank;
+			Debug.Assert(sDiagonal.Length == Math.Min(rows, columns));
+			Array.Copy(sDiagonal, 0, result, offset, sDiagonal.Length);
+			offset += sDiagonal.Length;
 			//sDiagonal = null;
 
-			double[] vtColumnWise = svd.VT.EnumerateRows(0, rank).SelectMany(row => row).ToArray(); // take newRank rows of VT
-			Debug.Assert(vtColumnWise.Length == rank * columns);
+			double[] vtColumnWise = svd.VT.EnumerateRows().SelectMany(row => row).ToArray(); // take newRank rows of VT
+			Debug.Assert(vtColumnWise.Length == columns * columns);
 			Array.Copy(vtColumnWise, 0, result, offset, vtColumnWise.Length);
 			offset += vtColumnWise.Length;
 			//vtColumnWise = null;
 			Debug.Assert(offset == result.Length);
-
+			
 			return result;
 		}
 
@@ -96,17 +97,18 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			// create matrices U, S, VT from compressedData
-			int uSize = svdParameters.Rows * svdParameters.Rank;
+			int uSize = svdParameters.Rows * svdParameters.Rows;
 			int sSize = svdParameters.Rank;
-			int vtSize = svdParameters.Rank * svdParameters.Columns;
+			int vtSize = svdParameters.Columns * svdParameters.Columns;
 			Debug.Assert(uSize + sSize + vtSize == compressedData.Length);
 
-			Matrix U = DenseMatrix.OfColumnMajor(svdParameters.Rows, svdParameters.Rank, compressedData.Take(uSize));
-			Matrix S = DiagonalMatrix.OfDiagonal(svdParameters.Rank, svdParameters.Columns, compressedData.Skip(uSize).Take(sSize));
-			Matrix VT = DenseMatrix.OfRows(svdParameters.Rank, svdParameters.Columns, compressedData.Skip(uSize + sSize).Partition(svdParameters.Columns));
+			Matrix U = DenseMatrix.OfColumnMajor(svdParameters.Rows, svdParameters.Rows, compressedData.Take(uSize));
+			Matrix S = DiagonalMatrix.OfDiagonal(svdParameters.Rows, svdParameters.Columns, compressedData.Skip(uSize).Take(sSize));
+			Matrix VT = DenseMatrix.OfRows(svdParameters.Columns, svdParameters.Columns, compressedData.Skip(uSize + sSize).Partition(svdParameters.Columns));
 
 			// multiply UxSxVT to obtain approximaton of original matrix A
-			var A_appx = U.Multiply(S).Multiply(VT);
+			var US = U.Multiply(S);
+			var A_appx = US.Multiply(VT);
 
 			// linearize result to sequence of double arrays
 			return A_appx.EnumerateRows().Select(vector => vector.ToArray());

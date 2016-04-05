@@ -62,7 +62,7 @@ namespace MeshEditor.LayerManager.Encoding
 					break;
 				case TrimOptions.BeginEnd:
 					Debug.Assert(encodingParameters.DataType == convertTypeToDataArrayType(typeof(T)));
-					T defaultValue = string.IsNullOrEmpty(encodingParameters.DefaultValue) ? default(T) : (T)Convert.ChangeType(encodingParameters.DefaultValue, typeof(T));
+					T defaultValue = string.IsNullOrEmpty(encodingParameters.DefaultValue) ? default(T) : (T)Convert.ChangeType(encodingParameters.DefaultValue, typeof(T), CultureInfo.InvariantCulture);
 					result = expand(values, encodingParameters.OriginalLength, encodingParameters.Offset, defaultValue);
 					break;
 				default:
