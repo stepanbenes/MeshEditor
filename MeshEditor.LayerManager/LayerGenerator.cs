@@ -105,12 +105,14 @@ namespace MeshEditor.LayerManager
 					throw new NotSupportedException();
 			}
 
-			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
-			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
-
+			// filter attributes
 			var originalAttributeFileUris = parentLayer.Attributes.Select(a => new Uri(layerDirectoryUri, $"{parentLayerId}.{a.Index}.attribute.json"));
 			IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeFileUris);
 
+			// filter results
+			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
+			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
+			
 			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions, filter);
 		}
 
@@ -410,23 +412,30 @@ namespace MeshEditor.LayerManager
 			int timeStepIndex = 0;
 			foreach (double[] decompressedData in decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression))
 			{
-				DataDescription data = new DataDescription();
-
-				data.Name = layerResult.FieldName;
-				data.TimeStep = layerResult.TimeSteps[timeStepIndex++];
-				data.ComponentNames = new[] { layerResult.ComponentName };
-				data.FieldType = FieldType.Scalar;
-				data.Location = layerResult.Location;
-				data.NumberOfComponents = 1;
-				data.Values = decompressedData;
-
+				DataDescription data = new DataDescription
+				{
+					Name = layerResult.FieldName,
+					TimeStep = layerResult.TimeSteps[timeStepIndex++],
+					ComponentNames = new[] { layerResult.ComponentName },
+					FieldType = FieldType.Scalar,
+					Location = layerResult.Location,
+					NumberOfComponents = 1,
+					Values = decompressedData
+				};
 				yield return data;
 			}
 		}
 
 		private AttributeDescription createAttributeDescriptionFromDataLayerAttribute(DataLayerFile layerAttributes)
 		{
-			throw new NotImplementedException();
+			Debug.Assert(layerAttributes.Compression == null);
+			AttributeDescription attribute = new AttributeDescription
+			{
+				Name = layerAttributes.FieldName,
+				Location = layerAttributes.Location,
+				Values = decodeAttributes(layerAttributes.Data, layerAttributes.Encoding)
+			};
+			return attribute;
 		}
 
 		private GeometryDescription filterGeometryByCellAttribute(GeometryDescription geometry, AttributeDescription attribute, int[] selectionFilter)
