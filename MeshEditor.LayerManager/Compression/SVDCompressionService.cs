@@ -34,7 +34,8 @@ namespace MeshEditor.LayerManager.Compression
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
 			// create matrix from input data values, replace possible NaN values with zeroes
-			Matrix A = /* SparseMatrix ? */ DenseMatrix.OfRows(rows, columns, dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value)));
+			var dataValuesWithoutNaNs = dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value));
+			Matrix A = /* SparseMatrix ? */ DenseMatrix.OfRows(rows, columns, dataValuesWithoutNaNs);
 			Debug.Assert(A.RowCount == rows);
 			Debug.Assert(A.ColumnCount == columns);
 
@@ -47,8 +48,14 @@ namespace MeshEditor.LayerManager.Compression
 			Debug.Assert(svd.VT.RowCount == columns);
 			Debug.Assert(svd.VT.ColumnCount == columns);
 
-			int rank = 1; /**/ //svd.Rank; // TODO: choose rank according to singular values' values
-			//double factor = (double)rank * (rows + columns + 1) / (rows * columns); // TODO: calculate compression factor
+			int rank;
+			if (!decideWhetherToProceedWithCompression(svd.S, rows, columns, out rank))
+			{
+				// SVD compression is not appropriate,
+				// use transparent compression service instead
+				var transparentCompression = new TransparentCompressionService();
+				return transparentCompression.Compress(dataValues, rows, columns, out parameters); // WARNING: dataValues is enumerated second times !
+			}
 
 			parameters = new SVDCompressionParameters
 			{
@@ -88,7 +95,43 @@ namespace MeshEditor.LayerManager.Compression
 			offset += vtColumnWise.Length;
 			//vtColumnWise = null;
 			Debug.Assert(offset == result.Length);
-			
+
+#if DEBUG
+			// evaluate compression quality and save the results to parameters object
+
+			var decompressedData = Decompress(result, parameters);
+			double globalMin = double.MaxValue, globalMax = double.MinValue, maxError = double.MinValue;
+
+			using (var decompressedDataEnumerator = decompressedData.GetEnumerator())
+			{
+				for (int row = 0; row < rows; row++)
+				{
+					if (!decompressedDataEnumerator.MoveNext())
+					{
+						throw new InvalidOperationException();
+					}
+					double[] decompressedRow = decompressedDataEnumerator.Current;
+					for (int column = 0; column < columns; column++)
+					{
+						double originalValue = A[row, column];
+						double decompressedValue = decompressedRow[column];
+						globalMin = Math.Min(globalMin, originalValue);
+						globalMax = Math.Max(globalMax, originalValue);
+						double error = Math.Abs(originalValue - decompressedValue);
+						maxError = Math.Max(maxError, error);
+					}
+				}
+			}
+
+			double range = globalMax - globalMin;
+			double maxRelativeError = maxError / range;
+			var svdParameters = (SVDCompressionParameters)parameters;
+			svdParameters.MaxDataValue = globalMax;
+			svdParameters.MinDataValue = globalMin;
+			svdParameters.MaxRelativeError = maxRelativeError;
+			svdParameters.CompressionFactor = computeCompressionFactor(rank, rows, columns);
+#endif
+
 			return result;
 		}
 
@@ -125,6 +168,22 @@ namespace MeshEditor.LayerManager.Compression
 		#endregion
 
 		#region Private methods
+
+		private static bool decideWhetherToProceedWithCompression(IList<double> singularValues, int inputMatrixRowCount, int inputMatrixColumnCount, out int rank)
+		{
+			// TODO: are singularValues really sorted?
+
+			//double tolerance = MathNet.Numerics.Precision.EpsilonOf(singularValues.Max()) * Math.Max(inputMatrixRowCount, inputMatrixColumnCount);
+			double tolerance = singularValues.Max() * 1e-3; // TODO: add smart calculation of tolerance
+			rank = singularValues.Count(t => Math.Abs(t) > tolerance);
+			double factor = computeCompressionFactor(rank, inputMatrixRowCount, inputMatrixColumnCount);
+			return factor < 1.0;
+		}
+
+		private static double computeCompressionFactor(int rank, int inputMatrixRowCount, int inputMatrixColumnCount)
+		{
+			return rank * ((double)inputMatrixRowCount + inputMatrixColumnCount + 1) / ((double)inputMatrixRowCount * inputMatrixColumnCount);
+		}
 
 		#endregion
 	}
