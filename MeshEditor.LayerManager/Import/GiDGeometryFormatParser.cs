@@ -59,8 +59,9 @@ namespace MeshEditor.LayerManager.Import
 
 			int dimension = 0;
 			int currentLineNumber = 0;
-			Dictionary<int, int> nodeIdIndexMap = new Dictionary<int, int>();
-			Dictionary<int, int> elementIdIndexMap = new Dictionary<int, int>();
+			int numberOfNodes = 0;
+			int numberOfElements = 0;
+			ImportGeometryEntityMapping mapping = new ImportGeometryEntityMapping();
 
 			using (Stream fileStream = storageService.Load(uri))
 			using (TextReader reader = new StreamReader(fileStream))
@@ -125,7 +126,7 @@ namespace MeshEditor.LayerManager.Import
 									Debug.Assert(parts.Length >= 3);
 									int nodeId = ParseInt32(parts[0]);
 
-									nodeIdIndexMap[nodeId] = nodeIdIndexMap.Count;
+									mapping.AddPointMapping(oldPointId: nodeId, newPointId: numberOfNodes);
 
 									float positionX = (float)ParseFloat64(parts[1]); // WARNING: possible loss of precision
 									float positionY = (float)ParseFloat64(parts[2]); // WARNING: possible loss of precision
@@ -142,6 +143,7 @@ namespace MeshEditor.LayerManager.Import
 										pointCoordinates.Add(positionY);
 										pointCoordinates.Add(positionZ);
 									}
+									numberOfNodes += 1;
 								}
 								break;
 							case ParserMode.Elements:
@@ -158,12 +160,15 @@ namespace MeshEditor.LayerManager.Import
 									cellTypes.Add(elementType);
 
 									int elementId = ParseInt32(parts[0]);
-									elementIdIndexMap[elementId] = elementIdIndexMap.Count;
+
+									mapping.AddCellMapping(oldCellId: elementId, newCellId: numberOfElements);
 
 									for (int i = 0; i < nnode; i++)
 									{
 										int nodeId = ParseInt32(parts[i + 1]);
-										int nodeIndex = nodeIdIndexMap[nodeId];
+										int nodeIndex;
+										if (!mapping.TryGetNewPointId(nodeId, out nodeIndex))
+											throw new KeyNotFoundException($"node with id {nodeId} was not found");
 										cellConnectivity.Add(nodeIndex);
 									}
 									if (parts.Length > nnode + 1)
@@ -175,6 +180,7 @@ namespace MeshEditor.LayerManager.Import
 									{
 										elementProperties.Add(0);
 									}
+									numberOfElements += 1;
 								}
 								break;
 						}
@@ -194,7 +200,7 @@ namespace MeshEditor.LayerManager.Import
 				CellConnectivity = cellConnectivity.ToArray(),
 				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
-				Mapping = new ImportGeometryEntityMapping(oldToNewPointIdMap: nodeIdIndexMap, oldToNewCellIdMap: elementIdIndexMap)
+				Mapping = mapping
 			};
 
 			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Values = elementProperties.ToArray() } };

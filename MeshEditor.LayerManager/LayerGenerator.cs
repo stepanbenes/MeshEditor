@@ -200,6 +200,7 @@ namespace MeshEditor.LayerManager
 
 		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, IEnumerable<Uri> originalAttributeFileUris)
 		{
+			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
 			foreach (AttributeDescription oldAttribute in originalAttributeFileUris.Select(uri => LoadAttribute(uri)))
 			{
 				int[] newValues;
@@ -207,13 +208,19 @@ namespace MeshEditor.LayerManager
 				{
 					case DataLocationType.Points:
 						newValues = new int[filteredGeometry.NumberOfPoints];
-						for (int newIndex = 0; newIndex < newValues.Length; newIndex++)
+						for (int newPointIndex = 0; newPointIndex < newValues.Length; newPointIndex++)
 						{
 							int oldIndex;
-							if (filteredGeometry.Mapping.TryGetOldPointId(newIndex, out oldIndex))
+							EdgeIntersection oldEdgeIntersection;
+							if (mapping.TryGetOldPointId(newPointIndex, out oldIndex))
 							{
-								newValues[newIndex] = oldAttribute.Values[oldIndex];
+								newValues[newPointIndex] = oldAttribute.Values[oldIndex];
 							}
+							else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							{
+								throw new NotImplementedException();
+							}
+							//else -> no attribute value (zero is default)
 						}
 						break;
 					case DataLocationType.CellPoints:
@@ -222,13 +229,14 @@ namespace MeshEditor.LayerManager
 
 					case DataLocationType.Cells:
 						newValues = new int[filteredGeometry.NumberOfCells];
-						for (int newIndex = 0; newIndex < newValues.Length; newIndex++)
+						for (int newCellIndex = 0; newCellIndex < newValues.Length; newCellIndex++)
 						{
 							int oldIndex;
-							if (filteredGeometry.Mapping.TryGetOldCellId(newIndex, out oldIndex))
+							if (mapping.TryGetOldCellId(newCellIndex, out oldIndex))
 							{
-								newValues[newIndex] = oldAttribute.Values[oldIndex];
+								newValues[newCellIndex] = oldAttribute.Values[oldIndex];
 							}
+							//else -> no attribute value (zero is default)
 						}
 						break;
 					default:
@@ -248,6 +256,8 @@ namespace MeshEditor.LayerManager
 
 		private IEnumerable<DataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<Uri> originalResultFileUris)
 		{
+			const double EMPTY_VALUE = double.NaN;
+			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
 			foreach (DataDescription oldResult in originalResultFileUris.SelectMany(uri => LoadData(uri)))
 			{
 				int componentCount = oldResult.NumberOfComponents;
@@ -262,9 +272,18 @@ namespace MeshEditor.LayerManager
 							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
 							{
 								int oldPointIndex;
-								if (filteredGeometry.Mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
+								EdgeIntersection oldEdgeIntersection;
+								if (mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
 								{
 									newValues[newPointIndex * componentCount + componentIndex] = oldResult.Values[oldPointIndex * componentCount + componentIndex];
+								}
+								else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+								{
+									throw new NotImplementedException();
+								}
+								else
+								{
+									newValues[newPointIndex * componentCount + componentIndex] = EMPTY_VALUE;
 								}
 							}
 						}
@@ -280,9 +299,13 @@ namespace MeshEditor.LayerManager
 							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
 							{
 								int oldCellIndex;
-								if (filteredGeometry.Mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
+								if (mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
 								{
 									newValues[newCellIndex * componentCount + componentIndex] = oldResult.Values[oldCellIndex * componentCount + componentIndex];
+								}
+								else
+								{
+									newValues[newCellIndex * componentCount + componentIndex] = EMPTY_VALUE;
 								}
 							}
 						}
@@ -533,12 +556,12 @@ namespace MeshEditor.LayerManager
 			HashSet<int> remainingPointIndices = new HashSet<int>();
 			List<int> cellConnectivity = new List<int>();
 			List<int> cellOffsets = new List<int>();
-			Dictionary<int, int> newOldCellIndexMap = new Dictionary<int, int>();
+			FilterGeometryEntityMapping mapping = new FilterGeometryEntityMapping();
 
-			for (int cellIndex = 0, previousOffset = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
+			for (int oldCellIndex = 0, newCellIndex = 0, previousOffset = 0; oldCellIndex < geometry.NumberOfCells; oldCellIndex++)
 			{
-				int currentOffset = geometry.CellOffsets[cellIndex];
-				if (selectionFilter.Contains(attribute.Values[cellIndex]))
+				int currentOffset = geometry.CellOffsets[oldCellIndex];
+				if (selectionFilter.Contains(attribute.Values[oldCellIndex]))
 				{
 					for (int offset = previousOffset; offset < currentOffset; offset++)
 					{
@@ -547,25 +570,29 @@ namespace MeshEditor.LayerManager
 						cellConnectivity.Add(pointIndex);
 					}
 					cellOffsets.Add(cellConnectivity.Count);
-					cellTypes.Add(geometry.CellTypes[cellIndex]);
-					newOldCellIndexMap[newOldCellIndexMap.Count] = cellIndex;
+					cellTypes.Add(geometry.CellTypes[oldCellIndex]);
+					mapping.AddCellMapping(newCellIndex, oldCellIndex);
+					newCellIndex += 1;
 				}
 				previousOffset = currentOffset;
 			}
 
 			int numberOfCoordinates = geometry.NumberOfCoordinateComponents;
 			List<float> pointCoordinates = new List<float>();
-			Dictionary<int, int> newOldPointIndexMap = new Dictionary<int, int>();
 			Dictionary<int, int> oldNewPointIndexMap = new Dictionary<int, int>();
 
-			foreach (int oldPointIndex in remainingPointIndices.OrderBy(p => p))
 			{
-				for (int coordinateIndex = 0; coordinateIndex < numberOfCoordinates; coordinateIndex++)
+				int newPointIndex = 0;
+				foreach (int oldPointIndex in remainingPointIndices.OrderBy(p => p))
 				{
-					pointCoordinates.Add(geometry.PointCoordinates[oldPointIndex * numberOfCoordinates + coordinateIndex]);
+					for (int coordinateIndex = 0; coordinateIndex < numberOfCoordinates; coordinateIndex++)
+					{
+						pointCoordinates.Add(geometry.PointCoordinates[oldPointIndex * numberOfCoordinates + coordinateIndex]);
+					}
+					mapping.AddPointMapping(newPointIndex, oldPointIndex);
+					oldNewPointIndexMap[oldPointIndex] = newPointIndex;
+					newPointIndex += 1;
 				}
-				newOldPointIndexMap[newOldPointIndexMap.Count] = oldPointIndex;
-				oldNewPointIndexMap[oldPointIndex] = oldNewPointIndexMap.Count;
 			}
 
 			// update cell connectivity (from old point indices to new point indices)
@@ -583,8 +610,9 @@ namespace MeshEditor.LayerManager
 				CellConnectivity = cellConnectivity.ToArray(),
 				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
-				Mapping = new FilterGeometryEntityMapping(newOldPointIndexMap, newOldCellIndexMap)
+				Mapping = mapping
 			};
+
 			return filteredGeometry;
 		}
 

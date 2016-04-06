@@ -707,7 +707,7 @@ namespace MeshEditor.LayerManager.Import
 							{
 								int pointId = ids[idIndex];
 								int pointIndex;
-								if (geometry.Mapping.TryGetNewPointId(pointId, out pointIndex))
+								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewPointId(pointId, out pointIndex))
 								{
 									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 									{
@@ -774,7 +774,7 @@ namespace MeshEditor.LayerManager.Import
 							{
 								int cellId = ids[idIndex];
 								int cellIndex;
-								if (geometry.Mapping.TryGetNewCellId(cellId, out cellIndex))
+								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewCellId(cellId, out cellIndex))
 								{
 									int previousCellOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 									int cellOffset = geometry.CellOffsets[cellIndex];
@@ -806,7 +806,7 @@ namespace MeshEditor.LayerManager.Import
 							{
 								int cellId = ids[idIndex];
 								int cellIndex;
-								if (geometry.Mapping.TryGetNewCellId(cellId, out cellIndex))
+								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewCellId(cellId, out cellIndex))
 								{
 									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 									{
@@ -838,9 +838,9 @@ namespace MeshEditor.LayerManager.Import
 
 		private static double[] createEmptyValueArray(int length)
 		{
-			const double emptyValue = double.NaN;
+			const double EMPTY_VALUE = double.NaN;
 			double[] array = new double[length];
-			array.Fill(emptyValue);
+			array.Fill(EMPTY_VALUE);
 			//for (int i = 0; i < length; i++)
 			//{
 			//	array[i] = emptyValue;

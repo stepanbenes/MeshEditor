@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.Compression
 			maxCompressionFactor = null;
 		}
 
-		public SVDCompressionService(double singularValueToleranceFactor, double maxCompressionFactor)
+		public SVDCompressionService(double singularValueToleranceFactor, double? maxCompressionFactor = null)
 		{
 			Debug.Assert(singularValueToleranceFactor >= 0.0);
 			Debug.Assert(maxCompressionFactor >= 0.0);
