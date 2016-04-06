@@ -13,18 +13,22 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		#region Constructor, Fields
 
-		private double? desiredCompressionFactor;
+		private readonly double singularValueToleranceFactor;
+		private readonly double? maxCompressionFactor;
 
 		public SVDCompressionService()
 		{
-			desiredCompressionFactor = null;
+			singularValueToleranceFactor = 1e-3;
+			maxCompressionFactor = null;
 		}
 
-		public SVDCompressionService(double desiredCompressionFactor)
+		public SVDCompressionService(double singularValueToleranceFactor, double maxCompressionFactor)
 		{
-			Debug.Assert(desiredCompressionFactor >= 0.0);
-			Debug.Assert(desiredCompressionFactor <= 1.0);
-			this.desiredCompressionFactor = desiredCompressionFactor;
+			Debug.Assert(singularValueToleranceFactor >= 0.0);
+			Debug.Assert(maxCompressionFactor >= 0.0);
+			Debug.Assert(maxCompressionFactor <= 1.0);
+			this.singularValueToleranceFactor = singularValueToleranceFactor;
+			this.maxCompressionFactor = maxCompressionFactor;
 		}
 
 		#endregion
@@ -169,13 +173,19 @@ namespace MeshEditor.LayerManager.Compression
 
 		#region Private methods
 
-		private static bool decideWhetherToProceedWithCompression(IList<double> singularValues, int inputMatrixRowCount, int inputMatrixColumnCount, out int rank)
+		private bool decideWhetherToProceedWithCompression(IList<double> singularValues, int inputMatrixRowCount, int inputMatrixColumnCount, out int rank)
 		{
-			// TODO: are singularValues really sorted?
-
+			// TODO: are singularValues sorted?
 			//double tolerance = MathNet.Numerics.Precision.EpsilonOf(singularValues.Max()) * Math.Max(inputMatrixRowCount, inputMatrixColumnCount);
-			double tolerance = singularValues.Max() * 1e-3; // TODO: add smart calculation of tolerance
+			double tolerance = singularValues.Max() * singularValueToleranceFactor; // TODO: add smart calculation of tolerance
 			rank = singularValues.Count(t => Math.Abs(t) > tolerance);
+
+			if (maxCompressionFactor.HasValue)
+			{
+				rank = Math.Min(rank, (int)(maxCompressionFactor.Value / computeCompressionFactor(1, inputMatrixRowCount, inputMatrixColumnCount)));
+				return true;
+			}
+
 			double factor = computeCompressionFactor(rank, inputMatrixRowCount, inputMatrixColumnCount);
 			return factor < 1.0;
 		}
