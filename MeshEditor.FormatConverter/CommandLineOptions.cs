@@ -21,7 +21,7 @@ namespace MeshEditor.FormatConverter
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : Options
 	{
-		[Value(index: 0, MetaName = "Project name", Required = true, HelpText = "Name of new project")]
+		[Value(index: 0, MetaName = "Project name", Required = false, HelpText = "Name of new project")]
 		public override string ProjectName { get; set; }
 
 		[Option('m', "mesh", Required = true, HelpText = "Mesh file to be processed.")]

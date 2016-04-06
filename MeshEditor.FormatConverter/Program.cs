@@ -51,9 +51,11 @@ namespace MeshEditor.FormatConverter
 			var layerGenerator = new LayerGenerator(progressReporter: progress);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(currentDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 
-			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, options.ProjectName);
+			string projectName = options.ProjectName ?? Path.GetFileNameWithoutExtension(options.MeshFile);
 
-			string projectNameAsValidFileName = options.ProjectName.MakeAlphanumericFilename();
+			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, projectName);
+
+			string projectNameAsValidFileName = projectName.MakeAlphanumericFilename();
 			using (Stream stream = localStorage.Save(new Uri(Path.Combine(currentDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
 				ISerializationService serializer = new JsonSerializationService();
