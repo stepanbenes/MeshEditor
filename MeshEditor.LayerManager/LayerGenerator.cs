@@ -112,7 +112,7 @@ namespace MeshEditor.LayerManager
 			// filter results
 			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
 			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
-			
+
 			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions, filter);
 		}
 
@@ -198,23 +198,112 @@ namespace MeshEditor.LayerManager
 
 		#region Private methods
 
-		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, /*mapping, */ IEnumerable<Uri> originalAttributeFileUris)
+		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, IEnumerable<Uri> originalAttributeFileUris)
 		{
-			throw new NotImplementedException();
-
-			foreach (AttributeDescription data in originalAttributeFileUris.Select(uri => LoadAttribute(uri)))
+			foreach (AttributeDescription oldAttribute in originalAttributeFileUris.Select(uri => LoadAttribute(uri)))
 			{
-				// TODO
+				int[] newValues;
+				switch (oldAttribute.Location)
+				{
+					case DataLocationType.Points:
+						newValues = new int[filteredGeometry.NumberOfPoints];
+						for (int newIndex = 0; newIndex < newValues.Length; newIndex++)
+						{
+							int oldIndex;
+							if (filteredGeometry.Mapping.TryGetOldPointId(newIndex, out oldIndex))
+							{
+								newValues[newIndex] = oldAttribute.Values[oldIndex];
+							}
+						}
+						break;
+					case DataLocationType.CellPoints:
+
+						throw new NotImplementedException();
+
+					case DataLocationType.Cells:
+						newValues = new int[filteredGeometry.NumberOfCells];
+						for (int newIndex = 0; newIndex < newValues.Length; newIndex++)
+						{
+							int oldIndex;
+							if (filteredGeometry.Mapping.TryGetOldCellId(newIndex, out oldIndex))
+							{
+								newValues[newIndex] = oldAttribute.Values[oldIndex];
+							}
+						}
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+
+				AttributeDescription newAttribute = new AttributeDescription
+				{
+					Name = oldAttribute.Name,
+					Location = oldAttribute.Location,
+					Values = newValues
+				};
+
+				yield return newAttribute;
 			}
 		}
 
-		private IEnumerable<DataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, /*mapping, */ IEnumerable<Uri> originalResultFileUris)
+		private IEnumerable<DataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<Uri> originalResultFileUris)
 		{
-			throw new NotImplementedException();
-
-			foreach (DataDescription data in originalResultFileUris.SelectMany(uri => LoadData(uri)))
+			foreach (DataDescription oldResult in originalResultFileUris.SelectMany(uri => LoadData(uri)))
 			{
-				// TODO
+				int componentCount = oldResult.NumberOfComponents;
+				double[] newValues;
+				
+				switch (oldResult.Location)
+				{
+					case DataLocationType.Points:
+						newValues = new double[filteredGeometry.NumberOfPoints * componentCount];
+						for (int newPointIndex = 0; newPointIndex < filteredGeometry.NumberOfPoints; newPointIndex++)
+						{
+							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+							{
+								int oldPointIndex;
+								if (filteredGeometry.Mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
+								{
+									newValues[newPointIndex * componentCount + componentIndex] = oldResult.Values[oldPointIndex * componentCount + componentIndex];
+								}
+							}
+						}
+						break;
+					case DataLocationType.CellPoints:
+
+						throw new NotImplementedException();
+
+					case DataLocationType.Cells:
+						newValues = new double[filteredGeometry.NumberOfCells * componentCount];
+						for (int newCellIndex = 0; newCellIndex < filteredGeometry.NumberOfCells; newCellIndex++)
+						{
+							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+							{
+								int oldCellIndex;
+								if (filteredGeometry.Mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
+								{
+									newValues[newCellIndex * componentCount + componentIndex] = oldResult.Values[oldCellIndex * componentCount + componentIndex];
+								}
+							}
+						}
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+
+				DataDescription newResult = new DataDescription
+				{
+					Name = oldResult.Name,
+					TimeStep = oldResult.TimeStep,
+					ComponentNames = oldResult.ComponentNames,
+
+					FieldType = oldResult.FieldType,
+					Location = oldResult.Location,
+					NumberOfComponents = oldResult.NumberOfComponents,
+					Values = newValues
+				};
+
+				yield return newResult;
 			}
 		}
 
@@ -444,7 +533,7 @@ namespace MeshEditor.LayerManager
 			HashSet<int> remainingPointIndices = new HashSet<int>();
 			List<int> cellConnectivity = new List<int>();
 			List<int> cellOffsets = new List<int>();
-			Dictionary<int, int> oldNewCellIndexMap = new Dictionary<int, int>();
+			Dictionary<int, int> newOldCellIndexMap = new Dictionary<int, int>();
 
 			for (int cellIndex = 0, previousOffset = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
@@ -459,20 +548,23 @@ namespace MeshEditor.LayerManager
 					}
 					cellOffsets.Add(cellConnectivity.Count);
 					cellTypes.Add(geometry.CellTypes[cellIndex]);
-					oldNewCellIndexMap[cellIndex] = oldNewCellIndexMap.Count;
+					newOldCellIndexMap[newOldCellIndexMap.Count] = cellIndex;
 				}
 				previousOffset = currentOffset;
 			}
 
 			int numberOfCoordinates = geometry.NumberOfCoordinateComponents;
 			List<float> pointCoordinates = new List<float>();
+			Dictionary<int, int> newOldPointIndexMap = new Dictionary<int, int>();
 			Dictionary<int, int> oldNewPointIndexMap = new Dictionary<int, int>();
+
 			foreach (int oldPointIndex in remainingPointIndices.OrderBy(p => p))
 			{
 				for (int coordinateIndex = 0; coordinateIndex < numberOfCoordinates; coordinateIndex++)
 				{
 					pointCoordinates.Add(geometry.PointCoordinates[oldPointIndex * numberOfCoordinates + coordinateIndex]);
 				}
+				newOldPointIndexMap[newOldPointIndexMap.Count] = oldPointIndex;
 				oldNewPointIndexMap[oldPointIndex] = oldNewPointIndexMap.Count;
 			}
 
@@ -491,8 +583,7 @@ namespace MeshEditor.LayerManager
 				CellConnectivity = cellConnectivity.ToArray(),
 				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
-				PointIdIndexMap = oldNewPointIndexMap,
-				CellIdIndexMap = oldNewCellIndexMap
+				Mapping = new FilterGeometryEntityMapping(newOldPointIndexMap, newOldCellIndexMap)
 			};
 			return filteredGeometry;
 		}

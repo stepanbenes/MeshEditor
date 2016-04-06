@@ -60,6 +60,8 @@
     <Compile Include="Compression\SVDCompressionParameters.cs" />
     <Compile Include="Compression\SVDCompressionService.cs" />
     <Compile Include="Compression\TransparentCompressionService.cs" />
+    <Compile Include="Data\EdgeIntersection.cs" />
+    <Compile Include="Data\GeometryEntityMapping.cs" />
     <Compile Include="Encoding\Base64EncodingService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
     <Compile Include="DataFormatParserFactory.cs" />

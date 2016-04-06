@@ -68,7 +68,7 @@ namespace MeshEditor.LayerManager.Import
 				string line;
 				string[] parts;
 				string meshName;
-				
+
 				int nnode = 0;
 				ParserMode parserMode = ParserMode.Init;
 				CellType elementType = CellType.Undefined;
@@ -194,8 +194,7 @@ namespace MeshEditor.LayerManager.Import
 				CellConnectivity = cellConnectivity.ToArray(),
 				CellOffsets = cellOffsets.ToArray(),
 				CellTypes = cellTypes.ToArray(),
-				PointIdIndexMap = nodeIdIndexMap,
-				CellIdIndexMap = elementIdIndexMap,
+				Mapping = new ImportGeometryEntityMapping(oldToNewPointIdMap: nodeIdIndexMap, oldToNewCellIdMap: elementIdIndexMap)
 			};
 
 			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Values = elementProperties.ToArray() } };
