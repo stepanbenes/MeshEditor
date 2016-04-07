@@ -52,13 +52,15 @@ namespace MeshEditor.LayerManager.Data
 		private readonly Dictionary<int, int> newToOldCellPointIdMap;
 
 		private readonly Dictionary<int, EdgeIntersection> newPointIdToOldEdgeIntersectionMap;
-		
+		private readonly Dictionary<int, EdgeIntersection> newCellPointIdToOldEdgeIntersectionMap;
+
 		public FilterGeometryEntityMapping()
 		{
 			newToOldPointIdMap = new Dictionary<int, int>();
 			newToOldCellIdMap = new Dictionary<int, int>();
 			newToOldCellPointIdMap = new Dictionary<int, int>();
 			newPointIdToOldEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
+			newCellPointIdToOldEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
 		}
 
 		public void AddPointMapping(int newPointId, int oldPointId)
@@ -81,6 +83,11 @@ namespace MeshEditor.LayerManager.Data
 			newPointIdToOldEdgeIntersectionMap.Add(newPointId, edgeIntersection);
 		}
 
+		public void AddCellPointEdgeMapping(int newCellPointId, EdgeIntersection edgeIntersection)
+		{
+			newCellPointIdToOldEdgeIntersectionMap.Add(newCellPointId, edgeIntersection);
+		}
+
 
 		public bool TryGetOldPointId(int newPointId, out int oldPointId)
 		{
@@ -97,9 +104,14 @@ namespace MeshEditor.LayerManager.Data
 			return newToOldCellPointIdMap.TryGetValue(newCellPointId, out oldCellPointId);
 		}
 
-		public bool TryGetOldEdgeIntersection(int newPointId, out EdgeIntersection edgeIntersection)
+		public bool TryGetOldPointEdgeIntersection(int newPointId, out EdgeIntersection edgeIntersection)
 		{
 			return newPointIdToOldEdgeIntersectionMap.TryGetValue(newPointId, out edgeIntersection);
+		}
+
+		public bool TryGetOldCellPointEdgeIntersection(int newCellPointId, out EdgeIntersection edgeIntersection)
+		{
+			return newCellPointIdToOldEdgeIntersectionMap.TryGetValue(newCellPointId, out edgeIntersection);
 		}
 	}
 }

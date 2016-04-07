@@ -216,9 +216,12 @@ namespace MeshEditor.LayerManager
 							{
 								newValues[newPointIndex] = oldAttribute.Values[oldIndex];
 							}
-							else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryGetOldPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
 							{
-								throw new NotImplementedException();
+								newValues[newPointIndex] = interpolateAttributeValue(
+									firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
+									secondAttributeValue: oldAttribute.Values[oldEdgeIntersection.SecondPointId],
+									edgeCoordinate: oldEdgeIntersection.Coordinate);
 							}
 							//else -> no attribute value (zero is default)
 						}
@@ -229,9 +232,17 @@ namespace MeshEditor.LayerManager
 							for (int newCellPointIndex = 0; newCellPointIndex < newValues.Length; newCellPointIndex++)
 							{
 								int oldCellPointIndex;
+								EdgeIntersection oldEdgeIntersection;
 								if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
 								{
 									newValues[newCellPointIndex] = oldAttribute.Values[oldCellPointIndex];
+								}
+								else if (mapping.TryGetOldCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+								{
+									newValues[newCellPointIndex] = interpolateAttributeValue(
+										firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
+										secondAttributeValue: oldAttribute.Values[oldEdgeIntersection.SecondPointId],
+										edgeCoordinate: oldEdgeIntersection.Coordinate);
 								}
 								//else -> no attribute value (zero is default)
 							}
@@ -288,9 +299,15 @@ namespace MeshEditor.LayerManager
 									newValues[newPointIndex * componentCount + componentIndex] = oldResult.Values[oldPointIndex * componentCount + componentIndex];
 								}
 							}
-							else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryGetOldPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
 							{
-								throw new NotImplementedException();
+								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+								{
+									newValues[newPointIndex * componentCount + componentIndex] = interpolateDataValue(
+										firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId * componentCount + componentIndex],
+										secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId * componentCount + componentIndex],
+										edgeCoordinate: oldEdgeIntersection.Coordinate);
+								}
 							}
 							else
 							{
@@ -303,6 +320,7 @@ namespace MeshEditor.LayerManager
 						for (int newCellPointIndex = 0; newCellPointIndex < filteredGeometry.CellConnectivity.Length; newCellPointIndex++)
 						{
 							int oldCellPointIndex;
+							EdgeIntersection oldEdgeIntersection;
 							if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
 							{
 								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
@@ -310,7 +328,16 @@ namespace MeshEditor.LayerManager
 									newValues[newCellPointIndex * componentCount + componentIndex] = oldResult.Values[oldCellPointIndex * componentCount + componentIndex];
 								}
 							}
-							// else if edge-intersection
+							else if (mapping.TryGetOldCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+							{
+								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+								{
+									newValues[newCellPointIndex * componentCount + componentIndex] = interpolateDataValue(
+										firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId * componentCount + componentIndex],
+										secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId * componentCount + componentIndex],
+										edgeCoordinate: oldEdgeIntersection.Coordinate);
+								}
+							}
 							else
 							{
 								newValues.FillRange(EMPTY_VALUE, newCellPointIndex * componentCount, componentCount);
@@ -353,6 +380,20 @@ namespace MeshEditor.LayerManager
 
 				yield return newResult;
 			}
+		}
+
+		private static int interpolateAttributeValue(int firstAttributeValue, int secondAttributeValue, float edgeCoordinate)
+		{
+			if (firstAttributeValue != secondAttributeValue)
+				return 0;
+			return firstAttributeValue;
+		}
+
+		private static double interpolateDataValue(double firstDataValue, double secondDataValue, float edgeCoordinate)
+		{
+			//if (double.IsNaN(firstDataValue) || double.IsNaN(secondDataValue))
+			//	return double.NaN;
+			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
 		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<DataDescription> dataDescriptions, FilterBase filter)
