@@ -33,6 +33,7 @@ namespace MeshEditor.LayerManager.Data
 			oldToNewCellIdMap.Add(oldCellId, newCellId);
 		}
 
+
 		public bool TryGetNewPointId(int oldPointId, out int newPointId)
 		{
 			return oldToNewPointIdMap.TryGetValue(oldPointId, out newPointId);
@@ -48,16 +49,15 @@ namespace MeshEditor.LayerManager.Data
 	{
 		private readonly Dictionary<int, int> newToOldPointIdMap;
 		private readonly Dictionary<int, int> newToOldCellIdMap;
+		private readonly Dictionary<int, int> newToOldCellPointIdMap;
+
 		private readonly Dictionary<int, EdgeIntersection> newPointIdToOldEdgeIntersectionMap;
-
-		// private readonly Dictionary<int, int> newToOldCellPointIdMap;
-		// private readonly Dictionary<int, EdgeIntersection> newCellPointIdToOldEdgeIntersectionMap; // edge has two cell point indexes
-		// TODO: add methods for filling dictionaries, do not pass it through ctor, e.g., newToOldPointIdMap and newCellPointIdToOldEdgeIntersectionMap has to be entangled
-
+		
 		public FilterGeometryEntityMapping()
 		{
 			newToOldPointIdMap = new Dictionary<int, int>();
 			newToOldCellIdMap = new Dictionary<int, int>();
+			newToOldCellPointIdMap = new Dictionary<int, int>();
 			newPointIdToOldEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
 		}
 
@@ -71,10 +71,16 @@ namespace MeshEditor.LayerManager.Data
 			newToOldCellIdMap.Add(newCellId, oldCellId);
 		}
 
+		public void AddCellPointMapping(int newCellPointId, int oldCellPointId)
+		{
+			newToOldCellPointIdMap.Add(newCellPointId, oldCellPointId);
+		}
+
 		public void AddPointEdgeMapping(int newPointId, EdgeIntersection edgeIntersection)
 		{
 			newPointIdToOldEdgeIntersectionMap.Add(newPointId, edgeIntersection);
 		}
+
 
 		public bool TryGetOldPointId(int newPointId, out int oldPointId)
 		{
@@ -84,6 +90,11 @@ namespace MeshEditor.LayerManager.Data
 		public bool TryGetOldCellId(int newCellId, out int oldCellId)
 		{
 			return newToOldCellIdMap.TryGetValue(newCellId, out oldCellId);
+		}
+
+		public bool TryGetOldCellPointId(int newCellPointId, out int oldCellPointId)
+		{
+			return newToOldCellPointIdMap.TryGetValue(newCellPointId, out oldCellPointId);
 		}
 
 		public bool TryGetOldEdgeIntersection(int newPointId, out EdgeIntersection edgeIntersection)

@@ -56,5 +56,23 @@ namespace MeshEditor.LayerManager.Common
 
 			Array.Copy(destinationArray, 0, destinationArray, copyLength, destinationArray.Length - copyLength);
 		}
+
+		public static void FillRange<T>(this T[] array, T value, int index, int count)
+		{
+			if (array == null)
+			{
+				throw new ArgumentNullException(nameof(array));
+			}
+
+			if (index + count >= array.Length)
+			{
+				throw new ArgumentException("Length of array must be less than index + count");
+			}
+
+			for (int i = 0; i < count; i++)
+			{
+				array[index + i] = value;
+			}
+		}
 	}
 }

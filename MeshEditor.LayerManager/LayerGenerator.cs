@@ -224,9 +224,19 @@ namespace MeshEditor.LayerManager
 						}
 						break;
 					case DataLocationType.CellPoints:
-
-						throw new NotImplementedException();
-
+						newValues = new int[filteredGeometry.CellConnectivity.Length];
+						{
+							for (int newCellPointIndex = 0; newCellPointIndex < newValues.Length; newCellPointIndex++)
+							{
+								int oldCellPointIndex;
+								if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
+								{
+									newValues[newCellPointIndex] = oldAttribute.Values[oldCellPointIndex];
+								}
+								//else -> no attribute value (zero is default)
+							}
+						}
+						break;
 					case DataLocationType.Cells:
 						newValues = new int[filteredGeometry.NumberOfCells];
 						for (int newCellIndex = 0; newCellIndex < newValues.Length; newCellIndex++)
@@ -262,51 +272,66 @@ namespace MeshEditor.LayerManager
 			{
 				int componentCount = oldResult.NumberOfComponents;
 				double[] newValues;
-				
+
 				switch (oldResult.Location)
 				{
 					case DataLocationType.Points:
 						newValues = new double[filteredGeometry.NumberOfPoints * componentCount];
 						for (int newPointIndex = 0; newPointIndex < filteredGeometry.NumberOfPoints; newPointIndex++)
 						{
-							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+							int oldPointIndex;
+							EdgeIntersection oldEdgeIntersection;
+							if (mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
 							{
-								int oldPointIndex;
-								EdgeIntersection oldEdgeIntersection;
-								if (mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
+								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
 								{
 									newValues[newPointIndex * componentCount + componentIndex] = oldResult.Values[oldPointIndex * componentCount + componentIndex];
 								}
-								else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
-								{
-									throw new NotImplementedException();
-								}
-								else
-								{
-									newValues[newPointIndex * componentCount + componentIndex] = EMPTY_VALUE;
-								}
+							}
+							else if (mapping.TryGetOldEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							{
+								throw new NotImplementedException();
+							}
+							else
+							{
+								newValues.FillRange(EMPTY_VALUE, newPointIndex * componentCount, componentCount);
 							}
 						}
 						break;
 					case DataLocationType.CellPoints:
-
-						throw new NotImplementedException();
-
+						newValues = new double[filteredGeometry.CellConnectivity.Length * componentCount];
+						for (int newCellPointIndex = 0; newCellPointIndex < filteredGeometry.CellConnectivity.Length; newCellPointIndex++)
+						{
+							int oldCellPointIndex;
+							if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
+							{
+								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+								{
+									newValues[newCellPointIndex * componentCount + componentIndex] = oldResult.Values[oldCellPointIndex * componentCount + componentIndex];
+								}
+							}
+							// else if edge-intersection
+							else
+							{
+								newValues.FillRange(EMPTY_VALUE, newCellPointIndex * componentCount, componentCount);
+							}
+						}
+						break;
 					case DataLocationType.Cells:
 						newValues = new double[filteredGeometry.NumberOfCells * componentCount];
 						for (int newCellIndex = 0; newCellIndex < filteredGeometry.NumberOfCells; newCellIndex++)
 						{
-							for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
+							int oldCellIndex;
+							if (mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
 							{
-								int oldCellIndex;
-								if (mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
+								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
 								{
 									newValues[newCellIndex * componentCount + componentIndex] = oldResult.Values[oldCellIndex * componentCount + componentIndex];
 								}
-								else
-								{
-									newValues[newCellIndex * componentCount + componentIndex] = EMPTY_VALUE;
-								}
+							}
+							else
+							{
+								newValues.FillRange(EMPTY_VALUE, newCellIndex * componentCount, componentCount);
 							}
 						}
 						break;
@@ -322,7 +347,7 @@ namespace MeshEditor.LayerManager
 
 					FieldType = oldResult.FieldType,
 					Location = oldResult.Location,
-					NumberOfComponents = oldResult.NumberOfComponents,
+					NumberOfComponents = componentCount,
 					Values = newValues
 				};
 
@@ -567,6 +592,8 @@ namespace MeshEditor.LayerManager
 					{
 						int pointIndex = geometry.CellConnectivity[offset];
 						remainingPointIndices.Add(pointIndex);
+
+						mapping.AddCellPointMapping(newCellPointId: cellConnectivity.Count, oldCellPointId: offset);
 						cellConnectivity.Add(pointIndex);
 					}
 					cellOffsets.Add(cellConnectivity.Count);
