@@ -71,25 +71,7 @@ namespace MeshEditor.FormatConverter
 
 		private static int runFilterCommand(FilterOptions options)
 		{
-			FilterBase filter;
-			switch (options.FilterType)
-			{
-				case FilterType.AttributeSelection:
-					filter = new AttributeSelectionFilter
-					{
-						AttributeName = options.FilterParameters.First(),
-						AttributeSelection = options.FilterParameters.Skip(1).Select(p => int.Parse(p)).ToArray()
-					};
-					break;
-				case FilterType.Surface:
-				case FilterType.Slice:
-				case FilterType.Clip:
-				case FilterType.IsoSurface:
-				case FilterType.StreamLines:
-					throw new NotImplementedException();
-				default:
-					throw new NotSupportedException();
-			}
+			FilterBase filter = FilterFactory.Create(options.FilterType, options.FilterParameters);
 
 			string currentDirectory = Directory.GetCurrentDirectory() + "/";
 

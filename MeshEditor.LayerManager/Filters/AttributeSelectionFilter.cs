@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Filters
 {
-	public class AttributeSelectionFilter : FilterBase
+	internal class AttributeSelectionFilter : FilterBase
 	{
 		public override FilterType Type => FilterType.AttributeSelection;
 

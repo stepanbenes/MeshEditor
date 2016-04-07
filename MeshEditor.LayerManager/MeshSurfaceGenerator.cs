@@ -8,7 +8,7 @@ using MeshEditor.LayerManager.Import;
 
 namespace MeshEditor.LayerManager
 {
-	class MeshFaceGenerator
+	internal class MeshSurfaceGenerator
 	{
 		#region Static members
 

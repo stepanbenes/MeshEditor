@@ -86,8 +86,11 @@ namespace MeshEditor.LayerManager
 			switch (filter.Type)
 			{
 				case FilterType.Surface:
+					// TODO: use MeshSurfaceGenerator
 				case FilterType.Slice:
+					// TODO: use MeshSliceGenerator
 				case FilterType.Clip:
+					// TODO: use MeshSliceGenerator
 				case FilterType.IsoSurface:
 				case FilterType.StreamLines:
 					throw new NotImplementedException();

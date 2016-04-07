@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Serialization
 {
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 	internal class EnumValueTypeSelectorAttribute : Attribute
 	{
 		public object EnumValue { get; }

@@ -10,6 +10,7 @@ using Newtonsoft.Json.Converters;
 namespace MeshEditor.LayerManager.Filters
 {
 	[EnumValueTypeSelector(FilterType.AttributeSelection, typeof(AttributeSelectionFilter), enumPropertyName: nameof(Type))]
+	[EnumValueTypeSelector(FilterType.Slice, typeof(SliceFilter), enumPropertyName: nameof(Type))]
 	public abstract class FilterBase
 	{
 		[JsonConverter(typeof(StringEnumConverter))]
