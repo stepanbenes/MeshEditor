@@ -8,24 +8,23 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
 
-namespace MeshEditor.LayerManager
+namespace MeshEditor.LayerManager.Import
 {
-	public static class DataFormatParserFactory
+	public static class GeometryFormatParserFactory
 	{
-		public static IDataImportService Create(IReadStorageService storageService, IEnumerable<Uri> uris)
+		public static IGeometryImportService Create(IReadStorageService storageService, Uri uri)
 		{
-			Debug.Assert(uris != null);
-			Debug.Assert(uris.Count() > 0);
+			Debug.Assert(uri != null);
 
-			var extension = Path.GetExtension(uris.First().LocalPath).ToLower();
+			var extension = Path.GetExtension(uri.LocalPath).ToLower();
 			// pick the right loader according to filename extension
 			switch (extension)
 			{
-				case ".res": // GiD results 
-					return new GiDDataFormatParser(storageService, uris);
+				case ".msh": // GiD mesh 
+					return new GiDGeometryFormatParser(storageService, uri);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlDataFormatParser(storageService, uris);
-
+					return new VTKXmlGeometryFormatParser(storageService, uri);
+				
 				default:
 					throw new NotSupportedException();
 			}

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
 
-namespace MeshEditor.LayerManager
+namespace MeshEditor.LayerManager.MeshFiltering
 {
 	internal class MeshSurfaceGenerator
 	{
