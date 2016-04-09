@@ -433,9 +433,9 @@ namespace MeshEditor.LayerManager
 			{
 				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
 
-				DataLayerFile layerElementProperties = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
-				storeLayerFile(layerElementProperties, location, layerDirectory, $"{layerId}.{layerElementProperties.Index}.attribute");
-				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(layerElementProperties));
+				DataLayerFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
+				storeLayerFile(elementPropertyAttributeLayer, location, layerDirectory, $"{layerId}.{elementPropertyAttributeLayer.Index}.attribute");
+				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;
 			}
 			layerSummary.Attributes = attributeDescriptors.ToArray();

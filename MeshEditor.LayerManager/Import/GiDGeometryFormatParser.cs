@@ -203,7 +203,7 @@ namespace MeshEditor.LayerManager.Import
 				Mapping = mapping
 			};
 
-			attributes = new[] { new AttributeDescription { Name = "ElementProperties", Location = DataLocationType.Cells, Values = elementProperties.ToArray() } };
+			attributes = new[] { new AttributeDescription { Name = "ElementProperty", Location = DataLocationType.Cells, Values = elementProperties.ToArray() } };
 
 			return geometry;
 		}
