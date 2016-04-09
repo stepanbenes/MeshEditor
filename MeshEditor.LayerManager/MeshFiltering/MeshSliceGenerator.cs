@@ -30,6 +30,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			Vector3 planeNormal = new Vector3(sliceFilter.NormalX, sliceFilter.NormalY, sliceFilter.NormalZ);
 			planeNormal.Normalize();
 
+			// TODO: share intersections between neighboring cells
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
 				List<EdgeIntersection> intersectionInfoList;
@@ -37,24 +38,20 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				if (!getIntersectionsWithElement(cellIndex, planeNormal, sliceFilter.Offset, out intersectionInfoList, out intersections))
 					continue;
 
-				int[] indices;
+				Debug.Assert(intersectionInfoList.Count == intersections.Length);
 
-				//if (intersections.Length == 2)
-				//{
-				//	if (element is Element2D)
-				//	{
-				//		indices = new int[] { 0, 1 };
+				if (intersections.Length == 2)
+				{
+					if (GeometryDescription.GetDimensionOfCellType(geometry.CellTypes[cellIndex]) == 2) // 2D cell
+					{
+						int point1 = geometryBuilder.AddPoint(intersections[0], convertCellPointsToPointsInEdgeIntersection(intersectionInfoList[0]));
+						int point2 = geometryBuilder.AddPoint(intersections[1], convertCellPointsToPointsInEdgeIntersection(intersectionInfoList[1]));
+						geometryBuilder.AddCell(CellType.LineLinear, cellIndex, new[] { point1, point2 }, new[] { intersectionInfoList[0], intersectionInfoList[1] });
+					}
+					continue;
+				}
 
-				//		lineVertexIndices.Add(vertices.Count);
-				//		//vertices.Add(intersections[0]);
-				//		addIntersectionVertex(vertices, intersections, intersectionInfoList, indices, 0);
-
-				//		lineVertexIndices.Add(vertices.Count);
-				//		//vertices.Add(intersections[1]);
-				//		addIntersectionVertex(vertices, intersections, intersectionInfoList, indices, 1);
-				//	}
-				//	continue;
-				//}
+				Debug.Assert(intersections.Length > 2);
 
 				Vector3 pivot = Vector3.Zero;
 				for (int i = 0; i < intersections.Length; i++)
@@ -63,7 +60,6 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				}
 				pivot /= (float)intersections.Length;
 
-				//float[] intersectionAngles = new float[intersections.Count];
 				Vector3 firstVector = intersections[0] - pivot;
 
 				if (firstVector == Vector3.Zero) // all intersections are same, do not cut element - section plane incides only with one point in element
@@ -75,7 +71,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				for (int i = 1; i < intersections.Length; i++)
 				{
 					Vector3 secondVector = intersections[i] - pivot;
-					//System.Diagnostics.Debug.Assert(secondVector != Vector3.Zero);
+					//Debug.Assert(secondVector != Vector3.Zero);
 					if (secondVector == Vector3.Zero) // TODO: vyresit nulovy vektor nebo blizky nule
 						continue;
 					secondVector.Normalize();
@@ -83,51 +79,34 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					intersectionAngles[i] = intersectionAngle;
 				}
 
-				indices = new int[intersections.Length];
-				for (int i = 0; i < indices.Length; i++)
+				int[] intersectionIndices = new int[intersections.Length];
+				for (int i = 0; i < intersectionIndices.Length; i++)
 				{
-					indices[i] = i;
+					intersectionIndices[i] = i;
 				}
 
 				Comparison<int> compareAngles = (index1, index2) => intersectionAngles[index1].CompareTo(intersectionAngles[index2]);
 
-				Array.Sort(indices, compareAngles);
+				Array.Sort(intersectionIndices, compareAngles);
 
-				//int firstIndex = vertices.Count;
-
-				// add vertexes to vertex list and add indexes of edge vertexes to edgeVertexIndices list
-				for (int i = 1; i < intersections.Length - 1; i++)
+				int[] connectivityIndices = new int[intersections.Length];
+				for (int i = 0; i < intersectionIndices.Length; i++)
 				{
-					int point1 = geometryBuilder.AddPoint(intersections[indices[0]]);
-					int point2 = geometryBuilder.AddPoint(intersections[indices[i]]);
-					int point3 = geometryBuilder.AddPoint(intersections[indices[i + 1]]);
-
-					geometryBuilder.AddCell(CellType.TriangleLinear, point1, point2, point3);
-
-					//triangleVertexIndices.Add(vertices.Count);
-					//addIntersectionVertex(vertices, intersections, intersectionInfoList, indices, 0);
-
-					//edgeVertexIndices.Add(vertices.Count);
-					//triangleVertexIndices.Add(vertices.Count);
-					//addIntersectionVertex(vertices, intersections, intersectionInfoList, indices, i);
-					//edgeVertexIndices.Add(vertices.Count);
-					//triangleVertexIndices.Add(vertices.Count);
-					//addIntersectionVertex(vertices, intersections, intersectionInfoList, indices, i + 1);
+					connectivityIndices[i] = geometryBuilder.AddPoint(intersections[intersectionIndices[i]], convertCellPointsToPointsInEdgeIntersection(intersectionInfoList[intersectionIndices[i]]));
 				}
 
-				//int lastIndex = vertices.Count - 1;
+				for (int i = 1; i < intersections.Length - 1; i++)
+				{
+					geometryBuilder.AddCell(CellType.TriangleLinear, cellIndex, new[] { connectivityIndices[0], connectivityIndices[i], connectivityIndices[i + 1] }, new[] { intersectionInfoList[intersectionIndices[0]], intersectionInfoList[intersectionIndices[i]], intersectionInfoList[intersectionIndices[i + 1]] });
+					geometryBuilder.AddEdge(connectivityIndices[i], connectivityIndices[i + 1]);
+				}
 
-				//edgeVertexIndices.Add(lastIndex);
-				//edgeVertexIndices.Add(firstIndex);
-				//edgeVertexIndices.Add(firstIndex);
-				//edgeVertexIndices.Add(firstIndex + 1);
-
-				//crossedElements.Add(new ElementCountPair(element, lastIndex - firstIndex + 1));
+				geometryBuilder.AddEdge(connectivityIndices[0], connectivityIndices[1]);
+				geometryBuilder.AddEdge(connectivityIndices[connectivityIndices.Length - 1], connectivityIndices[0]);
 
 			} // end of element loop
 
 			GeometryDescription slice = geometryBuilder.Build();
-			slice.Mapping = new FilterGeometryEntityMapping(); /**/
 			return slice;
 		}
 
@@ -186,16 +165,24 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			int baseOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 			for (int i = 0; i < edgePointIndexArray.Length; i += 2)
 			{
-				int firstIndex = geometry.CellConnectivity[baseOffset + edgePointIndexArray[i]];
-				int secondIndex = geometry.CellConnectivity[baseOffset + edgePointIndexArray[i + 1]];
-				Vector3 firstPoint = getPointCoordinates(firstIndex);
-				Vector3 secondPoint = getPointCoordinates(secondIndex);
+				int firstIndex = baseOffset + edgePointIndexArray[i];
+				int secondIndex = baseOffset + edgePointIndexArray[i + 1];
+				Vector3 firstPoint = getPointCoordinates(geometry.CellConnectivity[firstIndex]);
+				Vector3 secondPoint = getPointCoordinates(geometry.CellConnectivity[secondIndex]);
 				float intersection;
 				if (ComputationalGeometry.LinePlaneIntersection(firstPoint, secondPoint, ref planeNormal, planeOffset, out intersection))
 				{
 					yield return new EdgeIntersection(firstIndex, secondIndex, intersection);
 				}
 			}
+		}
+
+		private EdgeIntersection convertCellPointsToPointsInEdgeIntersection(EdgeIntersection cellPointEdgeIntersection)
+		{
+			return new EdgeIntersection(
+				geometry.CellConnectivity[cellPointEdgeIntersection.FirstPointId],
+				geometry.CellConnectivity[cellPointEdgeIntersection.SecondPointId],
+				cellPointEdgeIntersection.Coordinate);
 		}
 
 		private bool getIntersectionsWithElement(int cellIndex, Vector3 planeNormal, float planeOffset, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections)
@@ -228,7 +215,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			int uniqueCount = 0;
 			for (int i = 0; i < intersectionInfoList.Count; i++)
 			{
-				Vector3 temp = getIntersectionPoint(intersectionInfoList[i]);
+				EdgeIntersection edgeIntersection = convertCellPointsToPointsInEdgeIntersection(intersectionInfoList[i]);
+				Vector3 temp = getIntersectionPoint(edgeIntersection);
 				if (hashTest.Add(temp)) // check if already exists
 				{
 					intersections[uniqueCount++] = temp;

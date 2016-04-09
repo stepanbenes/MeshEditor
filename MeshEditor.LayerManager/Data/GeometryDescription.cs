@@ -56,6 +56,32 @@ namespace MeshEditor.LayerManager.Data
 			}
 		}
 
+		public static int GetDimensionOfCellType(CellType cellType)
+		{
+			switch (cellType)
+			{
+				case CellType.Point:
+					return 0;
+				case CellType.LineLinear:
+				case CellType.LineQuadratic:
+					return 1;
+				case CellType.TriangleLinear:
+				case CellType.TriangleQuadratic:
+				case CellType.QuadLinear:
+				case CellType.QuadQuadratic:
+					return 2;
+				case CellType.TetraLinear:
+				case CellType.TetraQuadratic:
+				case CellType.WedgeLinear:
+				case CellType.WedgeQuadratic:
+				case CellType.HexaLinear:
+				case CellType.HexaQuadratic:
+					return 3;
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
 		#endregion
 	}
 }
