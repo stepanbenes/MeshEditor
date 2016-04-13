@@ -10,6 +10,7 @@ using Newtonsoft.Json.Converters;
 namespace MeshEditor.LayerManager.Compression
 {
 	[EnumValueTypeSelector(CompressionMethod.SVD, typeof(SVDCompressionParameters), enumPropertyName: nameof(Method))]
+	[EnumValueTypeSelector(CompressionMethod.WT, typeof(WaveletCompressionParameters), enumPropertyName: nameof(Method))]
 	public class CompressionParameters
 	{
 		[JsonConverter(typeof(StringEnumConverter))]

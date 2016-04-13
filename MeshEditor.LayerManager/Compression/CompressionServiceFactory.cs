@@ -17,7 +17,7 @@ namespace MeshEditor.LayerManager.Compression
 				case CompressionMethod.SVD:
 					return new SVDCompressionService();
 				case CompressionMethod.WT:
-					throw new NotImplementedException();
+					return new WaveletCompressionService();
 				default:
 					throw new NotSupportedException();
 			}

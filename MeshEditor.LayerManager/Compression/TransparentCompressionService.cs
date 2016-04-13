@@ -10,16 +10,10 @@ namespace MeshEditor.LayerManager.Compression
 {
 	internal class TransparentCompressionService : ICompressionService
 	{
-		#region Public methods
+		#region Static members
 
-		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
+		public static double[] LinearizeDataRows(IEnumerable<double[]> dataValues, int rows, int columns)
 		{
-			parameters = new CompressionParameters
-			{
-				Rows = rows,
-				Columns = columns,
-			};
-
 			if (rows == 1)
 			{
 				return dataValues.Single();
@@ -38,24 +32,42 @@ namespace MeshEditor.LayerManager.Compression
 			//return dataValues.SelectMany(row => row).ToArray();
 		}
 
+		public static IEnumerable<double[]> EnumerateDataRows(double[] linearizedDataValues, int rows, int columns)
+		{
+			Debug.Assert(linearizedDataValues.Length == rows * columns);
+			if (rows == 1) // optimize for single row
+			{
+				return Enumerable.Repeat(linearizedDataValues, 1); // return original array
+			}
+			return splitToChunks(linearizedDataValues, columns);
+		}
+
+		#endregion
+
+		#region Public methods
+
+		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
+		{
+			parameters = new CompressionParameters
+			{
+				Rows = rows,
+				Columns = columns,
+			};
+			return LinearizeDataRows(dataValues, rows, columns);
+		}
+
 		public IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters)
 		{
 			Debug.Assert(parameters != null);
 			Debug.Assert(parameters.Method == CompressionMethod.None);
-
-			Debug.Assert(compressedData.Length == parameters.Rows * parameters.Columns);
-			if (parameters.Rows == 1) // optimize for single row
-			{
-				return Enumerable.Repeat(compressedData, 1); // return original array
-			}
-			return splitToChunks(compressedData, parameters.Columns);
+			return EnumerateDataRows(compressedData, parameters.Rows, parameters.Columns);
 		}
 
 		#endregion
 
 		#region Private methods
 
-		private IEnumerable<double[]> splitToChunks(double[] array, int chunkLength)
+		private static IEnumerable<double[]> splitToChunks(double[] array, int chunkLength)
 		{
 			Debug.Assert(chunkLength <= array.Length);
 			Debug.Assert(array.Length % chunkLength == 0);
