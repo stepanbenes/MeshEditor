@@ -19,9 +19,63 @@ namespace MeshEditor.LayerManager
 {
 	public class LayerGenerator
 	{
-		#region Fields, constructor
+		#region Static members
 
 		private static readonly CellType DefaultCellType = CellType.TriangleLinear;
+
+		private class CompressionCounter
+		{
+			long inputDataLength;
+			long compressedDataLength;
+			long encodedDataLength;
+
+			public void Increment(CompressionParameters compression, EncodingParameters encoding)
+			{
+				inputDataLength += (long)compression.Rows * compression.Columns;
+				compressedDataLength += encoding.OriginalLength;
+				encodedDataLength += encoding.Length;
+			}
+
+			public double GetCompressionFactor()
+			{
+				return (double)compressedDataLength / inputDataLength;
+			}
+
+			public double GetEncodingFactor()
+			{
+				return (double)encodedDataLength / compressedDataLength;
+			}
+
+			public double GetOverallFactor()
+			{
+				return (double)encodedDataLength / inputDataLength;
+			}
+
+			public long GetMemoryConsumption()
+			{
+				return encodedDataLength * sizeof(double);
+			}
+
+			public override string ToString()
+			{
+				StringBuilder text = new StringBuilder();
+				text.AppendLine("| OVERVIEW:");
+				text.Append("| compression factor: ");
+				text.AppendLine(GetCompressionFactor().ToString());
+				text.Append("| encoding factor: ");
+				text.AppendLine(GetEncodingFactor().ToString());
+				text.Append("| overall factor: ");
+				text.AppendLine(GetOverallFactor().ToString());
+				text.Append("| memory consumption: ");
+				text.Append(GetMemoryConsumption().ToString());
+				text.Append(" bytes");
+				return text.ToString();
+			}
+		}
+
+		#endregion
+
+		#region Fields, constructor
 
 		IReadStorageService sourceStorage;
 		IWriteStorageService destinationStorage;
@@ -470,6 +524,7 @@ namespace MeshEditor.LayerManager
 
 			var resultDescriptors = new List<DataLayerDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
+			var compressionCounter = new CompressionCounter();
 			foreach (var dataDescriptionGroup in dataDescriptionGroups)
 			{
 				DataDescription firstDataField = dataDescriptionGroup.FirstOrDefault();
@@ -488,6 +543,7 @@ namespace MeshEditor.LayerManager
 							timeStepsHashSet.Add(timeStep);
 						}
 						storeLayerFile(layerResult, getLayerResultFileUri(location, layerId, layerResult.Index));
+						compressionCounter.Increment(layerResult.Compression, layerResult.Encoding);
 						resultIndex += 1;
 					}
 				}
@@ -499,6 +555,8 @@ namespace MeshEditor.LayerManager
 			progressReporter?.Report(new OperationState("Generating summary file"));
 
 			storeLayerFile(layerSummary, getLayerSummaryFileUri(location, layerId));
+
+			progressReporter?.Report(new OperationState(compressionCounter.ToString()));
 
 			return layerSummary;
 		}
