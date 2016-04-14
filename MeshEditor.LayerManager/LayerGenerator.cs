@@ -762,7 +762,7 @@ namespace MeshEditor.LayerManager
 
 				double range = maxValue - minValue;
 				double maxRelativeErrorPerComponent = (range > 0.0) ? maxAbsoluteError / range : 0.0;
-				double averageRelativeErrorPerComponent = (numberOfDataValuesPerComponent > 0) ? absoluteErrorSum / numberOfDataValuesPerComponent : 0.0;
+				double averageRelativeErrorPerComponent = (range > 0.0 && numberOfDataValuesPerComponent > 0) ? absoluteErrorSum / (range * numberOfDataValuesPerComponent) : 0.0;
 				maxRelativeError = Math.Max(maxRelativeError, maxRelativeErrorPerComponent);
 				averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValuesPerComponent;
 				numberOfDataValues += numberOfDataValuesPerComponent;
