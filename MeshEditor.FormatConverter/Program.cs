@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.IO;
 using System.Threading;
 using System.Globalization;
@@ -9,7 +8,6 @@ using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.LayerManager.Common;
 using CommandLine;
-using Newtonsoft.Json;
 using MeshEditor.LayerManager.Infrastructure;
 using MeshEditor.LayerManager.Filters;
 using System.Collections.Generic;
@@ -45,12 +43,10 @@ namespace MeshEditor.FormatConverter
 
 		#region Fields, constructor
 
-		IProgress<OperationState> progress;
 		Stopwatch stopwatch;
 
 		public Program()
 		{
-			progress = createProgressReporter();
 			stopwatch = new Stopwatch();
 			stopwatch.Start();
 		}
@@ -72,7 +68,7 @@ namespace MeshEditor.FormatConverter
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, projectDirectory));
 			IDataImportService dataImportService = options.ResultFiles.Any() ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, projectDirectory))) : null;
-			var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
+			var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(projectDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 			logNewLayer(masterLayer);
 			string projectName = options.ProjectName ?? Path.GetFileNameWithoutExtension(options.MeshFile);
@@ -93,7 +89,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.ParentLayer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
+					var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
 					var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(projectDirectory), layer.Id, filter, options.LayerName);
 					logNewLayer(filterLayer);
 					// convert filter layer to layer record and append it to parent layer's children
@@ -111,7 +107,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method), progressReporter: options.Verbose ? progress : null);
+					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method), progressReporter: createProgressReporter(options));
 					var compressedLayer = layerGenerator.CompressLayer(new Uri(projectDirectory), layer.Id, $"time compression ({options.Method})", options.FieldName, options.ComponentName);
 					logNewLayer(compressedLayer);
 					// convert filter layer to layer record and append it to parent layer's children
@@ -129,7 +125,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
+					var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
 					var diff = layerGenerator.CreateDiff(new Uri(projectDirectory), layer.Id);
 					logMessage(diff.ToString());
 				},
@@ -237,22 +233,19 @@ namespace MeshEditor.FormatConverter
 			return null;
 		}
 
+		private IProgress<OperationState> createProgressReporter(Options options)
+		{
+			return options.Verbose ? new Progress<OperationState>
+				(
+					state => logMessage(state.State)
+				)
+				:
+				null;
+		}
+
 		private void logNewLayer(SummaryLayerFile layerSummary)
 		{
 			logMessage($"layer name: {layerSummary.Name}, layer id: {layerSummary.Id}");
-		}
-
-		private IProgress<OperationState> createProgressReporter()
-		{
-			return new Progress<OperationState>
-				(
-					state => logMessage(state.State)
-				);
-		}
-
-		private void logMessage(string message)
-		{
-			Console.WriteLine(message);
 		}
 
 		//private static void clearCurrentConsoleLine()
@@ -270,6 +263,11 @@ namespace MeshEditor.FormatConverter
 				return new Uri(path);
 			}
 			return new Uri(Path.Combine(basePath, path));
+		}
+
+		private void logMessage(string message)
+		{
+			Console.WriteLine(message);
 		}
 
 		#endregion
