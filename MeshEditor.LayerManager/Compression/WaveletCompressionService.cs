@@ -36,7 +36,7 @@ namespace MeshEditor.LayerManager.Compression
 				}
 			}
 
-			const int ITERATIONS_COUNT = 2;
+			const int ITERATIONS_COUNT = 1;
 
 			parameters = new WaveletCompressionParameters
 			{
@@ -48,7 +48,7 @@ namespace MeshEditor.LayerManager.Compression
 			};
 
 			// TODO: do 2D transform instead of sequence of 1D transforms
-			return TransparentCompressionService.LinearizeDataRows(dataValues.Select(row => FWT(row, ITERATIONS_COUNT, minValue, maxValue)), rows, columns);
+			return TransparentCompressionService.LinearizeDataRows(allValues.Select(row => FWT(row, ITERATIONS_COUNT, minValue, maxValue)), rows, columns);
 		}
 
 		public IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters)
@@ -83,10 +83,10 @@ namespace MeshEditor.LayerManager.Compression
 				usableLength >>= 1;
 			}
 
-			for (int i = usableLength; i < scaledInput.Length; i++) // throw away details
-			{
-				scaledInput[i] = 0.0;
-			}
+			//for (int i = usableLength; i < scaledInput.Length; i++) // throw away details
+			//{
+			//	scaledInput[i] = 0.0;
+			//}
 
 			return shrink(scaledInput, input.Length);
 		}
@@ -184,6 +184,7 @@ namespace MeshEditor.LayerManager.Compression
 			double[] result = array;
 			Array.Resize(ref result, newLength); // enlarge
 			Debug.Assert(!ReferenceEquals(result, array));
+			Debug.Assert(array.Length == newLength);
 			return result;
 		}
 
@@ -191,6 +192,7 @@ namespace MeshEditor.LayerManager.Compression
 		{
 			double[] result = array;
 			Array.Resize(ref result, newLength);
+			Debug.Assert(array.Length == newLength);
 			return result;
 		}
 

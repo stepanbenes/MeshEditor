@@ -100,7 +100,11 @@ namespace MeshEditor.FormatConverter
 				layer =>
 				{
 					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method));
-					layerGenerator.CompressLayer(new Uri(projectDirectory), layer.Id, options.FieldName, options.ComponentName);
+					var compressedLayer = layerGenerator.CompressLayer(new Uri(projectDirectory), layer.Id, $"time compression ({options.Method})", options.FieldName, options.ComponentName);
+
+					// convert filter layer to layer record and append it to parent layer's children
+					var childLayer = SolutionBuilder.CreateLayerRecordFromFilterLayer(compressedLayer);
+					layer.Children = layer.Children.EmptyIfNull().Append(childLayer).ToArray();
 				},
 				updateSolutionFile: true
 			);

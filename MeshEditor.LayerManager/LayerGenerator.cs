@@ -62,7 +62,7 @@ namespace MeshEditor.LayerManager
 			IReadOnlyList<AttributeDescription> attributeDescriptions;
 			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
 			IEnumerable<DataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>();
-			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, geometry, attributeDescriptions, dataDescriptions, filter: null);
+			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
 			return layerFile;
 		}
 
@@ -124,10 +124,10 @@ namespace MeshEditor.LayerManager
 			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
 			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
 
-			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions, filter);
+			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
 		}
 
-		public void CompressLayer(Uri location, Guid layerId, string field = null, string component = null)
+		public SummaryLayerFile CompressLayer(Uri location, Guid layerId, string layerName = null, string fieldName = null, string componentName = null)
 		{
 			string layerDirectory = $"{layerId}/";
 			Uri layerFileUri = new Uri(location, $"{layerDirectory}{layerId}.layer.json");
@@ -139,36 +139,16 @@ namespace MeshEditor.LayerManager
 				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
-			var resultGroups = from result in layerSummary.Results
-							   where (field == null || field == result.FieldName) && (component == null || component == result.ComponentName)
-							   group result by new { result.FieldName, result.ComponentName } into g
-							   select g;
-
-			var resultDescriptors = new List<DataLayerDescriptor>();
-			int dataIndex = 1;
-			foreach (var resultGroup in resultGroups)
-			{
-				Uri[] resultFileUris = resultGroup.Select(result => new Uri(location, $"{layerDirectory}{layerId}.{result.Index}.result.json")).ToArray();
-				Debug.Assert(resultFileUris.Length > 0);
-				DataDescription firstDataField = LoadData(resultFileUris[0]).Single(); // TODO: support already compressed results
-				IEnumerable<DataDescription> restDataFields = resultFileUris.Skip(1).Select(uri => LoadData(uri).Single()); // TODO: support already compressed results
-				DataLayerFile dataLayerFile = createLayerResultFromDataDescriptions(firstDataField, restDataFields, resultFileUris.Length, 0, layerId, dataIndex);
-
-				storeLayerFile(dataLayerFile, location, layerDirectory, $"{layerId}.{dataIndex}.result");
-
-				resultDescriptors.Add(DataLayerDescriptor.CreateFrom(dataLayerFile));
-				dataIndex += 1;
-			}
-
-			// delete all previous result files (not overwritten by new result files)
-			foreach (int dataIndexToDelete in layerSummary.Results.Select(r => r.Index).Where(i => i >= dataIndex))
-			{
-				Uri fileToDelete = new Uri(location, $"{layerDirectory}{layerId}.{dataIndexToDelete}.result.json");
-				destinationStorage.Delete(fileToDelete);
-			}
-
-			layerSummary.Results = resultDescriptors.ToArray(); // update descriptors
-			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer"); // save updated summary file
+			Uri meshFileUri = new Uri(location, $"{layerDirectory}{layerId}.mesh.json");
+			GeometryDescription geometry = LoadGeometry(meshFileUri);
+			var attributeFileUris = layerSummary.Attributes.Select(a => new Uri(location, $"{layerDirectory}{layerId}.{a.Index}.attribute.json"));
+			IEnumerable<AttributeDescription> attributeDescriptions = attributeFileUris.Select(uri => LoadAttribute(uri));
+			var dataDescriptionGroups = from result in layerSummary.Results
+										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
+										group result by new { result.FieldName, result.ComponentName } into g
+										select g.SelectMany(r => LoadData(new Uri(location, $"{layerDirectory}{layerId}.{r.Index}.result.json"))).ToList(); /*WARNING: eager evaluation*/
+			FilterBase filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
+			return generateLayerFiles(location, layerName ?? "time compression", geometry, attributeDescriptions, dataDescriptionGroups, filter);
 		}
 
 		public LayerDiff CreateDiff(Uri location, Guid layerId)
@@ -412,7 +392,7 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<DataDescription> dataDescriptions, FilterBase filter)
+		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyCollection<DataDescription>> dataDescriptionGroups, FilterBase filter)
 		{
 			Guid layerId = Guid.NewGuid();
 
@@ -447,20 +427,26 @@ namespace MeshEditor.LayerManager
 
 			var resultDescriptors = new List<DataLayerDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
-			foreach (var dataField in dataDescriptions)
+			foreach (var dataDescriptionGroup in dataDescriptionGroups)
 			{
-				progressReporter?.Report(new OperationState($"Generating result file for field '{dataField.Name}' (time step: {dataField.TimeStep})"));
-
-				for (int componentIndex = 0; componentIndex < dataField.NumberOfComponents; componentIndex++)
+				DataDescription firstDataField = dataDescriptionGroup.FirstOrDefault();
+				if (firstDataField != null)
 				{
-					var layerResult = createLayerResultFromDataDescriptions(dataField, Enumerable.Empty<DataDescription>(), 1, componentIndex, layerId, resultIndex);
-					resultDescriptors.Add(DataLayerDescriptor.CreateFrom(layerResult));
-					foreach (var timeStep in layerResult.TimeSteps)
+					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
+
+					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' (time step: {firstDataField.TimeStep})"));
+
+					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
-						timeStepsHashSet.Add(timeStep);
+						var layerResult = createLayerResultFromDataDescriptions(firstDataField, restDataFields, dataDescriptionGroup.Count, componentIndex, layerId, resultIndex);
+						resultDescriptors.Add(DataLayerDescriptor.CreateFrom(layerResult));
+						foreach (var timeStep in layerResult.TimeSteps)
+						{
+							timeStepsHashSet.Add(timeStep);
+						}
+						storeLayerFile(layerResult, location, layerDirectory, $"{layerId}.{layerResult.Index}.result");
+						resultIndex += 1;
 					}
-					storeLayerFile(layerResult, location, layerDirectory, $"{layerId}.{layerResult.Index}.result");
-					resultIndex += 1;
 				}
 			}
 

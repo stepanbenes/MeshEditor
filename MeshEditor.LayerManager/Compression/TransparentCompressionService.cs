@@ -37,6 +37,7 @@ namespace MeshEditor.LayerManager.Compression
 			Debug.Assert(linearizedDataValues.Length == rows * columns);
 			if (rows == 1) // optimize for single row
 			{
+				Debug.Assert(linearizedDataValues.Length == columns);
 				return Enumerable.Repeat(linearizedDataValues, 1); // return original array
 			}
 			return splitToChunks(linearizedDataValues, columns);

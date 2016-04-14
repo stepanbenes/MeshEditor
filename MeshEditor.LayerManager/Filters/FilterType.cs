@@ -14,5 +14,6 @@ namespace MeshEditor.LayerManager.Filters
 		IsoSurface, // surface with constant data value
 		StreamLines,
 		AttributeSelection, // e.g. elements with specific property
+		TimeCompression,
 	}
 }

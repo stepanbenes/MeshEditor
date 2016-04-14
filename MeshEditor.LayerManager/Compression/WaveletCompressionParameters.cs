@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Compression
 {
-	class WaveletCompressionParameters : CompressionParameters
+	public class WaveletCompressionParameters : CompressionParameters
 	{
 		public override CompressionMethod Method => CompressionMethod.WT;
 
