@@ -171,6 +171,11 @@ namespace MeshEditor.LayerManager
 			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer"); // save updated summary file
 		}
 
+		public LayerDiff CreateDiff(Uri location, Guid layerId)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void AppendDataToLayer(Uri location, Guid layerId, IDataImportService dataImportService)
 		{
 			throw new NotImplementedException();

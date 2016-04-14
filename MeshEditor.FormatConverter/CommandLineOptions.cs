@@ -16,6 +16,9 @@ namespace MeshEditor.FormatConverter
 		// Omitting long name, default --verbose
 		[Option(HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
+
+		[Option("directory", Required = false, HelpText = "Project location (if differs from current directory)")]
+		public string Directory { get; set; }
 	}
 	
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
@@ -67,5 +70,15 @@ namespace MeshEditor.FormatConverter
 
 		[Option("component", Required = false, HelpText = "Name of Component of field to compress")]
 		public string ComponentName { get; set; }
+	}
+
+	[Verb("diff", HelpText = "Compare two layers")]
+	class DiffOptions : Options
+	{
+		[Value(index: 0, MetaName = "Layer to compare with its parent", Required = true, HelpText = "layer's guid or name")]
+		public string Layer { get; set; }
+
+		[Option("project", Required = false, HelpText = "Project name")]
+		public override string ProjectName { get; set; }
 	}
 }
