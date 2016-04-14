@@ -26,106 +26,115 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions>(args)
-				.MapResult(
-				(ImportOptions options) => runImportCommand(options),
-				(FilterOptions options) => runFilterCommand(options),
-				(CompressOptions options) => runCompressCommand(options),
-				(DiffOptions options) => runDiffCommand(options),
-				errors => 1);
+			var program = new Program();
+			try
+			{
+				return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions>(args)
+					.MapResult(
+					(ImportOptions options) => program.runImportCommand(options),
+					(FilterOptions options) => program.runFilterCommand(options),
+					(CompressOptions options) => program.runCompressCommand(options),
+					(DiffOptions options) => program.runDiffCommand(options),
+					errors => 1);
+			}
+			finally
+			{
+				program.GoodBye();
+			}
 		}
+
+		#region Fields, constructor
+
+		IProgress<OperationState> progress;
+		Stopwatch stopwatch;
+
+		public Program()
+		{
+			progress = createProgressReporter();
+			stopwatch = new Stopwatch();
+			stopwatch.Start();
+		}
+
+		public void GoodBye()
+		{
+			stopwatch.Stop();
+			logMessage($"Done in {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}.");
+		}
+
+		#endregion
 
 		#region Commands
 
-		private static int runImportCommand(ImportOptions options)
+		private int runImportCommand(ImportOptions options)
 		{
-			Stopwatch stopwatch = new Stopwatch();
-			stopwatch.Start();
-			IProgress<OperationState> progress = options.Verbose ? createProgressReporter() : null;
-
 			const string masterLayerName = "master";
 			string projectDirectory = getProjectLocation(options);
-
 			IStorageService localStorage = new LocalFileSystemStorageService();
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, projectDirectory));
 			IDataImportService dataImportService = options.ResultFiles.Any() ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, projectDirectory))) : null;
-			var layerGenerator = new LayerGenerator(progressReporter: progress);
+			var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(projectDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
-
+			logNewLayer(masterLayer);
 			string projectName = options.ProjectName ?? Path.GetFileNameWithoutExtension(options.MeshFile);
-
 			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, projectName);
-
 			string projectNameAsValidFileName = projectName.MakeAlphanumericFilename();
 			using (Stream stream = localStorage.Save(new Uri(Path.Combine(projectDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
 				ISerializationService serializer = new JsonSerializationService();
 				serializer.Serialize(solution, stream);
 			}
-
-			stopwatch.Stop();
-			clearCurrentConsoleLine();
-			Console.WriteLine($"Done in {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}.");
-
 			return 0;
 		}
 
-		private static int runFilterCommand(FilterOptions options)
+		private int runFilterCommand(FilterOptions options)
 		{
 			FilterBase filter = FilterFactory.Create(options.FilterType, options.FilterParameters);
-
 			string projectDirectory = getProjectLocation(options);
-
 			processLayer(projectDirectory, options.ProjectName, options.ParentLayer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator();
+					var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
 					var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(projectDirectory), layer.Id, filter, options.LayerName);
-
+					logNewLayer(filterLayer);
 					// convert filter layer to layer record and append it to parent layer's children
 					var childLayer = SolutionBuilder.CreateLayerRecordFromFilterLayer(filterLayer);
 					layer.Children = layer.Children.EmptyIfNull().Append(childLayer).ToArray();
 				},
 				updateSolutionFile: true
 			);
-
 			return 0;
 		}
 
-		private static int runCompressCommand(CompressOptions options)
+		private int runCompressCommand(CompressOptions options)
 		{
 			string projectDirectory = getProjectLocation(options);
-
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method));
+					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method), progressReporter: options.Verbose ? progress : null);
 					var compressedLayer = layerGenerator.CompressLayer(new Uri(projectDirectory), layer.Id, $"time compression ({options.Method})", options.FieldName, options.ComponentName);
-
+					logNewLayer(compressedLayer);
 					// convert filter layer to layer record and append it to parent layer's children
 					var childLayer = SolutionBuilder.CreateLayerRecordFromFilterLayer(compressedLayer);
 					layer.Children = layer.Children.EmptyIfNull().Append(childLayer).ToArray();
 				},
 				updateSolutionFile: true
 			);
-
 			return 0;
 		}
 
-		private static int runDiffCommand(DiffOptions options)
+		private int runDiffCommand(DiffOptions options)
 		{
 			string projectDirectory = getProjectLocation(options);
-
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator();
+					var layerGenerator = new LayerGenerator(progressReporter: options.Verbose ? progress : null);
 					var diff = layerGenerator.CreateDiff(new Uri(projectDirectory), layer.Id);
-					Console.WriteLine(diff);
+					logMessage(diff.ToString());
 				},
 				updateSolutionFile: false
 			);
-
 			return 0;
 		}
 
@@ -228,30 +237,31 @@ namespace MeshEditor.FormatConverter
 			return null;
 		}
 
-		private static IProgress<OperationState> createProgressReporter()
+		private void logNewLayer(SummaryLayerFile layerSummary)
+		{
+			logMessage($"layer name: {layerSummary.Name}, layer id: {layerSummary.Id}");
+		}
+
+		private IProgress<OperationState> createProgressReporter()
 		{
 			return new Progress<OperationState>
 				(
-					state =>
-					{
-						clearCurrentConsoleLine();
-						Console.Write(state.State);
-						if (state.PercentDone.HasValue)
-						{
-							Console.Write(state.PercentDone);
-						}
-						Console.Write(" ");
-					}
+					state => logMessage(state.State)
 				);
 		}
 
-		private static void clearCurrentConsoleLine()
+		private void logMessage(string message)
 		{
-			int currentLine = Console.CursorTop;
-			Console.SetCursorPosition(0, currentLine);
-			Console.Write(new string(' ', Console.WindowWidth));
-			Console.SetCursorPosition(0, currentLine);
+			Console.WriteLine(message);
 		}
+
+		//private static void clearCurrentConsoleLine()
+		//{
+		//	int currentLine = Console.CursorTop;
+		//	Console.SetCursorPosition(0, currentLine);
+		//	Console.Write(new string(' ', Console.WindowWidth));
+		//	Console.SetCursorPosition(0, currentLine);
+		//}
 
 		private static Uri convertToUri(string path, string basePath)
 		{

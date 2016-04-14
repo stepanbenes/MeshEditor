@@ -62,7 +62,7 @@ namespace MeshEditor.LayerManager
 			IReadOnlyList<AttributeDescription> attributeDescriptions;
 			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
 			IEnumerable<DataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>();
-			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
+			SummaryLayerFile layerFile = generateLayerFiles(location, layerName, null, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
 			return layerFile;
 		}
 
@@ -86,7 +86,7 @@ namespace MeshEditor.LayerManager
 			switch (filter.Type)
 			{
 				case FilterType.Surface:
-					// TODO: use MeshSurfaceGenerator
+				// TODO: use MeshSurfaceGenerator
 				case FilterType.Slice:
 					{
 						var sliceFilter = (SliceFilter)filter;
@@ -96,7 +96,7 @@ namespace MeshEditor.LayerManager
 					}
 					break;
 				case FilterType.Clip:
-					// TODO: use MeshSliceGenerator
+				// TODO: use MeshSliceGenerator
 				case FilterType.IsoSurface:
 				case FilterType.StreamLines:
 					throw new NotImplementedException();
@@ -123,7 +123,7 @@ namespace MeshEditor.LayerManager
 			var originalResultFileUris = parentLayer.Results.Select(r => getLayerResultFileUri(location, parentLayerId, r.Index));
 			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
 
-			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
+			return generateLayerFiles(location, filterLayerName, parentLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
 		}
 
 		public SummaryLayerFile CompressLayer(Uri location, Guid layerId, string layerName = null, string fieldName = null, string componentName = null)
@@ -141,17 +141,62 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = LoadGeometry(meshFileUri);
 			var attributeFileUris = layerSummary.Attributes.Select(a => getLayerAttributeFileUri(location, layerId, a.Index));
 			IEnumerable<AttributeDescription> attributeDescriptions = attributeFileUris.Select(uri => LoadAttribute(uri));
+			FilterBase filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
+
 			var dataDescriptionGroups = from result in layerSummary.Results
 										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
 										group result by new { result.FieldName, result.ComponentName } into g
 										select g.SelectMany(r => LoadData(getLayerResultFileUri(location, layerId, r.Index))).ToList(); /*WARNING: eager evaluation*/
-			FilterBase filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
-			return generateLayerFiles(location, layerName ?? "time compression", geometry, attributeDescriptions, dataDescriptionGroups, filter);
+
+			return generateLayerFiles(location, layerName ?? "time compression", layerId, geometry, attributeDescriptions, dataDescriptionGroups, filter);
 		}
 
 		public LayerDiff CreateDiff(Uri location, Guid layerId)
 		{
-			throw new NotImplementedException();
+			Uri layerFileUri = getLayerSummaryFileUri(location, layerId);
+			SummaryLayerFile layerSummary;
+			using (var stream = sourceStorage.Load(layerFileUri))
+				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+
+			if (!layerSummary.ParentId.HasValue)
+				throw new ArgumentException("Layer is master layer (has no parent), can't create diff.");
+
+			Uri parentLayerFileUri = getLayerSummaryFileUri(location, layerSummary.ParentId.Value);
+			SummaryLayerFile parentLayerSummary;
+			using (var stream = sourceStorage.Load(parentLayerFileUri))
+				parentLayerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+
+			var firstResults = from result in parentLayerSummary.Results
+							   select getLayerResultFileUri(location, parentLayerSummary.Id, result.Index) into uri
+							   from data in LoadData(uri)
+							   select data;
+
+			var secondResults = from result in layerSummary.Results
+								select getLayerResultFileUri(location, layerSummary.Id, result.Index) into uri
+								from data in LoadData(uri)
+								select data;
+
+			var diffs = from a in firstResults
+						join b in secondResults on new { Field = a.Name, Component = a.ComponentNames.Single(), a.TimeStep } equals new { Field = b.Name, Component = b.ComponentNames.Single(), b.TimeStep }
+						select compareTwoDataDescriptions(a, b);
+
+			int numberOfDataComponents = 0;
+			int numberOfDataValues = 0;
+			double maxRelativeError = double.MinValue;
+			double averageRelativeErrorWeightedSum = 0.0;
+			double standardDeviation = double.NaN; /**/
+
+			foreach (var diff in diffs)
+			{
+				numberOfDataComponents += diff.NumberOfDataComponents;
+				numberOfDataValues += diff.NumberOfDataValues;
+				maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
+				averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
+			}
+
+			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
+
+			return new LayerDiff(numberOfDataComponents, numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation);
 		}
 
 		public void AppendDataToLayer(Uri location, Guid layerId, IDataImportService dataImportService)
@@ -390,7 +435,7 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyCollection<DataDescription>> dataDescriptionGroups, FilterBase filter)
+		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyCollection<DataDescription>> dataDescriptionGroups, FilterBase filter)
 		{
 			Guid layerId = Guid.NewGuid();
 
@@ -398,7 +443,7 @@ namespace MeshEditor.LayerManager
 			{
 				Id = layerId,
 				Name = layerName,
-				ParentId = null,
+				ParentId = parentLayerId,
 				Filter = filter,
 			};
 
@@ -687,6 +732,43 @@ namespace MeshEditor.LayerManager
 		{
 			Uri layerDirectoryUri = getLayerDirectoryUri(projectLocation, layerId);
 			return new Uri(layerDirectoryUri, $"{layerId}.{index}.result{serializationService.FileExtension}");
+		}
+
+		private static LayerDiff compareTwoDataDescriptions(DataDescription a, DataDescription b)
+		{
+			Debug.Assert(a.Values.Length == b.Values.Length);
+			Debug.Assert(a.NumberOfComponents == b.NumberOfComponents);
+			double maxRelativeError = double.MinValue;
+			double averageRelativeErrorWeightedSum = 0.0;
+			int numberOfDataValues = 0;
+			for (int component = 0; component < a.NumberOfComponents; component++)
+			{
+				double minValue = double.MaxValue, maxValue = double.MinValue;
+				double maxAbsoluteError = double.MinValue;
+				double absoluteErrorSum = 0.0;
+				int numberOfDataValuesPerComponent = 0;
+
+				for (int i = component; i < a.Values.Length; i += a.NumberOfComponents)
+				{
+					if (double.IsNaN(a.Values[i]) || double.IsNaN(b.Values[i]))
+						continue;
+					minValue = Math.Min(minValue, Math.Min(a.Values[i], b.Values[i]));
+					maxValue = Math.Max(maxValue, Math.Max(a.Values[i], b.Values[i]));
+					double error = Math.Abs(a.Values[i] - b.Values[i]);
+					maxAbsoluteError = Math.Max(maxAbsoluteError, error);
+					absoluteErrorSum += error;
+					numberOfDataValuesPerComponent += 1;
+				}
+
+				double range = maxValue - minValue;
+				double maxRelativeErrorPerComponent = (range > 0.0) ? maxAbsoluteError / range : 0.0;
+				double averageRelativeErrorPerComponent = (numberOfDataValuesPerComponent > 0) ? absoluteErrorSum / numberOfDataValuesPerComponent : 0.0;
+				maxRelativeError = Math.Max(maxRelativeError, maxRelativeErrorPerComponent);
+				averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValuesPerComponent;
+				numberOfDataValues += numberOfDataValuesPerComponent;
+			}
+			double averageRelativeError = (numberOfDataValues > 0) ? averageRelativeErrorWeightedSum / numberOfDataValues : 0.0;
+			return new LayerDiff(a.NumberOfComponents, numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation: double.NaN);
 		}
 
 		#endregion

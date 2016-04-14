@@ -184,7 +184,7 @@ namespace MeshEditor.LayerManager.Compression
 			double[] result = array;
 			Array.Resize(ref result, newLength); // enlarge
 			Debug.Assert(!ReferenceEquals(result, array));
-			Debug.Assert(array.Length == newLength);
+			Debug.Assert(result.Length == newLength);
 			return result;
 		}
 
@@ -192,7 +192,7 @@ namespace MeshEditor.LayerManager.Compression
 		{
 			double[] result = array;
 			Array.Resize(ref result, newLength);
-			Debug.Assert(array.Length == newLength);
+			Debug.Assert(result.Length == newLength);
 			return result;
 		}
 
