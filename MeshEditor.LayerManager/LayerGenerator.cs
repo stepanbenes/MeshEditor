@@ -68,8 +68,7 @@ namespace MeshEditor.LayerManager
 
 		public SummaryLayerFile GenerateFilterLayer(Uri location, Guid parentLayerId, FilterBase filter, string layerName = null)
 		{
-			Uri layerDirectoryUri = new Uri(location, $"{parentLayerId}/");
-			Uri parentLayerFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.layer.json");
+			Uri parentLayerFileUri = getLayerSummaryFileUri(location, parentLayerId);
 
 			// find parentLayer in storage and download summary
 			SummaryLayerFile parentLayer;
@@ -78,7 +77,7 @@ namespace MeshEditor.LayerManager
 				parentLayer = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
-			Uri meshFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.mesh.json");
+			Uri meshFileUri = getLayerMeshFileUri(location, parentLayerId);
 
 			GeometryDescription originalGeometry = LoadGeometry(meshFileUri);
 			GeometryDescription filteredGeometry;
@@ -105,7 +104,7 @@ namespace MeshEditor.LayerManager
 					{
 						var attributeSelectionFilter = (AttributeSelectionFilter)filter;
 						var attributeDescriptor = parentLayer.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-						var attributeFileUri = new Uri(layerDirectoryUri, $"{parentLayerId}.{attributeDescriptor.Index}.attribute.json");
+						var attributeFileUri = getLayerAttributeFileUri(location, parentLayerId, attributeDescriptor.Index);
 						var attribute = LoadAttribute(attributeFileUri);
 						var meshPartitionGenerator = new MeshPartitionGenerator(originalGeometry);
 						filteredGeometry = meshPartitionGenerator.FilterGeometryByAttribute(attributeSelectionFilter, attribute);
@@ -117,11 +116,11 @@ namespace MeshEditor.LayerManager
 			}
 
 			// filter attributes
-			var originalAttributeFileUris = parentLayer.Attributes.Select(a => new Uri(layerDirectoryUri, $"{parentLayerId}.{a.Index}.attribute.json"));
+			var originalAttributeFileUris = parentLayer.Attributes.Select(a => getLayerAttributeFileUri(location, parentLayerId, a.Index));
 			IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeFileUris);
 
 			// filter results
-			var originalResultFileUris = parentLayer.Results.Select(r => new Uri(layerDirectoryUri, $"{parentLayerId}.{r.Index}.result.json"));
+			var originalResultFileUris = parentLayer.Results.Select(r => getLayerResultFileUri(location, parentLayerId, r.Index));
 			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultFileUris);
 
 			return generateLayerFiles(location, filterLayerName, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
@@ -129,8 +128,7 @@ namespace MeshEditor.LayerManager
 
 		public SummaryLayerFile CompressLayer(Uri location, Guid layerId, string layerName = null, string fieldName = null, string componentName = null)
 		{
-			string layerDirectory = $"{layerId}/";
-			Uri layerFileUri = new Uri(location, $"{layerDirectory}{layerId}.layer.json");
+			Uri layerFileUri = getLayerSummaryFileUri(location, layerId);
 
 			// find layer in storage and download summary
 			SummaryLayerFile layerSummary;
@@ -139,14 +137,14 @@ namespace MeshEditor.LayerManager
 				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
-			Uri meshFileUri = new Uri(location, $"{layerDirectory}{layerId}.mesh.json");
+			Uri meshFileUri = getLayerMeshFileUri(location, layerId);
 			GeometryDescription geometry = LoadGeometry(meshFileUri);
-			var attributeFileUris = layerSummary.Attributes.Select(a => new Uri(location, $"{layerDirectory}{layerId}.{a.Index}.attribute.json"));
+			var attributeFileUris = layerSummary.Attributes.Select(a => getLayerAttributeFileUri(location, layerId, a.Index));
 			IEnumerable<AttributeDescription> attributeDescriptions = attributeFileUris.Select(uri => LoadAttribute(uri));
 			var dataDescriptionGroups = from result in layerSummary.Results
 										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
 										group result by new { result.FieldName, result.ComponentName } into g
-										select g.SelectMany(r => LoadData(new Uri(location, $"{layerDirectory}{layerId}.{r.Index}.result.json"))).ToList(); /*WARNING: eager evaluation*/
+										select g.SelectMany(r => LoadData(getLayerResultFileUri(location, layerId, r.Index))).ToList(); /*WARNING: eager evaluation*/
 			FilterBase filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
 			return generateLayerFiles(location, layerName ?? "time compression", geometry, attributeDescriptions, dataDescriptionGroups, filter);
 		}
@@ -409,7 +407,7 @@ namespace MeshEditor.LayerManager
 			progressReporter?.Report(new OperationState("Generating mesh file"));
 
 			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
-			storeLayerFile(layerMesh, location, layerDirectory, $"{layerId}.mesh");
+			storeLayerFile(layerMesh, getLayerMeshFileUri(location, layerId));
 
 			int attributeIndex = 1, resultIndex = 1;
 
@@ -419,7 +417,7 @@ namespace MeshEditor.LayerManager
 				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
 
 				DataLayerFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
-				storeLayerFile(elementPropertyAttributeLayer, location, layerDirectory, $"{layerId}.{elementPropertyAttributeLayer.Index}.attribute");
+				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeFileUri(location, layerId, elementPropertyAttributeLayer.Index));
 				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;
 			}
@@ -444,7 +442,7 @@ namespace MeshEditor.LayerManager
 						{
 							timeStepsHashSet.Add(timeStep);
 						}
-						storeLayerFile(layerResult, location, layerDirectory, $"{layerId}.{layerResult.Index}.result");
+						storeLayerFile(layerResult, getLayerResultFileUri(location, layerId, layerResult.Index));
 						resultIndex += 1;
 					}
 				}
@@ -455,7 +453,7 @@ namespace MeshEditor.LayerManager
 
 			progressReporter?.Report(new OperationState("Generating summary file"));
 
-			storeLayerFile(layerSummary, location, layerDirectory, $"{layerId}.layer");
+			storeLayerFile(layerSummary, getLayerSummaryFileUri(location, layerId));
 
 			return layerSummary;
 		}
@@ -618,9 +616,8 @@ namespace MeshEditor.LayerManager
 			return attribute;
 		}
 
-		private void storeLayerFile<T>(T layerObject, Uri location, string layerDirectory, string recordName)
+		private void storeLayerFile<T>(T layerObject, Uri uri)
 		{
-			Uri uri = new Uri(location, Path.Combine(layerDirectory ?? "", recordName + serializationService.FileExtension));
 			using (Stream stream = destinationStorage.Save(uri))
 			{
 				serializationService.Serialize(layerObject, stream);
@@ -661,6 +658,35 @@ namespace MeshEditor.LayerManager
 		{
 			EncodingParameters encodingParameters = new EncodingParameters { OriginalLength = originalLength, Length = originalLength };
 			return encodingService.Decode<T>(data, expandEnd ? TrimOptions.End : TrimOptions.None, encodingParameters);
+		}
+
+		private static Uri getLayerDirectoryUri(Uri projectLocation, Guid layerId)
+		{
+			return new Uri(projectLocation, $"{layerId}/");
+		}
+
+		private Uri getLayerSummaryFileUri(Uri projectLocation, Guid layerId)
+		{
+			Uri layerDirectoryUri = getLayerDirectoryUri(projectLocation, layerId);
+			return new Uri(layerDirectoryUri, $"{layerId}.summary{serializationService.FileExtension}");
+		}
+
+		private Uri getLayerMeshFileUri(Uri projectLocation, Guid layerId)
+		{
+			Uri layerDirectoryUri = getLayerDirectoryUri(projectLocation, layerId);
+			return new Uri(layerDirectoryUri, $"{layerId}.mesh{serializationService.FileExtension}");
+		}
+
+		private Uri getLayerAttributeFileUri(Uri projectLocation, Guid layerId, int index)
+		{
+			Uri layerDirectoryUri = getLayerDirectoryUri(projectLocation, layerId);
+			return new Uri(layerDirectoryUri, $"{layerId}.{index}.attribute{serializationService.FileExtension}");
+		}
+
+		private Uri getLayerResultFileUri(Uri projectLocation, Guid layerId, int index)
+		{
+			Uri layerDirectoryUri = getLayerDirectoryUri(projectLocation, layerId);
+			return new Uri(layerDirectoryUri, $"{layerId}.{index}.result{serializationService.FileExtension}");
 		}
 
 		#endregion
