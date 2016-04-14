@@ -95,12 +95,15 @@ namespace MeshEditor.LayerManager.Compression
 		{
 			int newLength = findClosestNumberDivisibleBy(number: input.Length, divider: 1 << iterations);
 			double[] result = enlarge(input, newLength);
-			int usableLength = result.Length >> (iterations - 1);
-			Debug.Assert(usableLength > 1);
-			for (int i = 0; i < iterations; i++)
+			if (iterations > 0)
 			{
-				IWTiteration(result, usableLength);
-				usableLength <<= 1;
+				int usableLength = result.Length >> (iterations - 1);
+				Debug.Assert(usableLength > 1);
+				for (int i = 0; i < iterations; i++)
+				{
+					IWTiteration(result, usableLength);
+					usableLength <<= 1;
+				}
 			}
 			for (int i = 0; i < input.Length; i++)
 			{

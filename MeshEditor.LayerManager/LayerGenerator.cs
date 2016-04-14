@@ -677,8 +677,8 @@ namespace MeshEditor.LayerManager
 
 		private IEnumerable<double[]> decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
-			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method);
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
+			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method);
 			IEnumerable<double[]> originalDataValues = selectedCompressionService.Decompress(compressedValues, compressionParameters);
 			return originalDataValues;
 		}

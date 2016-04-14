@@ -56,6 +56,7 @@
     <Compile Include="Common\StringExtensions.cs" />
     <Compile Include="Compression\CompressionMethod.cs" />
     <Compile Include="Compression\CompressionServiceFactory.cs" />
+    <Compile Include="Compression\TransparentCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionService.cs" />
     <Compile Include="Data\LayerDiff.cs" />

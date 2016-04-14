@@ -49,7 +49,7 @@ namespace MeshEditor.LayerManager.Compression
 
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
-			parameters = new CompressionParameters
+			parameters = new TransparentCompressionParameters
 			{
 				Rows = rows,
 				Columns = columns,
