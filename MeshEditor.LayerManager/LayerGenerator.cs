@@ -435,7 +435,7 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyCollection<DataDescription>> dataDescriptionGroups, FilterBase filter)
+		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, FilterBase filter)
 		{
 			Guid layerId = Guid.NewGuid();
 
@@ -477,7 +477,7 @@ namespace MeshEditor.LayerManager
 				{
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
-					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' (time step: {firstDataField.TimeStep})"));
+					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
