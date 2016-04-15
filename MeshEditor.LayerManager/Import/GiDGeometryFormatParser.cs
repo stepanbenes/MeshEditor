@@ -37,12 +37,12 @@ namespace MeshEditor.LayerManager.Import
 		#region Fields, constructor
 
 		IReadStorageService storageService;
-		Uri uri;
+		string recordName;
 
-		public GiDGeometryFormatParser(IReadStorageService storageService, Uri uri)
+		public GiDGeometryFormatParser(IReadStorageService storageService, string recordName)
 		{
 			this.storageService = storageService;
-			this.uri = uri;
+			this.recordName = recordName;
 		}
 
 		#endregion
@@ -63,7 +63,7 @@ namespace MeshEditor.LayerManager.Import
 			int numberOfElements = 0;
 			ImportGeometryEntityMapping mapping = new ImportGeometryEntityMapping();
 
-			using (Stream fileStream = storageService.Load(uri))
+			using (Stream fileStream = storageService.Load(recordName))
 			using (TextReader reader = new StreamReader(fileStream))
 			{
 				string line;

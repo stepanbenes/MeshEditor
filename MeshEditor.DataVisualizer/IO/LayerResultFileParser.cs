@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using MeshEditor.DataVisualizer.Data;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
+using MeshEditor.LayerManager.Storage;
 using MeshEditor.Utilities;
 
 namespace MeshEditor.DataVisualizer.IO
@@ -124,7 +126,8 @@ namespace MeshEditor.DataVisualizer.IO
 
 		private void initDataEnumerator()
 		{
-			dataEnumerator = new LayerGenerator().LoadData(new Uri(Filename)).GetEnumerator();
+			var localStorage = new LocalFileSystemStorageService(Path.GetDirectoryName(Filename));
+			dataEnumerator = new LayerGenerator(sourceStorage: localStorage, destinationStorage: null).LoadData(Path.GetFileName(Filename)).GetEnumerator();
 		}
 
 		#endregion

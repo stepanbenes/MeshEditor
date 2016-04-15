@@ -10,26 +10,23 @@ namespace MeshEditor.FormatConverter
 {
 	class AzureBlobStorageService : IStorageService
 	{
-		public string ConnectionString { get; }
-		public string BlobContainerName { get; }
 
 		public AzureBlobStorageService(string connectionString, string blobContainerName)
 		{
-			ConnectionString = connectionString;
-			BlobContainerName = blobContainerName;
+			// TODO: create storage account...
 		}
 
-		public Stream Load(Uri uri)
+		public Stream Load(string record)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Stream Save(Uri uri)
+		public Stream Save(string record)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void Delete(Uri uri)
+		public void Delete(string record)
 		{
 			throw new NotImplementedException();
 		}

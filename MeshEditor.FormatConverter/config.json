@@ -1,11 +1,14 @@
 ﻿{
     "ImportStorage": {
-        "Type" :  "Local"
+        "Type": "Local",
+        "Directory": null
     },
     "LayerSourceStorage": {
-        "Type": "Local"
+        "Type": "Local",
+        "Directory": null
     },
     "LayerDestinationStorage": {
-        "Type": "Local"
+        "Type": "Local",
+        "Directory": null
     }
 }

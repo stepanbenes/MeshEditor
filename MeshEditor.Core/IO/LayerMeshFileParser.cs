@@ -72,7 +72,8 @@ namespace MeshEditor.IO
 
 		private void loadGeometry()
 		{
-			geometry = new LayerGenerator().LoadGeometry(meshFileUri: new Uri(Filename));
+			var localStorage = new LocalFileSystemStorageService(Path.GetDirectoryName(Filename));
+			geometry = new LayerGenerator(sourceStorage: localStorage, destinationStorage: null).LoadGeometry(Path.GetFileName(Filename));
 			/* TODO: load cell attributes */
 		}
 

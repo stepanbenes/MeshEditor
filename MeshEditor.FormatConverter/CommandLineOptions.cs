@@ -11,21 +11,19 @@ namespace MeshEditor.FormatConverter
 {
 	abstract class Options
 	{
-		public abstract string ProjectName { get; set; }
-
 		// Omitting long name, default --verbose
 		[Option(HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("directory", Required = false, HelpText = "Project location (if differs from current directory)")]
-		public string Directory { get; set; }
+		[Option("solutionfile", Required = false, HelpText = "Solution file location (if differs from current directory)")]
+		public string SolutionFile { get; set; }
 	}
 	
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : Options
 	{
 		[Value(index: 0, MetaName = "Project name", Required = false, HelpText = "Name of new project")]
-		public override string ProjectName { get; set; }
+		public string ProjectName { get; set; }
 
 		[Option('m', "mesh", Required = true, HelpText = "Mesh file to be processed.")]
 		public string MeshFile { get; set; }
@@ -43,9 +41,6 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 1, MetaName = "Filter type", Required = true, HelpText = "Name of filter to be applied on the parent layer")]
 		public FilterType FilterType { get; set; }
 
-		[Option("project", Required = false, HelpText = "Project name")]
-		public override string ProjectName { get; set; }
-
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
 
@@ -62,9 +57,6 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 1, Required = true, HelpText = "Compression method")]
 		public CompressionMethod Method { get; set; }
 
-		[Option("project", Required = false, HelpText = "Project name")]
-		public override string ProjectName { get; set; }
-
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }
 
@@ -77,8 +69,5 @@ namespace MeshEditor.FormatConverter
 	{
 		[Value(index: 0, MetaName = "Layer to compare with its parent", Required = true, HelpText = "layer's guid or name")]
 		public string Layer { get; set; }
-
-		[Option("project", Required = false, HelpText = "Project name")]
-		public override string ProjectName { get; set; }
 	}
 }

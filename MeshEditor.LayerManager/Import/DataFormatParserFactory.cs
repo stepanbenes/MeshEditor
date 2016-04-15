@@ -12,19 +12,19 @@ namespace MeshEditor.LayerManager.Import
 {
 	public static class DataFormatParserFactory
 	{
-		public static IDataImportService Create(IReadStorageService storageService, IEnumerable<Uri> uris)
+		public static IDataImportService Create(IReadStorageService storageService, IEnumerable<string> recordNames)
 		{
-			Debug.Assert(uris != null);
-			Debug.Assert(uris.Count() > 0);
+			Debug.Assert(recordNames != null);
+			Debug.Assert(recordNames.Count() > 0);
 
-			var extension = Path.GetExtension(uris.First().LocalPath).ToLower();
+			var extension = Path.GetExtension(recordNames.First()).ToLower();
 			// pick the right loader according to filename extension
 			switch (extension)
 			{
 				case ".res": // GiD results 
-					return new GiDDataFormatParser(storageService, uris);
+					return new GiDDataFormatParser(storageService, recordNames);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlDataFormatParser(storageService, uris);
+					return new VTKXmlDataFormatParser(storageService, recordNames);
 
 				default:
 					throw new NotSupportedException();

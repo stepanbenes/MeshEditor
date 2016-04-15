@@ -126,12 +126,12 @@ namespace MeshEditor.LayerManager.Import
 		#region Fields, Constructor
 
 		IReadStorageService storageService;
-		IEnumerable<Uri> uris;
+		IEnumerable<string> recordNames;
 
-		public GiDDataFormatParser(IReadStorageService storageService, IEnumerable<Uri> uris)
+		public GiDDataFormatParser(IReadStorageService storageService, IEnumerable<string> recordNames)
 		{
 			this.storageService = storageService;
-			this.uris = uris;
+			this.recordNames = recordNames;
 		}
 
 		#endregion
@@ -142,9 +142,9 @@ namespace MeshEditor.LayerManager.Import
 		{
 			// TODO: replace asserts with throws
 
-			foreach (Uri uri in uris)
+			foreach (string recordName in recordNames)
 			{
-				using (Stream fileStream = storageService.Load(uri))
+				using (Stream fileStream = storageService.Load(recordName))
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;

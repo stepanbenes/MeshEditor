@@ -14,20 +14,20 @@ namespace MeshEditor.LayerManager.Import
 	class VTKXmlDataFormatParser : VTKXmlFormatParserBase, IDataImportService
 	{
 		IReadStorageService storageService;
-		IEnumerable<Uri> uris;
+		IEnumerable<string> recordNames;
 
-		public VTKXmlDataFormatParser(IReadStorageService storageService, IEnumerable<Uri> uris)
+		public VTKXmlDataFormatParser(IReadStorageService storageService, IEnumerable<string> recordNames)
 		{
 			this.storageService = storageService;
-			this.uris = uris;
+			this.recordNames = recordNames;
 		}
 
 		public IEnumerable<DataDescription> ReadData(GeometryDescription ignored)
 		{
-			foreach (Uri uri in uris)
+			foreach (string recordName in recordNames)
 			{
-				double? timeStep = tryGetOrdinalFromFileName(uri.LocalPath);
-				using (Stream fileStream = storageService.Load(uri))
+				double? timeStep = tryGetOrdinalFromFileName(recordName);
+				using (Stream fileStream = storageService.Load(recordName))
 				{
 					string fileType;
 					using (XmlReader input = InitInput(fileStream, out fileType))

@@ -26,6 +26,7 @@ namespace MeshEditor.FormatConverter
 	class LocalStorageInfo : StorageInfo
 	{
 		public override StorageType Type => StorageType.Local;
+		public string Directory { get; set; }
 	}
 
 	class AzureBlobStorageInfo : StorageInfo

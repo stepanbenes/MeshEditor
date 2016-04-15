@@ -12,12 +12,12 @@ namespace MeshEditor.LayerManager.Storage
 
 	public interface IReadStorageService
 	{
-		Stream Load(Uri uri);
+		Stream Load(string record);
 	}
 
 	public interface IWriteStorageService
 	{
-		Stream Save(Uri uri);
-		void Delete(Uri uri);
+		Stream Save(string record);
+		void Delete(string record);
 	}
 }

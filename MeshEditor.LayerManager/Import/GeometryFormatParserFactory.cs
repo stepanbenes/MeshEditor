@@ -12,18 +12,18 @@ namespace MeshEditor.LayerManager.Import
 {
 	public static class GeometryFormatParserFactory
 	{
-		public static IGeometryImportService Create(IReadStorageService storageService, Uri uri)
+		public static IGeometryImportService Create(IReadStorageService storageService, string recordName)
 		{
-			Debug.Assert(uri != null);
+			Debug.Assert(recordName != null);
 
-			var extension = Path.GetExtension(uri.LocalPath).ToLower();
+			var extension = Path.GetExtension(recordName).ToLower();
 			// pick the right loader according to filename extension
 			switch (extension)
 			{
 				case ".msh": // GiD mesh 
-					return new GiDGeometryFormatParser(storageService, uri);
+					return new GiDGeometryFormatParser(storageService, recordName);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlGeometryFormatParser(storageService, uri);
+					return new VTKXmlGeometryFormatParser(storageService, recordName);
 				
 				default:
 					throw new NotSupportedException();

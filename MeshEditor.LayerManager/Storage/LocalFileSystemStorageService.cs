@@ -11,25 +11,32 @@ namespace MeshEditor.LayerManager.Storage
 {
 	public class LocalFileSystemStorageService : IStorageService
 	{
-		public Stream Load(Uri uri)
+		readonly string basePath;
+
+		public LocalFileSystemStorageService(string basePath)
 		{
-			return new FileStream(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+			this.basePath = basePath;
 		}
 
-		public Stream Save(Uri uri)
+		public Stream Load(string record)
 		{
-			string localPath = uri.LocalPath;
-			string directory = Path.GetDirectoryName(localPath);
+			return new FileStream(Path.Combine(basePath, record), FileMode.Open, FileAccess.Read, FileShare.Read);
+		}
+
+		public Stream Save(string record)
+		{
+			string path = Path.Combine(basePath, record);
+			string directory = Path.GetDirectoryName(path);
 			if (!Directory.Exists(directory))
 			{
 				Directory.CreateDirectory(directory);
 			}
-			return new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None);
+			return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
 		}
 
-		public void Delete(Uri uri)
+		public void Delete(string record)
 		{
-			File.Delete(uri.LocalPath);
+			File.Delete(Path.Combine(basePath, record));
 		}
 	}
 }
