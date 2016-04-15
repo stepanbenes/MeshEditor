@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Filters
 {
-	internal class SliceFilter : FilterBase
+	internal class SliceFilter : Filter
 	{
 		public override FilterType Type => FilterType.Slice;
 

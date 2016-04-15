@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.LayerManager.Filters
 {
-	internal class TimeCompressionFilter : FilterBase
+	internal class TimeCompressionFilter : Filter
 	{
 		public override FilterType Type => FilterType.TimeCompression;
 

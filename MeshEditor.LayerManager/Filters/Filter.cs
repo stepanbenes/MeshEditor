@@ -9,10 +9,11 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Filters
 {
+	[EnumValueTypeSelector(FilterType.Surface, typeof(SurfaceFilter), enumPropertyName: nameof(Type))]
 	[EnumValueTypeSelector(FilterType.AttributeSelection, typeof(AttributeSelectionFilter), enumPropertyName: nameof(Type))]
 	[EnumValueTypeSelector(FilterType.Slice, typeof(SliceFilter), enumPropertyName: nameof(Type))]
 	[EnumValueTypeSelector(FilterType.TimeCompression, typeof(TimeCompressionFilter), enumPropertyName: nameof(Type))]
-	public abstract class FilterBase
+	public abstract class Filter
 	{
 		[JsonConverter(typeof(StringEnumConverter))]
 		public abstract FilterType Type { get; }

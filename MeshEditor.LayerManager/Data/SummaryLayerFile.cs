@@ -13,7 +13,7 @@ namespace MeshEditor.LayerManager.Data
 		public string Name { get; set; }
 
 		public Guid? ParentId { get; set; }
-		public FilterBase Filter { get; set; }
+		public Filter Filter { get; set; }
 
 		public double[] TimeSteps { get; set; }
 

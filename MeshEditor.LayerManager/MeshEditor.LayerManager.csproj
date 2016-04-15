@@ -60,6 +60,7 @@
     <Compile Include="Compression\WaveletCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionService.cs" />
     <Compile Include="Data\LayerDiff.cs" />
+    <Compile Include="Filters\SurfaceFilter.cs" />
     <Compile Include="Filters\TimeCompressionFilter.cs" />
     <Compile Include="MeshFiltering\GeometryBuilder.cs" />
     <Compile Include="Compression\SVD.cs" />
@@ -86,7 +87,7 @@
     <Compile Include="Data\SummaryLayerFile.cs" />
     <Compile Include="Encoding\TrimOptions.cs" />
     <Compile Include="Filters\AttributeSelectionFilter.cs" />
-    <Compile Include="Filters\FilterBase.cs" />
+    <Compile Include="Filters\Filter.cs" />
     <Compile Include="Filters\FilterFactory.cs" />
     <Compile Include="Filters\FilterType.cs" />
     <Compile Include="Data\DataDescription.cs" />

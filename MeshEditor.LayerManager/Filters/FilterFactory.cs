@@ -8,7 +8,7 @@ namespace MeshEditor.LayerManager.Filters
 {
 	public static class FilterFactory
 	{
-		public static FilterBase Create(FilterType type, IEnumerable<string> parameters)
+		public static Filter Create(FilterType type, IEnumerable<string> parameters)
 		{
 			switch (type)
 			{
@@ -27,6 +27,10 @@ namespace MeshEditor.LayerManager.Filters
 						Offset = float.Parse(parameters.ElementAt(3)),
 					};
 				case FilterType.Surface:
+					return new SurfaceFilter
+					{
+						EdgeAngleLimits = parameters.Select(p => float.Parse(p)).ToArray()
+					};
 				case FilterType.Clip:
 				case FilterType.IsoSurface:
 				case FilterType.StreamLines:

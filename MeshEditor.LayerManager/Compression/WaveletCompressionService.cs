@@ -22,6 +22,9 @@ namespace MeshEditor.LayerManager.Compression
 
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
+			// TODO: deal with NaN values
+			// TODO: do 2D transform instead of sequence of 1D transforms
+
 			double[][] allValues = dataValues.ToArray();
 
 			double minValue = double.MaxValue;
@@ -47,7 +50,6 @@ namespace MeshEditor.LayerManager.Compression
 				Iterations = ITERATIONS_COUNT
 			};
 
-			// TODO: do 2D transform instead of sequence of 1D transforms
 			return TransparentCompressionService.LinearizeDataRows(allValues.Select(row => FWT(row, ITERATIONS_COUNT, minValue, maxValue)), rows, columns);
 		}
 

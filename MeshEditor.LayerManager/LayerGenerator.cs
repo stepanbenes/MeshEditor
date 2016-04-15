@@ -120,7 +120,7 @@ namespace MeshEditor.LayerManager
 			return layerFile;
 		}
 
-		public SummaryLayerFile GenerateFilterLayer(Uri location, Guid parentLayerId, FilterBase filter, string layerName = null)
+		public SummaryLayerFile GenerateFilterLayer(Uri location, Guid parentLayerId, Filter filter, string layerName = null)
 		{
 			Uri parentLayerFileUri = getLayerSummaryFileUri(location, parentLayerId);
 
@@ -140,13 +140,18 @@ namespace MeshEditor.LayerManager
 			switch (filter.Type)
 			{
 				case FilterType.Surface:
-				// TODO: use MeshSurfaceGenerator
+					{
+						var meshSurfaceGenerator = new MeshSurfaceGenerator(originalGeometry);
+						filteredGeometry = meshSurfaceGenerator.CreateSurface((SurfaceFilter)filter);
+						filterLayerName = layerName ?? "surface";
+					}
+					break;
 				case FilterType.Slice:
 					{
 						var sliceFilter = (SliceFilter)filter;
 						var meshSliceGenerator = new MeshSliceGenerator(originalGeometry);
 						filteredGeometry = meshSliceGenerator.CreateSlice(sliceFilter);
-						filterLayerName = layerName ?? $"Slice {sliceFilter.Offset}"; // TODO: use better name
+						filterLayerName = layerName ?? $"slice {sliceFilter.Offset}"; // TODO: use better name
 					}
 					break;
 				case FilterType.Clip:
@@ -195,7 +200,7 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = LoadGeometry(meshFileUri);
 			var attributeFileUris = layerSummary.Attributes.Select(a => getLayerAttributeFileUri(location, layerId, a.Index));
 			IEnumerable<AttributeDescription> attributeDescriptions = attributeFileUris.Select(uri => LoadAttribute(uri));
-			FilterBase filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
+			Filter filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
 
 			var dataDescriptionGroups = from result in layerSummary.Results
 										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
@@ -489,7 +494,7 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, FilterBase filter)
+		private SummaryLayerFile generateLayerFiles(Uri location, string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, Filter filter)
 		{
 			Guid layerId = Guid.NewGuid();
 

@@ -84,7 +84,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runFilterCommand(FilterOptions options)
 		{
-			FilterBase filter = FilterFactory.Create(options.FilterType, options.FilterParameters);
+			Filter filter = FilterFactory.Create(options.FilterType, options.FilterParameters);
 			string projectDirectory = getProjectLocation(options);
 			processLayer(projectDirectory, options.ProjectName, options.ParentLayer,
 				layer =>
