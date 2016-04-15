@@ -15,6 +15,7 @@ using System.Diagnostics;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
+using System.Reflection;
 
 namespace MeshEditor.FormatConverter
 {
@@ -43,10 +44,18 @@ namespace MeshEditor.FormatConverter
 
 		#region Fields, constructor
 
+		IStorageService solutionStorage;
+		ISerializationService solutionSerializer;
+		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
 		Stopwatch stopwatch;
 
 		public Program()
 		{
+			solutionStorage = new LocalFileSystemStorageService();
+			solutionSerializer = new JsonSerializationService();
+
+			readConfiguration();
+
 			stopwatch = new Stopwatch();
 			stopwatch.Start();
 		}
@@ -65,19 +74,17 @@ namespace MeshEditor.FormatConverter
 		{
 			const string masterLayerName = "master";
 			string projectDirectory = getProjectLocation(options);
-			IStorageService localStorage = new LocalFileSystemStorageService();
-			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(localStorage, convertToUri(options.MeshFile, projectDirectory));
-			IDataImportService dataImportService = options.ResultFiles.Any() ? DataFormatParserFactory.Create(localStorage, options.ResultFiles.Select(arg => convertToUri(arg, projectDirectory))) : null;
-			var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
+			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(importStorage, convertToUri(options.MeshFile, projectDirectory));
+			IDataImportService dataImportService = options.ResultFiles.Any() ? DataFormatParserFactory.Create(importStorage, options.ResultFiles.Select(arg => convertToUri(arg, projectDirectory))) : null;
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter(options));
 			var masterLayer = layerGenerator.GenerateMasterLayer(new Uri(projectDirectory + "/"), masterLayerName, geometryImportService, dataImportService);
 			logNewLayer(masterLayer);
 			string projectName = options.ProjectName ?? Path.GetFileNameWithoutExtension(options.MeshFile);
 			var solution = SolutionBuilder.CreateSolutionFromMasterLayer(masterLayer, projectName);
 			string projectNameAsValidFileName = projectName.MakeAlphanumericFilename();
-			using (Stream stream = localStorage.Save(new Uri(Path.Combine(projectDirectory, $"{projectNameAsValidFileName}.solution.json"))))
+			using (Stream stream = solutionStorage.Save(new Uri(Path.Combine(projectDirectory, $"{projectNameAsValidFileName}.solution.json"))))
 			{
-				ISerializationService serializer = new JsonSerializationService();
-				serializer.Serialize(solution, stream);
+				solutionSerializer.Serialize(solution, stream);
 			}
 			return 0;
 		}
@@ -89,7 +96,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.ParentLayer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
+					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter(options));
 					var filterLayer = layerGenerator.GenerateFilterLayer(new Uri(projectDirectory), layer.Id, filter, options.LayerName);
 					logNewLayer(filterLayer);
 					// convert filter layer to layer record and append it to parent layer's children
@@ -107,7 +114,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method), progressReporter: createProgressReporter(options));
+					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(options.Method), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter(options));
 					var compressedLayer = layerGenerator.CompressLayer(new Uri(projectDirectory), layer.Id, $"time compression ({options.Method})", options.FieldName, options.ComponentName);
 					logNewLayer(compressedLayer);
 					// convert filter layer to layer record and append it to parent layer's children
@@ -125,7 +132,7 @@ namespace MeshEditor.FormatConverter
 			processLayer(projectDirectory, options.ProjectName, options.Layer,
 				layer =>
 				{
-					var layerGenerator = new LayerGenerator(progressReporter: createProgressReporter(options));
+					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter(options));
 					var diff = layerGenerator.CreateDiff(new Uri(projectDirectory), layer.Id);
 					logMessage(diff.ToString());
 				},
@@ -143,11 +150,9 @@ namespace MeshEditor.FormatConverter
 			return options.Directory ?? Directory.GetCurrentDirectory() + "/";
 		}
 
-		private static void processLayer(string solutionDirectory, string optionalProjectName, string layerIdentifier, Action<Solution.LayerRecord> processLayerOperation, bool updateSolutionFile)
+		private void processLayer(string solutionDirectory, string optionalProjectName, string layerIdentifier, Action<Solution.LayerRecord> processLayerOperation, bool updateSolutionFile)
 		{
 			var solutionFiles = Directory.EnumerateFiles(solutionDirectory, "*.solution.json", SearchOption.TopDirectoryOnly);
-			IStorageService localStorage = new LocalFileSystemStorageService();
-			ISerializationService serializer = new JsonSerializationService();
 			Solution solution = null;
 			string solutionFilePath = null;
 			if (optionalProjectName != null) // if project name is set, enumerate all solution files and find project name match
@@ -155,9 +160,9 @@ namespace MeshEditor.FormatConverter
 				foreach (var path in solutionFiles)
 				{
 					Solution testSolution;
-					using (Stream stream = localStorage.Load(new Uri(path)))
+					using (Stream stream = solutionStorage.Load(new Uri(path)))
 					{
-						testSolution = serializer.Deserialize<Solution>(stream);
+						testSolution = solutionSerializer.Deserialize<Solution>(stream);
 					}
 					if (optionalProjectName.Equals(testSolution.ProjectName))
 					{
@@ -180,9 +185,9 @@ namespace MeshEditor.FormatConverter
 			else // if project name is NOT set, find single solution file in directory and load solution object
 			{
 				solutionFilePath = solutionFiles.Single();
-				using (Stream stream = localStorage.Load(new Uri(solutionFilePath)))
+				using (Stream stream = solutionStorage.Load(new Uri(solutionFilePath)))
 				{
-					solution = serializer.Deserialize<Solution>(stream);
+					solution = solutionSerializer.Deserialize<Solution>(stream);
 				}
 			}
 
@@ -209,9 +214,9 @@ namespace MeshEditor.FormatConverter
 
 			if (updateSolutionFile)
 			{
-				using (Stream stream = localStorage.Save(new Uri(solutionFilePath)))
+				using (Stream stream = solutionStorage.Save(new Uri(solutionFilePath)))
 				{
-					serializer.Serialize(solution, stream);
+					solutionSerializer.Serialize(solution, stream);
 				}
 			}
 		}
@@ -268,6 +273,42 @@ namespace MeshEditor.FormatConverter
 		private void logMessage(string message)
 		{
 			Console.WriteLine(message);
+		}
+
+		private void readConfiguration()
+		{
+			string configFilename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
+			if (File.Exists(configFilename))
+			{
+				Config config = null;
+				using (var stream = new FileStream(configFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
+				{
+					ISerializationService serializer = new JsonSerializationService();
+					config = serializer.Deserialize<Config>(stream);
+				}
+
+				importStorage = createStorageService(config.ImportStorage);
+				layerSourceStorage = createStorageService(config.LayerSourceStorage);
+				layerDestinationStorage = createStorageService(config.LayerDestinationStorage);
+			}
+			else
+			{
+				importStorage = layerSourceStorage = layerDestinationStorage = solutionStorage;
+			}
+		}
+
+		private static IStorageService createStorageService(StorageInfo storageInfo)
+		{
+			switch (storageInfo.Type)
+			{
+				case StorageType.Local:
+					return new LocalFileSystemStorageService();
+				case StorageType.AzureBlob:
+					var azureBlobStorageInfo = (AzureBlobStorageInfo)storageInfo;
+					return new AzureBlobStorageService(azureBlobStorageInfo.ConnectionString, azureBlobStorageInfo.BlobContainerName);
+				default:
+					throw new NotSupportedException();
+			}
 		}
 
 		#endregion

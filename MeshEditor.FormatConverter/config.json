@@ -1,0 +1,11 @@
+﻿{
+    "ImportStorage": {
+        "Type" :  "Local"
+    },
+    "LayerSourceStorage": {
+        "Type": "Local"
+    },
+    "LayerDestinationStorage": {
+        "Type": "Local"
+    }
+}
