@@ -129,24 +129,21 @@ namespace MeshEditor.LayerManager
 				parentLayer = serializationService.Deserialize<SummaryLayerFile>(stream);
 			}
 
-			GeometryDescription originalGeometry = LoadGeometry(getLayerMeshRecordName(parentLayerId));
-			GeometryDescription filteredGeometry;
+			IMeshFilterCreator meshFilterCreator;
 			string filterLayerName;
 
 			switch (filter.Type)
 			{
 				case FilterType.Surface:
 					{
-						var meshSurfaceGenerator = new MeshSurfaceGenerator(originalGeometry);
-						filteredGeometry = meshSurfaceGenerator.CreateSurface((SurfaceFilter)filter);
+						meshFilterCreator = new MeshSurfaceCreator((SurfaceFilter)filter);
 						filterLayerName = layerName ?? "surface";
 					}
 					break;
 				case FilterType.Slice:
 					{
 						var sliceFilter = (SliceFilter)filter;
-						var meshSliceGenerator = new MeshSliceGenerator(originalGeometry);
-						filteredGeometry = meshSliceGenerator.CreateSlice(sliceFilter);
+						meshFilterCreator = new MeshSliceCreator(sliceFilter);
 						filterLayerName = layerName ?? $"slice {sliceFilter.Offset}"; // TODO: use better name
 					}
 					break;
@@ -160,14 +157,16 @@ namespace MeshEditor.LayerManager
 						var attributeSelectionFilter = (AttributeSelectionFilter)filter;
 						var attributeDescriptor = parentLayer.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
 						var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.Index));
-						var meshPartitionGenerator = new MeshPartitionGenerator(originalGeometry);
-						filteredGeometry = meshPartitionGenerator.FilterGeometryByAttribute(attributeSelectionFilter, attribute);
+						meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
 						filterLayerName = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
 					}
 					break;
 				default:
 					throw new NotSupportedException();
 			}
+
+			GeometryDescription originalGeometry = LoadGeometry(getLayerMeshRecordName(parentLayerId));
+			GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
 
 			// filter attributes
 			var originalAttributeRecordNames = parentLayer.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));

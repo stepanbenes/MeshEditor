@@ -67,7 +67,7 @@
     <Compile Include="Compression\SVDCompressionParameters.cs" />
     <Compile Include="Compression\SVDCompressionService.cs" />
     <Compile Include="Compression\TransparentCompressionService.cs" />
-    <Compile Include="MeshFiltering\ComputationalGeometry.cs" />
+    <Compile Include="MeshFiltering\ComputationalGeometryMath.cs" />
     <Compile Include="Data\EdgeIntersection.cs" />
     <Compile Include="Data\GeometryEntityMapping.cs" />
     <Compile Include="Encoding\Base64EncodingService.cs" />
@@ -106,10 +106,11 @@
     <Compile Include="Infrastructure\Solution.cs" />
     <Compile Include="Infrastructure\SolutionBuilder.cs" />
     <Compile Include="LayerGenerator.cs" />
-    <Compile Include="MeshFiltering\MeshPartitionGenerator.cs" />
+    <Compile Include="MeshFiltering\IMeshFilterCreator.cs" />
+    <Compile Include="MeshFiltering\MeshPartitionCreator.cs" />
     <Compile Include="MeshFiltering\Vector3.cs" />
-    <Compile Include="MeshFiltering\MeshSliceGenerator.cs" />
-    <Compile Include="MeshFiltering\MeshSurfaceGenerator.cs" />
+    <Compile Include="MeshFiltering\MeshSliceCreator.cs" />
+    <Compile Include="MeshFiltering\MeshSurfaceCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\EnumValueTypeSelectorAttribute.cs" />
     <Compile Include="Serialization\EnumValueTypeSelectorJsonConverter.cs" />

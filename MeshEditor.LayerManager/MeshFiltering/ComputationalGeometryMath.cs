@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
-	class ComputationalGeometry
+	class ComputationalGeometryMath
 	{
 		#region Constants
 

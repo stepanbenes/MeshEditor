@@ -9,17 +9,20 @@ using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
-	internal class MeshPartitionGenerator
+	internal class MeshPartitionCreator : IMeshFilterCreator
 	{
-		private GeometryDescription geometry;
+		private AttributeSelectionFilter attributeSelectionFilter;
+		private AttributeDescription attribute;
 
-		public MeshPartitionGenerator(GeometryDescription geometry)
+		public MeshPartitionCreator(AttributeSelectionFilter attributeSelectionFilter, AttributeDescription attribute)
 		{
-			Debug.Assert(geometry != null);
-			this.geometry = geometry;
+			Debug.Assert(attributeSelectionFilter != null);
+			Debug.Assert(attribute != null);
+			this.attributeSelectionFilter = attributeSelectionFilter;
+			this.attribute = attribute;
 		}
 
-		public GeometryDescription FilterGeometryByAttribute(AttributeSelectionFilter attributeSelectionFilter, AttributeDescription attribute)
+		public GeometryDescription Create(GeometryDescription geometry)
 		{
 			// TODO: use GeometryBuilder
 

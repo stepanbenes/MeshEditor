@@ -10,7 +10,7 @@ using MeshEditor.LayerManager.Import;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
-	internal class MeshSurfaceGenerator
+	internal class MeshSurfaceCreator : IMeshFilterCreator
 	{
 		#region Static members
 
@@ -114,12 +114,11 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Fields, constructor
 
-		private GeometryDescription geometry;
+		private SurfaceFilter surfaceFilter;
 
-		public MeshSurfaceGenerator(GeometryDescription geometry)
+		public MeshSurfaceCreator(SurfaceFilter surfaceFilter)
 		{
-			Debug.Assert(geometry != null);
-			this.geometry = geometry;
+			this.surfaceFilter = surfaceFilter;
 		}
 
 		#endregion
@@ -135,12 +134,12 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Public methods
 
-		public GeometryDescription CreateSurface(SurfaceFilter surfaceFilter)
+		public GeometryDescription Create(GeometryDescription geometry)
 		{
 			Dictionary<TriangleFace, int> surfaceTriangles = new Dictionary<TriangleFace, int>();
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				foreach (TriangleFace cellFace in getFacesOfCell(cellIndex))
+				foreach (TriangleFace cellFace in getFacesOfCell(geometry, cellIndex))
 				{
 					if (cellFace.IsCollapsed())
 						continue;
@@ -197,7 +196,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Private methods
 
-		private IEnumerable<TriangleFace> getFacesOfCell(int cellIndex)
+		private static IEnumerable<TriangleFace> getFacesOfCell(GeometryDescription geometry, int cellIndex)
 		{
 			CellType cellType = geometry.CellTypes[cellIndex];
 			int[] connectivity = geometry.CellConnectivity;
