@@ -22,20 +22,24 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Fields, constructor
 
-		string solutionFile;
+		ISolutionProvider solutionProvider;
 		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
 		ILogger logger;
 
-		public SolutionHub(string solutionFile, ILogger logger = null)
+		public SolutionHub(ILogger logger = null)
 		{
-			this.solutionFile = solutionFile;
 			this.logger = logger;
-			ConfigLoader.ReadConfiguration(out importStorage, out layerSourceStorage, out layerDestinationStorage);
+			ConfigLoader.ReadConfiguration(out solutionProvider, out importStorage, out layerSourceStorage, out layerDestinationStorage);
 		}
 
 		#endregion
 
 		#region Commands (SolutionManager's public interface)
+
+		public IEnumerable<ISolutionInfo> EnumerateSolutions()
+		{
+			return solutionProvider.GetAll();
+		}
 
 		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
 		{
@@ -48,30 +52,10 @@ namespace MeshEditor.SolutionManager
 			projectName = projectName ?? Path.GetFileNameWithoutExtension(meshFile);
 			var solution = createSolutionFromMasterLayer(masterLayer, projectName);
 
-			string solutionDirectory;
-			string solutionRecordName;
-
-			if (string.IsNullOrEmpty(solutionFile))
-			{
-				solutionDirectory = Directory.GetCurrentDirectory();
-				string projectNameAsValidFileName = projectName.MakeAlphanumericFilename();
-				solutionRecordName = $"{projectNameAsValidFileName}.solution.json";
-			}
-			else
-			{
-				solutionDirectory = Path.GetDirectoryName(solutionFile);
-				solutionRecordName = Path.GetFileName(solutionFile);
-			}
-
-			IStorageService solutionStorage = new LocalFileSystemStorageService(solutionDirectory);
-			using (Stream stream = solutionStorage.Save(solutionRecordName))
-			{
-				ISerializationService solutionSerializer = new JsonSerializationService();
-				solutionSerializer.Serialize(solution, stream);
-			}
+			solutionProvider.Create(solution);
 		}
 
-		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
+		public void Filter(ISolutionInfo solutionInfo, string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
 		{
 			FilterType filterType;
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
@@ -79,7 +63,7 @@ namespace MeshEditor.SolutionManager
 
 			Filter filter = FilterFactory.Create(filterType, filterParameters);
 
-			processLayer(solutionFile, parentLayerIdOrName,
+			processLayer(solutionInfo, parentLayerIdOrName,
 				layer =>
 				{
 					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
@@ -93,13 +77,13 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public void Compress(string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
+		public void Compress(ISolutionInfo solutionInfo, string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
 				throw new ArgumentException($"Unknown compression method ({compressionMethodName})", nameof(compressionMethodName));
 
-			processLayer(solutionFile, layerIdOrName,
+			processLayer(solutionInfo, layerIdOrName,
 				layer =>
 				{
 					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
@@ -113,9 +97,9 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public void Diff(string layerIdOrName)
+		public void Diff(ISolutionInfo solutionInfo, string layerIdOrName)
 		{
-			processLayer(solutionFile, layerIdOrName,
+			processLayer(solutionInfo, layerIdOrName,
 				layer =>
 				{
 					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
@@ -130,14 +114,14 @@ namespace MeshEditor.SolutionManager
 
 		#region Helper methods
 
-		private static SolutionFile createSolutionFromMasterLayer(SummaryLayerFile masterLayer, string projectName)
+		private static Solution createSolutionFromMasterLayer(SummaryLayerFile masterLayer, string projectName)
 		{
-			SolutionFile solution = new SolutionFile
+			Solution solution = new Solution
 			{
 				ProjectName = projectName,
 				Layers = new[]
 				{
-					new SolutionFile.LayerRecord
+					new Solution.Layer
 					{
 						Id = masterLayer.Id,
 						Name = masterLayer.Name,
@@ -149,9 +133,9 @@ namespace MeshEditor.SolutionManager
 			return solution;
 		}
 
-		private static SolutionFile.LayerRecord createLayerRecordFromFilterLayer(SummaryLayerFile filterLayer)
+		private static Solution.Layer createLayerRecordFromFilterLayer(SummaryLayerFile filterLayer)
 		{
-			var newLayerRecord = new SolutionFile.LayerRecord
+			var newLayerRecord = new Solution.Layer
 			{
 				Id = filterLayer.Id,
 				Name = filterLayer.Name,
@@ -161,19 +145,12 @@ namespace MeshEditor.SolutionManager
 			return newLayerRecord;
 		}
 
-		private void processLayer(string solutionFile, string layerIdentifier, Action<SolutionFile.LayerRecord> processLayerOperation, bool updateSolutionFile)
+		private void processLayer(ISolutionInfo solutionInfo, string layerIdentifier, Action<Solution.Layer> processLayerOperation, bool updateSolutionFile)
 		{
-			IStorageService solutionStorage = new LocalFileSystemStorageService(Path.GetDirectoryName(solutionFile));
-			ISerializationService solutionSerializer = new JsonSerializationService();
-			SolutionFile solution;
-			string recordName = Path.GetFileName(solutionFile);
-			using (Stream stream = solutionStorage.Load(recordName))
-			{
-				solution = solutionSerializer.Deserialize<SolutionFile>(stream);
-			}
+			Solution solution = solutionProvider.Get(solutionInfo.Uri);
 
 			// find layer according to either provided layer guid or layer name
-			SolutionFile.LayerRecord layer;
+			Solution.Layer layer;
 			Guid guid;
 			if (Guid.TryParse(layerIdentifier, out guid))
 			{
@@ -195,14 +172,11 @@ namespace MeshEditor.SolutionManager
 
 			if (updateSolutionFile)
 			{
-				using (Stream stream = solutionStorage.Save(recordName))
-				{
-					solutionSerializer.Serialize(solution, stream);
-				}
+				solutionProvider.Update(solution);
 			}
 		}
 
-		private static SolutionFile.LayerRecord findLayer(IEnumerable<SolutionFile.LayerRecord> layers, Func<SolutionFile.LayerRecord, bool> predicate)
+		private static Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
 		{
 			Debug.Assert(layers != null);
 			foreach (var layer in layers)

@@ -8,17 +8,22 @@ namespace MeshEditor.SolutionManager.IO
 {
 	class RestApiSolutionProvider : ISolutionProvider
 	{
-		public SolutionFile Get(int id)
+		public IEnumerable<ISolutionInfo> GetAll()
 		{
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<SolutionFile> List()
+		public Solution Get(Uri uri)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void Update(SolutionFile solution)
+		public void Create(Solution solution)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Update(Solution solution)
 		{
 			throw new NotImplementedException();
 		}

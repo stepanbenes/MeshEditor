@@ -1,4 +1,9 @@
 ﻿{
+    "SolutionProvider": {
+        "Type": "Local",
+        "Directory": null
+    },
+
     "ImportStorage": {
         "Type": "Local",
         "Directory": null

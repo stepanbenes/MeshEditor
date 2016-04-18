@@ -7,19 +7,17 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class SolutionFile
+	class Solution : SolutionBase
 	{
-		public class LayerRecord
+		public class Layer
 		{
 			public Guid Id { get; set; }
 			public string Name { get; set; }
 			public Filter Filter { get; set; }
 			[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-			public LayerRecord[] Children { get; set; }
+			public Layer[] Children { get; set; }
 		}
 
-		public int Id { get; set; }
-		public string ProjectName { get; set; }
-		public LayerRecord[] Layers { get; set; }
+		public Layer[] Layers { get; set; }
 	}
 }

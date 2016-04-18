@@ -7,8 +7,9 @@ namespace MeshEditor.SolutionManager.IO
 {
 	interface ISolutionProvider
 	{
-		IEnumerable<SolutionFile> List();
-		SolutionFile Get(int id);
-		void Update(SolutionFile solution);
+		IEnumerable<ISolutionInfo> GetAll();
+		Solution Get(Uri uri);
+		void Create(Solution solution);
+		void Update(Solution solution);
 	}
 }

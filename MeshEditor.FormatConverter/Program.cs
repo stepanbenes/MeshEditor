@@ -58,7 +58,7 @@ namespace MeshEditor.FormatConverter
 		private int runImportCommand(ImportOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(options.SolutionFile ?? findSolutionFileInCurrentDirectory(), logger)
+			new SolutionHub(logger)
 				.Import(options.ProjectName, options.MeshFile, options.ResultFiles);
 			return 0;
 		}
@@ -66,36 +66,30 @@ namespace MeshEditor.FormatConverter
 		private int runFilterCommand(FilterOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(options.SolutionFile ?? findSolutionFileInCurrentDirectory(), logger)
-				.Filter(options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
+			var hub = new SolutionHub(logger);
+			hub.Filter(hub.EnumerateSolutions().Single(), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
 			return 0;
 		}
 
 		private int runCompressCommand(CompressOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(options.SolutionFile ?? findSolutionFileInCurrentDirectory(), logger)
-				.Compress(options.Layer, options.Method, options.FieldName, options.ComponentName);
+			var hub = new SolutionHub(logger);
+			hub.Compress(hub.EnumerateSolutions().Single(), options.Layer, options.Method, options.FieldName, options.ComponentName);
 			return 0;
 		}
 
 		private int runDiffCommand(DiffOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(options.SolutionFile ?? findSolutionFileInCurrentDirectory(), logger)
-				.Diff(options.Layer);
+			var hub = new SolutionHub(logger);
+			hub.Diff(hub.EnumerateSolutions().Single(), options.Layer);
 			return 0;
 		}
 
 		#endregion
 
 		#region Private methods
-
-		private static string findSolutionFileInCurrentDirectory()
-		{
-			var solutionFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.solution.json", SearchOption.TopDirectoryOnly);
-			return solutionFiles.Single();
-		}
 
 		#endregion
 	}

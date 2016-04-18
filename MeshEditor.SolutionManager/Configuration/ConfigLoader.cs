@@ -8,22 +8,25 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.SolutionManager.AzureStorage;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.SolutionManager.Configuration
 {
 	class ConfigLoader
 	{
-		public static void ReadConfiguration(out IStorageService importStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
+		public static void ReadConfiguration(out ISolutionProvider solutionProvider, out IStorageService importStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
 		{
 			string configFilename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
 			if (File.Exists(configFilename))
 			{
-				ConfigFile config = null;
+				Config config = null;
 				using (var stream = new FileStream(configFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
 				{
 					ISerializationService serializer = new JsonSerializationService();
-					config = serializer.Deserialize<ConfigFile>(stream);
+					config = serializer.Deserialize<Config>(stream);
 				}
+
+				solutionProvider = createSolutionProvider(config.SolutionProvider);
 
 				importStorage = createStorageService(config.ImportStorage);
 				layerSourceStorage = createStorageService(config.LayerSourceStorage);
@@ -31,7 +34,27 @@ namespace MeshEditor.SolutionManager.Configuration
 			}
 			else
 			{
+				solutionProvider = new LocalSolutionProvider(Directory.GetCurrentDirectory());
 				importStorage = layerSourceStorage = layerDestinationStorage = new LocalFileSystemStorageService(Directory.GetCurrentDirectory());
+			}
+		}
+
+		private static ISolutionProvider createSolutionProvider(SolutionProviderInfo solutionProviderInfo)
+		{
+			switch (solutionProviderInfo.Type)
+			{
+				case SolutionProviderType.Local:
+					{
+						var localSolutionProviderInfo = (LocalSolutionProviderInfo)solutionProviderInfo;
+						return new LocalSolutionProvider(localSolutionProviderInfo.Directory ?? Directory.GetCurrentDirectory());
+					}
+				case SolutionProviderType.RestApi:
+					{
+						var restApiSolutionProviderInfo = (RestApiSolutionProviderInfo)solutionProviderInfo;
+						return new RestApiSolutionProvider(/*restApiSolutionProviderInfo.Uri*/);
+					}
+				default:
+					throw new NotSupportedException();
 			}
 		}
 

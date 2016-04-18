@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MeshEditor.SolutionManager.IO
+{
+	class SolutionBase : ISolutionInfo
+	{
+		public int Id { get; set; }
+		public string ProjectName { get; set; }
+		public Uri Uri { get; set; }
+	}
+}

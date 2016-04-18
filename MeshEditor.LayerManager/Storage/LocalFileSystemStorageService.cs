@@ -15,6 +15,7 @@ namespace MeshEditor.LayerManager.Storage
 
 		public LocalFileSystemStorageService(string basePath)
 		{
+			Debug.Assert(basePath != null);
 			this.basePath = basePath;
 		}
 
