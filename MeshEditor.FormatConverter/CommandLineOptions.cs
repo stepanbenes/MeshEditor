@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
-using MeshEditor.LayerManager.Compression;
-using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.FormatConverter
 {
@@ -39,7 +36,7 @@ namespace MeshEditor.FormatConverter
 		public string ParentLayer { get; set; }
 
 		[Value(index: 1, MetaName = "Filter type", Required = true, HelpText = "Name of filter to be applied on the parent layer")]
-		public FilterType FilterType { get; set; }
+		public string FilterType { get; set; }
 
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
@@ -55,7 +52,7 @@ namespace MeshEditor.FormatConverter
 		public string Layer { get; set; }
 
 		[Value(index: 1, Required = true, HelpText = "Compression method")]
-		public CompressionMethod Method { get; set; }
+		public string Method { get; set; }
 
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }

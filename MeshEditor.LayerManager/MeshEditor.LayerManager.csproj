@@ -103,8 +103,6 @@
     <Compile Include="Import\VTKXmlDataFormatParser.cs" />
     <Compile Include="Import\VTKXmlFormatParserBase.cs" />
     <Compile Include="Import\VTKXmlGeometryFormatParser.cs" />
-    <Compile Include="Infrastructure\Solution.cs" />
-    <Compile Include="Infrastructure\SolutionBuilder.cs" />
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFiltering\IMeshFilterCreator.cs" />
     <Compile Include="MeshFiltering\MeshPartitionCreator.cs" />

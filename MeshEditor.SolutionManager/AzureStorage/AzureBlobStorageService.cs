@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Storage;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.SolutionManager.AzureStorage
 {
 	class AzureBlobStorageService : IStorageService
 	{

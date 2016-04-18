@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
 using Newtonsoft.Json;
 
-namespace MeshEditor.LayerManager.Infrastructure
+namespace MeshEditor.SolutionManager.IO
 {
-	public class Solution
+	class SolutionFile
 	{
 		public class LayerRecord
 		{
@@ -19,6 +18,7 @@ namespace MeshEditor.LayerManager.Infrastructure
 			public LayerRecord[] Children { get; set; }
 		}
 
+		public int Id { get; set; }
 		public string ProjectName { get; set; }
 		public LayerRecord[] Layers { get; set; }
 	}
