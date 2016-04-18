@@ -64,4 +64,11 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 0, MetaName = "Layer to compare with its parent", Required = true, HelpText = "layer's guid or name")]
 		public string Layer { get; set; }
 	}
+
+	[Verb("list", HelpText = "Enumerate all solutions in base directory")]
+	class ListOptions : Options
+	{
+		//[Value(index: 0, MetaName = "Solution id", Required = false, HelpText = "Id of solution whose layers should be displayed")]
+		//public int? SolutionId { get; set; }
+	}
 }

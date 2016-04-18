@@ -49,6 +49,7 @@
     <Compile Include="Configuration\ConfigLoader.cs" />
     <Compile Include="Configuration\SolutionProviderInfo.cs" />
     <Compile Include="Configuration\StorageInfo.cs" />
+    <Compile Include="IO\ILayerInfo.cs" />
     <Compile Include="IO\SolutionBase.cs" />
     <Compile Include="IO\ISolutionInfo.cs" />
     <Compile Include="Logging\ILogger.cs" />

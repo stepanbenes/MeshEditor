@@ -41,6 +41,11 @@ namespace MeshEditor.SolutionManager
 			return solutionProvider.GetAll();
 		}
 
+		public IEnumerable<ILayerInfo> EnumerateLayersOfSolution(ISolutionInfo solution)
+		{
+			return solutionProvider.Get(solution.Uri).Layers;
+		}
+
 		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
 		{
 			const string masterLayerName = "master";

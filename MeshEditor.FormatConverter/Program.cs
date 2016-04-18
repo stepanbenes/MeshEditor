@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.Logging;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.FormatConverter
 {
@@ -20,12 +21,13 @@ namespace MeshEditor.FormatConverter
 			var program = new Program();
 			try
 			{
-				return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions>(args)
+				return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
 					.MapResult(
 					(ImportOptions options) => program.runImportCommand(options),
 					(FilterOptions options) => program.runFilterCommand(options),
 					(CompressOptions options) => program.runCompressCommand(options),
 					(DiffOptions options) => program.runDiffCommand(options),
+					(ListOptions options) => program.runListCommand(options),
 					errors => 1);
 			}
 			finally
@@ -85,6 +87,30 @@ namespace MeshEditor.FormatConverter
 			var hub = new SolutionHub(logger);
 			hub.Diff(hub.EnumerateSolutions().Single(), options.Layer);
 			return 0;
+		}
+
+		private int runListCommand(ListOptions options)
+		{
+			logger = new ConsoleLogger(options.Verbose);
+			var hub = new SolutionHub(logger);
+			foreach (var solutionInfo in hub.EnumerateSolutions()) // list all solutions
+			{
+				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}, Uri: {solutionInfo.Uri}", LogMessagePriority.High);
+				foreach (var layerInfo in hub.EnumerateLayersOfSolution(solutionInfo))
+				{
+					printLayerInfo(layerInfo, depth: 1);
+				}
+			}
+			return 0;
+		}
+
+		private void printLayerInfo(ILayerInfo layerInfo, int depth)
+		{
+			logger.LogMessage($"{new string(' ', depth * 2)}+ {layerInfo.Name}, filter: {layerInfo.FilterType}, {layerInfo.Id}", LogMessagePriority.High);
+			foreach (var child in layerInfo.Children)
+			{
+				printLayerInfo(child, depth + 1);
+			}
 		}
 
 		#endregion
