@@ -43,7 +43,7 @@ namespace MeshEditor.SolutionManager
 
 		public IEnumerable<ILayerInfo> EnumerateLayersOfSolution(ISolutionInfo solution)
 		{
-			return solutionProvider.Get(solution.Uri).Layers;
+			return solutionProvider.Get(solution).Layers;
 		}
 
 		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
@@ -130,7 +130,7 @@ namespace MeshEditor.SolutionManager
 					{
 						Id = masterLayer.Id,
 						Name = masterLayer.Name,
-						Filter = null,
+						FilterType = null,
 						Children = null
 					}
 				}
@@ -144,7 +144,7 @@ namespace MeshEditor.SolutionManager
 			{
 				Id = filterLayer.Id,
 				Name = filterLayer.Name,
-				Filter = filterLayer.Filter,
+				FilterType = filterLayer.Filter.Type.ToString(),
 				Children = null
 			};
 			return newLayerRecord;
@@ -152,7 +152,7 @@ namespace MeshEditor.SolutionManager
 
 		private void processLayer(ISolutionInfo solutionInfo, string layerIdentifier, Action<Solution.Layer> processLayerOperation, bool updateSolutionFile)
 		{
-			Solution solution = solutionProvider.Get(solutionInfo.Uri);
+			Solution solution = solutionProvider.Get(solutionInfo);
 
 			// find layer according to either provided layer guid or layer name
 			Solution.Layer layer;

@@ -13,11 +13,11 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			public Guid Id { get; set; }
 			public string Name { get; set; }
-			public Filter Filter { get; set; }
+			public string FilterType { get; set; }
 			[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 			public Layer[] Children { get; set; }
 
-			string ILayerInfo.FilterType => Filter?.Type.ToString() ?? "null";
+			string ILayerInfo.FilterType => FilterType ?? "<null>";
 			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
 		}
 

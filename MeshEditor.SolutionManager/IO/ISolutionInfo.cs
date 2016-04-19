@@ -10,6 +10,5 @@ namespace MeshEditor.SolutionManager.IO
 	{
 		int Id { get; }
 		string ProjectName { get; }
-		Uri Uri { get; }
 	}
 }

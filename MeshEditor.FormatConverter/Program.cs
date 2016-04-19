@@ -95,7 +95,7 @@ namespace MeshEditor.FormatConverter
 			var hub = new SolutionHub(logger);
 			foreach (var solutionInfo in hub.EnumerateSolutions()) // list all solutions
 			{
-				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}, Uri: {solutionInfo.Uri}", LogMessagePriority.High);
+				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}", LogMessagePriority.High);
 				foreach (var layerInfo in hub.EnumerateLayersOfSolution(solutionInfo))
 				{
 					printLayerInfo(layerInfo, depth: 1);

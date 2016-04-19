@@ -15,7 +15,7 @@ namespace MeshEditor.SolutionManager.IO
 	{
 		private static readonly string SolutionFileExtension = ".solution";
 
-		IStorageService storage;
+		IStorageService localStorage;
 		ISerializationService serializer;
 		string solutionDirectory;
 
@@ -23,7 +23,7 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			Debug.Assert(solutionDirectory != null);
 			this.solutionDirectory = solutionDirectory;
-			storage = new LocalFileSystemStorageService(solutionDirectory);
+			localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			serializer = new JsonSerializationService();
 		}
 
@@ -31,22 +31,18 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
 			{
-				using (Stream stream = storage.Load(Path.GetFileName(solutionFile)))
+				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
 				{
-					var solutionBase = serializer.Deserialize<SolutionBase>(stream);
-					solutionBase.Uri = new Uri(solutionFile);
-					yield return solutionBase;
+					yield return serializer.Deserialize<SolutionBase>(stream);
 				}
 			}
 		}
 
-		public Solution Get(Uri uri)
+		public Solution Get(ISolutionInfo solutionInfo)
 		{
-			using (Stream stream = storage.Load(uri.LocalPath))
+			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionInfo)))
 			{
-				var solution = serializer.Deserialize<Solution>(stream);
-				solution.Uri = uri;
-				return solution;
+				return serializer.Deserialize<Solution>(stream);
 			}
 		}
 
@@ -54,18 +50,16 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			string projectNameAsValidFileName = solution.ProjectName.MakeAlphanumericFilename();
 			string solutionRecordName = projectNameAsValidFileName + SolutionFileExtension + serializer.FileExtension;
-			
-			using (Stream stream = storage.Save(solutionRecordName))
+			solution.Id = findAvailableSolutionId();
+			using (Stream stream = localStorage.Save(solutionRecordName))
 			{
-				// TODO: create Id
-				solution.Uri = new Uri(Path.Combine(solutionDirectory, solutionRecordName));
 				serializer.Serialize(solution, stream);
 			}
 		}
 
 		public void Update(Solution solution)
 		{
-			using (Stream stream = storage.Save(Path.GetFileName(solution.Uri.LocalPath)))
+			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution)))
 			{
 				serializer.Serialize(solution, stream);
 			}
@@ -76,6 +70,36 @@ namespace MeshEditor.SolutionManager.IO
 		private IEnumerable<string> findAllSolutionFilesInSolutionDirectory()
 		{
 			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileExtension + serializer.FileExtension, SearchOption.TopDirectoryOnly);
+		}
+
+		private string findRecordNameOfSolution(ISolutionInfo solutionInfo)
+		{
+			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			{
+				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				{
+					var testSolution = serializer.Deserialize<SolutionBase>(stream);
+					if (testSolution.Id == solutionInfo.Id)
+					{
+						return Path.GetFileName(solutionFile);
+					}
+				}
+			}
+			throw new FileNotFoundException();
+		}
+
+		private int findAvailableSolutionId()
+		{
+			int maxId = 0;
+			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			{
+				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				{
+					var testSolution = serializer.Deserialize<SolutionBase>(stream);
+					maxId = Math.Max(maxId, testSolution.Id);
+				}
+			}
+			return maxId + 1;
 		}
 
 		#endregion

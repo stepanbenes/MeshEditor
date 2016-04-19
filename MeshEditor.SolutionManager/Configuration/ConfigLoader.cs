@@ -51,7 +51,7 @@ namespace MeshEditor.SolutionManager.Configuration
 				case SolutionProviderType.RestApi:
 					{
 						var restApiSolutionProviderInfo = (RestApiSolutionProviderInfo)solutionProviderInfo;
-						return new RestApiSolutionProvider(/*restApiSolutionProviderInfo.Uri*/);
+						return new RestApiSolutionProvider(restApiSolutionProviderInfo.Uri);
 					}
 				default:
 					throw new NotSupportedException();
