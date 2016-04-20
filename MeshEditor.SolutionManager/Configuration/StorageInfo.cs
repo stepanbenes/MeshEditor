@@ -32,5 +32,6 @@ namespace MeshEditor.SolutionManager.Configuration
 		public override StorageType Type => StorageType.AzureBlob;
 		public string ConnectionString { get; set; }
 		public string BlobContainerName { get; set; }
+		public string BaseUri { get; set; }
 	}
 }

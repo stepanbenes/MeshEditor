@@ -69,7 +69,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(logger);
-			hub.Filter(hub.EnumerateSolutions().Single(), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
+			hub.Filter(pickSolution(hub), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
 			return 0;
 		}
 
@@ -77,7 +77,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(logger);
-			hub.Compress(hub.EnumerateSolutions().Single(), options.Layer, options.Method, options.FieldName, options.ComponentName);
+			hub.Compress(pickSolution(hub), options.Layer, options.Method, options.FieldName, options.ComponentName);
 			return 0;
 		}
 
@@ -85,7 +85,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(logger);
-			hub.Diff(hub.EnumerateSolutions().Single(), options.Layer);
+			hub.Diff(pickSolution(hub), options.Layer);
 			return 0;
 		}
 
@@ -116,6 +116,11 @@ namespace MeshEditor.FormatConverter
 		#endregion
 
 		#region Private methods
+
+		private static ISolutionInfo pickSolution(SolutionHub hub)
+		{
+			return hub.EnumerateSolutions().First();
+		}
 
 		#endregion
 	}

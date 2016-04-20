@@ -1,7 +1,7 @@
 ﻿{
     "SolutionProvider": {
-        "Type": "Local",
-        "Directory": null
+        "Type": "RestApi",
+        "BaseUri": "http://mesheditor.azurewebsites.net"
     },
 
     "ImportStorage": {
@@ -9,11 +9,19 @@
         "Directory": null
     },
     "LayerSourceStorage": {
-        "Type": "Local",
-        "Directory": null
+        "Type": "AzureBlob",
+        "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
+        "BlobContainerName": "fea-layers",
+        "BaseUri": "https://feastorage.blob.core.windows.net/fea-layers"
     },
     "LayerDestinationStorage": {
-        "Type": "Local",
-        "Directory": null
+        "Type": "AzureBlob",
+        "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
+        "BlobContainerName": "fea-layers",
+        "BaseUri": "https://feastorage.blob.core.windows.net/fea-layers"
     }
+    //"LayerDestinationStorage": {
+    //    "Type": "Local",
+    //    "Directory": null
+    //}
 }

@@ -33,7 +33,7 @@ namespace MeshEditor.SolutionManager.Configuration
 	class RestApiSolutionProviderInfo : SolutionProviderInfo
 	{
 		public override SolutionProviderType Type => SolutionProviderType.RestApi;
-		public string Uri { get; set; }
+		public string BaseUri { get; set; }
 		// credentials...
 	}
 }

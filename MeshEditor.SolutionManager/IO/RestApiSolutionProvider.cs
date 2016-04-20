@@ -62,14 +62,65 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<Solution>(response);
 		}
 
-		public void Create(Solution solution)
+		//public void Create(Solution solution)
+		//{
+		//	sendSolutionObject(solution, Method.POST);
+		//}
+
+		//public void Update(Solution solution)
+		//{
+		//	sendSolutionObject(solution, Method.PUT);
+		//}
+
+		public void CreateNew(SolutionBase solution)
 		{
-			throw new NotImplementedException();
+			var client = new RestClient(uri);
+			var request = new RestRequest($"api/solution/{solution.Id}", Method.POST);
+
+			//request.AddUrlSegment("id", simulationId.ToString());
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			request.RequestFormat = DataFormat.Json;
+			//request.AddBody(serializedSolution);
+			//request.AddQueryParameter("state", ((int)analysisState).ToString());
+
+			string jsonString = request.JsonSerializer.Serialize(solution);
+			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
+
+			var response = client.Execute(request);
+
+			Console.WriteLine("Status code: " + response.StatusCode);
+			Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
 		}
 
-		public void Update(Solution solution)
+		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			throw new NotImplementedException();
+			var client = new RestClient(uri);
+			var request = new RestRequest($"api/solution/{solution.Id}/layer", Method.POST);
+
+			//request.AddUrlSegment("id", simulationId.ToString());
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			request.RequestFormat = DataFormat.Json;
+			//request.AddBody(serializedSolution);
+			//request.AddQueryParameter("state", ((int)analysisState).ToString());
+
+			var body = new
+			{
+				Id = newLayer.Id,
+				ParentLayerId = parentLayer?.Id,
+				SolutionId = solution.Id,
+				Name = newLayer.Name,
+				FilterType = newLayer.FilterType
+			};
+
+			string jsonString = request.JsonSerializer.Serialize(body);
+			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
+
+			var response = client.Execute(request);
+
+			Console.WriteLine("Status code: " + response.StatusCode);
+			Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
 		}
 
 		#endregion

@@ -46,7 +46,7 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public void Create(Solution solution)
+		public void CreateNew(SolutionBase solution)
 		{
 			string projectNameAsValidFileName = solution.ProjectName.MakeAlphanumericFilename();
 			string solutionRecordName = projectNameAsValidFileName + SolutionFileExtension + serializer.FileExtension;
@@ -57,8 +57,9 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public void Update(Solution solution)
+		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
+			parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(newLayer).ToArray();
 			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution)))
 			{
 				serializer.Serialize(solution, stream);

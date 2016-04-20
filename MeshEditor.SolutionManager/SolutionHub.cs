@@ -55,9 +55,10 @@ namespace MeshEditor.SolutionManager
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, geometryImportService, dataImportService);
 			logNewLayer(masterLayer);
 			projectName = projectName ?? Path.GetFileNameWithoutExtension(meshFile);
-			var solution = createSolutionFromMasterLayer(masterLayer, projectName);
 
-			solutionProvider.Create(solution);
+			var solution = new Solution { ProjectName = projectName };
+			solutionProvider.CreateNew(solution);
+			solutionProvider.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
 		public void Filter(ISolutionInfo solutionInfo, string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
@@ -67,19 +68,17 @@ namespace MeshEditor.SolutionManager
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
 			Filter filter = FilterFactory.Create(filterType, filterParameters);
+			Solution solution = solutionProvider.Get(solutionInfo);
 
-			processLayer(solutionInfo, parentLayerIdOrName,
-				layer =>
-				{
-					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-					var filterLayer = layerGenerator.GenerateFilterLayer(layer.Id, filter, layerName);
-					logNewLayer(filterLayer);
-					// convert filter layer to layer record and append it to parent layer's children
-					var childLayer = createLayerRecordFromFilterLayer(filterLayer);
-					layer.Children = layer.Children.EmptyIfNull().Append(childLayer).ToArray();
-				},
-				updateSolutionFile: true
-			);
+			var parentLayer = findLayer(solution, parentLayerIdOrName);
+
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var filterLayer = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, layerName);
+			logNewLayer(filterLayer);
+			// convert filter layer to layer record and append it to parent layer's children
+			var childLayer = createLayerRecordLayerSummaryFile(filterLayer);
+
+			solutionProvider.AddLayer(solution, parentLayer, childLayer);
 		}
 
 		public void Compress(ISolutionInfo solutionInfo, string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
@@ -88,72 +87,47 @@ namespace MeshEditor.SolutionManager
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
 				throw new ArgumentException($"Unknown compression method ({compressionMethodName})", nameof(compressionMethodName));
 
-			processLayer(solutionInfo, layerIdOrName,
-				layer =>
-				{
-					var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-					var compressedLayer = layerGenerator.CompressLayer(layer.Id, $"time compression ({method})", fieldName, componentName);
-					logNewLayer(compressedLayer);
-					// convert filter layer to layer record and append it to parent layer's children
-					var childLayer = createLayerRecordFromFilterLayer(compressedLayer);
-					layer.Children = layer.Children.EmptyIfNull().Append(childLayer).ToArray();
-				},
-				updateSolutionFile: true
-			);
+			Solution solution = solutionProvider.Get(solutionInfo);
+
+			var parentLayer = findLayer(solution, layerIdOrName);
+
+			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, $"time compression ({method})", fieldName, componentName);
+			logNewLayer(compressedLayer);
+			// convert filter layer to layer record and append it to parent layer's children
+			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);
+
+			solutionProvider.AddLayer(solution, parentLayer, childLayer);
 		}
 
 		public void Diff(ISolutionInfo solutionInfo, string layerIdOrName)
 		{
-			processLayer(solutionInfo, layerIdOrName,
-				layer =>
-				{
-					var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-					var diff = layerGenerator.CreateDiff(layer.Id);
-					logger?.LogMessage(diff.ToString());
-				},
-				updateSolutionFile: false
-			);
+			Solution solution = solutionProvider.Get(solutionInfo);
+			var layer = findLayer(solution, layerIdOrName);
+
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var diff = layerGenerator.CreateDiff(layer.Id);
+			logger?.LogMessage(diff.ToString());
 		}
 
 		#endregion
 
 		#region Helper methods
 
-		private static Solution createSolutionFromMasterLayer(SummaryLayerFile masterLayer, string projectName)
-		{
-			Solution solution = new Solution
-			{
-				ProjectName = projectName,
-				Layers = new[]
-				{
-					new Solution.Layer
-					{
-						Id = masterLayer.Id,
-						Name = masterLayer.Name,
-						FilterType = null,
-						Children = null
-					}
-				}
-			};
-			return solution;
-		}
-
-		private static Solution.Layer createLayerRecordFromFilterLayer(SummaryLayerFile filterLayer)
+		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryLayerFile layerSummary)
 		{
 			var newLayerRecord = new Solution.Layer
 			{
-				Id = filterLayer.Id,
-				Name = filterLayer.Name,
-				FilterType = filterLayer.Filter.Type.ToString(),
+				Id = layerSummary.Id,
+				Name = layerSummary.Name,
+				FilterType = layerSummary.Filter?.Type.ToString(),
 				Children = null
 			};
 			return newLayerRecord;
 		}
 
-		private void processLayer(ISolutionInfo solutionInfo, string layerIdentifier, Action<Solution.Layer> processLayerOperation, bool updateSolutionFile)
+		private Solution.Layer findLayer(Solution solution, string layerIdentifier)
 		{
-			Solution solution = solutionProvider.Get(solutionInfo);
-
 			// find layer according to either provided layer guid or layer name
 			Solution.Layer layer;
 			Guid guid;
@@ -171,14 +145,7 @@ namespace MeshEditor.SolutionManager
 				throw new Exception($"Layer '{layerIdentifier}' not found.");
 			}
 
-			// --------------------------
-			processLayerOperation(layer);
-			// --------------------------
-
-			if (updateSolutionFile)
-			{
-				solutionProvider.Update(solution);
-			}
+			return layer;
 		}
 
 		private static Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)

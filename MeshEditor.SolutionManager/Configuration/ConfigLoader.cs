@@ -51,7 +51,7 @@ namespace MeshEditor.SolutionManager.Configuration
 				case SolutionProviderType.RestApi:
 					{
 						var restApiSolutionProviderInfo = (RestApiSolutionProviderInfo)solutionProviderInfo;
-						return new RestApiSolutionProvider(restApiSolutionProviderInfo.Uri);
+						return new RestApiSolutionProvider(restApiSolutionProviderInfo.BaseUri);
 					}
 				default:
 					throw new NotSupportedException();
@@ -70,7 +70,7 @@ namespace MeshEditor.SolutionManager.Configuration
 				case StorageType.AzureBlob:
 					{
 						var azureBlobStorageInfo = (AzureBlobStorageInfo)storageInfo;
-						return new AzureBlobStorageService(azureBlobStorageInfo.ConnectionString, azureBlobStorageInfo.BlobContainerName);
+						return new AzureBlobStorageService(azureBlobStorageInfo.ConnectionString, azureBlobStorageInfo.BaseUri, azureBlobStorageInfo.BlobContainerName);
 					}
 				default:
 					throw new NotSupportedException();
