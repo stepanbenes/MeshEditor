@@ -14,13 +14,22 @@ namespace MeshEditor.SolutionManager.Configuration
 {
 	class ConfigLoader
 	{
-		public static void ReadConfiguration(out ISolutionProvider solutionProvider, out IStorageService importStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
+		public static void ReadConfiguration(string configFile, out ISolutionProvider solutionProvider, out IStorageService meshImportStorage, out IStorageService dataImportStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
 		{
-			string configFilename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
-			if (File.Exists(configFilename))
+			string configFilePath;
+			if (configFile == null)
+			{
+				configFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
+			}
+			else
+			{
+				configFilePath = (Path.IsPathRooted(configFile)) ? configFile : Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFile);
+			}
+
+			if (File.Exists(configFilePath))
 			{
 				Config config = null;
-				using (var stream = new FileStream(configFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
+				using (var stream = new FileStream(configFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
 				{
 					ISerializationService serializer = new JsonSerializationService();
 					config = serializer.Deserialize<Config>(stream);
@@ -28,14 +37,15 @@ namespace MeshEditor.SolutionManager.Configuration
 
 				solutionProvider = createSolutionProvider(config.SolutionProvider);
 
-				importStorage = createStorageService(config.ImportStorage);
+				meshImportStorage = createStorageService(config.MeshImportStorage);
+				dataImportStorage = createStorageService(config.DataImportStorage);
 				layerSourceStorage = createStorageService(config.LayerSourceStorage);
 				layerDestinationStorage = createStorageService(config.LayerDestinationStorage);
 			}
 			else
 			{
 				solutionProvider = new LocalSolutionProvider(Directory.GetCurrentDirectory());
-				importStorage = layerSourceStorage = layerDestinationStorage = new LocalFileSystemStorageService(Directory.GetCurrentDirectory());
+				meshImportStorage = dataImportStorage = layerSourceStorage = layerDestinationStorage = new LocalFileSystemStorageService(Directory.GetCurrentDirectory());
 			}
 		}
 

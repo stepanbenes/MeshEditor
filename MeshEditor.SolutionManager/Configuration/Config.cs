@@ -8,7 +8,8 @@ namespace MeshEditor.SolutionManager.Configuration
 	{
 		public SolutionProviderInfo SolutionProvider { get; set; }
 
-		public StorageInfo ImportStorage { get; set; }
+		public StorageInfo MeshImportStorage { get; set; }
+		public StorageInfo DataImportStorage { get; set; }
 		public StorageInfo LayerSourceStorage { get; set; }
 		public StorageInfo LayerDestinationStorage { get; set; }
 	}

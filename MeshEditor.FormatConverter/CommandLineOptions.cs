@@ -11,6 +11,9 @@ namespace MeshEditor.FormatConverter
 		// Omitting long name, default --verbose
 		[Option(HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
+
+		[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
+		public string ConfigFile { get; set; }
 	}
 	
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]

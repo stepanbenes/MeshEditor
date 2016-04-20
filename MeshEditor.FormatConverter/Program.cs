@@ -58,7 +58,7 @@ namespace MeshEditor.FormatConverter
 		private int runImportCommand(ImportOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(logger)
+			new SolutionHub(options.ConfigFile, logger)
 				.Import(options.ProjectName, options.MeshFile, options.ResultFiles);
 			return 0;
 		}
@@ -66,7 +66,7 @@ namespace MeshEditor.FormatConverter
 		private int runFilterCommand(FilterOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(logger);
+			var hub = new SolutionHub(options.ConfigFile, logger);
 			hub.Filter(pickSolution(hub), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
 			return 0;
 		}
@@ -74,7 +74,7 @@ namespace MeshEditor.FormatConverter
 		private int runCompressCommand(CompressOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(logger);
+			var hub = new SolutionHub(options.ConfigFile, logger);
 			hub.Compress(pickSolution(hub), options.Layer, options.Method, options.FieldName, options.ComponentName);
 			return 0;
 		}
@@ -82,7 +82,7 @@ namespace MeshEditor.FormatConverter
 		private int runDiffCommand(DiffOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(logger);
+			var hub = new SolutionHub(options.ConfigFile, logger);
 			hub.Diff(pickSolution(hub), options.Layer);
 			return 0;
 		}
@@ -90,7 +90,7 @@ namespace MeshEditor.FormatConverter
 		private int runListCommand(ListOptions options)
 		{
 			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(logger);
+			var hub = new SolutionHub(options.ConfigFile, logger);
 			foreach (var solutionInfo in hub.EnumerateSolutions()) // list all solutions
 			{
 				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}", LogMessagePriority.High);

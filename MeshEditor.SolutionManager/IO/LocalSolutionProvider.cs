@@ -59,7 +59,14 @@ namespace MeshEditor.SolutionManager.IO
 
 		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(newLayer).ToArray();
+			if (parentLayer == null)
+			{
+				solution.Layers = solution.Layers.EmptyIfNull().Append(newLayer).ToArray();
+			}
+			else
+			{
+				parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(newLayer).ToArray();
+			}
 			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution)))
 			{
 				serializer.Serialize(solution, stream);

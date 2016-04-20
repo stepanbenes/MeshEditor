@@ -23,13 +23,13 @@ namespace MeshEditor.SolutionManager
 		#region Fields, constructor
 
 		ISolutionProvider solutionProvider;
-		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
+		IStorageService meshImportStorage, dataImportStorage, layerSourceStorage, layerDestinationStorage;
 		ILogger logger;
 
-		public SolutionHub(ILogger logger = null)
+		public SolutionHub(string configFile = null, ILogger logger = null)
 		{
 			this.logger = logger;
-			ConfigLoader.ReadConfiguration(out solutionProvider, out importStorage, out layerSourceStorage, out layerDestinationStorage);
+			ConfigLoader.ReadConfiguration(configFile, out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
 		}
 
 		#endregion
@@ -49,8 +49,8 @@ namespace MeshEditor.SolutionManager
 		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
 		{
 			const string masterLayerName = "master";
-			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(importStorage, meshFile);
-			IDataImportService dataImportService = resultFiles.Any() ? DataFormatParserFactory.Create(importStorage, resultFiles) : null;
+			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(meshImportStorage, meshFile);
+			IDataImportService dataImportService = resultFiles.Any() ? DataFormatParserFactory.Create(dataImportStorage, resultFiles) : null;
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, geometryImportService, dataImportService);
 			logNewLayer(masterLayer);

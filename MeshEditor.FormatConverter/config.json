@@ -4,9 +4,17 @@
         "BaseUri": "http://mesheditor.azurewebsites.net"
     },
 
-    "ImportStorage": {
-        "Type": "Local",
-        "Directory": null
+    "MeshImportStorage": {
+        "Type": "AzureBlob",
+        "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
+        "BlobContainerName": "fea-meshes",
+        "BaseUri": "https://feastorage.blob.core.windows.net/fea-meshes"
+    },
+    "DataImportStorage": {
+        "Type": "AzureBlob",
+        "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
+        "BlobContainerName": "fea-results",
+        "BaseUri": "https://feastorage.blob.core.windows.net/fea-results"
     },
     "LayerSourceStorage": {
         "Type": "AzureBlob",
