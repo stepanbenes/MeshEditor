@@ -19,9 +19,10 @@ namespace MeshEditor.FormatConverter
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
 			var program = new Program();
+			int code;
 			try
 			{
-				return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+				code = Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
 					.MapResult(
 					(ImportOptions options) => program.runImportCommand(options),
 					(FilterOptions options) => program.runFilterCommand(options),
@@ -30,10 +31,13 @@ namespace MeshEditor.FormatConverter
 					(ListOptions options) => program.runListCommand(options),
 					errors => 1);
 			}
-			finally
+			catch (Exception ex)
 			{
-				program.GoodBye();
+				program.logger?.LogError(ex);
+				code = 1;
 			}
+			program.goodBye(success: code == 0);
+			return code;
 		}
 
 		#region Fields, constructor
@@ -45,12 +49,6 @@ namespace MeshEditor.FormatConverter
 		{
 			stopwatch = new Stopwatch();
 			stopwatch.Start();
-		}
-
-		public void GoodBye()
-		{
-			stopwatch.Stop();
-			logger?.LogMessage($"Done in {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}.", LogMessagePriority.High);
 		}
 
 		#endregion
@@ -117,9 +115,53 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private static ISolutionInfo pickSolution(SolutionHub hub)
+		private ISolutionInfo pickSolution(SolutionHub hub)
 		{
-			return hub.EnumerateSolutions().First();
+			var solutions = hub.EnumerateSolutions().ToArray();
+			if (solutions.Length == 0)
+				throw new FileNotFoundException("No solution found");
+			if (solutions.Length == 1)
+				return solutions[0];
+
+			stopwatch.Stop(); // interrupt stopwatch
+			try
+			{
+				// otherwise show menu:
+				Console.WriteLine("Choose solution:");
+				foreach (var solution in solutions)
+				{
+					Console.WriteLine($"# Solution id: {solution.Id}, Project name: '{solution.ProjectName}'");
+				}
+
+				// read input from keyboard
+				while (true)
+				{
+					Console.Write("Id = ");
+					string input = Console.ReadLine();
+					int id;
+					if (!int.TryParse(input, out id))
+					{
+						Console.WriteLine("Please insert valid integer value.");
+						continue;
+					}
+					if (!solutions.Any(s => s.Id == id))
+					{
+						Console.WriteLine($"Solution with id '{id}' does not exist.");
+						continue;
+					}
+					return solutions.Single(s => s.Id == id);
+				}
+			}
+			finally
+			{
+				stopwatch.Start();
+			}
+		}
+
+		private void goodBye(bool success)
+		{
+			stopwatch.Stop();
+			logger?.LogMessage($"{(success ? "Success." : "Fail.")} Duration: {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}", LogMessagePriority.High);
 		}
 
 		#endregion

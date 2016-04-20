@@ -24,5 +24,13 @@ namespace MeshEditor.FormatConverter
 				Console.WriteLine(message);
 			}
 		}
+
+		public void LogError(Exception ex)
+		{
+			var color = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine($"{ex.GetType().Name}: {ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
+			Console.ForegroundColor = color;
+		}
 	}
 }
