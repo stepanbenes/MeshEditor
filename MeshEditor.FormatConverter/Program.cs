@@ -59,7 +59,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			new SolutionHub(options.ConfigFile, logger)
-				.Import(options.ProjectName, options.MeshFile, options.ResultFiles);
+				.Import(options.SolutionId, options.ProjectName, options.MeshFile, options.ResultFiles);
 			return 0;
 		}
 
@@ -100,15 +100,6 @@ namespace MeshEditor.FormatConverter
 				}
 			}
 			return 0;
-		}
-
-		private void printLayerInfo(ILayerInfo layerInfo, int depth)
-		{
-			logger.LogMessage($"{new string(' ', depth * 2)}+ {layerInfo.Name}, filter: {layerInfo.FilterType}, {layerInfo.Id}", LogMessagePriority.High);
-			foreach (var child in layerInfo.Children)
-			{
-				printLayerInfo(child, depth + 1);
-			}
 		}
 
 		#endregion
@@ -162,6 +153,15 @@ namespace MeshEditor.FormatConverter
 		{
 			stopwatch.Stop();
 			logger?.LogMessage($"{(success ? "Success." : "Fail.")} Duration: {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}", LogMessagePriority.High);
+		}
+
+		private void printLayerInfo(ILayerInfo layerInfo, int depth)
+		{
+			logger.LogMessage($"{new string(' ', depth * 2)}+ '{layerInfo.Name}', filter: {layerInfo.FilterType}, {layerInfo.Id}", LogMessagePriority.High);
+			foreach (var child in layerInfo.Children)
+			{
+				printLayerInfo(child, depth + 1);
+			}
 		}
 
 		#endregion

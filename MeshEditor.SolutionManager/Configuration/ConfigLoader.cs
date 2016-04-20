@@ -9,12 +9,20 @@ using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.SolutionManager.Logging;
 
 namespace MeshEditor.SolutionManager.Configuration
 {
 	class ConfigLoader
 	{
-		public static void ReadConfiguration(string configFile, out ISolutionProvider solutionProvider, out IStorageService meshImportStorage, out IStorageService dataImportStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
+		ILogger logger;
+
+		public ConfigLoader(ILogger logger)
+		{
+			this.logger = logger;
+		}
+
+		public void ReadConfiguration(string configFile, out ISolutionProvider solutionProvider, out IStorageService meshImportStorage, out IStorageService dataImportStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
 		{
 			string configFilePath;
 			if (configFile == null)
@@ -49,7 +57,7 @@ namespace MeshEditor.SolutionManager.Configuration
 			}
 		}
 
-		private static ISolutionProvider createSolutionProvider(SolutionProviderInfo solutionProviderInfo)
+		private ISolutionProvider createSolutionProvider(SolutionProviderInfo solutionProviderInfo)
 		{
 			switch (solutionProviderInfo.Type)
 			{
@@ -61,14 +69,14 @@ namespace MeshEditor.SolutionManager.Configuration
 				case SolutionProviderType.RestApi:
 					{
 						var restApiSolutionProviderInfo = (RestApiSolutionProviderInfo)solutionProviderInfo;
-						return new RestApiSolutionProvider(restApiSolutionProviderInfo.BaseUri);
+						return new RestApiSolutionProvider(restApiSolutionProviderInfo.BaseUri, logger);
 					}
 				default:
 					throw new NotSupportedException();
 			}
 		}
 
-		private static IStorageService createStorageService(StorageInfo storageInfo)
+		private IStorageService createStorageService(StorageInfo storageInfo)
 		{
 			switch (storageInfo.Type)
 			{

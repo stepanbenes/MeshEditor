@@ -29,7 +29,7 @@ namespace MeshEditor.SolutionManager
 		public SolutionHub(string configFile = null, ILogger logger = null)
 		{
 			this.logger = logger;
-			ConfigLoader.ReadConfiguration(configFile, out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
+			new ConfigLoader(logger).ReadConfiguration(configFile, out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
 		}
 
 		#endregion
@@ -46,7 +46,7 @@ namespace MeshEditor.SolutionManager
 			return solutionProvider.Get(solution).Layers;
 		}
 
-		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
+		public void Import(int solutionId, string projectName, string meshFile, IEnumerable<string> resultFiles)
 		{
 			const string masterLayerName = "master";
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(meshImportStorage, meshFile);
@@ -56,7 +56,7 @@ namespace MeshEditor.SolutionManager
 			logNewLayer(masterLayer);
 			projectName = projectName ?? Path.GetFileNameWithoutExtension(meshFile);
 
-			var solution = new Solution { ProjectName = projectName };
+			var solution = new Solution { Id = solutionId, ProjectName = projectName };
 			solutionProvider.CreateNew(solution);
 			solutionProvider.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}

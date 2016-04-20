@@ -759,22 +759,26 @@ namespace MeshEditor.LayerManager
 
 		private string getLayerSummaryRecordName(Guid layerId)
 		{
-			return $"{layerId}/{layerId}.summary{serializationService.FileExtension}";
+			//return $"{layerId}/{layerId}.summary{serializationService.FileExtension}";
+			return $"{layerId}/summary{serializationService.FileExtension}";
 		}
 
 		private string getLayerMeshRecordName(Guid layerId)
 		{
-			return $"{layerId}/{layerId}.mesh{serializationService.FileExtension}";
+			//return $"{layerId}/{layerId}.mesh{serializationService.FileExtension}";
+			return $"{layerId}/mesh{serializationService.FileExtension}";
 		}
 
 		private string getLayerAttributeRecordName(Guid layerId, int index)
 		{
-			return $"{layerId}/{layerId}.{index}.attribute{serializationService.FileExtension}";
+			//return $"{layerId}/{layerId}.{index}.attribute{serializationService.FileExtension}";
+			return $"{layerId}/attribute.{index}{serializationService.FileExtension}";
 		}
 
 		private string getLayerResultRecordName(Guid layerId, int index)
 		{
-			return $"{layerId}/{layerId}.{index}.result{serializationService.FileExtension}";
+			//return $"{layerId}/{layerId}.{index}.result{serializationService.FileExtension}";
+			return $"{layerId}/result.{index}{serializationService.FileExtension}";
 		}
 
 		private static LayerDiff compareTwoDataDescriptions(DataDescription a, DataDescription b)

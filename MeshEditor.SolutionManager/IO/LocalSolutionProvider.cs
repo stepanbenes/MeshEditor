@@ -50,7 +50,6 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			string projectNameAsValidFileName = solution.ProjectName.MakeAlphanumericFilename();
 			string solutionRecordName = projectNameAsValidFileName + SolutionFileExtension + serializer.FileExtension;
-			solution.Id = findAvailableSolutionId();
 			using (Stream stream = localStorage.Save(solutionRecordName))
 			{
 				serializer.Serialize(solution, stream);
@@ -94,20 +93,6 @@ namespace MeshEditor.SolutionManager.IO
 				}
 			}
 			throw new FileNotFoundException();
-		}
-
-		private int findAvailableSolutionId()
-		{
-			int maxId = 0;
-			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
-			{
-				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
-				{
-					var testSolution = serializer.Deserialize<SolutionBase>(stream);
-					maxId = Math.Max(maxId, testSolution.Id);
-				}
-			}
-			return maxId + 1;
 		}
 
 		#endregion

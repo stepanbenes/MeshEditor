@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
+using MeshEditor.SolutionManager.Logging;
 using RestSharp;
 
 namespace MeshEditor.SolutionManager.IO
@@ -16,11 +18,13 @@ namespace MeshEditor.SolutionManager.IO
 
 		private string uri;
 		private ISerializationService serializer;
+		private ILogger logger;
 
-		public RestApiSolutionProvider(string uri)
+		public RestApiSolutionProvider(string uri, ILogger logger)
 		{
 			Debug.Assert(uri != null);
 			this.uri = uri;
+			this.logger = logger;
 			serializer = new JsonSerializationService();
 		}
 
@@ -37,10 +41,7 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddHeader("Content-Type", "application/json");
 			//request.RequestFormat = DataFormat.Json;
 
-			var response = client.Execute(request);
-
-			//Console.WriteLine("Status code: " + response.StatusCode);
-			//Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
+			var response = executeRequest(client, request);
 
 			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
@@ -54,10 +55,7 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddHeader("Content-Type", "application/json");
 			//request.RequestFormat = DataFormat.Json;
 
-			var response = client.Execute(request);
-
-			//Console.WriteLine("Status code: " + response.StatusCode);
-			//Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
+			var response = executeRequest(client, request);
 
 			return parseResponse<Solution>(response);
 		}
@@ -75,7 +73,7 @@ namespace MeshEditor.SolutionManager.IO
 		public void CreateNew(SolutionBase solution)
 		{
 			var client = new RestClient(uri);
-			var request = new RestRequest($"api/solution/{solution.Id}", Method.POST);
+			var request = new RestRequest($"api/solution", Method.POST);
 
 			//request.AddUrlSegment("id", simulationId.ToString());
 			request.AddHeader("Accept", "application/json");
@@ -87,10 +85,7 @@ namespace MeshEditor.SolutionManager.IO
 			string jsonString = request.JsonSerializer.Serialize(solution);
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
-			var response = client.Execute(request);
-
-			Console.WriteLine("Status code: " + response.StatusCode);
-			Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
+			var response = executeRequest(client, request);
 		}
 
 		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
@@ -117,15 +112,37 @@ namespace MeshEditor.SolutionManager.IO
 			string jsonString = request.JsonSerializer.Serialize(body);
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
-			var response = client.Execute(request);
-
-			Console.WriteLine("Status code: " + response.StatusCode);
-			Console.WriteLine("ErrorMessage: " + (response.ErrorMessage ?? "None"));
+			var response = executeRequest(client, request);
 		}
 
 		#endregion
 
 		#region Private methods
+
+		private IRestResponse executeRequest(RestClient client, RestRequest request)
+		{
+			logger?.LogMessage($"{request.Method} {request.Resource}");
+
+			var response = client.Execute(request);
+
+			logger?.LogMessage($"Status: {response.StatusDescription} ({(int)response.StatusCode})");
+			if (response.ErrorException != null)
+				throw response.ErrorException;
+			if (isErrorStatusCode(response.StatusCode))
+				throw new Exception(/*response.Content*/response.StatusDescription);
+
+			return response;
+		}
+
+		private bool isSuccessStatusCode(HttpStatusCode statusCode)
+		{
+			return ((int)statusCode >= 200) && ((int)statusCode <= 299);
+		}
+
+		private bool isErrorStatusCode(HttpStatusCode statusCode)
+		{
+			return ((int)statusCode >= 400) && ((int)statusCode <= 599);
+		}
 
 		private T parseResponse<T>(IRestResponse response)
 		{
