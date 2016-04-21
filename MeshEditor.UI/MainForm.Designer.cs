@@ -103,6 +103,7 @@
 			this.edgesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.postprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.opensolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.loadDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
 			this.dataPickerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -663,7 +664,7 @@
 			this.orbitToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
 			this.orbitToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.orbitToolStripMenuItem1.Name = "orbitToolStripMenuItem1";
-			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
 			this.orbitToolStripMenuItem1.Text = "&Orbit";
 			this.orbitToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -672,7 +673,7 @@
 			this.panToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
 			this.panToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.panToolStripMenuItem1.Name = "panToolStripMenuItem1";
-			this.panToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+			this.panToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
 			this.panToolStripMenuItem1.Text = "&Pan";
 			this.panToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -681,7 +682,7 @@
 			this.lookAroundToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
 			this.lookAroundToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
 			this.lookAroundToolStripMenuItem1.Name = "lookAroundToolStripMenuItem1";
-			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(151, 22);
 			this.lookAroundToolStripMenuItem1.Text = "Look &around";
 			this.lookAroundToolStripMenuItem1.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
@@ -690,75 +691,75 @@
 			this.zoomWindowToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
 			this.zoomWindowToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
 			this.zoomWindowToolStripMenuItem.Name = "zoomWindowToolStripMenuItem";
-			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.zoomWindowToolStripMenuItem.Text = "&Zoom window";
 			this.zoomWindowToolStripMenuItem.Click += new System.EventHandler(this.cameraToolChosen);
 			// 
 			// toolStripSeparator10
 			// 
 			this.toolStripSeparator10.Name = "toolStripSeparator10";
-			this.toolStripSeparator10.Size = new System.Drawing.Size(149, 6);
+			this.toolStripSeparator10.Size = new System.Drawing.Size(148, 6);
 			// 
 			// zoomToFitToolStripMenuItem
 			// 
 			this.zoomToFitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
 			this.zoomToFitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
 			this.zoomToFitToolStripMenuItem.Name = "zoomToFitToolStripMenuItem";
-			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.zoomToFitToolStripMenuItem.Text = "Zoo&m to fit";
 			this.zoomToFitToolStripMenuItem.Click += new System.EventHandler(this.zoomToFitToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator16
 			// 
 			this.toolStripSeparator16.Name = "toolStripSeparator16";
-			this.toolStripSeparator16.Size = new System.Drawing.Size(149, 6);
+			this.toolStripSeparator16.Size = new System.Drawing.Size(148, 6);
 			// 
 			// frontToolStripMenuItem
 			// 
 			this.frontToolStripMenuItem.Name = "frontToolStripMenuItem";
-			this.frontToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.frontToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.frontToolStripMenuItem.Text = "&Front";
 			this.frontToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// backToolStripMenuItem
 			// 
 			this.backToolStripMenuItem.Name = "backToolStripMenuItem";
-			this.backToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.backToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.backToolStripMenuItem.Text = "&Back";
 			this.backToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// topToolStripMenuItem
 			// 
 			this.topToolStripMenuItem.Name = "topToolStripMenuItem";
-			this.topToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.topToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.topToolStripMenuItem.Text = "&Top";
 			this.topToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// bottomToolStripMenuItem
 			// 
 			this.bottomToolStripMenuItem.Name = "bottomToolStripMenuItem";
-			this.bottomToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.bottomToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.bottomToolStripMenuItem.Text = "Bo&ttom";
 			this.bottomToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// rightToolStripMenuItem
 			// 
 			this.rightToolStripMenuItem.Name = "rightToolStripMenuItem";
-			this.rightToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.rightToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.rightToolStripMenuItem.Text = "&Right";
 			this.rightToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// leftToolStripMenuItem
 			// 
 			this.leftToolStripMenuItem.Name = "leftToolStripMenuItem";
-			this.leftToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.leftToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.leftToolStripMenuItem.Text = "&Left";
 			this.leftToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
 			// isoToolStripMenuItem
 			// 
 			this.isoToolStripMenuItem.Name = "isoToolStripMenuItem";
-			this.isoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.isoToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
 			this.isoToolStripMenuItem.Text = "&Iso";
 			this.isoToolStripMenuItem.Click += new System.EventHandler(this.cameraStandardViewToolStripMenuItem_Click);
 			// 
@@ -823,6 +824,7 @@
 			// postprocessToolStripMenuItem
 			// 
 			this.postprocessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.opensolutionToolStripMenuItem,
             this.loadDataToolStripMenuItem,
             this.toolStripSeparator24,
             this.dataPickerToolStripMenuItem,
@@ -833,6 +835,15 @@
 			this.postprocessToolStripMenuItem.Name = "postprocessToolStripMenuItem";
 			this.postprocessToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
 			this.postprocessToolStripMenuItem.Text = "&POSTPROCESS";
+			// 
+			// opensolutionToolStripMenuItem
+			// 
+			this.opensolutionToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
+			this.opensolutionToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.opensolutionToolStripMenuItem.Name = "opensolutionToolStripMenuItem";
+			this.opensolutionToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+			this.opensolutionToolStripMenuItem.Text = "Open &solution...";
+			this.opensolutionToolStripMenuItem.Click += new System.EventHandler(this.openSolutionToolStripMenuItem_Click);
 			// 
 			// loadDataToolStripMenuItem
 			// 
@@ -1497,7 +1508,7 @@
             this.closeWindowToolStripMenuItem});
 			this.contextMenuStrip.Name = "contextMenuStrip";
 			this.contextMenuStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-			this.contextMenuStrip.Size = new System.Drawing.Size(152, 192);
+			this.contextMenuStrip.Size = new System.Drawing.Size(152, 170);
 			this.contextMenuStrip.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextMenuStrip_Closed);
 			this.contextMenuStrip.Opened += new System.EventHandler(this.cameraToolStripMenuItem_DropDownOpened);
 			// 
@@ -1816,6 +1827,7 @@
 		private System.Windows.Forms.ToolStripMenuItem configurePropertyColorsToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem axisArrowsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem beamNumbersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem opensolutionToolStripMenuItem;
 	}
 }
 

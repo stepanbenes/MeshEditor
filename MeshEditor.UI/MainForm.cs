@@ -21,6 +21,7 @@ using System.Threading;
 using MeshEditor.DataVisualizer;
 using MeshEditor.DataVisualizer.UI;
 using MeshEditor.DataVisualizer.Data;
+using System.Threading.Tasks;
 
 namespace MeshEditor.WinUI
 {
@@ -1745,6 +1746,34 @@ namespace MeshEditor.WinUI
 
 				this.takeScreenshotLastFilterIndex = dialog.FilterIndex;
 				this.takeScreenshotLastFilename = Path.GetFileName(dialog.FileName);
+			}
+		}
+
+		private async void openSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			// TODO: FIX THIS !!!
+
+			OpenFileDialog dialog = new OpenFileDialog();
+			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
+			if (dialog.ShowDialog() == DialogResult.OK)
+			{
+				SolutionManager.IO.ISolutionInfo solution;
+				var solutionHub = new SolutionManager.SolutionHub(dialog.FileName, out solution);
+				var layers = solutionHub.EnumerateLayersOfSolution(solution.Id);
+
+				// TODO: load master layer and its data, show layers panel
+
+				var masterLayer = layers.Single(l => l.Name == "master");
+				string masterLayerFilename = Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString(), "mesh.json");
+				activeControl.LoadFiles(masterLayerFilename);
+
+				await Task.Delay(2000); // mesh is beeing loaded asynchronously, it must be loaded before data can begin to load, so wait some time
+
+				var dataVisualizer = new ExactDataVisualizer();
+				setNewDataVisualizer(dataVisualizer);
+				var resultFiles = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString()), "result.*");
+				dataVisualizer.LoadData(new ApproximationParameters(loadInternalEntities: true), resultFiles.ToArray(), longOpNotifier);
+				dataVisualizer.FinishUp();
 			}
 		}
 
