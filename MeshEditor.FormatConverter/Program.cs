@@ -9,6 +9,7 @@ using System.Diagnostics;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.Logging;
 using MeshEditor.SolutionManager.IO;
+using Microsoft.Azure.WebJobs;
 
 namespace MeshEditor.FormatConverter
 {
@@ -18,26 +19,21 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			var program = new Program();
-			int code;
-			try
+			string webjobName = Environment.GetEnvironmentVariable("WEBJOBS_NAME");
+
+			if (webjobName == null) // running locally
 			{
-				code = Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
-					.MapResult(
-					(ImportOptions options) => program.runImportCommand(options),
-					(FilterOptions options) => program.runFilterCommand(options),
-					(CompressOptions options) => program.runCompressCommand(options),
-					(DiffOptions options) => program.runDiffCommand(options),
-					(ListOptions options) => program.runListCommand(options),
-					errors => 1);
+				var program = new Program();
+				return program.Run(args);
 			}
-			catch (Exception ex)
+			else
 			{
-				program.logger?.LogError(ex);
-				code = 1;
+				var configuration = new JobHostConfiguration(Environment.GetEnvironmentVariable("AzureWebJobsDashboard"));
+				var host = new JobHost(configuration);
+				// The following code ensures that the WebJob will be running continuously
+				host.RunAndBlock();
+				return 0;
 			}
-			program.goodBye(success: code == 0);
-			return code;
 		}
 
 		#region Fields, constructor
@@ -49,6 +45,33 @@ namespace MeshEditor.FormatConverter
 		{
 			stopwatch = new Stopwatch();
 			stopwatch.Start();
+		}
+
+		#endregion
+
+		#region Public methods
+
+		public int Run(IEnumerable<string> args)
+		{
+			int code;
+			try
+			{
+				code = Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+					.MapResult(
+					(ImportOptions options) => runImportCommand(options),
+					(FilterOptions options) => runFilterCommand(options),
+					(CompressOptions options) => runCompressCommand(options),
+					(DiffOptions options) => runDiffCommand(options),
+					(ListOptions options) => runListCommand(options),
+					errors => 1);
+			}
+			catch (Exception ex)
+			{
+				logger?.LogError(ex);
+				code = 1;
+			}
+			goodBye(success: code == 0);
+			return code;
 		}
 
 		#endregion
