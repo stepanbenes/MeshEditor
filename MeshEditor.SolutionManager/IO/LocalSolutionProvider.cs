@@ -72,6 +72,14 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
+		public ISolutionInfo LoadSolutionFromFileName(string relativeFilename)
+		{
+			using (Stream stream = localStorage.Load(relativeFilename))
+			{
+				return serializer.Deserialize<SolutionBase>(stream);
+			}
+		}
+
 		#region Private methods
 
 		private IEnumerable<string> findAllSolutionFilesInSolutionDirectory()
@@ -96,5 +104,6 @@ namespace MeshEditor.SolutionManager.IO
 		}
 
 		#endregion
+
 	}
 }

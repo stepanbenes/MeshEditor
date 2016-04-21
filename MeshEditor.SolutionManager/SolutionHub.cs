@@ -29,7 +29,17 @@ namespace MeshEditor.SolutionManager
 		public SolutionHub(string configFile = null, ILogger logger = null)
 		{
 			this.logger = logger;
-			new ConfigLoader(logger).ReadConfiguration(configFile, out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
+			new ConfigLoader(logger).ReadConfiguration(configFile, Directory.GetCurrentDirectory(), out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
+		}
+
+		public SolutionHub(string solutionLocalFilename, out ISolutionInfo solutionInfo)
+		{
+			Debug.Assert(solutionLocalFilename != null);
+			Debug.Assert(Path.IsPathRooted(solutionLocalFilename));
+			ISolutionProvider ignored;
+			new ConfigLoader(logger).ReadConfiguration(null, Path.GetDirectoryName(solutionLocalFilename), out ignored, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
+			solutionProvider = new LocalSolutionProvider(Path.GetDirectoryName(solutionLocalFilename));
+			solutionInfo = ((LocalSolutionProvider)solutionProvider).LoadSolutionFromFileName(Path.GetFileName(solutionLocalFilename));
 		}
 
 		#endregion
