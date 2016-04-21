@@ -38,9 +38,9 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public Solution Get(ISolutionInfo solutionInfo)
+		public Solution Get(int solutionId)
 		{
-			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionInfo)))
+			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionId)))
 			{
 				return serializer.Deserialize<Solution>(stream);
 			}
@@ -66,7 +66,7 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(newLayer).ToArray();
 			}
-			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution)))
+			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
 			{
 				serializer.Serialize(solution, stream);
 			}
@@ -79,14 +79,14 @@ namespace MeshEditor.SolutionManager.IO
 			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileExtension + serializer.FileExtension, SearchOption.TopDirectoryOnly);
 		}
 
-		private string findRecordNameOfSolution(ISolutionInfo solutionInfo)
+		private string findRecordNameOfSolution(int solutionId)
 		{
 			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
 			{
 				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
 				{
 					var testSolution = serializer.Deserialize<SolutionBase>(stream);
-					if (testSolution.Id == solutionInfo.Id)
+					if (testSolution.Id == solutionId)
 					{
 						return Path.GetFileName(solutionFile);
 					}

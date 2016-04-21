@@ -41,9 +41,9 @@ namespace MeshEditor.SolutionManager
 			return solutionProvider.GetAll();
 		}
 
-		public IEnumerable<ILayerInfo> EnumerateLayersOfSolution(ISolutionInfo solution)
+		public IEnumerable<ILayerInfo> EnumerateLayersOfSolution(int solutionId)
 		{
-			return solutionProvider.Get(solution).Layers;
+			return solutionProvider.Get(solutionId).Layers;
 		}
 
 		public void Import(int solutionId, string projectName, string meshFile, IEnumerable<string> resultFiles)
@@ -61,14 +61,14 @@ namespace MeshEditor.SolutionManager
 			solutionProvider.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
-		public void Filter(ISolutionInfo solutionInfo, string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
+		public void Filter(int solutionId, string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
 		{
 			FilterType filterType;
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
 			Filter filter = FilterFactory.Create(filterType, filterParameters);
-			Solution solution = solutionProvider.Get(solutionInfo);
+			Solution solution = solutionProvider.Get(solutionId);
 
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
@@ -81,13 +81,13 @@ namespace MeshEditor.SolutionManager
 			solutionProvider.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(ISolutionInfo solutionInfo, string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
+		public void Compress(int solutionId, string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
 				throw new ArgumentException($"Unknown compression method ({compressionMethodName})", nameof(compressionMethodName));
 
-			Solution solution = solutionProvider.Get(solutionInfo);
+			Solution solution = solutionProvider.Get(solutionId);
 
 			var parentLayer = findLayer(solution, layerIdOrName);
 
@@ -100,9 +100,9 @@ namespace MeshEditor.SolutionManager
 			solutionProvider.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Diff(ISolutionInfo solutionInfo, string layerIdOrName)
+		public void Diff(int solutionId, string layerIdOrName)
 		{
-			Solution solution = solutionProvider.Get(solutionInfo);
+			Solution solution = solutionProvider.Get(solutionId);
 			var layer = findLayer(solution, layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());

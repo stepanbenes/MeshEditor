@@ -46,10 +46,10 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
 
-		public Solution Get(ISolutionInfo solutionInfo)
+		public Solution Get(int solutionId)
 		{
 			var client = new RestClient(uri);
-			var request = new RestRequest($"api/solution/{solutionInfo.Id}", Method.GET);
+			var request = new RestRequest($"api/solution/{solutionId}", Method.GET);
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");

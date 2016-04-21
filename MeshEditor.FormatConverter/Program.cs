@@ -90,7 +90,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Filter(pickSolution(hub), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
+			hub.Filter(options.SolutionId ?? chooseSolution(hub), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
 			return 0;
 		}
 
@@ -98,7 +98,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Compress(pickSolution(hub), options.Layer, options.Method, options.FieldName, options.ComponentName);
+			hub.Compress(options.SolutionId ?? chooseSolution(hub), options.Layer, options.Method, options.FieldName, options.ComponentName);
 			return 0;
 		}
 
@@ -106,7 +106,7 @@ namespace MeshEditor.FormatConverter
 		{
 			logger = new ConsoleLogger(options.Verbose);
 			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Diff(pickSolution(hub), options.Layer);
+			hub.Diff(options.SolutionId ?? chooseSolution(hub), options.Layer);
 			return 0;
 		}
 
@@ -117,7 +117,7 @@ namespace MeshEditor.FormatConverter
 			foreach (var solutionInfo in hub.EnumerateSolutions()) // list all solutions
 			{
 				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}", LogMessagePriority.High);
-				foreach (var layerInfo in hub.EnumerateLayersOfSolution(solutionInfo))
+				foreach (var layerInfo in hub.EnumerateLayersOfSolution(solutionInfo.Id))
 				{
 					printLayerInfo(layerInfo, depth: 1);
 				}
@@ -129,13 +129,13 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private ISolutionInfo pickSolution(SolutionHub hub)
+		private int chooseSolution(SolutionHub hub)
 		{
 			var solutions = hub.EnumerateSolutions().ToArray();
 			if (solutions.Length == 0)
 				throw new FileNotFoundException("No solution found");
 			if (solutions.Length == 1)
-				return solutions[0];
+				return solutions[0].Id;
 
 			stopwatch.Stop(); // interrupt stopwatch
 			try
@@ -163,7 +163,7 @@ namespace MeshEditor.FormatConverter
 						Console.WriteLine($"Solution with id '{id}' does not exist.");
 						continue;
 					}
-					return solutions.Single(s => s.Id == id);
+					return id;
 				}
 			}
 			finally
