@@ -11,15 +11,15 @@ using MeshEditor.LayerManager.Storage;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class LocalSolutionProvider : ISolutionProvider
+	class LocalSolutionController : ISolutionController
 	{
-		private static readonly string SolutionFileExtension = ".solution";
+		private static readonly string SolutionFileSuffix = ".solution";
 
 		IStorageService localStorage;
 		ISerializationService serializer;
 		string solutionDirectory;
 
-		public LocalSolutionProvider(string solutionDirectory)
+		public LocalSolutionController(string solutionDirectory)
 		{
 			Debug.Assert(solutionDirectory != null);
 			this.solutionDirectory = solutionDirectory;
@@ -49,7 +49,7 @@ namespace MeshEditor.SolutionManager.IO
 		public void CreateNew(SolutionBase solution)
 		{
 			string projectNameAsValidFileName = solution.ProjectName.MakeAlphanumericFilename();
-			string solutionRecordName = projectNameAsValidFileName + SolutionFileExtension + serializer.FileExtension;
+			string solutionRecordName = projectNameAsValidFileName + SolutionFileSuffix + serializer.FileExtension;
 			using (Stream stream = localStorage.Save(solutionRecordName))
 			{
 				serializer.Serialize(solution, stream);
@@ -84,7 +84,7 @@ namespace MeshEditor.SolutionManager.IO
 
 		private IEnumerable<string> findAllSolutionFilesInSolutionDirectory()
 		{
-			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileExtension + serializer.FileExtension, SearchOption.TopDirectoryOnly);
+			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.TopDirectoryOnly);
 		}
 
 		private string findRecordNameOfSolution(int solutionId)

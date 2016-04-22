@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	interface ISolutionProvider
+	interface ISolutionController
 	{
 		IEnumerable<ISolutionInfo> GetAll();
 		Solution Get(int solutionId);

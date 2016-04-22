@@ -12,7 +12,7 @@ using RestSharp;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class RestApiSolutionProvider : ISolutionProvider
+	class RestApiSolutionController : ISolutionController
 	{
 		#region Fields, constructor
 
@@ -20,7 +20,7 @@ namespace MeshEditor.SolutionManager.IO
 		private ISerializationService serializer;
 		private ILogger logger;
 
-		public RestApiSolutionProvider(string uri, ILogger logger)
+		public RestApiSolutionController(string uri, ILogger logger)
 		{
 			Debug.Assert(uri != null);
 			this.uri = uri;
@@ -59,16 +59,6 @@ namespace MeshEditor.SolutionManager.IO
 
 			return parseResponse<Solution>(response);
 		}
-
-		//public void Create(Solution solution)
-		//{
-		//	sendSolutionObject(solution, Method.POST);
-		//}
-
-		//public void Update(Solution solution)
-		//{
-		//	sendSolutionObject(solution, Method.PUT);
-		//}
 
 		public void CreateNew(SolutionBase solution)
 		{

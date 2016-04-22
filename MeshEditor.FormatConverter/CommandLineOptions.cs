@@ -12,16 +12,16 @@ namespace MeshEditor.FormatConverter
 		[Option(HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
-		public string ConfigFile { get; set; }
+		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
+		public int? SolutionId { get; set; }
+		
+		//[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
+		//public string ConfigFile { get; set; }
 	}
 	
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : Options
 	{
-		[Value(index: 0, MetaName = "Solution id", Required = true, HelpText = "Solution id (same as Simulation id in db)")]
-		public int SolutionId { get; set; }
-
 		[Value(index: 1, MetaName = "Project name", Required = false, HelpText = "Name of new project")]
 		public string ProjectName { get; set; }
 
@@ -46,9 +46,6 @@ namespace MeshEditor.FormatConverter
 
 		[Option('n', "name", Required = false, HelpText = "Name of new layer")]
 		public string LayerName { get; set; }
-
-		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
-		public int? SolutionId { get; set; }
 	}
 
 	[Verb("compress", HelpText = "Compress layer results")]
@@ -65,9 +62,6 @@ namespace MeshEditor.FormatConverter
 
 		[Option("component", Required = false, HelpText = "Name of Component of field to compress")]
 		public string ComponentName { get; set; }
-
-		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
-		public int? SolutionId { get; set; }
 	}
 
 	[Verb("diff", HelpText = "Compare two layers")]
@@ -75,9 +69,6 @@ namespace MeshEditor.FormatConverter
 	{
 		[Value(index: 0, MetaName = "Layer to compare with its parent", Required = true, HelpText = "layer's guid or name")]
 		public string Layer { get; set; }
-
-		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
-		public int? SolutionId { get; set; }
 	}
 
 	[Verb("list", HelpText = "Enumerate all solutions in base directory")]

@@ -12,6 +12,7 @@ using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
+using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.Configuration;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.SolutionManager.Logging;
@@ -20,43 +21,102 @@ namespace MeshEditor.SolutionManager
 {
 	public class SolutionHub
 	{
-		#region Fields, constructor
+		#region Public static methods
 
-		ISolutionProvider solutionProvider;
+		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
+		{
+			Debug.Assert(solutionFileName != null);
+			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
+			var solutionController = new LocalSolutionController(solutionDirectory);
+			var solutionInfo = solutionController.LoadSolutionFromFileName(Path.GetFileName(solutionFileName));
+
+			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
+			return new SolutionHub(
+				solutionId: solutionInfo.Id,
+				solutionController: solutionController,
+				meshImportStorage: localStorage,
+				dataImportStorage: localStorage,
+				layerSourceStorage: localStorage,
+				layerDestinationStorage: localStorage,
+				logger: logger
+			);
+		}
+
+		public static SolutionHub CreateLocal(int solutionId, ILogger logger = null)
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
+			return new SolutionHub(
+				solutionId: solutionId,
+				solutionController: new LocalSolutionController(solutionDirectory),
+				meshImportStorage: localStorage,
+				dataImportStorage: localStorage,
+				layerSourceStorage: localStorage,
+				layerDestinationStorage: localStorage,
+				logger: logger
+			);
+		}
+
+		public static SolutionHub CreateRemote(int solutionId, ILogger logger = null)
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			return new SolutionHub(
+				solutionId: solutionId,
+				solutionController: new RestApiSolutionController(config.RestApi.Uri, logger),
+				meshImportStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.MeshesBlobContainerName),
+				dataImportStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.ResultsBlobContainerName),
+				layerSourceStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
+				layerDestinationStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
+				logger: logger
+			);
+		}
+
+		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(ILogger logger = null)
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+			var solutionController = new LocalSolutionController(solutionDirectory);
+			return solutionController.GetAll();
+		}
+
+		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
+			return solutionController.GetAll();
+		}
+
+		#endregion
+
+		#region Fields, Constructors
+
+		int solutionId;
+		ISolutionController solutionController;
 		IStorageService meshImportStorage, dataImportStorage, layerSourceStorage, layerDestinationStorage;
 		ILogger logger;
 
-		public SolutionHub(string configFile = null, ILogger logger = null)
+		private SolutionHub(int solutionId, ISolutionController solutionController, IStorageService meshImportStorage, IStorageService dataImportStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
+			this.solutionId = solutionId;
+			this.solutionController = solutionController;
+			this.meshImportStorage = meshImportStorage;
+			this.dataImportStorage = dataImportStorage;
+			this.layerSourceStorage = layerSourceStorage;
+			this.layerDestinationStorage = layerDestinationStorage;
 			this.logger = logger;
-			new ConfigLoader(logger).ReadConfiguration(configFile, Directory.GetCurrentDirectory(), out solutionProvider, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
-		}
-
-		public SolutionHub(string solutionLocalFilename, out ISolutionInfo solutionInfo)
-		{
-			Debug.Assert(solutionLocalFilename != null);
-			Debug.Assert(Path.IsPathRooted(solutionLocalFilename));
-			ISolutionProvider ignored;
-			new ConfigLoader(logger).ReadConfiguration(null, Path.GetDirectoryName(solutionLocalFilename), out ignored, out meshImportStorage, out dataImportStorage, out layerSourceStorage, out layerDestinationStorage);
-			solutionProvider = new LocalSolutionProvider(Path.GetDirectoryName(solutionLocalFilename));
-			solutionInfo = ((LocalSolutionProvider)solutionProvider).LoadSolutionFromFileName(Path.GetFileName(solutionLocalFilename));
 		}
 
 		#endregion
 
 		#region Commands (SolutionManager's public interface)
 
-		public IEnumerable<ISolutionInfo> EnumerateSolutions()
+		public IEnumerable<ILayerInfo> EnumerateAllLayers()
 		{
-			return solutionProvider.GetAll();
+			return solutionController.Get(solutionId).Layers;
 		}
 
-		public IEnumerable<ILayerInfo> EnumerateLayersOfSolution(int solutionId)
-		{
-			return solutionProvider.Get(solutionId).Layers;
-		}
-
-		public void Import(int solutionId, string projectName, string meshFile, IEnumerable<string> resultFiles)
+		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
 		{
 			const string masterLayerName = "master";
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(meshImportStorage, meshFile);
@@ -67,18 +127,18 @@ namespace MeshEditor.SolutionManager
 			projectName = projectName ?? Path.GetFileNameWithoutExtension(meshFile);
 
 			var solution = new Solution { Id = solutionId, ProjectName = projectName };
-			solutionProvider.CreateNew(solution);
-			solutionProvider.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
+			solutionController.CreateNew(solution);
+			solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
-		public void Filter(int solutionId, string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
+		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
 		{
 			FilterType filterType;
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
 			Filter filter = FilterFactory.Create(filterType, filterParameters);
-			Solution solution = solutionProvider.Get(solutionId);
+			Solution solution = solutionController.Get(solutionId);
 
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
@@ -88,16 +148,16 @@ namespace MeshEditor.SolutionManager
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(filterLayer);
 
-			solutionProvider.AddLayer(solution, parentLayer, childLayer);
+			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(int solutionId, string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
+		public void Compress(string layerIdOrName, string compressionMethodName, string fieldName, string componentName)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
 				throw new ArgumentException($"Unknown compression method ({compressionMethodName})", nameof(compressionMethodName));
 
-			Solution solution = solutionProvider.Get(solutionId);
+			Solution solution = solutionController.Get(solutionId);
 
 			var parentLayer = findLayer(solution, layerIdOrName);
 
@@ -107,12 +167,12 @@ namespace MeshEditor.SolutionManager
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);
 
-			solutionProvider.AddLayer(solution, parentLayer, childLayer);
+			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Diff(int solutionId, string layerIdOrName)
+		public void Diff(string layerIdOrName)
 		{
-			Solution solution = solutionProvider.Get(solutionId);
+			Solution solution = solutionController.Get(solutionId);
 			var layer = findLayer(solution, layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
@@ -122,7 +182,7 @@ namespace MeshEditor.SolutionManager
 
 		#endregion
 
-		#region Helper methods
+		#region Private helper methods
 
 		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryLayerFile layerSummary)
 		{

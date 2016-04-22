@@ -6,11 +6,8 @@ namespace MeshEditor.SolutionManager.Configuration
 {
 	class Config
 	{
-		public SolutionProviderInfo SolutionProvider { get; set; }
-
-		public StorageInfo MeshImportStorage { get; set; }
-		public StorageInfo DataImportStorage { get; set; }
-		public StorageInfo LayerSourceStorage { get; set; }
-		public StorageInfo LayerDestinationStorage { get; set; }
+		public LocalStorageConfigPatameters LocalStorage { get; set; }
+		public AzureBlobStorageConfigParameters AzureBlobStorage { get; set; }
+		public RestApiConfigParameters RestApi { get; set; }
 	}
 }

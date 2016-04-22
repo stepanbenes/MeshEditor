@@ -16,13 +16,11 @@ namespace MeshEditor.SolutionManager.AzureStorage
 		#region Fields, constructor
 
 		private readonly CloudStorageAccount storageAccount;
-		private readonly string blobUri;
 		private readonly string blobContainerName;
 
-		public AzureBlobStorageService(string connectionString, string blobUri, string blobContainerName)
+		public AzureBlobStorageService(string connectionString, string blobContainerName)
 		{
 			storageAccount = CloudStorageAccount.Parse(connectionString);
-			this.blobUri = blobUri;
 			this.blobContainerName = blobContainerName;
 		}
 
@@ -32,7 +30,8 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 		public Stream Load(string record)
 		{
-			return new WebClient().OpenRead(Path.Combine(blobUri, record));
+			//return new WebClient().OpenRead(Path.Combine(blobUri, record));
+			return downloadFile(storageAccount, blobContainerName, record);
 		}
 
 		public Stream Save(string record)
@@ -49,13 +48,23 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 		#region Private methods
 
+		private static Stream downloadFile(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
+		{
+			// Create the blob client and reference the container
+			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
+
+			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
+			return blockBlob.OpenRead();
+		}
+
 		private static Stream uploadFile(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
 		{
 			// Create the blob client and reference the container
 			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
 			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
 
-			// Upload input file to Blob Storage
+			// Upload file to Blob Storage
 			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
 			//blockBlob.Properties.ContentType = formFile.ContentType;
 			return blockBlob.OpenWrite();

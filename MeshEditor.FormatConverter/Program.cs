@@ -13,6 +13,12 @@ using Microsoft.Azure.WebJobs;
 
 namespace MeshEditor.FormatConverter
 {
+	enum StorageType
+	{
+		Local,
+		Remote
+	}
+
 	class Program
 	{
 		static int Main(string[] args)
@@ -20,10 +26,10 @@ namespace MeshEditor.FormatConverter
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
 			string webjobName = Environment.GetEnvironmentVariable("WEBJOBS_NAME");
-
-			if (webjobName == null) // running locally
+			bool isRunningLocally = webjobName == null;
+			if (isRunningLocally) // running locally
 			{
-				var program = new Program();
+				var program = new Program(isRunningLocally, StorageType.Local);
 				return program.Run(args);
 			}
 			else
@@ -38,11 +44,17 @@ namespace MeshEditor.FormatConverter
 
 		#region Fields, constructor
 
+		SolutionHub solutionHub;
 		ILogger logger;
-		Stopwatch stopwatch;
 
-		public Program()
+		readonly bool isRunningLocally;
+		readonly StorageType storageType;
+		readonly Stopwatch stopwatch;
+
+		public Program(bool isRunningLocally, StorageType storageType)
 		{
+			this.isRunningLocally = isRunningLocally;
+			this.storageType = storageType;
 			stopwatch = new Stopwatch();
 			stopwatch.Start();
 		}
@@ -57,13 +69,14 @@ namespace MeshEditor.FormatConverter
 			try
 			{
 				code = Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+					.WithParsed((Options options) => initializeSolutionHub(options))
 					.MapResult(
-					(ImportOptions options) => runImportCommand(options),
-					(FilterOptions options) => runFilterCommand(options),
-					(CompressOptions options) => runCompressCommand(options),
-					(DiffOptions options) => runDiffCommand(options),
-					(ListOptions options) => runListCommand(options),
-					errors => 1);
+						(ImportOptions options) => runImportCommand(options),
+						(FilterOptions options) => runFilterCommand(options),
+						(CompressOptions options) => runCompressCommand(options),
+						(DiffOptions options) => runDiffCommand(options),
+						(ListOptions options) => runListCommand(options),
+						errors => 1);
 			}
 			catch (Exception ex)
 			{
@@ -80,47 +93,33 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
-			logger = new ConsoleLogger(options.Verbose);
-			new SolutionHub(options.ConfigFile, logger)
-				.Import(options.SolutionId, options.ProjectName, options.MeshFile, options.ResultFiles);
+			solutionHub.Import(options.ProjectName, options.MeshFile, options.ResultFiles);
 			return 0;
 		}
 
 		private int runFilterCommand(FilterOptions options)
 		{
-			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Filter(options.SolutionId ?? chooseSolution(hub), options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
+			solutionHub.Filter(options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName);
 			return 0;
 		}
 
 		private int runCompressCommand(CompressOptions options)
 		{
-			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Compress(options.SolutionId ?? chooseSolution(hub), options.Layer, options.Method, options.FieldName, options.ComponentName);
+			solutionHub.Compress(options.Layer, options.Method, options.FieldName, options.ComponentName);
 			return 0;
 		}
 
 		private int runDiffCommand(DiffOptions options)
 		{
-			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(options.ConfigFile, logger);
-			hub.Diff(options.SolutionId ?? chooseSolution(hub), options.Layer);
+			solutionHub.Diff(options.Layer);
 			return 0;
 		}
 
 		private int runListCommand(ListOptions options)
 		{
-			logger = new ConsoleLogger(options.Verbose);
-			var hub = new SolutionHub(options.ConfigFile, logger);
-			foreach (var solutionInfo in hub.EnumerateSolutions()) // list all solutions
+			foreach (var layerInfo in solutionHub.EnumerateAllLayers())
 			{
-				logger.LogMessage($"# Id: {solutionInfo.Id}, ProjectName: {solutionInfo.ProjectName}", LogMessagePriority.High);
-				foreach (var layerInfo in hub.EnumerateLayersOfSolution(solutionInfo.Id))
-				{
-					printLayerInfo(layerInfo, depth: 1);
-				}
+				printLayerInfo(layerInfo, depth: 1);
 			}
 			return 0;
 		}
@@ -129,9 +128,43 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private int chooseSolution(SolutionHub hub)
+		private void initializeSolutionHub(Options options)
 		{
-			var solutions = hub.EnumerateSolutions().ToArray();
+			logger = new ConsoleLogger(options.Verbose);
+
+			if (!isRunningLocally && !options.SolutionId.HasValue)
+			{
+				throw new ArgumentNullException(nameof(options.SolutionId));
+			}
+
+			switch (storageType)
+			{
+				case StorageType.Local:
+					solutionHub = SolutionHub.CreateLocal(options.SolutionId ?? chooseSolution(), logger);
+					break;
+				case StorageType.Remote:
+					solutionHub = SolutionHub.CreateRemote(options.SolutionId ?? chooseSolution(), logger);
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		private int chooseSolution()
+		{
+			ISolutionInfo[] solutions;
+			switch (storageType)
+			{
+				case StorageType.Local:
+					solutions = SolutionHub.EnumerateAllLocalSolutions(logger).ToArray();
+					break;
+				case StorageType.Remote:
+					solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+
 			if (solutions.Length == 0)
 				throw new FileNotFoundException("No solution found");
 			if (solutions.Length == 1)

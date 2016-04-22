@@ -15,16 +15,14 @@ namespace MeshEditor.SolutionManager.Configuration
 {
 	class ConfigLoader
 	{
-		ILogger logger;
 		string defaultConfigFileDirectory;
 
-		public ConfigLoader(ILogger logger, string defaultConfigFileDirectory = null)
+		public ConfigLoader(string defaultConfigFileDirectory = null)
 		{
-			this.logger = logger;
 			this.defaultConfigFileDirectory = defaultConfigFileDirectory;
 		}
 
-		public void ReadConfiguration(string configFile, string localFileSystemDefaultDirectory, out ISolutionProvider solutionProvider, out IStorageService meshImportStorage, out IStorageService dataImportStorage, out IStorageService layerSourceStorage, out IStorageService layerDestinationStorage)
+		public Config ReadConfiguration(string configFile = null)
 		{
 			string configFileAbsolutePath;
 			if (configFile == null)
@@ -36,64 +34,10 @@ namespace MeshEditor.SolutionManager.Configuration
 				configFileAbsolutePath = (Path.IsPathRooted(configFile)) ? configFile : Path.Combine(defaultConfigFileDirectory ?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFile);
 			}
 
-			if (File.Exists(configFileAbsolutePath))
+			using (var stream = new FileStream(configFileAbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
-				Config config = null;
-				using (var stream = new FileStream(configFileAbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-				{
-					ISerializationService serializer = new JsonSerializationService();
-					config = serializer.Deserialize<Config>(stream);
-				}
-
-				solutionProvider = createSolutionProvider(config.SolutionProvider);
-
-				meshImportStorage = createStorageService(config.MeshImportStorage);
-				dataImportStorage = createStorageService(config.DataImportStorage);
-				layerSourceStorage = createStorageService(config.LayerSourceStorage);
-				layerDestinationStorage = createStorageService(config.LayerDestinationStorage);
-			}
-			else
-			{
-				solutionProvider = new LocalSolutionProvider(localFileSystemDefaultDirectory);
-				meshImportStorage = dataImportStorage = layerSourceStorage = layerDestinationStorage = new LocalFileSystemStorageService(localFileSystemDefaultDirectory);
-			}
-		}
-
-		private ISolutionProvider createSolutionProvider(SolutionProviderInfo solutionProviderInfo)
-		{
-			switch (solutionProviderInfo.Type)
-			{
-				case SolutionProviderType.Local:
-					{
-						var localSolutionProviderInfo = (LocalSolutionProviderInfo)solutionProviderInfo;
-						return new LocalSolutionProvider(localSolutionProviderInfo.Directory ?? Directory.GetCurrentDirectory());
-					}
-				case SolutionProviderType.RestApi:
-					{
-						var restApiSolutionProviderInfo = (RestApiSolutionProviderInfo)solutionProviderInfo;
-						return new RestApiSolutionProvider(restApiSolutionProviderInfo.BaseUri, logger);
-					}
-				default:
-					throw new NotSupportedException();
-			}
-		}
-
-		private IStorageService createStorageService(StorageInfo storageInfo)
-		{
-			switch (storageInfo.Type)
-			{
-				case StorageType.Local:
-					{
-						var localStorageInfo = (LocalStorageInfo)storageInfo;
-						return new LocalFileSystemStorageService(localStorageInfo.Directory ?? Directory.GetCurrentDirectory());
-					}
-				case StorageType.AzureBlob:
-					{
-						var azureBlobStorageInfo = (AzureBlobStorageInfo)storageInfo;
-						return new AzureBlobStorageService(azureBlobStorageInfo.ConnectionString, azureBlobStorageInfo.BaseUri, azureBlobStorageInfo.BlobContainerName);
-					}
-				default:
-					throw new NotSupportedException();
+				ISerializationService serializer = new JsonSerializationService();
+				return serializer.Deserialize<Config>(stream);
 			}
 		}
 	}

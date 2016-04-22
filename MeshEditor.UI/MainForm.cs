@@ -1757,9 +1757,8 @@ namespace MeshEditor.WinUI
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
-				SolutionManager.IO.ISolutionInfo solution;
-				var solutionHub = new SolutionManager.SolutionHub(dialog.FileName, out solution);
-				var layers = solutionHub.EnumerateLayersOfSolution(solution.Id);
+				var solutionHub = SolutionManager.SolutionHub.CreateLocal(dialog.FileName);
+				var layers = solutionHub.EnumerateAllLayers();
 
 				// TODO: load master layer and its data, show layers panel
 
