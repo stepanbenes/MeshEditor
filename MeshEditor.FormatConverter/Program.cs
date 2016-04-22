@@ -137,20 +137,22 @@ namespace MeshEditor.FormatConverter
 				throw new ArgumentNullException(nameof(options.SolutionId));
 			}
 
+			StorageType storageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
+
 			switch (storageType)
 			{
 				case StorageType.Local:
-					solutionHub = SolutionHub.CreateLocal(options.SolutionId ?? chooseSolution(), logger);
+					solutionHub = SolutionHub.CreateLocal(options.SolutionId ?? chooseSolution(storageType), logger);
 					break;
 				case StorageType.Remote:
-					solutionHub = SolutionHub.CreateRemote(options.SolutionId ?? chooseSolution(), logger);
+					solutionHub = SolutionHub.CreateRemote(options.SolutionId ?? chooseSolution(storageType), logger);
 					break;
 				default:
 					throw new NotSupportedException();
 			}
 		}
 
-		private int chooseSolution()
+		private int chooseSolution(StorageType storageType)
 		{
 			ISolutionInfo[] solutions;
 			switch (storageType)
