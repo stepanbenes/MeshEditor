@@ -21,6 +21,26 @@ namespace MeshEditor.LayerManager.Data
 
 		#region Public methods
 
+		public void CalculateCenterAndRadius(out float[] center, out float radius)
+		{
+			if (PointCoordinates.Length == 0)
+			{
+				center = Enumerable.Repeat(0f, NumberOfCoordinateComponents).ToArray();
+				radius = 1f;
+				return;
+			}
+
+			float[] mins = Enumerable.Repeat(float.MaxValue, NumberOfCoordinateComponents).ToArray();
+			float[] maxs = Enumerable.Repeat(float.MinValue, NumberOfCoordinateComponents).ToArray();
+			for (int i = 0; i < PointCoordinates.Length; i++)
+			{
+				mins[i % mins.Length] = Math.Min(mins[i % mins.Length], PointCoordinates[i]);
+				maxs[i % maxs.Length] = Math.Max(maxs[i % maxs.Length], PointCoordinates[i]);
+			}
+			center = mins.Zip(maxs, (min, max) => (max - min) * 0.5f).ToArray();
+			radius = (float)(Math.Sqrt(mins.Zip(maxs, (min, max) => (max - min) * (max - min)).Sum()) * 0.5);
+		}
+
 		public static int MapCellTypeToNumberOfPoints(CellType cellType)
 		{
 			switch (cellType)

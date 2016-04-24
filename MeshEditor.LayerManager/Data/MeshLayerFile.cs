@@ -15,7 +15,11 @@ namespace MeshEditor.LayerManager.Data
 		public int NumberOfCells { get; set; }
 		public int NumberOfEdges { get; set; }
 
+		public float[] Center { get; set; }
+		public float Radius { get; set; }
+
 		public string PointCoordinates { get; set; }
+
 
 		public string CellConnectivity { get; set; }
 

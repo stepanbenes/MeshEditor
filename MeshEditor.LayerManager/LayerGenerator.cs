@@ -562,8 +562,13 @@ namespace MeshEditor.LayerManager
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
 			layerMesh.PointCoordinates = encodeGeometryDataArray(geometry.PointCoordinates, trimEnd: false);
 
-			layerMesh.NumberOfCells = geometry.NumberOfCells;
+			float[] center;
+			float radius;
+			geometry.CalculateCenterAndRadius(out center, out radius);
+			layerMesh.Center = center;
+			layerMesh.Radius = radius;
 
+			layerMesh.NumberOfCells = geometry.NumberOfCells;
 			layerMesh.CellConnectivity = encodeGeometryDataArray(geometry.CellConnectivity, trimEnd: false);
 
 			// set cell types to null if all cells are of default type (e.g. linear triangles)
@@ -575,13 +580,6 @@ namespace MeshEditor.LayerManager
 			{
 				layerMesh.CellTypes = null;
 			}
-
-			//MeshFaceGenerator faceGenerator = new MeshFaceGenerator();
-			//faceGenerator.ProcessGeometry(geometry);
-			//layerMesh.NumberOfTriangles = faceGenerator.NumberOfTriangles;
-			//layerMesh.TriangleConnectivity = ConvertArrayToBase64String(faceGenerator.TriangleConnectivity);
-			//layerMesh.NumberOfEdges = faceGenerator.NumberOfEdges;
-			//layerMesh.EdgeConnectivity = ConvertArrayToBase64String(faceGenerator.EdgeConnectivity);
 
 			return layerMesh;
 		}
