@@ -60,7 +60,7 @@ namespace MeshEditor.LayerManager.Compression
 		public IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters)
 		{
 			Debug.Assert(parameters != null);
-			Debug.Assert(parameters.Method == CompressionMethod.None);
+			Debug.Assert(parameters.Method == CompressionMethod.Transparent);
 			return EnumerateDataRows(compressedData, parameters.Rows, parameters.Columns);
 		}
 

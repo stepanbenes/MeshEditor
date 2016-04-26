@@ -8,6 +8,6 @@ namespace MeshEditor.LayerManager.Compression
 {
 	public class TransparentCompressionParameters : CompressionParameters
 	{
-		public override CompressionMethod Method => CompressionMethod.None;
+		public override CompressionMethod Method => CompressionMethod.Transparent;
 	}
 }

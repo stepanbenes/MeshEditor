@@ -8,7 +8,7 @@ namespace MeshEditor.LayerManager.Compression
 {
 	public enum CompressionMethod
 	{
-		None = 0,
+		Transparent = 0,
 		SVD,
 		WT,
 	}

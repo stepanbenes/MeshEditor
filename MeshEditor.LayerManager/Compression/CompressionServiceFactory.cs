@@ -12,7 +12,7 @@ namespace MeshEditor.LayerManager.Compression
 		{
 			switch (compressionMethod)
 			{
-				case CompressionMethod.None:
+				case CompressionMethod.Transparent:
 					return new TransparentCompressionService();
 				case CompressionMethod.SVD:
 					return new SVDCompressionService();
