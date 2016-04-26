@@ -37,7 +37,7 @@ namespace MeshEditor.LayerManager.Data
 				mins[i % mins.Length] = Math.Min(mins[i % mins.Length], PointCoordinates[i]);
 				maxs[i % maxs.Length] = Math.Max(maxs[i % maxs.Length], PointCoordinates[i]);
 			}
-			center = mins.Zip(maxs, (min, max) => (max - min) * 0.5f).ToArray();
+			center = mins.Zip(maxs, (min, max) => (max + min) * 0.5f).ToArray();
 			radius = (float)(Math.Sqrt(mins.Zip(maxs, (min, max) => (max - min) * (max - min)).Sum()) * 0.5);
 		}
 
