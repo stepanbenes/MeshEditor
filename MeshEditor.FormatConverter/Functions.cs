@@ -13,7 +13,7 @@ namespace MeshEditor.FormatConverter
 	{
 		// This function will get triggered/executed when a new message is written 
 		// on an Azure Queue called queue.
-		public static void ProcessQueueMessage([QueueTrigger("results-converter-queue")] string message, TextWriter log)
+		public static void ConvertResults([QueueTrigger("results-converter-queue")] string message, TextWriter log)
 		{
 			// TODO: pass log to program
 			var program = new Program(isRunningLocally: false, storageType: StorageType.Remote);
