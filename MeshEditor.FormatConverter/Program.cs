@@ -29,6 +29,11 @@ namespace MeshEditor.FormatConverter
 			bool isRunningLocally = webjobName == null;
 			if (isRunningLocally) // running locally
 			{
+				if (args == null || args.Length == 0)
+				{
+					drawHelloImage();
+				}
+
 				var program = new Program(isRunningLocally, StorageType.Local);
 				return program.Run(args);
 			}
@@ -220,6 +225,39 @@ namespace MeshEditor.FormatConverter
 			{
 				printLayerInfo(child, depth + 1);
 			}
+		}
+
+		private static void drawHelloImage()
+		{
+			// taken from: http://ascii.co.uk/art/excavator
+			string[] excavators = {
+@"
+     --.
+  ._// <>
+  |_|_
+ (o___o)
+",
+@"
+   //\\  ___          
+   Y  \\/_/=| 
+  _L  ((|_L_| 
+ (/\)(__(____)	 
+",
+@"
+     __
+    //\\`'-.___
+   //  \\  _(=()__
+   Y    \\//~//.--|
+   :    /\\~~//_  |
+  _L   |_((_|___L_|
+ (/\) (____(_______)
+",
+			};
+
+			var color = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.Cyan;
+			Console.WriteLine(excavators[new Random().Next(excavators.Length)]);
+			Console.ForegroundColor = color;
 		}
 
 		#endregion
