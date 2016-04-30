@@ -9,6 +9,5 @@ namespace MeshEditor.SolutionManager.Logging
 	public interface ILogger
 	{
 		void LogMessage(string message, LogMessagePriority priority = LogMessagePriority.Normal);
-		void LogError(Exception ex);
 	}
 }

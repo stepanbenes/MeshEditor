@@ -15,9 +15,8 @@ namespace MeshEditor.FormatConverter
 		// on an Azure Queue called queue.
 		public static void ConvertResults([QueueTrigger("results-converter-queue")] string message, TextWriter log)
 		{
-			// TODO: pass log to program
 			var program = new Program(isRunningLocally: false, storageType: StorageType.Remote);
-			program.Run(message.Split(' ', '\t'));
+			program.Run(message.Split(' ', '\t'), log);
 		}
 	}
 }

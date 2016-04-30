@@ -35,7 +35,18 @@ namespace MeshEditor.FormatConverter
 				}
 
 				var program = new Program(isRunningLocally, StorageType.Local);
-				return program.Run(args);
+				try
+				{
+					return program.Run(args, Console.Out);
+				}
+				catch (Exception ex)
+				{
+					var color = Console.ForegroundColor;
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine($"{ex.GetType().Name}: {ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
+					Console.ForegroundColor = color;
+					return 1;
+				}
 			}
 			else
 			{
@@ -54,27 +65,21 @@ namespace MeshEditor.FormatConverter
 
 		readonly bool isRunningLocally;
 		readonly StorageType storageType;
-		readonly Stopwatch stopwatch;
 
 		public Program(bool isRunningLocally, StorageType storageType)
 		{
 			this.isRunningLocally = isRunningLocally;
 			this.storageType = storageType;
-			stopwatch = new Stopwatch();
-			stopwatch.Start();
 		}
 
 		#endregion
 
 		#region Public methods
 
-		public int Run(IEnumerable<string> args)
+		public int Run(IEnumerable<string> args, TextWriter log)
 		{
-			int code;
-			try
-			{
-				code = Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
-					.WithParsed((Options options) => initializeSolutionHub(options))
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+					.WithParsed((Options options) => initializeSolutionHub(options, log))
 					.MapResult(
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
@@ -82,14 +87,6 @@ namespace MeshEditor.FormatConverter
 						(DiffOptions options) => runDiffCommand(options),
 						(ListOptions options) => runListCommand(options),
 						errors => 1);
-			}
-			catch (Exception ex)
-			{
-				logger?.LogError(ex);
-				code = 1;
-			}
-			goodBye(success: code == 0);
-			return code;
 		}
 
 		#endregion
@@ -133,9 +130,9 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private void initializeSolutionHub(Options options)
+		private void initializeSolutionHub(Options options, TextWriter log)
 		{
-			logger = new ConsoleLogger(options.Verbose);
+			logger = new Logger(log, options.Verbose);
 
 			if (!isRunningLocally && !options.SolutionId.HasValue)
 			{
@@ -177,45 +174,32 @@ namespace MeshEditor.FormatConverter
 			if (solutions.Length == 1)
 				return solutions[0].Id;
 
-			stopwatch.Stop(); // interrupt stopwatch
-			try
-			{
-				// otherwise show menu:
-				Console.WriteLine("Choose solution:");
-				foreach (var solution in solutions)
-				{
-					Console.WriteLine($"# Solution id: {solution.Id}, Project name: '{solution.ProjectName}'");
-				}
 
-				// read input from keyboard
-				while (true)
-				{
-					Console.Write("Id = ");
-					string input = Console.ReadLine();
-					int id;
-					if (!int.TryParse(input, out id))
-					{
-						Console.WriteLine("Please insert valid integer value.");
-						continue;
-					}
-					if (!solutions.Any(s => s.Id == id))
-					{
-						Console.WriteLine($"Solution with id '{id}' does not exist.");
-						continue;
-					}
-					return id;
-				}
-			}
-			finally
+			// otherwise show menu:
+			Console.WriteLine("Choose solution:");
+			foreach (var solution in solutions)
 			{
-				stopwatch.Start();
+				Console.WriteLine($"# Solution id: {solution.Id}, Project name: '{solution.ProjectName}'");
 			}
-		}
 
-		private void goodBye(bool success)
-		{
-			stopwatch.Stop();
-			logger?.LogMessage($"{(success ? "Success." : "Fail.")} Duration: {stopwatch.Elapsed.ToString("mm':'ss'.'ff")}", LogMessagePriority.High);
+			// read input from keyboard
+			while (true)
+			{
+				Console.Write("Id = ");
+				string input = Console.ReadLine();
+				int id;
+				if (!int.TryParse(input, out id))
+				{
+					Console.WriteLine("Please insert valid integer value.");
+					continue;
+				}
+				if (!solutions.Any(s => s.Id == id))
+				{
+					Console.WriteLine($"Solution with id '{id}' does not exist.");
+					continue;
+				}
+				return id;
+			}
 		}
 
 		private void printLayerInfo(ILayerInfo layerInfo, int depth)

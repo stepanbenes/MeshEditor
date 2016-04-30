@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,12 +9,15 @@ using MeshEditor.SolutionManager.Logging;
 
 namespace MeshEditor.FormatConverter
 {
-	class ConsoleLogger : ILogger
+	class Logger : ILogger
 	{
+		TextWriter log;
+
 		public bool Verbose { get; }
 
-		public ConsoleLogger(bool verbose)
+		public Logger(TextWriter log, bool verbose)
 		{
+			this.log = log;
 			Verbose = verbose;
 		}
 
@@ -21,16 +25,8 @@ namespace MeshEditor.FormatConverter
 		{
 			if (Verbose || priority == LogMessagePriority.High)
 			{
-				Console.WriteLine(message);
+				log.WriteLine(message);
 			}
-		}
-
-		public void LogError(Exception ex)
-		{
-			var color = Console.ForegroundColor;
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine($"{ex.GetType().Name}: {ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
-			Console.ForegroundColor = color;
 		}
 	}
 }
