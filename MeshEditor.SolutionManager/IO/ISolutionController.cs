@@ -9,7 +9,6 @@ namespace MeshEditor.SolutionManager.IO
 	{
 		IEnumerable<ISolutionInfo> GetAll();
 		Solution Get(int solutionId);
-		void CreateNew(SolutionBase solution);
 		void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
 	}
 }

@@ -46,16 +46,6 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public void CreateNew(SolutionBase solution)
-		{
-			string projectNameAsValidFileName = solution.ProjectName.MakeAlphanumericFilename();
-			string solutionRecordName = projectNameAsValidFileName + SolutionFileSuffix + serializer.FileExtension;
-			using (Stream stream = localStorage.Save(solutionRecordName))
-			{
-				serializer.Serialize(solution, stream);
-			}
-		}
-
 		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			if (parentLayer == null)

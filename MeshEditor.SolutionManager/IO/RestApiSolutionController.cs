@@ -60,24 +60,6 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<Solution>(response);
 		}
 
-		public void CreateNew(SolutionBase solution)
-		{
-			var client = new RestClient(uri);
-			var request = new RestRequest($"api/solution", Method.POST);
-
-			//request.AddUrlSegment("id", simulationId.ToString());
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			request.RequestFormat = DataFormat.Json;
-			//request.AddBody(serializedSolution);
-			//request.AddQueryParameter("state", ((int)analysisState).ToString());
-
-			string jsonString = request.JsonSerializer.Serialize(solution);
-			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
-
-			var response = executeRequest(client, request);
-		}
-
 		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			var client = new RestClient(uri);

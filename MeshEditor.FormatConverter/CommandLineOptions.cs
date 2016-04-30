@@ -21,13 +21,10 @@ namespace MeshEditor.FormatConverter
 		//[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
 		//public string ConfigFile { get; set; }
 	}
-	
+
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : Options
 	{
-		[Value(index: 1, MetaName = "Project name", Required = false, HelpText = "Name of new project")]
-		public string ProjectName { get; set; }
-
 		[Option('m', "mesh", Required = true, HelpText = "Mesh file to be processed.")]
 		public string MeshFile { get; set; }
 

@@ -98,7 +98,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
-			solutionHub.Import(options.ProjectName, options.MeshFile, options.ResultFiles);
+			solutionHub.Import(options.MeshFile, options.ResultFiles);
 			return 0;
 		}
 

@@ -116,7 +116,7 @@ namespace MeshEditor.SolutionManager
 			return solutionController.Get(solutionId).Layers;
 		}
 
-		public void Import(string projectName, string meshFile, IEnumerable<string> resultFiles)
+		public void Import(string meshFile, IEnumerable<string> resultFiles)
 		{
 			const string masterLayerName = "master";
 			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(meshImportStorage, meshFile);
@@ -124,10 +124,7 @@ namespace MeshEditor.SolutionManager
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, geometryImportService, dataImportService);
 			logNewLayer(masterLayer);
-			projectName = projectName ?? Path.GetFileNameWithoutExtension(meshFile);
-
-			var solution = new Solution { Id = solutionId, ProjectName = projectName };
-			solutionController.CreateNew(solution);
+			Solution solution = solutionController.Get(solutionId);
 			solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
