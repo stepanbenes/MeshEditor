@@ -174,7 +174,7 @@ namespace MeshEditor.SolutionManager
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
 			var diff = layerGenerator.CreateDiff(layer.Id);
-			logger?.LogMessage(diff.ToString());
+			logger?.LogMessage(diff.ToString(), LogMessagePriority.High);
 		}
 
 		#endregion

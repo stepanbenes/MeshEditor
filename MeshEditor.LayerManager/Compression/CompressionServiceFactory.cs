@@ -16,19 +16,37 @@ namespace MeshEditor.LayerManager.Compression
 					return new TransparentCompressionService();
 				case CompressionMethod.SVD:
 					{
-						string strategyString = parameters?.ElementAtOrDefault(0);
-						string factorString = parameters?.ElementAtOrDefault(1);
-						if (strategyString != null)
+						bool randomize = false;
+						SVDCompressionFocus? focus = null;
+						double? factor = null;
+
+						foreach (string parameter in parameters ?? Enumerable.Empty<string>())
 						{
-							var strategy = (SVDCompressionStrategy)Enum.Parse(typeof(SVDCompressionStrategy), strategyString, ignoreCase: true);
-							if (factorString != null)
+							SVDCompressionFocus testFocus;
+							double testFactor;
+							if (string.Equals(parameter, "randomize", StringComparison.InvariantCultureIgnoreCase))
 							{
-								var factor = double.Parse(factorString);
-								return new SVDCompressionService(strategy, factor);
+								randomize = true;
 							}
-							return new SVDCompressionService(strategy);
+							else if (double.TryParse(parameter, out testFactor))
+							{
+								factor = testFactor;
+							}
+							else if (Enum.TryParse(parameter, ignoreCase: true, result: out testFocus))
+							{
+								focus = testFocus;
+							}
 						}
-						return new SVDCompressionService();
+
+						if (focus.HasValue)
+						{
+							if (factor.HasValue)
+							{
+								return new SVDCompressionService(randomize, focus.Value, factor.Value);
+							}
+							return new SVDCompressionService(randomize, focus.Value);
+						}
+						return new SVDCompressionService(randomize);
 					}
 				case CompressionMethod.WT:
 					return new WaveletCompressionService();

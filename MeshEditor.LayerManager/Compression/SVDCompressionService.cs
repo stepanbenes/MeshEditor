@@ -12,18 +12,20 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		#region Constructor, Fields
 
-		private readonly double? singularValueToleranceFactor;
-		private readonly double? desiredCompressionFactor;
+		private readonly bool randomize;
+		private readonly double? qualityFactor;
+		private readonly double? sizeFactor;
 
-		public SVDCompressionService(SVDCompressionStrategy strategy = SVDCompressionStrategy.None, double factor = 1.0)
+		public SVDCompressionService(bool randomize, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
 		{
-			switch (strategy)
+			this.randomize = randomize;
+			switch (focus)
 			{
-				case SVDCompressionStrategy.Quality:
-					singularValueToleranceFactor = factor;
+				case SVDCompressionFocus.Quality:
+					qualityFactor = factor;
 					break;
-				case SVDCompressionStrategy.Size:
-					desiredCompressionFactor = factor;
+				case SVDCompressionFocus.Size:
+					sizeFactor = factor;
 					break;
 			}
 		}
@@ -34,57 +36,97 @@ namespace MeshEditor.LayerManager.Compression
 
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
-			int rank = calculateRank(rows, columns);
+			int rank = Math.Min(rows, columns);
+			try
+			{
+				if (rank <= 0)
+				{
+					return new double[0];
+				}
 
-			Debug.Assert(rank >= 0 && rank <= Math.Min(rows, columns));
+				REDSVD.Driver driver = new REDSVD.Driver();
+				double[] singularValues, U_VT_columnwise;
+				bool resizeIsNeeded = false;
 
-			if (rank <= 0)
+				if (randomize)
+				{
+					if (sizeFactor.HasValue)
+					{
+						int newRank = calculateRankFromSizeFactor(rows, columns);
+						Debug.Assert(newRank <= rank);
+						if (newRank != rank)
+						{
+							rank = newRank;
+							resizeIsNeeded = true;
+						}
+					}
+
+					// COMPUTE SVD RANDOMIZED
+					driver.ComputeSvdRandomized(dataValues, rows, columns, rank, out singularValues, out U_VT_columnwise);
+
+					Debug.Assert(singularValues.Length == rank);
+					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+				}
+				else
+				{
+					// COMPUTE SVD EXACT
+					driver.ComputeSvdExact(dataValues, rows, columns, out singularValues, out U_VT_columnwise);
+
+					Debug.Assert(singularValues.Length == rank);
+					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+
+					if (sizeFactor.HasValue)
+					{
+						
+						int newRank = calculateRankFromSizeFactor(rows, columns);
+						Debug.Assert(newRank <= rank);
+						if (newRank != rank)
+						{
+							rank = newRank;
+							resizeIsNeeded = true;
+						}
+					}
+				}
+
+				if (qualityFactor.HasValue)
+				{
+					int newRank = calculateRankFromQualityFactor(singularValues);
+					Debug.Assert(newRank <= rank);
+					if (newRank != rank)
+					{
+						rank = newRank;
+						resizeIsNeeded = true;
+					}
+				}
+
+				if (resizeIsNeeded)
+				{
+					shrinkSvdOutput(ref singularValues, ref U_VT_columnwise, rows, columns, rank);
+					Debug.Assert(singularValues.Length == rank);
+					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+				}
+
+				double[] US_VT_columnwise = U_VT_columnwise;
+				for (int c = 0; c < rank; c++) // multiply U by S
+				{
+					double singularValue = singularValues[c];
+					for (int r = 0; r < rows; r++)
+					{
+						US_VT_columnwise[c * rows + r] *= singularValue;
+					}
+				}
+
+				return US_VT_columnwise;
+			}
+			finally
 			{
 				parameters = new SVDCompressionParameters
 				{
 					Rows = rows,
 					Columns = columns,
-					Rank = 0,
+					Rank = rank,
 				};
-
-				return new double[0];
 			}
-
-			REDSVD.Driver driver = new REDSVD.Driver();
-			double[] singularValues, U_VT_columnwise;
-			driver.Run(dataValues, rows, columns, rank, out singularValues, out U_VT_columnwise);
-
-			Debug.Assert(singularValues.Length == rank);
-			Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
-
-			int updatedRank = calculateRank(singularValues);
-
-			if (updatedRank != rank)
-			{
-				Debug.Assert(updatedRank < rank);
-				shrinkSvdOutput(ref singularValues, ref U_VT_columnwise, rows, columns, updatedRank);
-				Debug.Assert(singularValues.Length == updatedRank);
-				Debug.Assert(U_VT_columnwise.Length == rows * updatedRank + updatedRank * columns);
-			}
-
-			double[] US_VT_columnwise = U_VT_columnwise;
-			for (int c = 0; c < updatedRank; c++)
-			{
-				double singularValue = singularValues[c];
-				for (int r = 0; r < rows; r++)
-				{
-					US_VT_columnwise[c * rows + r] *= singularValue;
-				}
-			}
-
-			parameters = new SVDCompressionParameters
-			{
-				Rows = rows,
-				Columns = columns,
-				Rank = updatedRank,
-			};
-
-			return US_VT_columnwise;
 
 			//// create matrix from input data values, replace possible NaN values with zeroes
 			//var dataValuesWithoutNaNs = dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value));
@@ -149,43 +191,43 @@ namespace MeshEditor.LayerManager.Compression
 			////vtColumnWise = null;
 			//Debug.Assert(offset == result.Length);
 
-//#if DEBUG
-//			// evaluate compression quality and save the results to parameters object
+			//#if DEBUG
+			//			// evaluate compression quality and save the results to parameters object
 
-//			var decompressedData = Decompress(result, parameters);
-//			double globalMin = double.MaxValue, globalMax = double.MinValue, maxError = double.MinValue;
+			//			var decompressedData = Decompress(result, parameters);
+			//			double globalMin = double.MaxValue, globalMax = double.MinValue, maxError = double.MinValue;
 
-//			using (var decompressedDataEnumerator = decompressedData.GetEnumerator())
-//			{
-//				for (int row = 0; row < rows; row++)
-//				{
-//					if (!decompressedDataEnumerator.MoveNext())
-//					{
-//						throw new InvalidOperationException();
-//					}
-//					double[] decompressedRow = decompressedDataEnumerator.Current;
-//					for (int column = 0; column < columns; column++)
-//					{
-//						double originalValue = A[row, column];
-//						double decompressedValue = decompressedRow[column];
-//						globalMin = Math.Min(globalMin, originalValue);
-//						globalMax = Math.Max(globalMax, originalValue);
-//						double error = Math.Abs(originalValue - decompressedValue);
-//						maxError = Math.Max(maxError, error);
-//					}
-//				}
-//			}
+			//			using (var decompressedDataEnumerator = decompressedData.GetEnumerator())
+			//			{
+			//				for (int row = 0; row < rows; row++)
+			//				{
+			//					if (!decompressedDataEnumerator.MoveNext())
+			//					{
+			//						throw new InvalidOperationException();
+			//					}
+			//					double[] decompressedRow = decompressedDataEnumerator.Current;
+			//					for (int column = 0; column < columns; column++)
+			//					{
+			//						double originalValue = A[row, column];
+			//						double decompressedValue = decompressedRow[column];
+			//						globalMin = Math.Min(globalMin, originalValue);
+			//						globalMax = Math.Max(globalMax, originalValue);
+			//						double error = Math.Abs(originalValue - decompressedValue);
+			//						maxError = Math.Max(maxError, error);
+			//					}
+			//				}
+			//			}
 
-//			double range = globalMax - globalMin;
-//			double maxRelativeError = maxError / range;
-//			var svdParameters = (SVDCompressionParameters)parameters;
-//			svdParameters.MaxDataValue = globalMax;
-//			svdParameters.MinDataValue = globalMin;
-//			svdParameters.MaxRelativeError = maxRelativeError;
-//			svdParameters.CompressionFactor = computeCompressionFactor(rank, rows, columns);
-//#endif
-//
-//			return result;
+			//			double range = globalMax - globalMin;
+			//			double maxRelativeError = maxError / range;
+			//			var svdParameters = (SVDCompressionParameters)parameters;
+			//			svdParameters.MaxDataValue = globalMax;
+			//			svdParameters.MinDataValue = globalMin;
+			//			svdParameters.MaxRelativeError = maxRelativeError;
+			//			svdParameters.CompressionFactor = computeCompressionFactor(rank, rows, columns);
+			//#endif
+			//
+			//			return result;
 		}
 
 		public IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters)
@@ -271,29 +313,17 @@ namespace MeshEditor.LayerManager.Compression
 			}
 		}
 
-		private int calculateRank(int rows, int columns)
+		private int calculateRankFromSizeFactor(int rows, int columns)
 		{
-			if (desiredCompressionFactor.HasValue)
-			{
-				return (int)Math.Ceiling((desiredCompressionFactor.Value * rows * columns)/((double)rows + columns));
-			}
-			return Math.Min(rows, columns);
+			return (int)Math.Ceiling((sizeFactor.Value * rows * columns) / ((double)rows + columns));
 		}
 
-		private int calculateRank(IReadOnlyList<double> singularValues)
+		private int calculateRankFromQualityFactor(IReadOnlyList<double> singularValues)
 		{
-			Debug.Assert(singularValues != null);
-			if (singularValues.Count == 0)
-				return 0;
-			if (singularValueToleranceFactor.HasValue)
-			{
-				// NOTE: I assume that singular values are sorted in descending order
-				Debug.Assert(singularValues.IsOrderedDescending(sv => sv));
-				double firstSingularValue = singularValues[0];
-				double tolerance = (1.0 - singularValueToleranceFactor.Value) * Math.Abs(firstSingularValue);
-				return singularValues.TakeWhile(sv => Math.Abs(sv) > tolerance).Count();
-			}
-			return singularValues.Count;
+			Debug.Assert(singularValues.IsOrderedDescending(sv => sv)); // NOTE: I assume that singular values are sorted in descending order
+			double firstSingularValue = singularValues[0];
+			double tolerance = (1.0 - qualityFactor.Value) * Math.Abs(firstSingularValue);
+			return singularValues.TakeWhile(sv => Math.Abs(sv) > tolerance).Count();
 		}
 
 		#endregion

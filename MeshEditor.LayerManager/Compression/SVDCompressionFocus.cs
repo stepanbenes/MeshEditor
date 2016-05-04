@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Compression
 {
-	public enum SVDCompressionStrategy
+	public enum SVDCompressionFocus
 	{
 		None = 0,
 		Quality,
