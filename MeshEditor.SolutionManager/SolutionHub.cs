@@ -148,7 +148,7 @@ namespace MeshEditor.SolutionManager
 			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(string layerIdOrName, string compressionMethodName, string fieldName, string componentName, IEnumerable<string> compressionParameters)
+		public void Compress(string layerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, IEnumerable<string> compressionParameters)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
@@ -159,7 +159,7 @@ namespace MeshEditor.SolutionManager
 			var parentLayer = findLayer(solution, layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method, compressionParameters), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
+			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
 			logNewLayer(compressedLayer);
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);

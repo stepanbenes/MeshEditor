@@ -107,7 +107,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runCompressCommand(CompressOptions options)
 		{
-			solutionHub.Compress(options.Layer, options.Method, options.FieldName, options.ComponentName, options.CompressionParameters);
+			solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters);
 			return 0;
 		}
 

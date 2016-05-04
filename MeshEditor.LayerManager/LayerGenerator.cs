@@ -179,7 +179,7 @@ namespace MeshEditor.LayerManager
 			return generateLayerFiles(filterLayerName, parentLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
 		}
 
-		public SummaryLayerFile CompressLayer(Guid layerId, string layerName = null, string fieldName = null, string componentName = null)
+		public SummaryLayerFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
 		{
 			// find layer in storage and download summary
 			SummaryLayerFile layerSummary;
@@ -196,7 +196,8 @@ namespace MeshEditor.LayerManager
 			var dataDescriptionGroups = from result in layerSummary.Results
 										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
 										group result by new { result.FieldName, result.ComponentName } into g
-										select g.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.Index))).ToList(); /*WARNING: eager evaluation*/
+										from list in createDataDescriptions(layerId, g, keyTimeSteps)
+										select list;
 
 			return generateLayerFiles(layerName ?? "time compression", layerId, geometry, attributeDescriptions, dataDescriptionGroups, filter);
 		}
@@ -467,6 +468,30 @@ namespace MeshEditor.LayerManager
 
 				yield return newResult;
 			}
+		}
+
+		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptions(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
+		{
+			double[] keyTimes = keyTimeSteps.ToArray();
+			int keyTimeIndex = 0;
+			List<DataDescription> dataListForCurrentTimeInterval = new List<DataDescription>();
+			foreach (var data in descriptors.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.Index))))
+			{
+				if (keyTimeIndex < keyTimes.Length)
+				{
+					if (data.TimeStep > keyTimes[keyTimeIndex])
+					{
+						if (dataListForCurrentTimeInterval.Count > 0)
+						{
+							yield return dataListForCurrentTimeInterval;
+							dataListForCurrentTimeInterval = new List<DataDescription>();
+						}
+						keyTimeIndex += 1;
+					}
+				}
+				dataListForCurrentTimeInterval.Add(data);
+			}
+			yield return dataListForCurrentTimeInterval;
 		}
 
 		private static int interpolateAttributeValue(int firstAttributeValue, int secondAttributeValue, float edgeCoordinate)

@@ -57,6 +57,9 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 1, MetaName = "Compression method", Required = true, HelpText = "Compression method (Transparent, SVD, WT)")]
 		public string Method { get; set; }
 
+		[Option('k', "keytimes", Required = false, HelpText = "Key time steps")]
+		public IEnumerable<double> KeyTimeSteps { get; set; }
+
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }
 
