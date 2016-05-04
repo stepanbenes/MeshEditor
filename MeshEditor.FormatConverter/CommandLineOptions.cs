@@ -54,7 +54,7 @@ namespace MeshEditor.FormatConverter
 		[Value(index: 0, MetaName = "Layer to compress", Required = true, HelpText = "Layer's guid or name")]
 		public string Layer { get; set; }
 
-		[Value(index: 1, Required = true, HelpText = "Compression method")]
+		[Value(index: 1, MetaName = "Compression method", Required = true, HelpText = "Compression method (Transparent, SVD, WT)")]
 		public string Method { get; set; }
 
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
@@ -62,6 +62,9 @@ namespace MeshEditor.FormatConverter
 
 		[Option("component", Required = false, HelpText = "Name of Component of field to compress")]
 		public string ComponentName { get; set; }
+
+		[Option('p', "params", Required = false, HelpText = "Compression parameters")]
+		public IEnumerable<string> CompressionParameters { get; set; }
 	}
 
 	[Verb("diff", HelpText = "Compare two layers")]

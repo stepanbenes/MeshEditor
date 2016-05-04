@@ -151,21 +151,6 @@ namespace MeshEditor.Utilities
 		}
 
 		/// <summary>
-		/// Returns true if array has no two equal items.
-		/// </summary>
-		public static bool CheckIfArrayContainsDistictItems<T>(T[] array) where T : IEquatable<T>
-		{
-			if (array == null)
-				return true;
-			for (int i = 1; i < array.Length; i++)
-			{
-				if (!array[i - 1].Equals(array[i]))
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
 		/// Get vector of values which are absolute values of component of original vector.
 		/// </summary>
 		public static Vector3 Abs(Vector3 vector)
