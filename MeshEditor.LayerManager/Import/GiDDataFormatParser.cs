@@ -49,7 +49,7 @@ namespace MeshEditor.LayerManager.Import
 			public int LineCounter { get; set; }
 
 			public string Name { get; set; }
-			public double? TimeStep { get; set; }
+			public double TimeStep { get; set; }
 			public FieldType? FieldType { get; set; }
 
 			public int? NumberOfComponents { get; set; }
@@ -109,7 +109,7 @@ namespace MeshEditor.LayerManager.Import
 			{
 				LineCounter = 0;
 				Name = null;
-				TimeStep = null;
+				TimeStep = 0.0;
 				FieldType = null;
 				NumberOfComponents = null;
 				ComponentNames = null;

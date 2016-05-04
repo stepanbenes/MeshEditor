@@ -26,7 +26,7 @@ namespace MeshEditor.LayerManager.Import
 		{
 			foreach (string recordName in recordNames)
 			{
-				double? timeStep = tryGetOrdinalFromFileName(recordName);
+				double timeStep = tryGetOrdinalFromFileName(recordName) ?? 0.0;
 				using (Stream fileStream = storageService.Load(recordName))
 				{
 					string fileType;
@@ -61,7 +61,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Private methods
 
-		private static IEnumerable<DataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double? timeStep)
+		private static IEnumerable<DataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double timeStep)
 		{
 			Dictionary<string, FieldType> fieldNameTypeMap;
 			readToDataElement(input, location, out fieldNameTypeMap);

@@ -646,7 +646,7 @@ namespace MeshEditor.LayerManager
 				FieldName = firstDataField.Name,
 				ComponentName = firstDataField.ComponentNames?[componentIndex],
 				Location = firstDataField.Location,
-				TimeSteps = restDataFields.Prepend(firstDataField).Select(d => d.TimeStep ?? 0.0).ToArray()
+				TimeSteps = restDataFields.Prepend(firstDataField).Select(d => d.TimeStep).ToArray()
 			};
 
 			var firstDataValues = extractComponentValues(firstDataField, componentIndex);
