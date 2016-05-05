@@ -34,19 +34,45 @@ namespace MeshEditor.FormatConverter
 					drawHelloImage();
 				}
 
+				int returnCode = 1;
+				Stopwatch stopwatch = new Stopwatch();
 				var program = new Program(isRunningLocally, StorageType.Local);
+				stopwatch.Start();
 				try
 				{
-					return program.Run(args, Console.Out);
+					returnCode = program.Run(args, Console.Out);
 				}
 				catch (Exception ex)
 				{
 					var color = Console.ForegroundColor;
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine($"{ex.GetType().Name}: {ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
+					Console.WriteLine($"{ex.GetType().FullName}");
+					Console.WriteLine($"{ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
 					Console.ForegroundColor = color;
-					return 1;
+					returnCode = -1;
 				}
+				finally
+				{
+					stopwatch.Stop();
+					if (returnCode != 1)
+					{
+						var color = Console.ForegroundColor;
+						if (returnCode == 0)
+						{
+							Console.ForegroundColor = ConsoleColor.Green;
+							Console.Write("Success. ");
+						}
+						else
+						{
+							Console.ForegroundColor = ConsoleColor.Red;
+							Console.Write("Fail. ");
+						}
+						Console.ForegroundColor = ConsoleColor.Gray;
+						Console.WriteLine($"Execution time: {stopwatch.Elapsed}");
+						Console.ForegroundColor = color;
+					}
+				}
+				return returnCode;
 			}
 			else
 			{
