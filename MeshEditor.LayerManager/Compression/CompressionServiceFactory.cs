@@ -16,7 +16,7 @@ namespace MeshEditor.LayerManager.Compression
 					return new TransparentCompressionService();
 				case CompressionMethod.SVD:
 					{
-						bool randomize = false;
+						bool randomized = false;
 						SVDCompressionFocus? focus = null;
 						double? factor = null;
 
@@ -24,9 +24,9 @@ namespace MeshEditor.LayerManager.Compression
 						{
 							SVDCompressionFocus testFocus;
 							double testFactor;
-							if (string.Equals(parameter, "randomize", StringComparison.InvariantCultureIgnoreCase))
+							if (string.Equals(parameter, nameof(randomized), StringComparison.InvariantCultureIgnoreCase))
 							{
-								randomize = true;
+								randomized = true;
 							}
 							else if (double.TryParse(parameter, out testFactor))
 							{
@@ -36,17 +36,21 @@ namespace MeshEditor.LayerManager.Compression
 							{
 								focus = testFocus;
 							}
+							else
+							{
+								throw new FormatException($"Unknown compression parameter '{parameter}'");
+							}
 						}
 
 						if (focus.HasValue)
 						{
 							if (factor.HasValue)
 							{
-								return new SVDCompressionService(randomize, focus.Value, factor.Value);
+								return new SVDCompressionService(randomized, focus.Value, factor.Value);
 							}
-							return new SVDCompressionService(randomize, focus.Value);
+							return new SVDCompressionService(randomized, focus.Value);
 						}
-						return new SVDCompressionService(randomize);
+						return new SVDCompressionService(randomized);
 					}
 				case CompressionMethod.WT:
 					return new WaveletCompressionService();

@@ -12,13 +12,13 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		#region Constructor, Fields
 
-		private readonly bool randomize;
+		private readonly bool randomized;
 		private readonly double? qualityFactor;
 		private readonly double? sizeFactor;
 
-		public SVDCompressionService(bool randomize, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
+		public SVDCompressionService(bool randomized, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
 		{
-			this.randomize = randomize;
+			this.randomized = randomized;
 			switch (focus)
 			{
 				case SVDCompressionFocus.Quality:
@@ -48,7 +48,7 @@ namespace MeshEditor.LayerManager.Compression
 				double[] singularValues, U_VT_columnwise;
 				bool resizeIsNeeded = false;
 
-				if (randomize)
+				if (randomized)
 				{
 					if (sizeFactor.HasValue)
 					{

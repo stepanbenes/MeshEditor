@@ -551,7 +551,7 @@ namespace MeshEditor.LayerManager
 				{
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
-					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
+					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' component {string.Join(", ", firstDataField.ComponentNames. Select(c => $"'{c}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
