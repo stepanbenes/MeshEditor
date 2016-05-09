@@ -196,7 +196,7 @@ namespace MeshEditor.LayerManager
 			var dataDescriptionGroups = from result in layerSummary.Results
 										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
 										group result by new { result.FieldName, result.ComponentName } into g
-										from list in createDataDescriptions(layerId, g, keyTimeSteps)
+										from list in createDataDescriptionGroups(layerId, g, keyTimeSteps)
 										select list;
 
 			return generateLayerFiles(layerName ?? "time compression", layerId, geometry, attributeDescriptions, dataDescriptionGroups, filter);
@@ -229,7 +229,6 @@ namespace MeshEditor.LayerManager
 						join b in secondResults on new { Field = a.FieldName, Component = a.ComponentName, a.TimeStep } equals new { Field = b.FieldName, Component = b.ComponentName, b.TimeStep }
 						select compareTwoDataDescriptions(a, b);
 
-			int numberOfDataComponents = 0;
 			int numberOfDataValues = 0;
 			double maxRelativeError = double.MinValue;
 			double averageRelativeErrorWeightedSum = 0.0;
@@ -451,7 +450,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptions(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
+		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptionGroups(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
 		{
 			double[] keyTimes = keyTimeSteps.ToArray();
 			int keyTimeIndex = 0;
@@ -460,7 +459,7 @@ namespace MeshEditor.LayerManager
 			{
 				if (keyTimeIndex < keyTimes.Length)
 				{
-					if (data.TimeStep > keyTimes[keyTimeIndex])
+					if (data.TimeStep >= keyTimes[keyTimeIndex])
 					{
 						if (dataListForCurrentTimeInterval.Count > 0)
 						{
