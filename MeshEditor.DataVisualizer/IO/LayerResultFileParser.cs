@@ -16,7 +16,7 @@ namespace MeshEditor.DataVisualizer.IO
 {
 	class LayerResultFileParser : IDataFileParser
 	{
-		IEnumerator<DataDescription> dataEnumerator;
+		IEnumerator<ComponentDataDescription> dataEnumerator;
 
 		public LayerResultFileParser(string filename)
 		{
@@ -48,10 +48,10 @@ namespace MeshEditor.DataVisualizer.IO
 			if (!dataEnumerator.MoveNext())
 				return null;
 
-			DataDescription data = dataEnumerator.Current;
+			ComponentDataDescription data = dataEnumerator.Current;
 
-			string componentName = data.ComponentNames.Single() ?? System.IO.Path.GetFileNameWithoutExtension(Filename);
-			DataType dataType = new DataType(data.Name + ": " + componentName, Filename, 0, convertFieldTypeToCoumpoundType(data.FieldType), componentName);
+			string componentName = data.ComponentName ?? System.IO.Path.GetFileNameWithoutExtension(Filename);
+			DataType dataType = new DataType(data.FieldName + ": " + componentName, Filename, 0, DataType.CompoundTypes.Scalar, componentName);
 			DataInfo dataInfo = new DataInfo(dataType, null, data.TimeStep, convertLocationTypeToDataLocation(data.Location));
 			return dataInfo;
 		}
@@ -63,12 +63,7 @@ namespace MeshEditor.DataVisualizer.IO
 				throw new InvalidOperationException();
 			}
 
-			DataDescription data = dataEnumerator.Current;
-
-			if (data.NumberOfComponents != 1)
-			{
-				throw new NotSupportedException();
-			}
+			ComponentDataDescription data = dataEnumerator.Current;
 
 			for (int index = 0; index < data.Values.Length; index++)
 			{
@@ -93,21 +88,6 @@ namespace MeshEditor.DataVisualizer.IO
 		}
 
 		#region Private methods
-
-		private static DataType.CompoundTypes convertFieldTypeToCoumpoundType(FieldType fieldType)
-		{
-			switch (fieldType)
-			{
-				case FieldType.Scalar:
-					return DataType.CompoundTypes.Scalar;
-				case FieldType.Vector:
-					return DataType.CompoundTypes.Vector;
-				case FieldType.Tensor:
-					return DataType.CompoundTypes.Matrix;
-				default:
-					throw new NotSupportedException();
-			}
-		}
 
 		private static DataLocation convertLocationTypeToDataLocation(DataLocationType location)
 		{

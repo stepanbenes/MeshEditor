@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.Import
 			this.recordNames = recordNames;
 		}
 
-		public IEnumerable<DataDescription> ReadData(GeometryDescription ignored)
+		public IEnumerable<FieldDataDescription> ReadData(GeometryDescription ignored)
 		{
 			foreach (string recordName in recordNames)
 			{
@@ -61,7 +61,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Private methods
 
-		private static IEnumerable<DataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double timeStep)
+		private static IEnumerable<FieldDataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double timeStep)
 		{
 			Dictionary<string, FieldType> fieldNameTypeMap;
 			readToDataElement(input, location, out fieldNameTypeMap);
@@ -123,12 +123,11 @@ namespace MeshEditor.LayerManager.Import
 
 				double[] values = ParseFloat64DataArray(input, currentDataArrayFormat.Value, currentDataArrayType.Value);
 
-				DataDescription dataDescription = new DataDescription
+				FieldDataDescription dataDescription = new FieldDataDescription
 				{
-					Name = dataArrayName,
+					FieldName = dataArrayName,
 					TimeStep = timeStep,
-					NumberOfComponents = numberOfComponents,
-					ComponentNames = null, // or new string[NumberOfDataComponents]
+					ComponentNames = new string[numberOfComponents],
 					FieldType = fieldType,
 					Location = location,
 					Values = values

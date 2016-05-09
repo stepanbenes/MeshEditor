@@ -115,7 +115,7 @@ namespace MeshEditor.LayerManager
 
 			IReadOnlyList<AttributeDescription> attributeDescriptions;
 			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
-			IEnumerable<DataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<DataDescription>();
+			IEnumerable<FieldDataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<FieldDataDescription>();
 			SummaryLayerFile layerFile = generateLayerFiles(layerName, null, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
 			return layerFile;
 		}
@@ -174,7 +174,7 @@ namespace MeshEditor.LayerManager
 
 			// filter results
 			var originalResultRecordNames = parentLayer.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
-			IEnumerable<DataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
+			IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
 
 			return generateLayerFiles(filterLayerName, parentLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
 		}
@@ -226,7 +226,7 @@ namespace MeshEditor.LayerManager
 								select data;
 
 			var diffs = from a in firstResults
-						join b in secondResults on new { Field = a.Name, Component = a.ComponentNames.Single(), a.TimeStep } equals new { Field = b.Name, Component = b.ComponentNames.Single(), b.TimeStep }
+						join b in secondResults on new { Field = a.FieldName, Component = a.ComponentName, a.TimeStep } equals new { Field = b.FieldName, Component = b.ComponentName, b.TimeStep }
 						select compareTwoDataDescriptions(a, b);
 
 			int numberOfDataComponents = 0;
@@ -237,7 +237,6 @@ namespace MeshEditor.LayerManager
 
 			foreach (var diff in diffs)
 			{
-				numberOfDataComponents += diff.NumberOfDataComponents;
 				numberOfDataValues += diff.NumberOfDataValues;
 				maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
 				averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
@@ -245,7 +244,7 @@ namespace MeshEditor.LayerManager
 
 			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
 
-			return new LayerDiff(numberOfDataComponents, numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation);
+			return new LayerDiff(numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation);
 		}
 
 		public void AppendDataToLayer(Guid layerId, IDataImportService dataImportService)
@@ -264,7 +263,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		public IEnumerable<DataDescription> LoadData(string record)
+		public IEnumerable<ComponentDataDescription> LoadData(string record)
 		{
 			using (Stream stream = sourceStorage.Load(record))
 			{
@@ -363,90 +362,74 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<DataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalResultRecordNames)
+		private IEnumerable<ComponentDataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalResultRecordNames)
 		{
 			const double EMPTY_VALUE = double.NaN;
 			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
-			foreach (DataDescription oldResult in originalResultRecordNames.SelectMany(record => LoadData(record)))
+			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => LoadData(record)))
 			{
-				int componentCount = oldResult.NumberOfComponents;
 				double[] newValues;
 
 				switch (oldResult.Location)
 				{
 					case DataLocationType.Points:
-						newValues = new double[filteredGeometry.NumberOfPoints * componentCount];
+						newValues = new double[filteredGeometry.NumberOfPoints];
 						for (int newPointIndex = 0; newPointIndex < filteredGeometry.NumberOfPoints; newPointIndex++)
 						{
 							int oldPointIndex;
 							EdgeIntersection oldEdgeIntersection;
 							if (mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
 							{
-								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
-								{
-									newValues[newPointIndex * componentCount + componentIndex] = oldResult.Values[oldPointIndex * componentCount + componentIndex];
-								}
+								newValues[newPointIndex] = oldResult.Values[oldPointIndex];
 							}
 							else if (mapping.TryGetOldPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
 							{
-								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
-								{
-									newValues[newPointIndex * componentCount + componentIndex] = interpolateDataValue(
-										firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId * componentCount + componentIndex],
-										secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId * componentCount + componentIndex],
-										edgeCoordinate: oldEdgeIntersection.Coordinate);
-								}
+								newValues[newPointIndex] = interpolateDataValue(
+									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
+									secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId],
+									edgeCoordinate: oldEdgeIntersection.Coordinate);
 							}
 							else
 							{
-								newValues.FillRange(EMPTY_VALUE, newPointIndex * componentCount, componentCount);
+								newValues[newPointIndex] = EMPTY_VALUE;
 							}
 						}
 						break;
 					case DataLocationType.CellPoints:
-						newValues = new double[filteredGeometry.CellConnectivity.Length * componentCount];
+						newValues = new double[filteredGeometry.CellConnectivity.Length];
 						for (int newCellPointIndex = 0; newCellPointIndex < filteredGeometry.CellConnectivity.Length; newCellPointIndex++)
 						{
 							int oldCellPointIndex;
 							EdgeIntersection oldEdgeIntersection;
 							if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
 							{
-								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
-								{
-									newValues[newCellPointIndex * componentCount + componentIndex] = oldResult.Values[oldCellPointIndex * componentCount + componentIndex];
-								}
+								newValues[newCellPointIndex] = oldResult.Values[oldCellPointIndex];
 							}
 							else if (mapping.TryGetOldCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
 							{
-								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
-								{
-									newValues[newCellPointIndex * componentCount + componentIndex] = interpolateDataValue(
-										firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId * componentCount + componentIndex],
-										secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId * componentCount + componentIndex],
-										edgeCoordinate: oldEdgeIntersection.Coordinate);
-								}
+								newValues[newCellPointIndex] = interpolateDataValue(
+									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
+									secondDataValue: oldResult.Values[oldEdgeIntersection.SecondPointId],
+									edgeCoordinate: oldEdgeIntersection.Coordinate);
 							}
 							else
 							{
-								newValues.FillRange(EMPTY_VALUE, newCellPointIndex * componentCount, componentCount);
+								newValues[newCellPointIndex] = EMPTY_VALUE;
 							}
 						}
 						break;
 					case DataLocationType.Cells:
-						newValues = new double[filteredGeometry.NumberOfCells * componentCount];
+						newValues = new double[filteredGeometry.NumberOfCells];
 						for (int newCellIndex = 0; newCellIndex < filteredGeometry.NumberOfCells; newCellIndex++)
 						{
 							int oldCellIndex;
 							if (mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
 							{
-								for (int componentIndex = 0; componentIndex < componentCount; componentIndex++)
-								{
-									newValues[newCellIndex * componentCount + componentIndex] = oldResult.Values[oldCellIndex * componentCount + componentIndex];
-								}
+								newValues[newCellIndex] = oldResult.Values[oldCellIndex];
 							}
 							else
 							{
-								newValues.FillRange(EMPTY_VALUE, newCellIndex * componentCount, componentCount);
+								newValues[newCellIndex] = EMPTY_VALUE;
 							}
 						}
 						break;
@@ -454,15 +437,13 @@ namespace MeshEditor.LayerManager
 						throw new NotSupportedException();
 				}
 
-				DataDescription newResult = new DataDescription
+				ComponentDataDescription newResult = new ComponentDataDescription
 				{
-					Name = oldResult.Name,
+					FieldName = oldResult.FieldName,
 					TimeStep = oldResult.TimeStep,
-					ComponentNames = oldResult.ComponentNames,
+					ComponentName = oldResult.ComponentName,
 
-					FieldType = oldResult.FieldType,
 					Location = oldResult.Location,
-					NumberOfComponents = componentCount,
 					Values = newValues
 				};
 
@@ -470,11 +451,11 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptions(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
+		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptions(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
 		{
 			double[] keyTimes = keyTimeSteps.ToArray();
 			int keyTimeIndex = 0;
-			List<DataDescription> dataListForCurrentTimeInterval = new List<DataDescription>();
+			List<ComponentDataDescription> dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
 			foreach (var data in descriptors.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.Index))))
 			{
 				if (keyTimeIndex < keyTimes.Length)
@@ -484,7 +465,7 @@ namespace MeshEditor.LayerManager
 						if (dataListForCurrentTimeInterval.Count > 0)
 						{
 							yield return dataListForCurrentTimeInterval;
-							dataListForCurrentTimeInterval = new List<DataDescription>();
+							dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
 						}
 						keyTimeIndex += 1;
 					}
@@ -551,7 +532,7 @@ namespace MeshEditor.LayerManager
 				{
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
-					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.Name}' component {string.Join(", ", firstDataField.ComponentNames. Select(c => $"'{c}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
+					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.FieldName}' component {string.Join(", ", Enumerable.Range(0, firstDataField.NumberOfComponents).Select(index => $"'{firstDataField.GetComponentName(index)}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
@@ -668,8 +649,8 @@ namespace MeshEditor.LayerManager
 			{
 				LayerId = layerId,
 				Index = dataIndex,
-				FieldName = firstDataField.Name,
-				ComponentName = firstDataField.ComponentNames?[componentIndex],
+				FieldName = firstDataField.FieldName,
+				ComponentName = firstDataField.GetComponentName(componentIndex),
 				Location = firstDataField.Location,
 				TimeSteps = restDataFields.Prepend(firstDataField).Select(d => d.TimeStep).ToArray()
 			};
@@ -705,19 +686,17 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<DataDescription> createDataDescriptionFromLayerResult(DataLayerFile layerResult)
+		private IEnumerable<ComponentDataDescription> createDataDescriptionFromLayerResult(DataLayerFile layerResult)
 		{
 			int timeStepIndex = 0;
 			foreach (double[] decompressedData in decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression))
 			{
-				DataDescription data = new DataDescription
+				ComponentDataDescription data = new ComponentDataDescription
 				{
-					Name = layerResult.FieldName,
+					FieldName = layerResult.FieldName,
 					TimeStep = layerResult.TimeSteps[timeStepIndex++],
-					ComponentNames = new[] { layerResult.ComponentName },
-					FieldType = FieldType.Scalar,
+					ComponentName = layerResult.ComponentName,
 					Location = layerResult.Location,
-					NumberOfComponents = 1,
 					Values = decompressedData
 				};
 				yield return data;
@@ -804,41 +783,37 @@ namespace MeshEditor.LayerManager
 			return $"{layerId}/result.{index}{serializationService.FileExtension}";
 		}
 
-		private static LayerDiff compareTwoDataDescriptions(DataDescription a, DataDescription b)
+		private static LayerDiff compareTwoDataDescriptions(ComponentDataDescription a, ComponentDataDescription b)
 		{
 			Debug.Assert(a.Values.Length == b.Values.Length);
-			Debug.Assert(a.NumberOfComponents == b.NumberOfComponents);
 			double maxRelativeError = double.MinValue;
 			double averageRelativeErrorWeightedSum = 0.0;
 			int numberOfDataValues = 0;
-			for (int component = 0; component < a.NumberOfComponents; component++)
+
+			double minValue = double.MaxValue, maxValue = double.MinValue;
+			double maxAbsoluteError = double.MinValue;
+			double absoluteErrorSum = 0.0;
+
+			for (int i = 0; i < a.Values.Length; i++)
 			{
-				double minValue = double.MaxValue, maxValue = double.MinValue;
-				double maxAbsoluteError = double.MinValue;
-				double absoluteErrorSum = 0.0;
-				int numberOfDataValuesPerComponent = 0;
-
-				for (int i = component; i < a.Values.Length; i += a.NumberOfComponents)
-				{
-					if (double.IsNaN(a.Values[i]) || double.IsNaN(b.Values[i]))
-						continue;
-					minValue = Math.Min(minValue, Math.Min(a.Values[i], b.Values[i]));
-					maxValue = Math.Max(maxValue, Math.Max(a.Values[i], b.Values[i]));
-					double error = Math.Abs(a.Values[i] - b.Values[i]);
-					maxAbsoluteError = Math.Max(maxAbsoluteError, error);
-					absoluteErrorSum += error;
-					numberOfDataValuesPerComponent += 1;
-				}
-
-				double range = maxValue - minValue;
-				double maxRelativeErrorPerComponent = (range > 0.0) ? maxAbsoluteError / range : 0.0;
-				double averageRelativeErrorPerComponent = (range > 0.0 && numberOfDataValuesPerComponent > 0) ? absoluteErrorSum / (range * numberOfDataValuesPerComponent) : 0.0;
-				maxRelativeError = Math.Max(maxRelativeError, maxRelativeErrorPerComponent);
-				averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValuesPerComponent;
-				numberOfDataValues += numberOfDataValuesPerComponent;
+				if (double.IsNaN(a.Values[i]) || double.IsNaN(b.Values[i]))
+					continue;
+				minValue = Math.Min(minValue, Math.Min(a.Values[i], b.Values[i]));
+				maxValue = Math.Max(maxValue, Math.Max(a.Values[i], b.Values[i]));
+				double error = Math.Abs(a.Values[i] - b.Values[i]);
+				maxAbsoluteError = Math.Max(maxAbsoluteError, error);
+				absoluteErrorSum += error;
+				numberOfDataValues += 1;
 			}
+
+			double range = maxValue - minValue;
+			double maxRelativeErrorPerComponent = (range > 0.0) ? maxAbsoluteError / range : 0.0;
+			double averageRelativeErrorPerComponent = (range > 0.0 && numberOfDataValues > 0) ? absoluteErrorSum / (range * numberOfDataValues) : 0.0;
+			maxRelativeError = Math.Max(maxRelativeError, maxRelativeErrorPerComponent);
+			averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValues;
+
 			double averageRelativeError = (numberOfDataValues > 0) ? averageRelativeErrorWeightedSum / numberOfDataValues : 0.0;
-			return new LayerDiff(a.NumberOfComponents, numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation: double.NaN);
+			return new LayerDiff(numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation: double.NaN);
 		}
 
 		#endregion

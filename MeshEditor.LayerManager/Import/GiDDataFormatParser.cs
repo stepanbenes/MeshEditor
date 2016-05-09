@@ -63,7 +63,7 @@ namespace MeshEditor.LayerManager.Import
 
 			public IDictionary<string, GaussPointsInfo> GaussPointsDescriptions { get; } = new Dictionary<string, GaussPointsInfo>();
 
-			public DataDescription CreateDataDescription(GeometryDescription geometry)
+			public FieldDataDescription CreateDataDescription(GeometryDescription geometry)
 			{
 				Debug.Assert(Location.HasValue);
 
@@ -82,14 +82,13 @@ namespace MeshEditor.LayerManager.Import
 				}
 
 				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
-				DataDescription data = new DataDescription
+				FieldDataDescription data = new FieldDataDescription
 				{
-					Name = Name,
+					FieldName = Name,
 					TimeStep = TimeStep,
 					ComponentNames = finalComponentNames,
 					FieldType = FieldType.Value,
 					Location = targetDataLocation,
-					NumberOfComponents = NumberOfComponents ?? finalComponentNames.Length
 				};
 
 				data.Values = convertValues(
@@ -138,7 +137,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Public methods
 
-		public IEnumerable<DataDescription> ReadData(GeometryDescription correspondingGeometry)
+		public IEnumerable<FieldDataDescription> ReadData(GeometryDescription correspondingGeometry)
 		{
 			// TODO: replace asserts with throws
 
