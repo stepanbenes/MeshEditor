@@ -148,7 +148,7 @@ namespace MeshEditor.SolutionManager
 			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(string layerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, IEnumerable<string> compressionParameters)
+		public void Compress(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, IEnumerable<string> compressionParameters, string compressedLayerName = null)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
@@ -156,10 +156,10 @@ namespace MeshEditor.SolutionManager
 
 			Solution solution = solutionController.Get(solutionId);
 
-			var parentLayer = findLayer(solution, layerIdOrName);
+			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
 			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method, compressionParameters), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
+			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, compressedLayerName ?? $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
 			logNewLayer(compressedLayer);
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);
@@ -169,17 +169,49 @@ namespace MeshEditor.SolutionManager
 
 		public void Diff(string layerIdOrName)
 		{
-			Solution solution = solutionController.Get(solutionId);
-			var layer = findLayer(solution, layerIdOrName);
-
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-			var diff = layerGenerator.CreateDiff(layer.Id);
+			var diff = createDiff(layerIdOrName);
 			logger?.LogMessage(diff.ToString(), LogMessagePriority.High);
+		}
+
+		public IList<string> RunBenchmark(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, string focus, int iterations, bool randomized)
+		{
+			const char delimitter = ' ';
+			List<string> results = new List<string>
+			{
+				// header
+				$"{focus}{delimitter}max_relative_error{delimitter}average_relative_error{delimitter}execution_time"
+			};
+			for (int i = 0; i < iterations; i++)
+			{
+				double factor = (double)(i + 1) / iterations;
+				var compressionParameters = new List<string> { focus, factor.ToString() };
+				if (randomized)
+				{
+					compressionParameters.Add("randomized");
+				}
+				string compressedLayerName = $"benchmark_{focus}_{factor}{(randomized ? " randomized" : "")}";
+				Stopwatch stopwatch = new Stopwatch();
+				stopwatch.Start();
+				Compress(parentLayerIdOrName, compressionMethodName, keyTimeSteps, fieldName, componentName, compressionParameters, compressedLayerName);
+				stopwatch.Stop();
+				var diff = createDiff(compressedLayerName);
+				results.Add($"{factor}{delimitter}{diff.MaxRelativeError}{delimitter}{diff.AverageRelativeError}{delimitter}{stopwatch.ElapsedMilliseconds}");
+			}
+			return results;
 		}
 
 		#endregion
 
 		#region Private helper methods
+
+		private LayerDiff createDiff(string layerIdOrName)
+		{
+			Solution solution = solutionController.Get(solutionId);
+			var layer = findLayer(solution, layerIdOrName);
+
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			return layerGenerator.CreateDiff(layer.Id);
+		}
 
 		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryLayerFile layerSummary)
 		{

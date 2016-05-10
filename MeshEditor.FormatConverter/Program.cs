@@ -133,7 +133,16 @@ namespace MeshEditor.FormatConverter
 
 		private int runCompressCommand(CompressOptions options)
 		{
-			solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters);
+			const string benchmarkKeyword = "benchmark";
+			if (string.Equals(options.CompressionParameters.FirstOrDefault(), benchmarkKeyword, StringComparison.InvariantCultureIgnoreCase))
+			{
+				var results = solutionHub.RunBenchmark(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters.ElementAt(1), int.Parse(options.CompressionParameters.ElementAt(2)), string.Equals(options.CompressionParameters.ElementAtOrDefault(3), "randomized", StringComparison.InvariantCultureIgnoreCase));
+				File.WriteAllLines(string.Join("_", options.CompressionParameters) + ".txt", results);
+			}
+			else
+			{
+				solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters);
+			}
 			return 0;
 		}
 
