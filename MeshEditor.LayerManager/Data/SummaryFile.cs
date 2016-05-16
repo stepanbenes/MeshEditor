@@ -7,7 +7,7 @@ using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class SummaryLayerFile
+	public class SummaryFile
 	{
 		public Guid Id { get; set; }
 		public string Name { get; set; }
@@ -17,7 +17,7 @@ namespace MeshEditor.LayerManager.Data
 
 		public double[] TimeSteps { get; set; }
 
-		public DataLayerDescriptor[] Attributes { get; set; }
-		public DataLayerDescriptor[] Results { get; set; }
+		public DataFileDescriptor[] Attributes { get; set; }
+		public DataFileDescriptor[] Results { get; set; }
 	}
 }

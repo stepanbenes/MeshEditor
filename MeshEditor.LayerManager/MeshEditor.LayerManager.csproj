@@ -99,10 +99,10 @@
     <Compile Include="Data\DataArrayType.cs" />
     <Compile Include="Data\DataLocationType.cs" />
     <Compile Include="Data\FieldType.cs" />
-    <Compile Include="Data\MeshLayerFile.cs" />
-    <Compile Include="Data\DataLayerFile.cs" />
-    <Compile Include="Data\DataLayerDescriptor.cs" />
-    <Compile Include="Data\SummaryLayerFile.cs" />
+    <Compile Include="Data\MeshFile.cs" />
+    <Compile Include="Data\DataFile.cs" />
+    <Compile Include="Data\DataFileDescriptor.cs" />
+    <Compile Include="Data\SummaryFile.cs" />
     <Compile Include="Encoding\TrimOptions.cs" />
     <Compile Include="Filters\AttributeSelectionFilter.cs" />
     <Compile Include="Filters\Filter.cs" />

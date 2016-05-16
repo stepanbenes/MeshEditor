@@ -106,7 +106,7 @@ namespace MeshEditor.LayerManager
 
 		#region Console app Entry points
 
-		public SummaryLayerFile GenerateMasterLayer(string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public SummaryFile GenerateMasterLayer(string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
 		{
 			if (geometryImportService == null)
 			{
@@ -116,17 +116,16 @@ namespace MeshEditor.LayerManager
 			IReadOnlyList<AttributeDescription> attributeDescriptions;
 			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
 			IEnumerable<FieldDataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<FieldDataDescription>();
-			SummaryLayerFile layerFile = generateLayerFiles(layerName, null, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
-			return layerFile;
+			return generateLayerFiles(layerName, null, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
 		}
 
-		public SummaryLayerFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)
+		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)
 		{
 			// find parentLayer in storage and download summary
-			SummaryLayerFile parentLayer;
+			SummaryFile parentLayer;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(parentLayerId)))
 			{
-				parentLayer = serializationService.Deserialize<SummaryLayerFile>(stream);
+				parentLayer = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
 			IMeshFilterCreator meshFilterCreator;
@@ -179,13 +178,13 @@ namespace MeshEditor.LayerManager
 			return generateLayerFiles(filterLayerName, parentLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
 		}
 
-		public SummaryLayerFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
+		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
 		{
 			// find layer in storage and download summary
-			SummaryLayerFile layerSummary;
+			SummaryFile layerSummary;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
 			{
-				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
 			GeometryDescription geometry = LoadGeometry(getLayerMeshRecordName(layerId));
@@ -204,16 +203,16 @@ namespace MeshEditor.LayerManager
 
 		public LayerDiff CreateDiff(Guid layerId)
 		{
-			SummaryLayerFile layerSummary;
+			SummaryFile layerSummary;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
-				layerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
 
 			if (!layerSummary.ParentId.HasValue)
 				throw new ArgumentException("Layer is master layer (has no parent), can't create diff.");
 
-			SummaryLayerFile parentLayerSummary;
+			SummaryFile parentLayerSummary;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerSummary.ParentId.Value)))
-				parentLayerSummary = serializationService.Deserialize<SummaryLayerFile>(stream);
+				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
 
 			var firstResults = from result in parentLayerSummary.Results
 							   select getLayerResultRecordName(parentLayerSummary.Id, result.Index) into uri
@@ -257,7 +256,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream meshStream = sourceStorage.Load(record))
 			{
-				MeshLayerFile layerMesh = serializationService.Deserialize<MeshLayerFile>(meshStream);
+				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
 				return createGeometryFromLayerMesh(layerMesh);
 			}
 		}
@@ -266,7 +265,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream stream = sourceStorage.Load(record))
 			{
-				DataLayerFile layerResult = serializationService.Deserialize<DataLayerFile>(stream);
+				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
 				return createDataDescriptionFromLayerResult(layerResult);
 			}
 		}
@@ -275,7 +274,7 @@ namespace MeshEditor.LayerManager
 		{
 			using (Stream attributeStream = sourceStorage.Load(record))
 			{
-				DataLayerFile layerAttributes = serializationService.Deserialize<DataLayerFile>(attributeStream);
+				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
 				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
 			}
 		}
@@ -450,7 +449,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptionGroups(Guid layerId, IEnumerable<DataLayerDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
+		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptionGroups(Guid layerId, IEnumerable<DataFileDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
 		{
 			double[] keyTimes = keyTimeSteps.ToArray();
 			int keyTimeIndex = 0;
@@ -488,11 +487,11 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryLayerFile generateLayerFiles(string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, Filter filter)
+		private SummaryFile generateLayerFiles(string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, Filter filter)
 		{
 			Guid layerId = Guid.NewGuid();
 
-			SummaryLayerFile layerSummary = new SummaryLayerFile
+			SummaryFile layerSummary = new SummaryFile
 			{
 				Id = layerId,
 				Name = layerName,
@@ -504,24 +503,24 @@ namespace MeshEditor.LayerManager
 
 			progressReporter?.Report(new OperationState("Generating mesh file"));
 
-			MeshLayerFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
+			MeshFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
 			storeLayerFile(layerMesh, getLayerMeshRecordName(layerId));
 
 			int attributeIndex = 1, resultIndex = 1;
 
-			var attributeDescriptors = new List<DataLayerDescriptor>();
+			var attributeDescriptors = new List<DataFileDescriptor>();
 			foreach (var attribute in attributeDescriptions)
 			{
 				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
 
-				DataLayerFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
+				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
 				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeRecordName(layerId, elementPropertyAttributeLayer.Index));
-				attributeDescriptors.Add(DataLayerDescriptor.CreateFrom(elementPropertyAttributeLayer));
+				attributeDescriptors.Add(DataFileDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;
 			}
 			layerSummary.Attributes = attributeDescriptors.ToArray();
 
-			var resultDescriptors = new List<DataLayerDescriptor>();
+			var resultDescriptors = new List<DataFileDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
 			var compressionCounter = new CompressionCounter();
 			foreach (var dataDescriptionGroup in dataDescriptionGroups)
@@ -536,7 +535,7 @@ namespace MeshEditor.LayerManager
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
 						var layerResult = createLayerResultFromDataDescriptions(firstDataField, restDataFields, dataDescriptionGroup.Count, componentIndex, layerId, resultIndex);
-						resultDescriptors.Add(DataLayerDescriptor.CreateFrom(layerResult));
+						resultDescriptors.Add(DataFileDescriptor.CreateFrom(layerResult));
 						foreach (var timeStep in layerResult.TimeSteps)
 						{
 							timeStepsHashSet.Add(timeStep);
@@ -560,9 +559,9 @@ namespace MeshEditor.LayerManager
 			return layerSummary;
 		}
 
-		private MeshLayerFile createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
+		private MeshFile createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
 		{
-			MeshLayerFile layerMesh = new MeshLayerFile { LayerId = layerId };
+			MeshFile layerMesh = new MeshFile { LayerId = layerId };
 
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
 			layerMesh.PointCoordinates = encodeGeometryDataArray(geometry.PointCoordinates, trimEnd: false);
@@ -589,11 +588,11 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
-		private DataLayerFile createAttributeLayerFile(string attributeName, int[] attributeValues, DataLocationType location, Guid layerId, int dataIndex)
+		private DataFile createAttributeLayerFile(string attributeName, int[] attributeValues, DataLocationType location, Guid layerId, int dataIndex)
 		{
 			Debug.Assert(attributeValues != null);
 
-			DataLayerFile attributeLayer = new DataLayerFile
+			DataFile attributeLayer = new DataFile
 			{
 				LayerId = layerId,
 				FieldName = attributeName,
@@ -609,7 +608,7 @@ namespace MeshEditor.LayerManager
 			return attributeLayer;
 		}
 
-		private GeometryDescription createGeometryFromLayerMesh(MeshLayerFile layerMesh)
+		private GeometryDescription createGeometryFromLayerMesh(MeshFile layerMesh)
 		{
 			GeometryDescription geometry = new GeometryDescription();
 
@@ -638,13 +637,13 @@ namespace MeshEditor.LayerManager
 			return geometry;
 		}
 
-		private DataLayerFile createLayerResultFromDataDescriptions(DataDescription firstDataField, IEnumerable<DataDescription> restDataFields, int dataFieldCount, int componentIndex, Guid layerId, int dataIndex)
+		private DataFile createLayerResultFromDataDescriptions(DataDescription firstDataField, IEnumerable<DataDescription> restDataFields, int dataFieldCount, int componentIndex, Guid layerId, int dataIndex)
 		{
 			Debug.Assert(firstDataField != null);
 			Debug.Assert(restDataFields != null);
 			Debug.Assert(dataFieldCount > 0);
 
-			DataLayerFile layerResult = new DataLayerFile
+			DataFile layerResult = new DataFile
 			{
 				LayerId = layerId,
 				Index = dataIndex,
@@ -685,7 +684,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<ComponentDataDescription> createDataDescriptionFromLayerResult(DataLayerFile layerResult)
+		private IEnumerable<ComponentDataDescription> createDataDescriptionFromLayerResult(DataFile layerResult)
 		{
 			int timeStepIndex = 0;
 			foreach (double[] decompressedData in decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression))
@@ -702,7 +701,7 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private AttributeDescription createAttributeDescriptionFromDataLayerAttribute(DataLayerFile layerAttributes)
+		private AttributeDescription createAttributeDescriptionFromDataLayerAttribute(DataFile layerAttributes)
 		{
 			Debug.Assert(layerAttributes.Compression == null);
 			AttributeDescription attribute = new AttributeDescription

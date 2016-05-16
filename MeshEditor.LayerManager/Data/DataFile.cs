@@ -11,7 +11,7 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class DataLayerFile : IDataLayerDescription
+	public class DataFile : IDataLayerDescription
 	{
 		public Guid LayerId { get; set; }
 

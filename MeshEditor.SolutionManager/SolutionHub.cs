@@ -213,7 +213,7 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.CreateDiff(layer.Id);
 		}
 
-		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryLayerFile layerSummary)
+		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryFile layerSummary)
 		{
 			var newLayerRecord = new Solution.Layer
 			{
@@ -272,7 +272,7 @@ namespace MeshEditor.SolutionManager
 				);
 		}
 
-		private void logNewLayer(SummaryLayerFile layerSummary)
+		private void logNewLayer(SummaryFile layerSummary)
 		{
 			logger?.LogMessage($"layer name: {layerSummary.Name}, layer id: {layerSummary.Id}");
 		}

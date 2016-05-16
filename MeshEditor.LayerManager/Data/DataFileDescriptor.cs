@@ -17,14 +17,14 @@ namespace MeshEditor.LayerManager.Data
 		DataLocationType Location { get; set; }
 	}
 
-	public class DataLayerDescriptor : IDataLayerDescription
+	public class DataFileDescriptor : IDataLayerDescription
 	{
-		public DataLayerDescriptor()
+		public DataFileDescriptor()
 		{ }
 
-		internal static DataLayerDescriptor CreateFrom(IDataLayerDescription source)
+		internal static DataFileDescriptor CreateFrom(IDataLayerDescription source)
 		{
-			return new DataLayerDescriptor
+			return new DataFileDescriptor
 			{
 				FieldName = source.FieldName,
 				ComponentName = source.ComponentName,

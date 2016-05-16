@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class MeshLayerFile
+	public class MeshFile
 	{
 		public Guid LayerId { get; set; }
 
