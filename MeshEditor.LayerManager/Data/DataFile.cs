@@ -11,16 +11,18 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class DataFile : IDataLayerDescription
+	public class DataFile : IDataDescription
 	{
 		public Guid LayerId { get; set; }
+
+		public int DataIndex { get; set; }
+		public int MeshIndex { get; set; }
+
 
 		public string FieldName { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string ComponentName { get; set; }
-
-		public int Index { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public double[] TimeSteps { get; set; }

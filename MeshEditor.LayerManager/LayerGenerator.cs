@@ -182,7 +182,7 @@ namespace MeshEditor.LayerManager
 						{
 							var attributeSelectionFilter = (AttributeSelectionFilter)filter;
 							var attributeDescriptor = parentMesh.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-							var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.Index));
+							var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.DataIndex));
 							meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
 						}
 						break;
@@ -194,11 +194,11 @@ namespace MeshEditor.LayerManager
 				// TODO: check if filteredGeometry is not empty
 
 				// filter attributes
-				var originalAttributeRecordNames = parentMesh.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
+				var originalAttributeRecordNames = parentMesh.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.DataIndex));
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
 
 				// filter results
-				var originalResultRecordNames = parentMesh.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
+				var originalResultRecordNames = parentMesh.Results.Select(r => getLayerResultRecordName(parentLayerId, r.DataIndex));
 				IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
 
 				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
@@ -224,7 +224,7 @@ namespace MeshEditor.LayerManager
 			foreach (var mesh in layerSummary.Meshes)
 			{
 				GeometryDescription geometry = LoadGeometry(getLayerMeshRecordName(layerId, mesh.Index));
-				var attributeRecordNames = mesh.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.Index));
+				var attributeRecordNames = mesh.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.DataIndex));
 				IEnumerable<AttributeDescription> attributeDescriptions = attributeRecordNames.Select(record => LoadAttribute(record));
 
 				var dataDescriptionGroups = from result in mesh.Results
@@ -261,12 +261,12 @@ namespace MeshEditor.LayerManager
 			foreach (var mesh in parentLayerSummary.Meshes)
 			{
 				var firstResults = from result in mesh.Results
-								   select getLayerResultRecordName(parentLayerSummary.Id, result.Index) into uri
+								   select getLayerResultRecordName(parentLayerSummary.Id, result.DataIndex) into uri
 								   from data in LoadData(uri)
 								   select data;
 
 				var secondResults =	from result in mesh.Results
-									select getLayerResultRecordName(layerSummary.Id, result.Index) into uri
+									select getLayerResultRecordName(layerSummary.Id, result.DataIndex) into uri
 									from data in LoadData(uri)
 									select data;
 
@@ -496,7 +496,7 @@ namespace MeshEditor.LayerManager
 			double[] keyTimes = keyTimeSteps.ToArray();
 			int keyTimeIndex = 0;
 			List<ComponentDataDescription> dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
-			foreach (var data in descriptors.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.Index))))
+			foreach (var data in descriptors.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.DataIndex))))
 			{
 				if (keyTimeIndex < keyTimes.Length)
 				{
@@ -542,8 +542,8 @@ namespace MeshEditor.LayerManager
 			{
 				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
 
-				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex);
-				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeRecordName(layerId, elementPropertyAttributeLayer.Index));
+				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex, meshIndex);
+				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeRecordName(layerId, elementPropertyAttributeLayer.DataIndex));
 				attributeDescriptors.Add(DataFileDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;
 			}
@@ -563,13 +563,13 @@ namespace MeshEditor.LayerManager
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
-						var layerResult = createLayerResultFromDataDescriptions(firstDataField, restDataFields, dataDescriptionGroup.Count, componentIndex, layerId, resultIndex);
+						var layerResult = createLayerResultFromDataDescriptions(firstDataField, restDataFields, dataDescriptionGroup.Count, componentIndex, layerId, resultIndex, meshIndex);
 						resultDescriptors.Add(DataFileDescriptor.CreateFrom(layerResult));
 						foreach (var timeStep in layerResult.TimeSteps)
 						{
 							timeStepsHashSet.Add(timeStep);
 						}
-						storeLayerFile(layerResult, getLayerResultRecordName(layerId, layerResult.Index));
+						storeLayerFile(layerResult, getLayerResultRecordName(layerId, layerResult.DataIndex));
 						compressionCounter.Increment(layerResult.Compression, layerResult.Encoding);
 						resultIndex += 1;
 					}
@@ -634,7 +634,7 @@ namespace MeshEditor.LayerManager
 			return layerMesh;
 		}
 
-		private DataFile createAttributeLayerFile(string attributeName, int[] attributeValues, DataLocationType location, Guid layerId, int dataIndex)
+		private DataFile createAttributeLayerFile(string attributeName, int[] attributeValues, DataLocationType location, Guid layerId, int dataIndex, int meshIndex)
 		{
 			Debug.Assert(attributeValues != null);
 
@@ -643,7 +643,8 @@ namespace MeshEditor.LayerManager
 				LayerId = layerId,
 				FieldName = attributeName,
 				ComponentName = null,
-				Index = dataIndex,
+				DataIndex = dataIndex,
+				MeshIndex = meshIndex,
 				TimeSteps = null,
 				Location = location
 			};
@@ -683,7 +684,7 @@ namespace MeshEditor.LayerManager
 			return geometry;
 		}
 
-		private DataFile createLayerResultFromDataDescriptions(DataDescription firstDataField, IEnumerable<DataDescription> restDataFields, int dataFieldCount, int componentIndex, Guid layerId, int dataIndex)
+		private DataFile createLayerResultFromDataDescriptions(DataDescription firstDataField, IEnumerable<DataDescription> restDataFields, int dataFieldCount, int componentIndex, Guid layerId, int dataIndex, int meshIndex)
 		{
 			Debug.Assert(firstDataField != null);
 			Debug.Assert(restDataFields != null);
@@ -692,7 +693,8 @@ namespace MeshEditor.LayerManager
 			DataFile layerResult = new DataFile
 			{
 				LayerId = layerId,
-				Index = dataIndex,
+				DataIndex = dataIndex,
+				MeshIndex = meshIndex,
 				FieldName = firstDataField.FieldName,
 				ComponentName = firstDataField.GetComponentName(componentIndex),
 				Location = firstDataField.Location,

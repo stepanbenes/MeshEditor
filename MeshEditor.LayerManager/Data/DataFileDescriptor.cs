@@ -8,27 +8,27 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	internal interface IDataLayerDescription
+	internal interface IDataDescription
 	{
 		string FieldName { get; set; }
 		string ComponentName { get; set; }
-		int Index { get; set; }
+		int DataIndex { get; set; }
 		double[] TimeSteps { get; set; }
 		DataLocationType Location { get; set; }
 	}
 
-	public class DataFileDescriptor : IDataLayerDescription
+	public class DataFileDescriptor : IDataDescription
 	{
 		public DataFileDescriptor()
 		{ }
 
-		internal static DataFileDescriptor CreateFrom(IDataLayerDescription source)
+		internal static DataFileDescriptor CreateFrom(IDataDescription source)
 		{
 			return new DataFileDescriptor
 			{
 				FieldName = source.FieldName,
 				ComponentName = source.ComponentName,
-				Index = source.Index,
+				DataIndex = source.DataIndex,
 				TimeSteps = source.TimeSteps?.ToArray(),
 				Location = source.Location
 			};
@@ -36,7 +36,7 @@ namespace MeshEditor.LayerManager.Data
 
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
-		public int Index { get; set; }
+		public int DataIndex { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public double[] TimeSteps { get; set; }
