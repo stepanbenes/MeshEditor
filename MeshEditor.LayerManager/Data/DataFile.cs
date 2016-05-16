@@ -15,7 +15,7 @@ namespace MeshEditor.LayerManager.Data
 	{
 		public Guid LayerId { get; set; }
 
-		public int DataIndex { get; set; }
+		public int Index { get; set; }
 		public int MeshIndex { get; set; }
 
 

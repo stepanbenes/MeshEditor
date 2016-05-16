@@ -10,7 +10,7 @@ namespace MeshEditor.LayerManager.Data
 	{
 		public int Index { get; set; }
 
-		public double[] TimeSteps { get; set; }
+		//public double[] TimeSteps { get; set; }
 
 		public DataFileDescriptor[] Attributes { get; set; }
 		public DataFileDescriptor[] Results { get; set; }

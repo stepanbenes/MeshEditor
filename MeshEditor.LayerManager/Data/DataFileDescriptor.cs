@@ -12,7 +12,7 @@ namespace MeshEditor.LayerManager.Data
 	{
 		string FieldName { get; set; }
 		string ComponentName { get; set; }
-		int DataIndex { get; set; }
+		int Index { get; set; }
 		double[] TimeSteps { get; set; }
 		DataLocationType Location { get; set; }
 	}
@@ -28,7 +28,7 @@ namespace MeshEditor.LayerManager.Data
 			{
 				FieldName = source.FieldName,
 				ComponentName = source.ComponentName,
-				DataIndex = source.DataIndex,
+				Index = source.Index,
 				TimeSteps = source.TimeSteps?.ToArray(),
 				Location = source.Location
 			};
@@ -36,7 +36,7 @@ namespace MeshEditor.LayerManager.Data
 
 		public string FieldName { get; set; }
 		public string ComponentName { get; set; }
-		public int DataIndex { get; set; }
+		public int Index { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public double[] TimeSteps { get; set; }
