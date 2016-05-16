@@ -15,9 +15,8 @@ namespace MeshEditor.LayerManager.Data
 		public Guid? ParentId { get; set; }
 		public Filter Filter { get; set; }
 
-		public double[] TimeSteps { get; set; }
+		//public double[] TimeSteps { get; set; }
 
-		public DataFileDescriptor[] Attributes { get; set; }
-		public DataFileDescriptor[] Results { get; set; }
+		public MeshFileDescriptor[] Meshes { get; set; }
 	}
 }

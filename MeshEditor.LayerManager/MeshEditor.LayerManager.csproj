@@ -79,6 +79,7 @@
     <Compile Include="Compression\WaveletCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionService.cs" />
     <Compile Include="Data\LayerDiff.cs" />
+    <Compile Include="Data\MeshFileDescriptor.cs" />
     <Compile Include="Filters\SurfaceFilter.cs" />
     <Compile Include="Filters\TimeCompressionFilter.cs" />
     <Compile Include="MeshFiltering\GeometryBuilder.cs" />

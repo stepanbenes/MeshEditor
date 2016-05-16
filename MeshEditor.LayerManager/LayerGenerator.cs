@@ -113,10 +113,18 @@ namespace MeshEditor.LayerManager
 				throw new ArgumentNullException(nameof(geometryImportService));
 			}
 
+			Guid newLayerId = Guid.NewGuid();
+			
+			// TODO: support multiple meshes
 			IReadOnlyList<AttributeDescription> attributeDescriptions;
 			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
 			IEnumerable<FieldDataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<FieldDataDescription>();
-			return generateLayerFiles(layerName, null, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), filter: null);
+			int meshIndex = 1;
+			int attributeIndex = 1;
+			int resultIndex = 1;
+			var meshFileDesriptor = generateDataFilesForMesh(meshIndex, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
+			// ------
+			return generateSummaryFile(layerName, null, newLayerId, null, Enumerable.Repeat(meshFileDesriptor, 1));
 		}
 
 		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)
@@ -154,9 +162,7 @@ namespace MeshEditor.LayerManager
 				case FilterType.AttributeSelection:
 					{
 						var attributeSelectionFilter = (AttributeSelectionFilter)filter;
-						var attributeDescriptor = parentLayer.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-						var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.Index));
-						meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
+						meshFilterCreator = null;
 						filterLayerName = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
 					}
 					break;
@@ -164,18 +170,42 @@ namespace MeshEditor.LayerManager
 					throw new NotSupportedException();
 			}
 
-			GeometryDescription originalGeometry = LoadGeometry(getLayerMeshRecordName(parentLayerId));
-			GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
+			Guid newLayerId = Guid.NewGuid();
+			var meshFileDescriptors = new List<MeshFileDescriptor>();
+			int attributeIndex = 1;
+			int resultIndex = 1;
+			foreach (var parentMesh in parentLayer.Meshes)
+			{
+				switch (filter.Type)
+				{
+					case FilterType.AttributeSelection:
+						{
+							var attributeSelectionFilter = (AttributeSelectionFilter)filter;
+							var attributeDescriptor = parentMesh.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
+							var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.Index));
+							meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
+						}
+						break;
+				}
 
-			// filter attributes
-			var originalAttributeRecordNames = parentLayer.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
-			IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
+				GeometryDescription originalGeometry = LoadGeometry(getLayerMeshRecordName(parentLayerId, parentMesh.Index));
+				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
 
-			// filter results
-			var originalResultRecordNames = parentLayer.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
-			IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
+				// TODO: check if filteredGeometry is not empty
 
-			return generateLayerFiles(filterLayerName, parentLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), filter);
+				// filter attributes
+				var originalAttributeRecordNames = parentMesh.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
+				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
+
+				// filter results
+				var originalResultRecordNames = parentMesh.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
+				IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
+
+				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
+				meshFileDescriptors.Add(meshFileDesriptor);
+			}
+
+			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
 		}
 
 		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
@@ -187,18 +217,25 @@ namespace MeshEditor.LayerManager
 				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
-			GeometryDescription geometry = LoadGeometry(getLayerMeshRecordName(layerId));
-			var attributeRecordNames = layerSummary.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.Index));
-			IEnumerable<AttributeDescription> attributeDescriptions = attributeRecordNames.Select(record => LoadAttribute(record));
-			Filter filter = new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName };
+			Guid compressedLayerId = Guid.NewGuid();
+			var meshFileDescriptors = new List<MeshFileDescriptor>();
+			int attributeIndex = 1;
+			int resultIndex = 1;
+			foreach (var mesh in layerSummary.Meshes)
+			{
+				GeometryDescription geometry = LoadGeometry(getLayerMeshRecordName(layerId, mesh.Index));
+				var attributeRecordNames = mesh.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.Index));
+				IEnumerable<AttributeDescription> attributeDescriptions = attributeRecordNames.Select(record => LoadAttribute(record));
 
-			var dataDescriptionGroups = from result in layerSummary.Results
-										where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
-										group result by new { result.FieldName, result.ComponentName } into g
-										from list in createDataDescriptionGroups(layerId, g, keyTimeSteps)
-										select list;
-
-			return generateLayerFiles(layerName ?? "time compression", layerId, geometry, attributeDescriptions, dataDescriptionGroups, filter);
+				var dataDescriptionGroups = from result in mesh.Results
+											where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
+											group result by new { result.FieldName, result.ComponentName } into g
+											from list in createDataDescriptionGroups(layerId, g, keyTimeSteps)
+											select list;
+				var meshFileDesriptor = generateDataFilesForMesh(mesh.Index, compressedLayerId, geometry, attributeDescriptions, dataDescriptionGroups, ref attributeIndex, ref resultIndex);
+				meshFileDescriptors.Add(meshFileDesriptor);
+			}
+			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName }, meshFileDescriptors);
 		}
 
 		public LayerDiff CreateDiff(Guid layerId)
@@ -212,32 +249,37 @@ namespace MeshEditor.LayerManager
 
 			SummaryFile parentLayerSummary;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerSummary.ParentId.Value)))
+			{
 				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
-
-			var firstResults = from result in parentLayerSummary.Results
-							   select getLayerResultRecordName(parentLayerSummary.Id, result.Index) into uri
-							   from data in LoadData(uri)
-							   select data;
-
-			var secondResults = from result in layerSummary.Results
-								select getLayerResultRecordName(layerSummary.Id, result.Index) into uri
-								from data in LoadData(uri)
-								select data;
-
-			var diffs = from a in firstResults
-						join b in secondResults on new { Field = a.FieldName, Component = a.ComponentName, a.TimeStep } equals new { Field = b.FieldName, Component = b.ComponentName, b.TimeStep }
-						select compareTwoDataDescriptions(a, b);
+			}
 
 			int numberOfDataValues = 0;
 			double maxRelativeError = double.MinValue;
 			double averageRelativeErrorWeightedSum = 0.0;
 			double standardDeviation = double.NaN; /**/
 
-			foreach (var diff in diffs)
+			foreach (var mesh in parentLayerSummary.Meshes)
 			{
-				numberOfDataValues += diff.NumberOfDataValues;
-				maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
-				averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
+				var firstResults = from result in mesh.Results
+								   select getLayerResultRecordName(parentLayerSummary.Id, result.Index) into uri
+								   from data in LoadData(uri)
+								   select data;
+
+				var secondResults =	from result in mesh.Results
+									select getLayerResultRecordName(layerSummary.Id, result.Index) into uri
+									from data in LoadData(uri)
+									select data;
+
+				var diffs = from a in firstResults
+							join b in secondResults on new { Field = a.FieldName, Component = a.ComponentName, a.TimeStep } equals new { Field = b.FieldName, Component = b.ComponentName, b.TimeStep }
+							select compareTwoDataDescriptions(a, b);
+
+				foreach (var diff in diffs)
+				{
+					numberOfDataValues += diff.NumberOfDataValues;
+					maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
+					averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
+				}
 			}
 
 			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
@@ -487,27 +529,14 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private SummaryFile generateLayerFiles(string layerName, Guid? parentLayerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, Filter filter)
+		private MeshFileDescriptor generateDataFilesForMesh(int meshIndex, Guid layerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, ref int attributeIndex, ref int resultIndex)
 		{
-			Guid layerId = Guid.NewGuid();
-
-			SummaryFile layerSummary = new SummaryFile
-			{
-				Id = layerId,
-				Name = layerName,
-				ParentId = parentLayerId,
-				Filter = filter,
-			};
-
-			string layerDirectory = $"{layerId}";
-
 			progressReporter?.Report(new OperationState("Generating mesh file"));
 
-			MeshFile layerMesh = createLayerMeshFromGeometry(geometry, layerId);
-			storeLayerFile(layerMesh, getLayerMeshRecordName(layerId));
+			MeshFile layerMesh = createLayerMeshFromGeometry(geometry, layerId, meshIndex);
+			storeLayerFile(layerMesh, getLayerMeshRecordName(layerId, meshIndex));
 
-			int attributeIndex = 1, resultIndex = 1;
-
+			// process attributes
 			var attributeDescriptors = new List<DataFileDescriptor>();
 			foreach (var attribute in attributeDescriptions)
 			{
@@ -518,8 +547,8 @@ namespace MeshEditor.LayerManager
 				attributeDescriptors.Add(DataFileDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;
 			}
-			layerSummary.Attributes = attributeDescriptors.ToArray();
 
+			// process results
 			var resultDescriptors = new List<DataFileDescriptor>();
 			var timeStepsHashSet = new HashSet<double>();
 			var compressionCounter = new CompressionCounter();
@@ -546,22 +575,39 @@ namespace MeshEditor.LayerManager
 					}
 				}
 			}
-
-			layerSummary.TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray();
-			layerSummary.Results = resultDescriptors.ToArray();
-
-			progressReporter?.Report(new OperationState("Generating summary file"));
-
-			storeLayerFile(layerSummary, getLayerSummaryRecordName(layerId));
-
 			progressReporter?.Report(new OperationState(compressionCounter.ToString()));
 
+			MeshFileDescriptor meshFileDescriptor = new MeshFileDescriptor
+			{
+				Index = meshIndex,
+				TimeSteps = timeStepsHashSet.OrderBy(t => t).ToArray(),
+				Attributes = attributeDescriptors.ToArray(),
+				Results = resultDescriptors.ToArray(),
+			};
+
+			return meshFileDescriptor;
+		}
+
+		private SummaryFile generateSummaryFile(string layerName, Guid? parentLayerId, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors)
+		{
+			SummaryFile layerSummary = new SummaryFile
+			{
+				Id = newLayerId,
+				Name = layerName,
+				ParentId = parentLayerId,
+				Filter = filter,
+				Meshes = meshFileDescriptors.ToArray(),
+				//TimeSteps = meshFileDescriptors.SelectMany(m => m.TimeSteps).Distinct().OrderBy(t => t).ToArray(),
+			};
+
+			progressReporter?.Report(new OperationState("Generating summary file"));
+			storeLayerFile(layerSummary, getLayerSummaryRecordName(newLayerId));
 			return layerSummary;
 		}
 
-		private MeshFile createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId)
+		private MeshFile createLayerMeshFromGeometry(GeometryDescription geometry, Guid layerId, int meshIndex)
 		{
-			MeshFile layerMesh = new MeshFile { LayerId = layerId };
+			MeshFile layerMesh = new MeshFile { LayerId = layerId, Index = meshIndex };
 
 			layerMesh.NumberOfPoints = geometry.NumberOfPoints;
 			layerMesh.PointCoordinates = encodeGeometryDataArray(geometry.PointCoordinates, trimEnd: false);
@@ -763,10 +809,10 @@ namespace MeshEditor.LayerManager
 			return $"{layerId}/summary{serializationService.FileExtension}";
 		}
 
-		private string getLayerMeshRecordName(Guid layerId)
+		private string getLayerMeshRecordName(Guid layerId, int index)
 		{
 			//return $"{layerId}/{layerId}.mesh{serializationService.FileExtension}";
-			return $"{layerId}/mesh{serializationService.FileExtension}";
+			return $"{layerId}/mesh.{index}{serializationService.FileExtension}";
 		}
 
 		private string getLayerAttributeRecordName(Guid layerId, int index)

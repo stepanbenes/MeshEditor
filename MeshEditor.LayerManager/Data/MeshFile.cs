@@ -11,6 +11,8 @@ namespace MeshEditor.LayerManager.Data
 	{
 		public Guid LayerId { get; set; }
 
+		public int Index { get; set; }
+
 		public int NumberOfPoints { get; set; }
 		public int NumberOfCells { get; set; }
 		public int NumberOfEdges { get; set; }
