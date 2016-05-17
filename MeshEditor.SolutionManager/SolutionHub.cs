@@ -116,13 +116,20 @@ namespace MeshEditor.SolutionManager
 			return solutionController.Get(solutionId).Layers;
 		}
 
-		public void Import(string meshFile, IEnumerable<string> resultFiles)
+		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
 		{
 			const string masterLayerName = "master";
-			IGeometryImportService geometryImportService = GeometryFormatParserFactory.Create(meshImportStorage, meshFile);
-			IDataImportService dataImportService = resultFiles.Any() ? DataFormatParserFactory.Create(dataImportStorage, resultFiles) : null;
+
+			var analysisResultImportServices = new List<IAnalysisResultImportService>();
+			int offset = 0;
+			foreach (int groupLength in analysisResultGroupLengths)
+			{
+				var resultGroup = analysisResultRecordNames.Skip(offset).Take(groupLength).ToList();
+				analysisResultImportServices.Add(AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, resultGroup.Take(1), resultGroup.Skip(1)));
+				offset += groupLength;
+			}
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, geometryImportService, dataImportService);
+			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices);
 			logNewLayer(masterLayer);
 			Solution solution = solutionController.Get(solutionId);
 			solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));

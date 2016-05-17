@@ -25,11 +25,11 @@ namespace MeshEditor.FormatConverter
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : Options
 	{
-		[Option('m', "mesh", Required = true, HelpText = "Mesh file to be processed.")]
-		public string MeshFile { get; set; }
+		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
+		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
 
-		[Option('r', "result", Required = false, HelpText = "Result files to be processed.")]
-		public IEnumerable<string> ResultFiles { get; set; }
+		[Option('r', "results", Required = true, HelpText = "Mesh and result files to be processed (first file in each group is expected to be mesh, others data)")]
+		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
 	}
 
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]

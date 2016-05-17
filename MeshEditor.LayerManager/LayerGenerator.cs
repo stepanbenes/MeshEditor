@@ -106,25 +106,27 @@ namespace MeshEditor.LayerManager
 
 		#region Console app Entry points
 
-		public SummaryFile GenerateMasterLayer(string layerName, IGeometryImportService geometryImportService, IDataImportService dataImportService = null)
+		public SummaryFile GenerateMasterLayer(string layerName, IEnumerable<IAnalysisResultImportService> analysisResultImportServices)
 		{
-			if (geometryImportService == null)
+			if (analysisResultImportServices == null)
 			{
-				throw new ArgumentNullException(nameof(geometryImportService));
+				throw new ArgumentNullException(nameof(analysisResultImportServices));
 			}
 
 			Guid newLayerId = Guid.NewGuid();
-			
-			// TODO: support multiple meshes
-			IReadOnlyList<AttributeDescription> attributeDescriptions;
-			GeometryDescription geometry = geometryImportService.ReadGeometry(out attributeDescriptions);
-			IEnumerable<FieldDataDescription> dataDescriptions = dataImportService?.ReadData(geometry) ?? Enumerable.Empty<FieldDataDescription>();
-			int meshIndex = 1;
 			int attributeIndex = 1;
 			int resultIndex = 1;
-			var meshFileDesriptor = generateDataFilesForMesh(meshIndex, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
-			// ------
-			return generateSummaryFile(layerName, null, newLayerId, null, Enumerable.Repeat(meshFileDesriptor, 1));
+			var meshDescriptors = new List<MeshFileDescriptor>();
+			foreach (var analysisResultImportService in analysisResultImportServices)
+			{
+				IReadOnlyList<AttributeDescription> attributeDescriptions;
+				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
+				IEnumerable<FieldDataDescription> dataDescriptions = analysisResultImportService.ReadData(geometry);
+				
+				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
+				meshDescriptors.Add(meshDescriptor);
+			}
+			return generateSummaryFile(layerName, null, newLayerId, null, meshDescriptors);
 		}
 
 		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)

@@ -121,7 +121,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
-			solutionHub.Import(options.MeshFile, options.ResultFiles);
+			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames);
 			return 0;
 		}
 
