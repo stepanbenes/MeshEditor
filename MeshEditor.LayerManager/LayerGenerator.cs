@@ -122,7 +122,7 @@ namespace MeshEditor.LayerManager
 				IReadOnlyList<AttributeDescription> attributeDescriptions;
 				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
 				IEnumerable<FieldDataDescription> dataDescriptions = analysisResultImportService.ReadData(geometry);
-				
+
 				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
 				meshDescriptors.Add(meshDescriptor);
 			}
@@ -267,7 +267,7 @@ namespace MeshEditor.LayerManager
 								   from data in LoadData(uri)
 								   select data;
 
-				var secondResults =	from result in mesh.Results
+				var secondResults = from result in mesh.Results
 									select getLayerResultRecordName(layerSummary.Id, result.Index) into uri
 									from data in LoadData(uri)
 									select data;
@@ -586,18 +586,50 @@ namespace MeshEditor.LayerManager
 
 		private SummaryFile generateSummaryFile(string layerName, Guid? parentLayerId, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors)
 		{
+			progressReporter?.Report(new OperationState("Generating summary file"));
+
 			SummaryFile layerSummary = new SummaryFile
 			{
 				Id = newLayerId,
 				Name = layerName,
 				ParentId = parentLayerId,
 				Filter = filter,
-				Meshes = meshFileDescriptors.ToArray(),
-				//TimeSteps = meshFileDescriptors.SelectMany(m => m.TimeSteps).Distinct().OrderBy(t => t).ToArray(),
+				Meshes = meshFileDescriptors.ToArray()
 			};
 
-			progressReporter?.Report(new OperationState("Generating summary file"));
+			var fields = new Dictionary<string, FieldDescriptor>();
+			foreach (var fieldGroup in from mesh in meshFileDescriptors
+									   from result in mesh.Results
+									   group new { Mesh = mesh, Result = result } by result.FieldName into resultGroup
+									   select resultGroup)
+			{
+				var components = new Dictionary<string, ComponentDescriptor>();
+				fields[fieldGroup.Key] = new FieldDescriptor { Components = components };
+				foreach (var componentGroup in from result in fieldGroup
+											   group result by result.Result.ComponentName into resultGroup
+											   select resultGroup)
+				{
+					var timeSteps = new Dictionary<double, TimeStepDescriptor>();
+					components[componentGroup.Key] = new ComponentDescriptor { TimeSteps = timeSteps };
+					foreach (var timeStepGroup in from result in componentGroup
+												  from timeStep in result.Result.TimeSteps
+												  group result by timeStep into resultGroup
+												  select resultGroup)
+					{
+						var timeStep = timeStepGroup.Single();
+						timeSteps[timeStepGroup.Key] = new TimeStepDescriptor
+						{
+							MeshIndex = timeStep.Mesh.Index,
+							DataIndex = timeStep.Result.Index
+						}; 
+					}
+				}
+			}
+
+			layerSummary.Fields = fields;
+
 			storeLayerFile(layerSummary, getLayerSummaryRecordName(newLayerId));
+
 			return layerSummary;
 		}
 

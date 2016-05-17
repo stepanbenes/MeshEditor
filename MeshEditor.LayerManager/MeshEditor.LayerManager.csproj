@@ -78,6 +78,7 @@
     <Compile Include="Compression\TransparentCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionService.cs" />
+    <Compile Include="Data\FieldDescriptor.cs" />
     <Compile Include="Data\LayerDiff.cs" />
     <Compile Include="Data\MeshFileDescriptor.cs" />
     <Compile Include="Filters\SurfaceFilter.cs" />
