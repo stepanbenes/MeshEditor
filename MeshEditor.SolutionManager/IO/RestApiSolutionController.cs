@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.SolutionManager.Logging;
 using RestSharp;
@@ -31,6 +32,28 @@ namespace MeshEditor.SolutionManager.IO
 		#endregion
 
 		#region Public methods
+
+		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null /*ignored*/)
+		{
+			var client = new RestClient(uri);
+			var request = new RestRequest($"api/solution", Method.POST);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			request.RequestFormat = DataFormat.Json;
+
+			var body = new
+			{
+				Id = solutionId,
+				Results = analysisResults.ToArray()
+			};
+
+			string jsonString = request.JsonSerializer.Serialize(body);
+			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
+
+			var response = executeRequest(client, request);
+			return parseResponse<Solution>(response);
+		}
 
 		public IEnumerable<ISolutionInfo> GetAll()
 		{

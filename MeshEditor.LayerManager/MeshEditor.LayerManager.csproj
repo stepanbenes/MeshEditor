@@ -82,6 +82,7 @@
     <Compile Include="Data\MeshFileDescriptor.cs" />
     <Compile Include="Filters\SurfaceFilter.cs" />
     <Compile Include="Filters\TimeCompressionFilter.cs" />
+    <Compile Include="Import\AnalysisResult.cs" />
     <Compile Include="Import\AnalysisResultImportServiceFactory.cs" />
     <Compile Include="Import\IAnalysisResultImportService.cs" />
     <Compile Include="MeshFiltering\GeometryBuilder.cs" />

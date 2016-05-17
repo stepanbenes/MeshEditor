@@ -11,11 +11,11 @@ namespace MeshEditor.LayerManager.Import
 {
 	public static class AnalysisResultImportServiceFactory
 	{
-		public static IAnalysisResultImportService Create(IReadStorageService geometryStorageService, IReadStorageService dataStorageService, IEnumerable<string> meshRecordNames, IEnumerable<string> dataRecordNames)
+		public static IAnalysisResultImportService Create(IReadStorageService geometryStorageService, IReadStorageService dataStorageService, AnalysisResult result)
 		{
 			return new AnalysisResultImportService(
-				createGeometryImportService(geometryStorageService, meshRecordNames.Single()),
-				(dataRecordNames.Count() > 0) ? createDataImportService(dataStorageService, dataRecordNames) : null
+				createGeometryImportService(geometryStorageService, result.MeshRecordNames.Single()),
+				(result.DataRecordNames.Count > 0) ? createDataImportService(dataStorageService, result.DataRecordNames) : null
 			);
 		}
 

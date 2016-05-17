@@ -22,8 +22,7 @@ namespace MeshEditor.FormatConverter
 		//public string ConfigFile { get; set; }
 	}
 
-	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
-	class ImportOptions : Options
+	abstract class AnalysisResultOptions : Options
 	{
 		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
 		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
@@ -32,6 +31,19 @@ namespace MeshEditor.FormatConverter
 		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
 	}
 
+	[Verb("create", HelpText = "Create new solution")]
+	class CreateOptions : AnalysisResultOptions
+	{
+		[Option('p', "project", Required = false, HelpText = "Project name")]
+		public string ProjectName { get; set; }
+	}
+
+	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
+	class ImportOptions : AnalysisResultOptions
+	{
+		
+	}
+	
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
 	class FilterOptions : Options
 	{

@@ -104,9 +104,10 @@ namespace MeshEditor.FormatConverter
 
 		public int Run(IEnumerable<string> args, TextWriter log)
 		{
-			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
 					.WithParsed((Options options) => initializeSolutionHub(options, log))
 					.MapResult(
+						(CreateOptions options) => runCreateCommand(options),
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
 						(CompressOptions options) => runCompressCommand(options),
@@ -118,6 +119,12 @@ namespace MeshEditor.FormatConverter
 		#endregion
 
 		#region Commands
+
+		private int runCreateCommand(CreateOptions options)
+		{
+			solutionHub.Create(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.ProjectName);
+			return 0;
+		}
 
 		private int runImportCommand(ImportOptions options)
 		{

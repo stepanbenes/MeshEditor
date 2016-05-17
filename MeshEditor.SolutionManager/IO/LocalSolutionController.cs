@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Common;
+using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 
@@ -25,6 +26,17 @@ namespace MeshEditor.SolutionManager.IO
 			this.solutionDirectory = solutionDirectory;
 			localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			serializer = new JsonSerializationService();
+		}
+
+		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
+		{
+			projectName = projectName ?? Path.GetFileNameWithoutExtension(analysisResults.First().MeshRecordNames.First());
+			Solution solution = new Solution { Id = solutionId, ProjectName = projectName };
+			using (Stream stream = localStorage.Save(projectName + SolutionFileSuffix + serializer.FileExtension))
+			{
+				serializer.Serialize(solution, stream);
+			}
+			return solution;
 		}
 
 		public IEnumerable<ISolutionInfo> GetAll()

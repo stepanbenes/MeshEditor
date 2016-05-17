@@ -116,22 +116,26 @@ namespace MeshEditor.SolutionManager
 			return solutionController.Get(solutionId).Layers;
 		}
 
+		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
+		{
+			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
+			Solution solution = solutionController.CreateNew(solutionId, analysisResults, projectName);
+		}
+
 		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
 		{
 			const string masterLayerName = "master";
 
-			var analysisResultImportServices = new List<IAnalysisResultImportService>();
-			int offset = 0;
-			foreach (int groupLength in analysisResultGroupLengths)
-			{
-				var resultGroup = analysisResultRecordNames.Skip(offset).Take(groupLength).ToList();
-				analysisResultImportServices.Add(AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, resultGroup.Take(1), resultGroup.Skip(1)));
-				offset += groupLength;
-			}
+			Solution solution = solutionController.Get(solutionId);
+
+			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
+
+			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result));
+
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices);
 			logNewLayer(masterLayer);
-			Solution solution = solutionController.Get(solutionId);
+			
 			solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
@@ -210,6 +214,20 @@ namespace MeshEditor.SolutionManager
 		#endregion
 
 		#region Private helper methods
+
+		private static List<AnalysisResult> composeAnalysisResults(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
+		{
+			var analysisResults = new List<AnalysisResult>();
+			int offset = 0;
+			foreach (int groupLength in analysisResultGroupLengths)
+			{
+				var resultGroup = analysisResultRecordNames.Skip(offset).Take(groupLength).ToList();
+				analysisResults.Add(new AnalysisResult(resultGroup.Take(1).ToArray(), resultGroup.Skip(1).ToArray()));
+				offset += groupLength;
+			}
+
+			return analysisResults;
+		}
 
 		private LayerDiff createDiff(string layerIdOrName)
 		{
