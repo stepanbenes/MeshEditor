@@ -37,60 +37,28 @@ namespace MeshEditor.LayerManager.Compression
 		public double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters)
 		{
 			int rank = Math.Min(rows, columns);
-			try
+
+			if (rank <= 0)
 			{
-				if (rank <= 0)
+				parameters = new SVDCompressionParameters
 				{
-					return new double[0];
-				}
+					Rows = rows,
+					Columns = columns,
+					Rank = rank,
+				};
 
-				REDSVD.Driver driver = new REDSVD.Driver();
-				double[] singularValues, U_VT_columnwise;
-				bool resizeIsNeeded = false;
+				return new double[0];
+			}
 
-				if (randomized)
+			REDSVD.Driver driver = new REDSVD.Driver();
+			double[] singularValues, U_VT_columnwise;
+			bool resizeIsNeeded = false;
+
+			if (randomized)
+			{
+				if (sizeFactor.HasValue)
 				{
-					if (sizeFactor.HasValue)
-					{
-						int newRank = calculateRankFromSizeFactor(rows, columns);
-						Debug.Assert(newRank <= rank);
-						if (newRank != rank)
-						{
-							rank = newRank;
-							resizeIsNeeded = true;
-						}
-					}
-
-					// COMPUTE SVD RANDOMIZED
-					driver.ComputeSvdRandomized(dataValues, rows, columns, rank, out singularValues, out U_VT_columnwise);
-
-					Debug.Assert(singularValues.Length == rank);
-					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
-				}
-				else
-				{
-					// COMPUTE SVD EXACT
-					driver.ComputeSvdExact(dataValues, rows, columns, out singularValues, out U_VT_columnwise);
-
-					Debug.Assert(singularValues.Length == rank);
-					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
-
-					if (sizeFactor.HasValue)
-					{
-						
-						int newRank = calculateRankFromSizeFactor(rows, columns);
-						Debug.Assert(newRank <= rank);
-						if (newRank != rank)
-						{
-							rank = newRank;
-							resizeIsNeeded = true;
-						}
-					}
-				}
-
-				if (qualityFactor.HasValue)
-				{
-					int newRank = calculateRankFromQualityFactor(singularValues);
+					int newRank = calculateRankFromSizeFactor(rows, columns);
 					Debug.Assert(newRank <= rank);
 					if (newRank != rank)
 					{
@@ -99,135 +67,69 @@ namespace MeshEditor.LayerManager.Compression
 					}
 				}
 
-				if (resizeIsNeeded)
-				{
-					shrinkSvdOutput(ref singularValues, ref U_VT_columnwise, rows, columns, rank);
-					Debug.Assert(singularValues.Length == rank);
-					Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
-				}
+				// COMPUTE SVD RANDOMIZED
+				driver.ComputeSvdRandomized(dataValues, rows, columns, rank, out singularValues, out U_VT_columnwise);
 
-				double[] US_VT_columnwise = U_VT_columnwise;
-				for (int c = 0; c < rank; c++) // multiply U by S
+				Debug.Assert(singularValues.Length == rank);
+				Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+			}
+			else
+			{
+				// COMPUTE SVD EXACT
+				driver.ComputeSvdExact(dataValues, rows, columns, out singularValues, out U_VT_columnwise);
+
+				Debug.Assert(singularValues.Length == rank);
+				Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+
+				if (sizeFactor.HasValue)
 				{
-					double singularValue = singularValues[c];
-					for (int r = 0; r < rows; r++)
+
+					int newRank = calculateRankFromSizeFactor(rows, columns);
+					Debug.Assert(newRank <= rank);
+					if (newRank != rank)
 					{
-						US_VT_columnwise[c * rows + r] *= singularValue;
+						rank = newRank;
+						resizeIsNeeded = true;
 					}
 				}
-
-				return US_VT_columnwise;
 			}
-			finally
+
+			if (qualityFactor.HasValue)
 			{
-				parameters = new SVDCompressionParameters
+				int newRank = calculateRankFromQualityFactor(singularValues);
+				Debug.Assert(newRank <= rank);
+				if (newRank != rank)
 				{
-					Rows = rows,
-					Columns = columns,
-					Rank = rank,
-				};
+					rank = newRank;
+					resizeIsNeeded = true;
+				}
 			}
 
-			//// create matrix from input data values, replace possible NaN values with zeroes
-			//var dataValuesWithoutNaNs = dataValues.Select(row => row.Select(value => double.IsNaN(value) ? 0.0 : value));
-			//Matrix A = /* SparseMatrix ? */ DenseMatrix.OfRows(rows, columns, dataValuesWithoutNaNs);
-			//Debug.Assert(A.RowCount == rows);
-			//Debug.Assert(A.ColumnCount == columns);
+			if (resizeIsNeeded)
+			{
+				shrinkSvdOutput(ref singularValues, ref U_VT_columnwise, rows, columns, rank);
+				Debug.Assert(singularValues.Length == rank);
+				Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
+			}
 
-			//// use MathNet.Numerics' implementation of SVD factorization
-			//var svd = SVD.Create(A);
+			double[] US_VT_columnwise = U_VT_columnwise;
+			for (int c = 0; c < rank; c++) // multiply U by S
+			{
+				double singularValue = singularValues[c];
+				for (int r = 0; r < rows; r++)
+				{
+					US_VT_columnwise[c * rows + r] *= singularValue;
+				}
+			}
 
-			//Debug.Assert(svd.U.RowCount == rows);
-			//Debug.Assert(svd.U.ColumnCount == rows);
-			//Debug.Assert(svd.S.Count == Math.Min(rows, columns));
-			//Debug.Assert(svd.VT.RowCount == columns);
-			//Debug.Assert(svd.VT.ColumnCount == columns);
+			parameters = new SVDCompressionParameters
+			{
+				Rows = rows,
+				Columns = columns,
+				Rank = rank,
+			};
 
-			//int rank;
-			//if (!decideWhetherToProceedWithCompression(svd.S, rows, columns, out rank))
-			//{
-			//	// SVD compression is not appropriate,
-			//	// use transparent compression service instead
-			//	var transparentCompression = new TransparentCompressionService();
-			//	return transparentCompression.Compress(dataValues, rows, columns, out parameters); // WARNING: dataValues is enumerated second times !
-			//}
-
-			//parameters = new SVDCompressionParameters
-			//{
-			//	Rows = rows,
-			//	Columns = columns,
-			//	Rank = rank,
-			//};
-
-			//if (rank == 0) // if rank is zero, matrix A is full of zeroes, so it enables ultimate compression
-			//{
-			//	return new double[0];
-			//}
-
-			//int u_rows = rows;
-			//int u_columns = rank;
-			//int vt_rows = rank;
-			//int vt_columns = columns;
-
-			//// linearize vectors in matrice U, V, S to double array
-			//double[] result = new double[u_rows * u_columns + rank + vt_rows * vt_columns];
-
-			//double[] uColumnWise = svd.U.EnumerateColumns(0, u_columns).SelectMany(column => column).ToArray(); // take newRank columns of U
-			//Debug.Assert(uColumnWise.Length == u_rows * u_columns);
-			//Array.Copy(uColumnWise, result, uColumnWise.Length);
-			//int offset = uColumnWise.Length;
-			////uColumnWise = null;
-
-			//double[] sDiagonal = svd.S.Take(rank).ToArray(); // take newRank singular values
-			//Debug.Assert(sDiagonal.Length == rank);
-			//Array.Copy(sDiagonal, 0, result, offset, sDiagonal.Length);
-			//offset += sDiagonal.Length;
-			////sDiagonal = null;
-
-			//double[] vtColumnWise = svd.VT.EnumerateRows(0, vt_rows).SelectMany(row => row).ToArray(); // take newRank rows of VT
-			//Debug.Assert(vtColumnWise.Length == vt_rows * vt_columns);
-			//Array.Copy(vtColumnWise, 0, result, offset, vtColumnWise.Length);
-			//offset += vtColumnWise.Length;
-			////vtColumnWise = null;
-			//Debug.Assert(offset == result.Length);
-
-			//#if DEBUG
-			//			// evaluate compression quality and save the results to parameters object
-
-			//			var decompressedData = Decompress(result, parameters);
-			//			double globalMin = double.MaxValue, globalMax = double.MinValue, maxError = double.MinValue;
-
-			//			using (var decompressedDataEnumerator = decompressedData.GetEnumerator())
-			//			{
-			//				for (int row = 0; row < rows; row++)
-			//				{
-			//					if (!decompressedDataEnumerator.MoveNext())
-			//					{
-			//						throw new InvalidOperationException();
-			//					}
-			//					double[] decompressedRow = decompressedDataEnumerator.Current;
-			//					for (int column = 0; column < columns; column++)
-			//					{
-			//						double originalValue = A[row, column];
-			//						double decompressedValue = decompressedRow[column];
-			//						globalMin = Math.Min(globalMin, originalValue);
-			//						globalMax = Math.Max(globalMax, originalValue);
-			//						double error = Math.Abs(originalValue - decompressedValue);
-			//						maxError = Math.Max(maxError, error);
-			//					}
-			//				}
-			//			}
-
-			//			double range = globalMax - globalMin;
-			//			double maxRelativeError = maxError / range;
-			//			var svdParameters = (SVDCompressionParameters)parameters;
-			//			svdParameters.MaxDataValue = globalMax;
-			//			svdParameters.MinDataValue = globalMin;
-			//			svdParameters.MaxRelativeError = maxRelativeError;
-			//			svdParameters.CompressionFactor = computeCompressionFactor(rank, rows, columns);
-			//#endif
-			//
-			//			return result;
+			return US_VT_columnwise;
 		}
 
 		public IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters)
@@ -242,29 +144,36 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			return multiplyUSandVTandEnumerateRowsOfResultMatrix(compressedData, svdParameters.Rows, svdParameters.Columns, svdParameters.Rank);
-
-			// create matrices U, S, VT from compressedData
-			//int u_size = svdParameters.Rows * svdParameters.Rank;
-			//int s_size = svdParameters.Rank;
-			//int v_size = svdParameters.Columns * svdParameters.Rank;
-			//Debug.Assert(u_size + s_size + v_size == compressedData.Length);
-
-			//// TODO: get rid of Concat methods, simulate multiplication of complete matrices more efficiently
-			//Matrix U = DenseMatrix.OfColumnMajor(svdParameters.Rows, svdParameters.Rows, compressedData.Take(u_size).Concat(Enumerable.Repeat(0.0, svdParameters.Rows * svdParameters.Rows - u_size)));
-			//Matrix S = DiagonalMatrix.OfDiagonal(svdParameters.Rows, svdParameters.Columns, compressedData.Skip(u_size).Take(s_size).Concat(Enumerable.Repeat(0.0, Math.Min(svdParameters.Rows, svdParameters.Columns) - s_size)));
-			//Matrix VT = DenseMatrix.OfRows(svdParameters.Columns, svdParameters.Columns, compressedData.Skip(u_size + s_size).Partition(svdParameters.Columns).Concat(Enumerable.Repeat(new double[svdParameters.Columns], svdParameters.Columns - svdParameters.Rank)));
-
-			//// multiply UxSxVT to obtain approximaton of original matrix A
-			//var US = U.Multiply(S);
-			//var A_appx = US.TransposeAndMultiply(VT);
-
-			//// linearize result to sequence of double arrays
-			//return A_appx.EnumerateRows().Select(vector => vector.ToArray());
 		}
 
 		#endregion
 
 		#region Private methods
+
+		private IEnumerable<double[]> calculateDiff(IEnumerable<double[]> firstSequence, IEnumerable<double[]> secondSequence)
+		{
+			return firstSequence.Zip(secondSequence, (firstRow, secondRow) => firstRow.Zip(secondRow, (firstValue, secondValue) => firstValue - secondValue).ToArray());
+		}
+
+		private void calculateMaxAndAverageError(IEnumerable<double[]> dataValues, IEnumerable<double[]> decompressedValues, out double maxRelativeError, out double averageRelativeError)
+		{
+			var max = dataValues.Max(row => row.Max());
+			var min = dataValues.Min(row => row.Min());
+			double range = max - min;
+			var allValues = dataValues.Zip(decompressedValues, (firstRow, secondRow) => firstRow.Zip(secondRow, (firstValue, secondValue) => (firstValue - secondValue))).SelectMany(row => row);
+			double tempMaxError = double.MinValue;
+			double tempErrorSum = 0.0;
+			int count = 0;
+			foreach (var error in allValues)
+			{
+				double relativeError = Math.Abs(error) / range;
+				tempMaxError = Math.Max(tempMaxError, relativeError);
+				tempErrorSum += relativeError;
+				count += 1;
+			}
+			maxRelativeError = tempMaxError;
+			averageRelativeError = tempErrorSum / count;
+		}
 
 		private static void shrinkSvdOutput(ref double[] singularValues, ref double[] U_VT_columnwise, int rows, int columns, int newRank)
 		{
