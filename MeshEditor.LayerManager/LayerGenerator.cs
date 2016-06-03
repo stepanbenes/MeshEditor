@@ -240,60 +240,6 @@ namespace MeshEditor.LayerManager
 			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName }, meshFileDescriptors);
 		}
 
-		public LayerDiff CreateDiff(Guid layerId)
-		{
-			SummaryFile layerSummary;
-			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
-				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
-
-			if (!layerSummary.ParentId.HasValue)
-				throw new ArgumentException("Layer is master layer (has no parent), can't create diff.");
-
-			SummaryFile parentLayerSummary;
-			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerSummary.ParentId.Value)))
-			{
-				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
-			}
-
-			int numberOfDataValues = 0;
-			double maxRelativeError = double.MinValue;
-			double averageRelativeErrorWeightedSum = 0.0;
-			double standardDeviation = double.NaN; /**/
-
-			foreach (var mesh in parentLayerSummary.Meshes)
-			{
-				var firstResults = from result in mesh.Results
-								   select getLayerResultRecordName(parentLayerSummary.Id, result.Index) into uri
-								   from data in LoadData(uri)
-								   select data;
-
-				var secondResults = from result in mesh.Results
-									select getLayerResultRecordName(layerSummary.Id, result.Index) into uri
-									from data in LoadData(uri)
-									select data;
-
-				var diffs = from a in firstResults
-							join b in secondResults on new { Field = a.FieldName, Component = a.ComponentName, a.TimeStep } equals new { Field = b.FieldName, Component = b.ComponentName, b.TimeStep }
-							select compareTwoDataDescriptions(a, b);
-
-				foreach (var diff in diffs)
-				{
-					numberOfDataValues += diff.NumberOfDataValues;
-					maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
-					averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
-				}
-			}
-
-			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
-
-			return new LayerDiff(numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation);
-		}
-
-		public void AppendDataToLayer(Guid layerId, IDataImportService dataImportService)
-		{
-			throw new NotImplementedException();
-		}
-
 		#endregion
 
 		public GeometryDescription LoadGeometry(string record)

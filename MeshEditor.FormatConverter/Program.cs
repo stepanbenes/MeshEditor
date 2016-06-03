@@ -104,14 +104,13 @@ namespace MeshEditor.FormatConverter
 
 		public int Run(IEnumerable<string> args, TextWriter log)
 		{
-			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, DiffOptions, ListOptions>(args)
+			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, ListOptions>(args)
 					.WithParsed((Options options) => initializeSolutionHub(options, log))
 					.MapResult(
 						(CreateOptions options) => runCreateCommand(options),
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
 						(CompressOptions options) => runCompressCommand(options),
-						(DiffOptions options) => runDiffCommand(options),
 						(ListOptions options) => runListCommand(options),
 						errors => 1);
 		}
@@ -140,22 +139,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runCompressCommand(CompressOptions options)
 		{
-			const string benchmarkKeyword = "benchmark";
-			if (string.Equals(options.CompressionParameters.FirstOrDefault(), benchmarkKeyword, StringComparison.InvariantCultureIgnoreCase))
-			{
-				var results = solutionHub.RunBenchmark(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters.ElementAt(1), int.Parse(options.CompressionParameters.ElementAt(2)), string.Equals(options.CompressionParameters.ElementAtOrDefault(3), "randomized", StringComparison.InvariantCultureIgnoreCase));
-				File.WriteAllLines(string.Join("_", options.CompressionParameters) + ".txt", results);
-			}
-			else
-			{
-				solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters);
-			}
-			return 0;
-		}
-
-		private int runDiffCommand(DiffOptions options)
-		{
-			solutionHub.Diff(options.Layer);
+			solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.ComponentName, options.CompressionParameters);
 			return 0;
 		}
 

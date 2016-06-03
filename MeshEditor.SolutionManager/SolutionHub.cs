@@ -178,39 +178,6 @@ namespace MeshEditor.SolutionManager
 			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Diff(string layerIdOrName)
-		{
-			var diff = createDiff(layerIdOrName);
-			logger?.LogMessage(diff.ToString(), LogMessagePriority.High);
-		}
-
-		public IList<string> RunBenchmark(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, string focus, int iterations, bool randomized)
-		{
-			const char delimitter = ' ';
-			List<string> results = new List<string>
-			{
-				// header
-				$"{focus}{delimitter}max_relative_error{delimitter}average_relative_error{delimitter}execution_time"
-			};
-			for (int i = 0; i < iterations; i++)
-			{
-				double factor = (double)(i + 1) / iterations;
-				var compressionParameters = new List<string> { focus, factor.ToString() };
-				if (randomized)
-				{
-					compressionParameters.Add("randomized");
-				}
-				string compressedLayerName = $"benchmark_{focus}_{factor}{(randomized ? " randomized" : "")}";
-				Stopwatch stopwatch = new Stopwatch();
-				stopwatch.Start();
-				Compress(parentLayerIdOrName, compressionMethodName, keyTimeSteps, fieldName, componentName, compressionParameters, compressedLayerName);
-				stopwatch.Stop();
-				var diff = createDiff(compressedLayerName);
-				results.Add($"{factor}{delimitter}{diff.MaxRelativeError}{delimitter}{diff.AverageRelativeError}{delimitter}{stopwatch.ElapsedMilliseconds}");
-			}
-			return results;
-		}
-
 		#endregion
 
 		#region Private helper methods
@@ -227,15 +194,6 @@ namespace MeshEditor.SolutionManager
 			}
 
 			return analysisResults;
-		}
-
-		private LayerDiff createDiff(string layerIdOrName)
-		{
-			Solution solution = solutionController.Get(solutionId);
-			var layer = findLayer(solution, layerIdOrName);
-
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
-			return layerGenerator.CreateDiff(layer.Id);
 		}
 
 		private static Solution.Layer createLayerRecordLayerSummaryFile(SummaryFile layerSummary)
