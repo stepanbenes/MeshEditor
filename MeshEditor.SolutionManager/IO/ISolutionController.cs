@@ -12,5 +12,6 @@ namespace MeshEditor.SolutionManager.IO
 		IEnumerable<ISolutionInfo> GetAll();
 		Solution Get(int solutionId);
 		void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
+		void DeleteLayer(Solution solution, Solution.Layer layerToDelete);
 	}
 }

@@ -48,6 +48,16 @@ namespace MeshEditor.LayerManager.Common
 		}
 
 		/// <summary>
+		/// Returns null reference if source sequence is empty.
+		/// </summary>
+		public static IEnumerable<T> NullIfEmpty<T>(this IEnumerable<T> source)
+		{
+			if (source == null || !source.Any())
+				return null;
+			return source;
+		}
+
+		/// <summary>
 		/// Split an IEnumerable<T> into fixed-sized chunks.
 		/// see: http://stackoverflow.com/questions/13709626/split-an-ienumerablet-into-fixed-sized-chunks-return-an-ienumerableienumerab
 		/// </summary>

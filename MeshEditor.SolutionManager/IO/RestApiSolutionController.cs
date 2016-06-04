@@ -110,6 +110,11 @@ namespace MeshEditor.SolutionManager.IO
 			var response = executeRequest(client, request);
 		}
 
+		public void DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion
 
 		#region Private methods

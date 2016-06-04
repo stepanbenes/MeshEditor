@@ -86,4 +86,14 @@ namespace MeshEditor.FormatConverter
 	class ListOptions : Options
 	{
 	}
+
+	[Verb("delete", HelpText = "Delete layer")]
+	class DeleteOptions : Options
+	{
+		[Value(index: 0, MetaName = "Layer to delete", Required = false, HelpText = "Layer's guid or name")]
+		public string Layer { get; set; }
+
+		[Option("all", Required = false, HelpText = "Delete all layers in solution")]
+		public bool DeleteAll { get; set; }
+	}
 }

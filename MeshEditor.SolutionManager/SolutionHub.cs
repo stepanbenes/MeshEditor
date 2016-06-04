@@ -113,7 +113,7 @@ namespace MeshEditor.SolutionManager
 
 		public IEnumerable<ILayerInfo> EnumerateAllLayers()
 		{
-			return solutionController.Get(solutionId).Layers;
+			return from layer in solutionController.Get(solutionId).Layers select layer;
 		}
 
 		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
@@ -178,9 +178,44 @@ namespace MeshEditor.SolutionManager
 			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
+		public void Delete(string layerIdOrName, bool deleteAll)
+		{
+			Solution solution = solutionController.Get(solutionId);
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			IEnumerable<Solution.Layer> layersToDelete = deleteAll ? solution.Layers : Enumerable.Repeat(findLayer(solution, layerIdOrName), 1);
+			foreach (var rootLayer in layersToDelete)
+			{
+				foreach (var layer in traverseLayerTreePostOrder(rootLayer))
+				{
+					layerGenerator.DeleteLayer(layer.Id);
+					solutionController.DeleteLayer(solution, layer);
+				}
+			}
+		}
+
 		#endregion
 
 		#region Private helper methods
+
+		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
+		{
+			Stack<Solution.Layer> result = new Stack<Solution.Layer>();
+			Stack<Solution.Layer> children = new Stack<Solution.Layer>();
+			children.Push(root);
+			while (children.Count > 0)
+			{
+				var layer = children.Pop();
+				result.Push(layer);
+				if (layer.Children != null)
+				{
+					foreach (var child in layer.Children)
+					{
+						children.Push(child);
+					}
+				}
+			}
+			return result;
+		}
 
 		private static List<AnalysisResult> composeAnalysisResults(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
 		{
@@ -210,6 +245,9 @@ namespace MeshEditor.SolutionManager
 
 		private Solution.Layer findLayer(Solution solution, string layerIdentifier)
 		{
+			if (layerIdentifier == null)
+				throw new ArgumentNullException(nameof(layerIdentifier));
+
 			// find layer according to either provided layer guid or layer name
 			Solution.Layer layer;
 			Guid guid;
@@ -232,17 +270,19 @@ namespace MeshEditor.SolutionManager
 
 		private static Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
 		{
-			Debug.Assert(layers != null);
-			foreach (var layer in layers)
+			if (layers != null)
 			{
-				if (predicate(layer))
-					return layer;
-			}
-			foreach (var layer in layers)
-			{
-				var hit = findLayer(layer.Children, predicate);
-				if (hit != null)
-					return hit;
+				foreach (var layer in layers)
+				{
+					if (predicate(layer))
+						return layer;
+				}
+				foreach (var layer in layers)
+				{
+					var hit = findLayer(layer.Children, predicate);
+					if (hit != null)
+						return hit;
+				}
 			}
 			return null;
 		}

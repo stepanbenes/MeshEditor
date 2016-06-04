@@ -44,6 +44,11 @@ namespace MeshEditor.SolutionManager.AzureStorage
 			deleteFileFromBlobStorage(storageAccount, blobContainerName, record);
 		}
 
+		public void DeleteDirectory(string name)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion
 
 		#region Private methods

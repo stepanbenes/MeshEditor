@@ -39,5 +39,10 @@ namespace MeshEditor.LayerManager.Storage
 		{
 			File.Delete(Path.Combine(basePath, record));
 		}
+
+		public void DeleteDirectory(string name)
+		{
+			Directory.Delete(Path.Combine(basePath, name), recursive: true);
+		}
 	}
 }

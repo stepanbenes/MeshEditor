@@ -104,7 +104,7 @@ namespace MeshEditor.FormatConverter
 
 		public int Run(IEnumerable<string> args, TextWriter log)
 		{
-			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, ListOptions>(args)
+			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions>(args)
 					.WithParsed((Options options) => initializeSolutionHub(options, log))
 					.MapResult(
 						(CreateOptions options) => runCreateCommand(options),
@@ -112,6 +112,7 @@ namespace MeshEditor.FormatConverter
 						(FilterOptions options) => runFilterCommand(options),
 						(CompressOptions options) => runCompressCommand(options),
 						(ListOptions options) => runListCommand(options),
+						(DeleteOptions options) => runDeleteCommand(options),
 						errors => 1);
 		}
 
@@ -149,6 +150,12 @@ namespace MeshEditor.FormatConverter
 			{
 				printLayerInfo(layerInfo, depth: 1);
 			}
+			return 0;
+		}
+
+		private int runDeleteCommand(DeleteOptions options)
+		{
+			solutionHub.Delete(options.Layer, options.DeleteAll);
 			return 0;
 		}
 

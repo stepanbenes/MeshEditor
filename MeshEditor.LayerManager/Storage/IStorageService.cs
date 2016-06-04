@@ -19,5 +19,6 @@ namespace MeshEditor.LayerManager.Storage
 	{
 		Stream Save(string record);
 		void Delete(string record);
+		void DeleteDirectory(string name);
 	}
 }

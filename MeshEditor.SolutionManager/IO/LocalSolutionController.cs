@@ -60,17 +60,19 @@ namespace MeshEditor.SolutionManager.IO
 
 		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			if (parentLayer == null)
-			{
-				solution.Layers = solution.Layers.EmptyIfNull().Append(newLayer).ToArray();
-			}
-			else
-			{
-				parentLayer.Children = parentLayer.Children.EmptyIfNull().Append(newLayer).ToArray();
-			}
+			Solution updatedSolution = Solution.CreateNewByAddingLayer(solution, newLayer, parentLayer?.Id);
 			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
 			{
-				serializer.Serialize(solution, stream);
+				serializer.Serialize(updatedSolution, stream);
+			}
+		}
+
+		public void DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		{
+			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
+			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
+			{
+				serializer.Serialize(updatedSolution, stream);
 			}
 		}
 
