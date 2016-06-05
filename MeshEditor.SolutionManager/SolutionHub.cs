@@ -187,8 +187,8 @@ namespace MeshEditor.SolutionManager
 			{
 				foreach (var layer in traverseLayerTreePostOrder(rootLayer))
 				{
-					layerGenerator.DeleteLayer(layer.Id);
 					solutionController.DeleteLayer(solution, layer);
+					layerGenerator.DeleteLayer(layer.Id);
 				}
 			}
 		}

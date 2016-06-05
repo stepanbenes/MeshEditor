@@ -46,7 +46,23 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 		public void DeleteDirectory(string name)
 		{
-			throw new NotImplementedException();
+			var blobClient = storageAccount.CreateCloudBlobClient();
+			var container = blobClient.GetContainerReference(blobContainerName);
+			List<IListBlobItem> blobsToDelete = new List<IListBlobItem>();
+
+			CloudBlobDirectory blobDirectory = container.GetDirectoryReference(name);
+			BlobContinuationToken continuationToken = null;
+			do
+			{
+				var listingResult = blobDirectory.ListBlobsSegmented(continuationToken);
+				continuationToken = listingResult.ContinuationToken;
+				blobsToDelete.AddRange(listingResult.Results);
+			} while (continuationToken != null);
+
+			foreach (CloudBlob cloudBlob in blobsToDelete)
+			{
+				cloudBlob.Delete();
+			}
 		}
 
 		#endregion

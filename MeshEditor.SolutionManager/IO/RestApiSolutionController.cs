@@ -112,7 +112,14 @@ namespace MeshEditor.SolutionManager.IO
 
 		public void DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
-			throw new NotImplementedException();
+			var client = new RestClient(uri);
+			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			request.AddQueryParameter("dontDeleteLayerBlobs", "true"); // do not initiate deleting layer files from server
+
+			var response = executeRequest(client, request);
 		}
 
 		#endregion
