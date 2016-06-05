@@ -160,7 +160,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runDeleteCommand(DeleteOptions options)
 		{
-			solutionHub.Delete(options.Layer, deleteAll: options.DeleteAll, updateSolution: isRunningLocally);
+			solutionHub.Delete(options.Layer, options.DeleteAll);
 			return 0;
 		}
 
