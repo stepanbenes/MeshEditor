@@ -178,7 +178,7 @@ namespace MeshEditor.SolutionManager
 			solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Delete(string layerIdOrName, bool deleteAll)
+		public void Delete(string layerIdOrName, bool deleteAll, bool updateSolution)
 		{
 			Solution solution = solutionController.Get(solutionId);
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
@@ -187,8 +187,11 @@ namespace MeshEditor.SolutionManager
 			{
 				foreach (var layer in traverseLayerTreePostOrder(rootLayer))
 				{
-					solutionController.DeleteLayer(solution, layer);
-					layerGenerator.DeleteLayer(layer.Id);
+					if (updateSolution)
+					{
+						solutionController.DeleteLayer(solution, layer);
+					}
+					layerGenerator.DeleteAllLayerFiles(layer.Id);
 				}
 			}
 		}

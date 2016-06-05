@@ -25,8 +25,12 @@ namespace MeshEditor.FormatConverter
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-			string webjobName = Environment.GetEnvironmentVariable("WEBJOBS_NAME");
-			bool isRunningLocally = webjobName == null;
+			//string webjobName = Environment.GetEnvironmentVariable("WEBJOBS_NAME");
+			//bool isRunningLocally = webjobName == null;
+
+			string dashboardAndStorageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsDashboard");
+			bool isRunningLocally = dashboardAndStorageConnectionString == null;
+
 			if (isRunningLocally) // running locally
 			{
 				if (args == null || args.Length == 0)
@@ -76,7 +80,8 @@ namespace MeshEditor.FormatConverter
 			}
 			else
 			{
-				var configuration = new JobHostConfiguration(Environment.GetEnvironmentVariable("AzureWebJobsDashboard"));
+				Debug.Assert(!string.IsNullOrEmpty(dashboardAndStorageConnectionString));
+				var configuration = new JobHostConfiguration(dashboardAndStorageConnectionString);
 				var host = new JobHost(configuration);
 				// The following code ensures that the WebJob will be running continuously
 				host.RunAndBlock();
@@ -155,7 +160,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runDeleteCommand(DeleteOptions options)
 		{
-			solutionHub.Delete(options.Layer, options.DeleteAll);
+			solutionHub.Delete(options.Layer, deleteAll: options.DeleteAll, updateSolution: isRunningLocally);
 			return 0;
 		}
 
