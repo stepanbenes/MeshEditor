@@ -131,6 +131,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.LayerManager.Common\MeshEditor.LayerManager.Common.csproj">
+      <Project>{06d721b8-cdb0-4a95-a009-2bf4c4ac5db9}</Project>
+      <Name>MeshEditor.LayerManager.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj">
       <Project>{551f7428-7a4e-4ee2-9681-5de0105bf887}</Project>
       <Name>MeshEditor.SolutionManager</Name>

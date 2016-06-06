@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Storage;
+using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.LayerManager.Import
 {
@@ -24,8 +25,6 @@ namespace MeshEditor.LayerManager.Import
 		public static readonly string ComponentNamesToken = "ComponentNames";
 
 		private static readonly char[] whiteSpaceSeparators = { ' ', '\t' };
-		private static readonly string tokensWithQuotesRegexPattern = @"[\""].+?[\""]|[^ ]+";
-		private static readonly char[] quotesTrimChars = { '"' };
 
 		private enum ParserState
 		{
@@ -162,7 +161,7 @@ namespace MeshEditor.LayerManager.Import
 								if (line.StartsWith(GaussPointsToken, StringComparison.InvariantCultureIgnoreCase)) // GaussPoints
 								{
 									state = ParserState.GaussPointsDescription;
-									string[] tokens = splitLineToTokensWithQuotes(line);
+									string[] tokens = line.SplitToTokensWithQuotes();
 									Debug.Assert(tokens.Length >= 4);
 									// GaussPoints "gauss_points_name" Elemtype my_type "mesh_name"
 									string gaussPointsName = tokens[1];
@@ -174,7 +173,7 @@ namespace MeshEditor.LayerManager.Import
 								else if (line.StartsWith(ResultToken, StringComparison.InvariantCultureIgnoreCase)) // Result
 								{
 									state = ParserState.ResultHeader;
-									string[] tokens = splitLineToTokensWithQuotes(line);
+									string[] tokens = line.SplitToTokensWithQuotes();
 									Debug.Assert(tokens.Length >= 6);
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
@@ -260,7 +259,7 @@ namespace MeshEditor.LayerManager.Import
 							case ParserState.ResultHeader:
 								if (line.StartsWith(ComponentNamesToken, StringComparison.InvariantCultureIgnoreCase)) // ComponentNames
 								{
-									string[] tokens = splitLineToTokensWithQuotes(line);
+									string[] tokens = line.SplitToTokensWithQuotes();
 									parserData.ComponentNames = tokens.Skip(1).ToArray();
 									parserData.NumberOfComponents = parserData.ComponentNames.Length;
 								}
@@ -329,15 +328,6 @@ namespace MeshEditor.LayerManager.Import
 		{
 			Debug.Assert(line != null);
 			return line.Split(whiteSpaceSeparators, StringSplitOptions.RemoveEmptyEntries);
-		}
-
-		private static string[] splitLineToTokensWithQuotes(string line)
-		{
-			// parse correctly quoted tokens (enclosed by '"' characters)
-			return Regex.Matches(line, tokensWithQuotesRegexPattern)
-				.Cast<Match>()
-				.Select(m => m.Value.Trim(quotesTrimChars))
-				.ToArray();
 		}
 
 		private static FieldType convertResultTypeStringToFieldType(string resultType)

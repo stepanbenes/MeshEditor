@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
+using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.FormatConverter
 {
@@ -16,7 +17,7 @@ namespace MeshEditor.FormatConverter
 		public static void ConvertResults([QueueTrigger("results-converter-queue")] string message, TextWriter log)
 		{
 			var program = new Program(isRunningLocally: false, storageType: StorageType.Remote);
-			program.Run(message.Split(' ', '\t'), log);
+			program.Run(message.SplitToTokensWithQuotes(), log);
 		}
 	}
 }

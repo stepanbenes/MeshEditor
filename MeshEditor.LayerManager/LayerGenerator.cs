@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager
 		#region Static members
 
 		private static readonly CellType DefaultCellType = CellType.TriangleLinear;
-
+		
 		private class CompressionCounter
 		{
 			long inputDataLength;
