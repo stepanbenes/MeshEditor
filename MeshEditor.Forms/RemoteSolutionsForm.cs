@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -44,7 +45,13 @@ namespace MeshEditor.WinUI
 
 		private void listBoxSolutions_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			buttonOk.Enabled = listBoxSolutions.SelectedItem != null;
+			buttonOk.Enabled = buttonOpenInBrowser.Enabled = listBoxSolutions.SelectedItem != null;
+		}
+
+		private void buttonOpenInBrowser_Click(object sender, EventArgs e)
+		{
+			var url = $"http://mesheditor.azurewebsites.net/postprocess/{SelectedSolutionId.Value}";
+			Process.Start(url);
 		}
 	}
 }
