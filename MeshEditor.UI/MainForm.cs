@@ -22,6 +22,7 @@ using MeshEditor.DataVisualizer;
 using MeshEditor.DataVisualizer.UI;
 using MeshEditor.DataVisualizer.Data;
 using System.Threading.Tasks;
+using MeshEditor.SolutionManager;
 
 namespace MeshEditor.WinUI
 {
@@ -1749,31 +1750,55 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private async void openSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		private void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			// TODO: FIX THIS !!!
-
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
-				var solutionHub = SolutionManager.SolutionHub.CreateLocal(dialog.FileName);
-				var layers = solutionHub.EnumerateAllLayers();
+				var solutionHub = SolutionHub.CreateLocal(dialog.FileName);
+				loadSolution(solutionHub);
 
-				// TODO: load master layer and its data, show layers panel
+				//	var layers = solutionHub.EnumerateAllLayers();
 
-				var masterLayer = layers.Single(l => l.Name == "master");
-				string masterLayerFilename = Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString(), "mesh.json");
-				activeControl.LoadFiles(masterLayerFilename);
+				//	// TODO: load master layer and its data, show layers panel
 
-				await Task.Delay(2000); // mesh is beeing loaded asynchronously, it must be loaded before data can begin to load, so wait some time
+				//	var masterLayer = layers.Single(l => l.Name == "master");
+				//	string masterLayerFilename = Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString(), "mesh.json");
+				//	activeControl.LoadFiles(masterLayerFilename);
 
-				var dataVisualizer = new ExactDataVisualizer();
-				setNewDataVisualizer(dataVisualizer);
-				var resultFiles = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString()), "result.*");
-				dataVisualizer.LoadData(new ApproximationParameters(loadInternalEntities: true), resultFiles.ToArray(), longOpNotifier);
-				dataVisualizer.FinishUp();
+				//	await Task.Delay(2000); // mesh is beeing loaded asynchronously, it must be loaded before data can begin to load, so wait some time
+
+				//	var dataVisualizer = new ExactDataVisualizer();
+				//	setNewDataVisualizer(dataVisualizer);
+				//	var resultFiles = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString()), "result.*");
+				//	dataVisualizer.LoadData(new ApproximationParameters(loadInternalEntities: true), resultFiles.ToArray(), longOpNotifier);
+				//	dataVisualizer.FinishUp();
 			}
+		}
+
+		private void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var solutions = SolutionHub.EnumerateAllRemoteSolutions();
+
+			RemoteSolutionsForm remoteSolutionsForm = new RemoteSolutionsForm(solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName))) { Owner = this };
+
+			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
+			{
+				int? selectedSolutionId = remoteSolutionsForm.SelectedSolutionId;
+				if (selectedSolutionId.HasValue)
+				{
+					var solutionHub = SolutionHub.CreateRemote(selectedSolutionId.Value);
+					loadSolution(solutionHub);
+				}
+			}
+		}
+
+		private void loadSolution(SolutionHub solutionHub)
+		{
+			var layers = solutionHub.EnumerateAllLayers();
+
+			throw new NotImplementedException();
 		}
 
 		#endregion

@@ -103,7 +103,6 @@
 			this.edgesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.postprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.opensolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.loadDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
 			this.dataPickerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -190,6 +189,8 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.openLocalSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openRemoteSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -824,7 +825,8 @@
 			// postprocessToolStripMenuItem
 			// 
 			this.postprocessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.opensolutionToolStripMenuItem,
+            this.openLocalSolutionToolStripMenuItem,
+            this.openRemoteSolutionToolStripMenuItem,
             this.loadDataToolStripMenuItem,
             this.toolStripSeparator24,
             this.dataPickerToolStripMenuItem,
@@ -835,15 +837,6 @@
 			this.postprocessToolStripMenuItem.Name = "postprocessToolStripMenuItem";
 			this.postprocessToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
 			this.postprocessToolStripMenuItem.Text = "&POSTPROCESS";
-			// 
-			// opensolutionToolStripMenuItem
-			// 
-			this.opensolutionToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
-			this.opensolutionToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.opensolutionToolStripMenuItem.Name = "opensolutionToolStripMenuItem";
-			this.opensolutionToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-			this.opensolutionToolStripMenuItem.Text = "Open &solution...";
-			this.opensolutionToolStripMenuItem.Click += new System.EventHandler(this.openSolutionToolStripMenuItem_Click);
 			// 
 			// loadDataToolStripMenuItem
 			// 
@@ -1639,6 +1632,20 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// openLocalSolutionToolStripMenuItem
+			// 
+			this.openLocalSolutionToolStripMenuItem.Name = "openLocalSolutionToolStripMenuItem";
+			this.openLocalSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.openLocalSolutionToolStripMenuItem.Text = "Open local solution...";
+			this.openLocalSolutionToolStripMenuItem.Click += new System.EventHandler(this.openLocalSolutionToolStripMenuItem_Click);
+			// 
+			// openRemoteSolutionToolStripMenuItem
+			// 
+			this.openRemoteSolutionToolStripMenuItem.Name = "openRemoteSolutionToolStripMenuItem";
+			this.openRemoteSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.openRemoteSolutionToolStripMenuItem.Text = "Open remote solution...";
+			this.openRemoteSolutionToolStripMenuItem.Click += new System.EventHandler(this.openRemoteSolutionToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1827,7 +1834,8 @@
 		private System.Windows.Forms.ToolStripMenuItem configurePropertyColorsToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem axisArrowsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem beamNumbersToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem opensolutionToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openLocalSolutionToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openRemoteSolutionToolStripMenuItem;
 	}
 }
 
