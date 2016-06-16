@@ -31,7 +31,7 @@ namespace MeshEditor.SolutionManager.IO
 		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
 		{
 			projectName = projectName ?? Path.GetFileNameWithoutExtension(analysisResults.First().MeshRecordNames.First());
-			Solution solution = new Solution { Id = solutionId, ProjectName = projectName };
+			Solution solution = new Solution { Id = solutionId, ProjectName = projectName, Layers = new Solution.Layer[0] };
 			using (Stream stream = localStorage.Save(projectName + SolutionFileSuffix + serializer.FileExtension))
 			{
 				serializer.Serialize(solution, stream);

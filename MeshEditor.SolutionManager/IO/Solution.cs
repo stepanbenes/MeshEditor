@@ -32,7 +32,7 @@ namespace MeshEditor.SolutionManager.IO
 				ProjectName = solution.ProjectName,
 				Layers = parentLayerId.HasValue ?
 					solution.Layers.Select(layer => cloneLayerAppend(layer, parentLayerId.Value, layerToAdd)).ToArray() :
-					solution.Layers.Select(layer => cloneLayer(layer)).Append(layerToAdd).ToArray()
+					(solution.Layers?.Select(layer => cloneLayer(layer))).EmptyIfNull().Append(layerToAdd).ToArray()
 			};
 			return newSolution;
 		}
