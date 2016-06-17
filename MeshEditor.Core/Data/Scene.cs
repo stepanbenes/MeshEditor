@@ -557,7 +557,7 @@ namespace MeshEditor.Data
 		public Scene Copy()
 		{
 			Scene copy = new Scene();
-			copy.camera = this.camera.Clone();  // naklonuju kameru
+			copy.camera = new Camera(this.camera);  // naklonuju kameru
 
 			copy.mesh = this.mesh;              // zkopiruju jen odkaz na mesh
 			if (this.mesh != null)

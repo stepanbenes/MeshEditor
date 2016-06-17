@@ -24,7 +24,7 @@ namespace MeshEditor.Graphics
 	public class Camera
 	{
 
-		#region Fields, Constructor
+		#region Fields, Constructors
 
 		private Vector3 globalViewVector, globalUpVector;
 		private float yaw, pitch;
@@ -34,6 +34,22 @@ namespace MeshEditor.Graphics
 		public Camera()
         {
 			setIsoView();
+		}
+
+		/// <summary>
+		/// Copy constructor
+		/// </summary>
+		public Camera(Camera toCopy)
+		{
+			eye = toCopy.eye;
+			center = toCopy.center;
+			up = toCopy.up;
+
+			globalViewVector = toCopy.globalViewVector;
+			globalUpVector = toCopy.globalUpVector;
+
+			yaw = toCopy.yaw;
+			pitch = toCopy.pitch;
 		}
 
 		#endregion
@@ -53,15 +69,6 @@ namespace MeshEditor.Graphics
 		#endregion
 
 		#region Public methods
-
-		public Camera Clone()
-		{
-			Camera newCam = new Camera();
-			newCam.eye = this.eye;
-			newCam.center = this.center;
-			newCam.up = this.up;
-			return newCam;
-		}
 
 		/// <summary>
 		/// Returns direction vector of camera (normalized).
