@@ -72,10 +72,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ContentViewControl.Designer.cs">
+      <DependentUpon>ContentViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayoutMode.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -88,10 +97,28 @@
     <Compile Include="OpenGLControl.Designer.cs">
       <DependentUpon>OpenGLControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="PostprocessViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PostprocessViewControl.Designer.cs">
+      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PreprocessViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PreprocessViewControl.Designer.cs">
+      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostprocessViewControl.resx">
+      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PreprocessViewControl.resx">
+      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

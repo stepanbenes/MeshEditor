@@ -141,6 +141,8 @@ namespace MeshEditor.WinUI
 			ioProcessCancelled = false;
 			ioProcessError = false;
 			delayTimer = null;
+
+
 		}
 
 		// =======================================================

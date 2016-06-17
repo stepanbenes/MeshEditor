@@ -56,12 +56,7 @@ namespace MeshEditor.WinUI
 		private int takeScreenshotLastFilterIndex;
 		private string takeScreenshotLastFilename;
 
-
-		public LongOpNotifier LongOpNotifier
-		{
-			get { return longOpNotifier; }
-		}
-
+		private LayoutMode layoutMode;
 
 		public MainForm(string[] args)
 		{
@@ -83,10 +78,6 @@ namespace MeshEditor.WinUI
 			this.longOpNotifier = null;
 			initLongOpNotifier();
 
-
-			OpenGLControl mainOpenGLControl = OpenGLControl.Create(null, openGLControl_MouseDown);
-
-
 			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
 			AppSettings.LoadFromFile(this.settingsFilePath);
 
@@ -99,15 +90,53 @@ namespace MeshEditor.WinUI
 			// load window state settings
 			loadAppSettings();
 
-			this.centralPanel.Controls.Add(mainOpenGLControl);
-			mainOpenGLControl.MyContainer = this.centralPanel;
-			mainOpenGLControl.Dock = DockStyle.Fill;
+			LayoutMode = LayoutMode.Preprocessor;
 
-			registerNewControl(mainOpenGLControl);
-			activateControl(mainOpenGLControl); // zakladni opengl okno je nyni ulozeno v activeControl
+			initializeMainOpenGlControl(getContentControl());
 
 			updateCaption();
 			editorModeChanged(null, null);
+		}
+
+		#endregion
+
+		#region Properties
+
+		public LayoutMode LayoutMode
+		{
+			get { return layoutMode; }
+			set
+			{
+				if (layoutMode != value)
+				{
+					Control content = getContentControl();
+					clearContentView();
+					layoutMode = value;
+					switch (layoutMode)
+					{
+						case LayoutMode.Preprocessor:
+							{
+								var preprocessView = new PreprocessViewControl { Content = content, Dock = DockStyle.Fill };
+								centralPanel.Controls.Add(preprocessView);
+							}
+							break;
+						case LayoutMode.Postprocessor:
+							{
+								var postprocessView = new PostprocessViewControl { Content = content, Dock = DockStyle.Fill };
+								centralPanel.Controls.Add(postprocessView);
+								postprocessView.SplitterDistance = 200;
+							}
+							break;
+						default:
+							throw new NotSupportedException();
+					}
+				}
+			}
+		}
+
+		public LongOpNotifier LongOpNotifier
+		{
+			get { return longOpNotifier; }
 		}
 
 		#endregion
@@ -1118,6 +1147,51 @@ namespace MeshEditor.WinUI
 
 		#region Help methods
 
+		private Control getContentControl()
+		{
+			switch (LayoutMode)
+			{
+				case LayoutMode.None:
+					return new Panel { Dock = DockStyle.Fill };
+				case LayoutMode.Preprocessor:
+				case LayoutMode.Postprocessor:
+					return centralPanel.Controls.Cast<ContentViewControl>().Single().Content;
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		private void clearContentView()
+		{
+			switch (LayoutMode)
+			{
+				case LayoutMode.None:
+					centralPanel.Controls.Clear();
+					break;
+				case LayoutMode.Preprocessor:
+				case LayoutMode.Postprocessor:
+					var contentView = centralPanel.Controls.Cast<ContentViewControl>().Single();
+					contentView.Content = null;
+					centralPanel.Controls.Remove(contentView);
+					contentView.Dispose();
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		private void initializeMainOpenGlControl(Control contentContainer)
+		{
+			OpenGLControl mainOpenGLControl = OpenGLControl.Create(null, openGLControl_MouseDown);
+			contentContainer.Controls.Add(mainOpenGLControl);
+
+			mainOpenGLControl.MyContainer = contentContainer;
+			mainOpenGLControl.Dock = DockStyle.Fill;
+
+			registerNewControl(mainOpenGLControl);
+			activateControl(mainOpenGLControl); // zakladni opengl okno je nyni ulozeno v activeControl
+		}
+
 		private void askToSaveChanges(List<OpenGLControl> controls, bool canBeCancelled, CancelEventArgs e)
 		{
 			string caption = "Save changes?";
@@ -1796,9 +1870,13 @@ namespace MeshEditor.WinUI
 
 		private void loadSolution(SolutionHub solutionHub)
 		{
+			throw new NotImplementedException();
+
 			var layers = solutionHub.EnumerateAllLayers();
 
-			throw new NotImplementedException();
+			LayoutMode = LayoutMode.Postprocessor;
+			
+			// ...
 		}
 
 		#endregion
