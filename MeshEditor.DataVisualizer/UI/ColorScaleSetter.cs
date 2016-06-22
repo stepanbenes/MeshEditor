@@ -12,7 +12,6 @@ namespace MeshEditor.DataVisualizer.UI
 	public partial class ColorScaleSetter : UserControl
 	{
 		IDataVisualizerController dataVisualizer;
-		bool changingCellValue;
 
 		public ColorScaleSetter()
 		{
@@ -26,34 +25,8 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				if (dataVisualizer != value)
 				{
-					if(dataVisualizer != null)
-						dataVisualizer.Settings.PropertyChanged -= settings_PropertyChanged;
 					dataVisualizer = value;
-					dataVisualizer.Settings.PropertyChanged += settings_PropertyChanged;
 					setupControlPoints();
-				}
-			}
-		}
-
-		private void settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			if (changingCellValue)
-				return;
-
-			if (string.IsNullOrEmpty(e.PropertyName))
-			{
-				setupControlPoints();
-			}
-			else
-			{
-				string[] parts = e.PropertyName.Split(';', '.');
-				if (parts.Contains("ColorScale"))
-				{
-					setupControlPoints();
-				}
-				else
-				{
-					dataGridViewControlPoints.Refresh();
 				}
 			}
 		}
@@ -82,15 +55,7 @@ namespace MeshEditor.DataVisualizer.UI
 		private void dataGridViewControlPoints_CellValueChanged(object sender, DataGridViewCellEventArgs e)
 		{
 			dataGridViewControlPoints.Refresh();
-			if (dataVisualizer != null)
-			{
-				if (!changingCellValue)
-				{
-					changingCellValue = true;
-					dataVisualizer.Settings.OnPropertyChanged("ColorScale");
-					changingCellValue = false;
-				}
-			}
+
 		}
 
 		private void dataGridViewControlPoints_ColumnAdded(object sender, DataGridViewColumnEventArgs e)

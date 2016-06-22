@@ -25,10 +25,9 @@ namespace MeshEditor.CoreInterface
 		/// <summary>
 		/// Loads result data stored in file specified by parameter.
 		/// </summary>
-		/// <param name="approximationParameters">Parameters describing order of approximation, octree creation etc.</param>
 		/// <param name="filenames">Path to result files with data to be loaded.</param>
 		/// <param name="longOpNotifier">Object that notifies UI about progress in loading data and handles cancellation.</param>
-		void LoadData(IApproximationParameters approximationParameters, string[] filenames, LongOpNotifier longOpNotifier);
+		void LoadData(string[] filenames, LongOpNotifier longOpNotifier);
 
 		/// <summary>
 		/// Sequence of already loaded filenames.
@@ -119,45 +118,5 @@ namespace MeshEditor.CoreInterface
 		/// Returns ids of nodes (one or more) that have the minimum data value (currently set).
 		/// </summary>
 		int[] GetEntitiesWithMinimumDataValue();
-
-		/// <summary>
-		/// Returns object describing parameters of currently used approximation method.
-		/// </summary>
-		/// <param name="longOpNotifier">Object that notifies UI about progress in loading data and handles cancellation.</param>
-		ApproximationQuality GetApproximationQuality(LongOpNotifier longOpNotifier);
-
 	}
-
-	public class ApproximationQuality
-	{
-		//public float MaxAbsoluteError { get; set; }
-		public float MaxRelativeError { get; set; }
-		public float AverageRelativeError { get; set; }
-		//public float CurrentDataMaxAbsoluteError { get; set; }
-		public float CurrentDataMaxRelativeError { get; set; }
-		public float CurrentDataAverageRelativeError { get; set; }
-
-		public long MemoryConsumption { get; set; }
-		public float CompressionRatio { get; set; }
-
-		public override string ToString()
-		{
-			return string.Format("Max error: {0:G4}% Current data max error: {1:G4}% Avg error: {2:G4}% Current data avg error: {3:G4}% Memory consumption: {4}B Compression ratio: {5:G3}%", MaxRelativeError * 100.0f, CurrentDataMaxRelativeError * 100.0f, AverageRelativeError * 100.0f, CurrentDataAverageRelativeError * 100.0f, MemoryConsumption, CompressionRatio * 100.0f);
-		}
-	}
-
-	public enum GaussPointsExtrapolationStrategy
-	{
-		NearestGaussPoint,
-		//Variational,
-		//Lumped
-	}
-
-	public interface IApproximationParameters
-	{
-		bool LoadInternalEntities { get; }
-		bool CompressTime { get; }
-		GaussPointsExtrapolationStrategy GPExptrapolationStrategy { get; }
-	}
-
 }

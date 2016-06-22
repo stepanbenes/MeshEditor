@@ -64,8 +64,6 @@ namespace MeshEditor.Data
 		private HashSet<Element> hiddenElements;
 		// --- SELECTED ITEMS -------------------
 		private HashSet<ISelectable> selectedItems;
-		// --- CROSS-SECTIONS -------------------
-		private List<ILayer> layers;
 		// ======================================
 
 		// ==========================================
@@ -97,7 +95,6 @@ namespace MeshEditor.Data
 
 			this.statistics = new MeshStatistics();
 			//this.statistics.RecreateBuffersNeeded += delegate { RecreateBuffers(); };
-			this.layers = new List<ILayer>();
 		}
 
 		#endregion
@@ -279,11 +276,6 @@ namespace MeshEditor.Data
 					ComputeMinimalElementRadius();
 				return statistics.MinimalElementRadius;
 			}
-		}
-
-		public IList<ILayer> Layers
-		{
-			get { return layers; }
 		}
 
 		public bool HasTwinElements
@@ -497,17 +489,6 @@ namespace MeshEditor.Data
 			//bool numbersAreOK = !optimizeForMoving && content.VisibleNodesReady;// && (Scene.AlwaysShowNumbers || !optimizeForSelecting);
 			bool showElementNumbers = drawElementNumbers & !optimizeForMoving;
 			bool showBeamNumbers = drawBeamNumbers & !optimizeForMoving;
-
-			foreach (ILayer layer in layers)
-			{
-				if (layer.Visible)
-				{
-					if (layer.UpdateNeeded)
-						layer.Update(this, content.DataVisualizer, elementPropertyColors);
-
-					layer.Draw(content.DataVisualizer, renderMode, elementPropertyColors);
-				}
-			}
 
 			if ((renderMode & RenderMode.Faces) != 0)
 			{
@@ -759,7 +740,6 @@ namespace MeshEditor.Data
 		public void UpdateColors()
 		{
 			content.UpdateAllColors(this.selectedItems, this.colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
-			updateLayerColors();
 		}
 
 		public void UpdateColors(PropertyColorsMode newColorMode, PropertyColorsMode oldColorMode)
@@ -768,7 +748,6 @@ namespace MeshEditor.Data
 			if ((newColorMode & PropertyColorsMode.Faces) != (oldColorMode & PropertyColorsMode.Faces) || (newColorMode & PropertyColorsMode.Elements) != (oldColorMode & PropertyColorsMode.Elements))
 			{
 				content.UpdateFaceColors(this.selectedItems, colorMode);
-				updateLayerColors();
 			}
 			if ((newColorMode & PropertyColorsMode.Edges) != (oldColorMode & PropertyColorsMode.Edges))
 				content.UpdateEdgeColors(this.selectedItems, colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
@@ -781,7 +760,6 @@ namespace MeshEditor.Data
 		public void UpdateFaceColors()
 		{
 			content.UpdateFaceColors(this.selectedItems, colorMode);
-			updateLayerColors();
 		}
 
 		public void UpdateEdgeColors()
@@ -802,9 +780,6 @@ namespace MeshEditor.Data
 		public void UpdateNodeCoordinates()
 		{
 			content.UpdateNodeCoordinates();
-
-			foreach (ILayer layer in layers)
-				layer.GeometryChanged = true;
 		}
 
 		public void Dispose()
@@ -1029,12 +1004,6 @@ namespace MeshEditor.Data
 		#endregion
 
 		#region Private methods
-
-		private void updateLayerColors()
-		{
-			foreach (ILayer layer in layers)
-				layer.ColorsChanged = true;
-		}
 
 		private HashSet<Node> findVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, out Dictionary<Node, Vector3> screenProjections)
 		{

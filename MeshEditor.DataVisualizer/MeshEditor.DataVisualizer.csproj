@@ -69,98 +69,23 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataVisualizers\WaveletDataVisualizer.cs" />
-    <Compile Include="Data\DataIndex.cs" />
-    <Compile Include="Data\GaussPointsInfo.cs" />
     <Compile Include="Data\Interval.cs" />
-    <Compile Include="Data\ScalarDataDisplayMethod.cs" />
-    <Compile Include="Graphics\VectorField.cs" />
-    <Compile Include="IO\DataParserFactory.cs" />
-    <Compile Include="IO\LayerResultFileParser.cs" />
-    <Compile Include="IO\ParaViewDataFileParser.cs" />
-    <Compile Include="IO\PositionAwareStreamReader.cs" />
-    <Compile Include="IO\VTKXmlDataFileParser.cs" />
-    <Compile Include="Layers\CrossSection.cs" />
-    <Compile Include="Layers\IsoSurfaceSection.cs" />
-    <Compile Include="DataVisualizers\ApproximationParameters.cs" />
     <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
-    <Compile Include="DataVisualizers\ExactDataVisualizer.cs" />
     <Compile Include="Data\ColorScale.cs" />
-    <Compile Include="Data\DataLocation.cs" />
-    <Compile Include="Data\DataType.cs" />
-    <Compile Include="Data\DataValue.cs" />
-    <Compile Include="Data\DeformationScale.cs" />
     <Compile Include="Data\VisualizerSettings.cs" />
     <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
     <Compile Include="Graphics\IsoAreasShader.cs" />
-    <Compile Include="IO\GiDResFileParser.cs" />
-    <Compile Include="IO\IDataFileParser.cs" />
-    <Compile Include="Data\DataInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\AnimationCreatorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\AnimationCreatorForm.Designer.cs">
-      <DependentUpon>AnimationCreatorForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\ColorScaleSetter.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\ColorScaleSetter.Designer.cs">
       <DependentUpon>ColorScaleSetter.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\DataPickerControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\DataPickerControl.Designer.cs">
-      <DependentUpon>DataPickerControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\DataPickerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\DataPickerForm.Designer.cs">
-      <DependentUpon>DataPickerForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\DataIndexSetter.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\DataIndexSetter.Designer.cs">
-      <DependentUpon>DataIndexSetter.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\DataVisualizerLoaderForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\DataVisualizerLoaderForm.Designer.cs">
-      <DependentUpon>DataVisualizerLoaderForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\LayersForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\LayersForm.Designer.cs">
-      <DependentUpon>LayersForm.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\AnimationCreatorForm.resx">
-      <DependentUpon>AnimationCreatorForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\ColorScaleSetter.resx">
       <DependentUpon>ColorScaleSetter.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DataPickerControl.resx">
-      <DependentUpon>DataPickerControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DataPickerForm.resx">
-      <DependentUpon>DataPickerForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DataIndexSetter.resx">
-      <DependentUpon>DataIndexSetter.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DataVisualizerLoaderForm.resx">
-      <DependentUpon>DataVisualizerLoaderForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\LayersForm.resx">
-      <DependentUpon>LayersForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

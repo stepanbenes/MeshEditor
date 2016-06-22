@@ -48,11 +48,6 @@ namespace MeshEditor.WinUI
 
 		private string[] arguments;
 
-		private DataVisualizerLoaderForm dataVisualizerLoader;
-		private DataPickerForm dataPicker;
-		private LayersForm layersDialog;
-		private AnimationCreatorForm animationDialog;
-
 		private int takeScreenshotLastFilterIndex;
 		private string takeScreenshotLastFilename;
 
@@ -435,7 +430,7 @@ namespace MeshEditor.WinUI
 			restoreCuttedItemsToolStripMenuItem.Enabled = (bool)activeControl.SceneFacade.GetValue(AvailableValue.MeshHasHiddenElements);
 			closeActiveWindowToolStripMenuItem.Enabled = activeWindowCanBeClosed();
 			bool containsMesh = activeControl.SceneFacade.ContainsMesh;
-			listOfSelectedItemsToolStripMenuItem.Enabled = layersToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = containsMesh;
+			listOfSelectedItemsToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = containsMesh;
 		}
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -996,106 +991,6 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void loadDataToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!activeControl.SceneFacade.ContainsMesh)
-			{
-				MessageBox.Show("No mesh is loaded. Open mesh file first.", "Can not load data");
-				return;
-			}
-
-			if (dataVisualizerLoader == null)
-			{
-				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
-				//if (dataVisualizer == null) // initialize
-				//{
-				//	dataVisualizer = new OctreeDataVisualizer();
-				//	setNewDataVisualizer(dataVisualizer);
-				//}
-
-				dataVisualizerLoader = new DataVisualizerLoaderForm(dataVisualizer, longOpNotifier);
-
-				dataVisualizerLoader.NeedInitialize += (s, ea) =>
-				{
-					if (dataVisualizerLoader.DataVisualizer != dataVisualizer) // new object created
-					{
-						dataVisualizer = dataVisualizerLoader.DataVisualizer;
-						setNewDataVisualizer(dataVisualizer);
-					}
-				};
-
-				dataVisualizerLoader.NeedRefresh += (s, ea) =>
-				{
-					activeControl.SceneFacade.PerformAction(AvailableAction.Refresh);
-				};
-
-				dataVisualizerLoader.FormClosed += (s, ea) =>
-				{
-					loadDataToolStripMenuItem.Checked = toolStripButtonDataVisualizer.Checked = false;
-					dataVisualizerLoader = null;
-				};
-
-				dataVisualizerLoader.Show(this); // show dialog
-
-				loadDataToolStripMenuItem.Checked = toolStripButtonDataVisualizer.Checked = true;
-			}
-			else
-			{
-				//loader.Activate();
-				dataVisualizerLoader.Close();
-			}
-		}
-
-		private void dataPickerToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (dataPicker == null)
-			{
-				IDataVisualizerController dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
-				dataPicker = new DataPickerForm(dataVisualizer, longOpNotifier);
-				dataPicker.FormClosed += (s, ea) => { dataPickerToolStripMenuItem.Checked = toolStripButtonDataPicker.Checked = false; dataPicker = null; };
-				dataPickerToolStripMenuItem.Checked = toolStripButtonDataPicker.Checked = true;
-				dataPicker.Show();
-			}
-			else
-			{
-				dataPicker.Close();
-				dataPicker = null;
-			}
-		}
-
-		private void showgridToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			IDataVisualizerController dataVisualizerController = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
-			if (dataVisualizerController != null)
-			{
-				bool drawGrid = dataVisualizerController.Settings.DrawGrid; // get value
-				drawGrid = !drawGrid; // switch value
-				dataVisualizerController.Settings.DrawGrid = drawGrid; // set it back
-				showgridToolStripMenuItem.Checked = drawGrid; // change button check state
-															  //activeControl.SceneFacade.PerformAction(AvailableAction.Refresh); // refresh
-			}
-		}
-
-		private void animationToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (animationDialog == null)
-			{
-				IDataVisualizerController dataVisualizerController = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizerController;
-				if (dataVisualizerController != null)
-				{
-					animationDialog = new AnimationCreatorForm(dataVisualizerController, longOpNotifier, (width, height) => activeControl.TakeScreenshot(width, height), activeControl.SceneFacade.MeshFilename);
-					animationDialog.FormClosed += (s, ea) => { animationToolStripMenuItem.Checked = false; animationDialog = null; };
-					animationToolStripMenuItem.Checked = true;
-					animationDialog.Show();
-				}
-			}
-			else
-			{
-				animationDialog.Close();
-				animationDialog = null;
-			}
-		}
-
 		private void signalDataMaximumToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (activeControl.SceneFacade.ContainsMesh)
@@ -1117,29 +1012,6 @@ namespace MeshEditor.WinUI
 				{
 					activeControl.SignalNodeByID(dataVisualizer.GetEntitiesWithMinimumDataValue());
 				}
-			}
-		}
-
-		private void layersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!activeControl.SceneFacade.ContainsMesh)
-				return;
-
-			if (layersDialog == null)
-			{
-				IList<ILayer> layers = activeControl.SceneFacade.GetValue(AvailableValue.LayerList) as IList<ILayer>;
-				Vector3 meshDimensions = (Vector3)activeControl.SceneFacade.GetValue(AvailableValue.MeshDimensions);
-				EventHandler redrawMeshHandler = (s, ea) => { meshNeedRefreshHandler(this, new MeshNeedRefreshEventArgs(activeControl.SceneFacade.MeshFilename)); };
-				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
-				layersDialog = new LayersForm(layers, redrawMeshHandler, meshDimensions, dataVisualizer != null);
-				layersDialog.FormClosed += (s, ea) => { layersToolStripMenuItem.Checked = toolStripButtonLayers.Checked = false; layersDialog = null; };
-				layersToolStripMenuItem.Checked = toolStripButtonLayers.Checked = true;
-				layersDialog.Show();
-			}
-			else
-			{
-				layersDialog.Close();
-				layersDialog = null;
 			}
 		}
 
@@ -1393,7 +1265,6 @@ namespace MeshEditor.WinUI
 				updateCaption();
 				updateStatus();
 				updateRenderModeButtons();
-				updateDataVisualizerButtons();
 			};
 
 			openGLControl.MeshNeedRefresh += meshNeedRefreshHandler;
@@ -1505,111 +1376,6 @@ namespace MeshEditor.WinUI
 		//    activeControl.SceneFacade.SetValue(AvailableValue.AlwaysShowNumbers, value);
 		//    alwaysShowNumbersToolStripMenuItem.Checked = value;
 		//}
-
-		private void setNewDataVisualizer(IDataVisualizer dataVisualizer)
-		{
-			// close data picker
-			if (dataPicker != null)
-			{
-				dataPicker.Close();
-				dataPicker = null;
-			}
-			// close animation dialog
-			if (animationDialog != null)
-			{
-				animationDialog.Close();
-				animationDialog = null;
-			}
-
-			showgridToolStripMenuItem.Enabled = dataPickerToolStripMenuItem.Enabled = toolStripButtonDataPicker.Enabled = animationToolStripMenuItem.Enabled = (dataVisualizer != null); // enable changing Show exact value property
-			if (dataVisualizer == null)
-				signalDataMaximumToolStripMenuItem.Enabled = signalDataMinimumToolStripMenuItem.Enabled = false;
-
-			IDataVisualizerController controller = dataVisualizer as IDataVisualizerController;
-			if (controller != null)
-			{
-				showgridToolStripMenuItem.Checked = controller.Settings.DrawGrid; // implicitly not checked
-																				  // register handler for refreshing window
-				controller.Settings.PropertyChanged += dataVisualizerSettings_PropertyChanged;
-			}
-
-			activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
-
-			updateDataVisualizerButtons();
-		}
-
-		private void updateDataVisualizerButtons()
-		{
-			IDataVisualizer dv = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
-			showgridToolStripMenuItem.Enabled = dataPickerToolStripMenuItem.Enabled = toolStripButtonDataPicker.Enabled = animationToolStripMenuItem.Enabled = (dv != null); // enable changing Show exact value property
-
-			IDataVisualizerController dc = dv as IDataVisualizerController;
-			if (dc != null)
-			{
-				showgridToolStripMenuItem.Checked = dc.Settings.DrawGrid; // implicitly not checked
-			}
-		}
-
-		private void dataVisualizerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			IVisualizerSettings settings = sender as IVisualizerSettings;
-			Debug.Assert(settings != null);
-
-			bool updateColorBuffers = false;
-			bool updateNodeCoordinates = false;
-			bool updateElementsCutByValueLimit = false;
-			bool invalidate = false;
-
-			string[] propertyNames = e.PropertyName.Split(';');
-			foreach (string propertyName in propertyNames)
-			{
-				switch (propertyName)
-				{
-					case "DrawIsoAreas":
-					case "IsoAreasSubIntervalNumber":
-					case "DrawGrid":
-					case "VectorDataIndex":
-					case "VectorLengthFactor":
-					case "MoveEndOfArrowsToNodes":
-					case "ShowColorScaleLegend":
-					case "ShowVectors":
-						invalidate = true;
-						break;
-					case "DeformationScale":
-						updateNodeCoordinates = true;
-						break;
-					case "ScalarDataIndex":
-					case "DisplayMethod":
-						updateElementsCutByValueLimit = true;
-						goto case "ColorScale";
-					case "ColorScale":
-						updateColorBuffers = settings.ShowScalars; // update colors only if scalars are enabled
-						invalidate = !updateColorBuffers;
-						break;
-					case "ShowScalars":
-						signalDataMaximumToolStripMenuItem.Enabled = signalDataMinimumToolStripMenuItem.Enabled = settings.ShowScalars;
-						updateColorBuffers = true;
-						break;
-				}
-			}
-
-			if (updateElementsCutByValueLimit)
-			{
-				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateElementsCutByValueLimit);
-			}
-			if (updateNodeCoordinates)
-			{
-				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateNodeCoordinates);
-			}
-			if (updateColorBuffers)
-			{
-				activeControl.SceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
-			}
-			if (invalidate && !(updateNodeCoordinates || updateColorBuffers))
-			{
-				activeControl.Invalidate();
-			}
-		}
 
 		private void loadAppSettings()
 		{
@@ -1735,21 +1501,6 @@ namespace MeshEditor.WinUI
 		{
 			string itemsName = getNameOfItemsToSelectAcordingToEditorMode() ?? "elements";
 			toolStripButtonSelectItemsByProperty.Text = "Select " + itemsName + " by property (F6)";
-		}
-
-		private void toolStripButtonDataVisualizer_Click(object sender, EventArgs e)
-		{
-			loadDataToolStripMenuItem_Click(sender, e);
-		}
-
-		private void toolStripButtonDataPicker_Click(object sender, EventArgs e)
-		{
-			dataPickerToolStripMenuItem_Click(sender, e);
-		}
-
-		private void toolStripButtonLayers_Click(object sender, EventArgs e)
-		{
-			layersToolStripMenuItem_Click(null, null);
 		}
 
 		private void takeScreenshotToolStripMenuItem_Click(object sender, EventArgs e)

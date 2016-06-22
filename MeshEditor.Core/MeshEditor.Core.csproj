@@ -100,7 +100,6 @@
     <Compile Include="CoreInterface\AvailableValue.cs" />
     <Compile Include="CoreInterface\ColorScaleLegendPosition.cs" />
     <Compile Include="CoreInterface\IDataVisualizer.cs" />
-    <Compile Include="CoreInterface\ILayer.cs" />
     <Compile Include="CoreInterface\IOEvents.cs" />
     <Compile Include="CoreInterface\LongOpNotifier.cs" />
     <Compile Include="CoreInterface\MouseButton.cs" />

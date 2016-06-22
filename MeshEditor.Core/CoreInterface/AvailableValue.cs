@@ -38,7 +38,6 @@ namespace MeshEditor.CoreInterface
 		NodeSignalIsSet, // bool
 		ElementSignalIsSet, // bool
 		DataVisualizer, // MeshEditor.CoreInterface.IDataVisualizer
-		LayerList, // IList<MeshEditor.CoreInterface.ILayer>
 		MeshDimensions, // OpenTK.Vector3
 		LastUsedCutInfo // Cuts.CutInfo
 	}

@@ -840,10 +840,6 @@ namespace MeshEditor.CoreInterface
 					if (scene.Mesh != null)
 						return scene.Mesh.GetDataVisualizer();
 					return null;
-				case AvailableValue.LayerList:
-					if (scene.Mesh != null)
-						return scene.Mesh.Layers;
-					return null;
 				case AvailableValue.MeshDimensions:
 					if (scene.Mesh != null)
 						return scene.Mesh.UpperBound - scene.Mesh.LowerBound;
