@@ -443,6 +443,8 @@ namespace MeshEditor.CoreInterface
 				needToComputeVisibleNodesFlag = false;
 			}
 
+			GL.ShadeModel(Scene.MeshShadingModel);
+
 			if (isActive) // vybrat barvu pozadi
 				GL.ClearColor(Scene.ActiveBackColor);
 			else

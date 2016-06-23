@@ -203,27 +203,13 @@ namespace MeshEditor.Data
 			PropertyDescriptionFileExtension = ".prop";
 			UndoOperationsMaxCount = 20;
 
-			if (openGLIsInitialized)
-				MeshShadingModel = ShadingModel.Smooth;
-			else
-				meshShadingModel = ShadingModel.Smooth;
+			MeshShadingModel = ShadingModel.Smooth;
 		}
 
 		public static ShadingModel MeshShadingModel
 		{
 			get { return meshShadingModel; }
-			set
-			{
-				meshShadingModel = value;
-				try
-				{
-					GL.ShadeModel(meshShadingModel);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine("Can't change shading model (" + ex.Message + ")");
-				}
-			}
+			set { meshShadingModel = value; }
 		}
 
 		#endregion
