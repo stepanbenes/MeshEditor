@@ -30,11 +30,6 @@ namespace MeshEditor.CoreInterface
 		void LoadData(string[] filenames, LongOpNotifier longOpNotifier);
 
 		/// <summary>
-		/// Sequence of already loaded filenames.
-		/// </summary>
-		IEnumerable<string> LoadedFiles { get; }
-
-		/// <summary>
 		/// Completes creation of Data visualizer object.
 		/// It is supposed to be called after LoadData() method from the UI thread.
 		/// It should set default values of DataVisualizerController settings.

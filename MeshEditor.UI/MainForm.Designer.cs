@@ -102,12 +102,6 @@
 			this.selectFacesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.edgesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.beamsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-			this.postprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.openLocalSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.openRemoteSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
-			this.signalDataMaximumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.signalDataMinimumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.meshInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.listOfSelectedItemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -120,6 +114,12 @@
 			this.closeActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
 			this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.postprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openLocalSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openRemoteSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
+			this.signalDataMaximumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.signalDataMinimumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.readDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -182,6 +182,7 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.closeSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -813,53 +814,6 @@
 			this.beamsToolStripMenuItem1.Text = "&Beams";
 			this.beamsToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
 			// 
-			// postprocessToolStripMenuItem
-			// 
-			this.postprocessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openLocalSolutionToolStripMenuItem,
-            this.openRemoteSolutionToolStripMenuItem,
-            this.toolStripSeparator24,
-            this.signalDataMaximumToolStripMenuItem,
-            this.signalDataMinimumToolStripMenuItem});
-			this.postprocessToolStripMenuItem.Name = "postprocessToolStripMenuItem";
-			this.postprocessToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
-			this.postprocessToolStripMenuItem.Text = "&POSTPROCESS";
-			// 
-			// openLocalSolutionToolStripMenuItem
-			// 
-			this.openLocalSolutionToolStripMenuItem.Name = "openLocalSolutionToolStripMenuItem";
-			this.openLocalSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-			this.openLocalSolutionToolStripMenuItem.Text = "Open local solution...";
-			this.openLocalSolutionToolStripMenuItem.Click += new System.EventHandler(this.openLocalSolutionToolStripMenuItem_Click);
-			// 
-			// openRemoteSolutionToolStripMenuItem
-			// 
-			this.openRemoteSolutionToolStripMenuItem.Name = "openRemoteSolutionToolStripMenuItem";
-			this.openRemoteSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-			this.openRemoteSolutionToolStripMenuItem.Text = "Open remote solution...";
-			this.openRemoteSolutionToolStripMenuItem.Click += new System.EventHandler(this.openRemoteSolutionToolStripMenuItem_Click);
-			// 
-			// toolStripSeparator24
-			// 
-			this.toolStripSeparator24.Name = "toolStripSeparator24";
-			this.toolStripSeparator24.Size = new System.Drawing.Size(196, 6);
-			// 
-			// signalDataMaximumToolStripMenuItem
-			// 
-			this.signalDataMaximumToolStripMenuItem.Enabled = false;
-			this.signalDataMaximumToolStripMenuItem.Name = "signalDataMaximumToolStripMenuItem";
-			this.signalDataMaximumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-			this.signalDataMaximumToolStripMenuItem.Text = "Signal data &maximum";
-			this.signalDataMaximumToolStripMenuItem.Click += new System.EventHandler(this.signalDataMaximumToolStripMenuItem_Click);
-			// 
-			// signalDataMinimumToolStripMenuItem
-			// 
-			this.signalDataMinimumToolStripMenuItem.Enabled = false;
-			this.signalDataMinimumToolStripMenuItem.Name = "signalDataMinimumToolStripMenuItem";
-			this.signalDataMinimumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-			this.signalDataMinimumToolStripMenuItem.Text = "Signal data mi&nimum";
-			this.signalDataMinimumToolStripMenuItem.Click += new System.EventHandler(this.signalDataMinimumToolStripMenuItem_Click);
-			// 
 			// toolsToolStripMenuItem
 			// 
 			this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -966,6 +920,54 @@
 			this.settingsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
 			this.settingsToolStripMenuItem.Text = "&Settings";
 			this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+			// 
+			// postprocessToolStripMenuItem
+			// 
+			this.postprocessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openLocalSolutionToolStripMenuItem,
+            this.openRemoteSolutionToolStripMenuItem,
+            this.closeSolutionToolStripMenuItem,
+            this.toolStripSeparator24,
+            this.signalDataMaximumToolStripMenuItem,
+            this.signalDataMinimumToolStripMenuItem});
+			this.postprocessToolStripMenuItem.Name = "postprocessToolStripMenuItem";
+			this.postprocessToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
+			this.postprocessToolStripMenuItem.Text = "&POSTPROCESS";
+			// 
+			// openLocalSolutionToolStripMenuItem
+			// 
+			this.openLocalSolutionToolStripMenuItem.Name = "openLocalSolutionToolStripMenuItem";
+			this.openLocalSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.openLocalSolutionToolStripMenuItem.Text = "Open local solution...";
+			this.openLocalSolutionToolStripMenuItem.Click += new System.EventHandler(this.openLocalSolutionToolStripMenuItem_Click);
+			// 
+			// openRemoteSolutionToolStripMenuItem
+			// 
+			this.openRemoteSolutionToolStripMenuItem.Name = "openRemoteSolutionToolStripMenuItem";
+			this.openRemoteSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.openRemoteSolutionToolStripMenuItem.Text = "Open remote solution...";
+			this.openRemoteSolutionToolStripMenuItem.Click += new System.EventHandler(this.openRemoteSolutionToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator24
+			// 
+			this.toolStripSeparator24.Name = "toolStripSeparator24";
+			this.toolStripSeparator24.Size = new System.Drawing.Size(196, 6);
+			// 
+			// signalDataMaximumToolStripMenuItem
+			// 
+			this.signalDataMaximumToolStripMenuItem.Enabled = false;
+			this.signalDataMaximumToolStripMenuItem.Name = "signalDataMaximumToolStripMenuItem";
+			this.signalDataMaximumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.signalDataMaximumToolStripMenuItem.Text = "Signal data &maximum";
+			this.signalDataMaximumToolStripMenuItem.Click += new System.EventHandler(this.signalDataMaximumToolStripMenuItem_Click);
+			// 
+			// signalDataMinimumToolStripMenuItem
+			// 
+			this.signalDataMinimumToolStripMenuItem.Enabled = false;
+			this.signalDataMinimumToolStripMenuItem.Name = "signalDataMinimumToolStripMenuItem";
+			this.signalDataMinimumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.signalDataMinimumToolStripMenuItem.Text = "Signal data mi&nimum";
+			this.signalDataMinimumToolStripMenuItem.Click += new System.EventHandler(this.signalDataMinimumToolStripMenuItem_Click);
 			// 
 			// aboutToolStripMenuItem
 			// 
@@ -1545,6 +1547,13 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// closeSolutionToolStripMenuItem
+			// 
+			this.closeSolutionToolStripMenuItem.Name = "closeSolutionToolStripMenuItem";
+			this.closeSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.closeSolutionToolStripMenuItem.Text = "Close solution";
+			this.closeSolutionToolStripMenuItem.Click += new System.EventHandler(this.closeSolutionToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1726,6 +1735,7 @@
 		private System.Windows.Forms.ToolStripMenuItem beamNumbersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openLocalSolutionToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openRemoteSolutionToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem closeSolutionToolStripMenuItem;
 	}
 }
 

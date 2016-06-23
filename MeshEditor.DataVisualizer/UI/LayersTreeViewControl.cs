@@ -7,20 +7,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MeshEditor.SolutionManager.IO;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
-	public partial class ContentViewControl : UserControl
+	public partial class LayersTreeViewControl : UserControl
 	{
-		public ContentViewControl()
+		public LayersTreeViewControl()
 		{
 			InitializeComponent();
 		}
 
-		public virtual Control Content
+		public void SetLayerTree(IEnumerable<ILayerInfo> layers)
 		{
-			get { throw new NotSupportedException(); }
-			set { throw new NotSupportedException(); }
+			throw new NotImplementedException();
 		}
 	}
 }

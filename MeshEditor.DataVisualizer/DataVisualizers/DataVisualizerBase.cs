@@ -28,14 +28,6 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		public IEnumerable<string> LoadedFiles
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
-
 		public IVisualizerSettings Settings
 		{
 			get

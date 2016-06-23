@@ -64,11 +64,13 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataVisualizers\LayerDataVisualizer.cs" />
     <Compile Include="Data\Interval.cs" />
     <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
     <Compile Include="Data\ColorScale.cs" />
@@ -82,10 +84,52 @@
     <Compile Include="UI\ColorScaleSetter.Designer.cs">
       <DependentUpon>ColorScaleSetter.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ContentViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ContentViewControl.Designer.cs">
+      <DependentUpon>ContentViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\LayersTreeViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\LayersTreeViewControl.Designer.cs">
+      <DependentUpon>LayersTreeViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PostprocessViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\PostprocessViewControl.Designer.cs">
+      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PreprocessViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\PreprocessViewControl.Designer.cs">
+      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\RemoteSolutionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\RemoteSolutionsForm.Designer.cs">
+      <DependentUpon>RemoteSolutionsForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\ColorScaleSetter.resx">
       <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\LayersTreeViewControl.resx">
+      <DependentUpon>LayersTreeViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\PostprocessViewControl.resx">
+      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\PreprocessViewControl.resx">
+      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\RemoteSolutionsForm.resx">
+      <DependentUpon>RemoteSolutionsForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -96,6 +140,10 @@
     <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
       <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
       <Name>MeshEditor.LayerManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj">
+      <Project>{551F7428-7A4E-4EE2-9681-5DE0105BF887}</Project>
+      <Name>MeshEditor.SolutionManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -22,7 +22,6 @@ using MeshEditor.DataVisualizer;
 using MeshEditor.DataVisualizer.UI;
 using MeshEditor.DataVisualizer.Data;
 using System.Threading.Tasks;
-using MeshEditor.SolutionManager;
 
 namespace MeshEditor.WinUI
 {
@@ -87,7 +86,7 @@ namespace MeshEditor.WinUI
 
 			LayoutMode = LayoutMode.Preprocessor;
 
-			initializeMainOpenGlControl(getContentControl());
+			initializeMainOpenGlControl(centralPanel.Controls.Cast<ContentViewControl>().Single().Content);
 
 			updateCaption();
 			editorModeChanged(null, null);
@@ -104,7 +103,7 @@ namespace MeshEditor.WinUI
 			{
 				if (layoutMode != value)
 				{
-					Control content = getContentControl();
+					Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
 					clearContentView();
 					layoutMode = value;
 					switch (layoutMode)
@@ -120,6 +119,7 @@ namespace MeshEditor.WinUI
 								var postprocessView = new PostprocessViewControl { Content = content, Dock = DockStyle.Fill };
 								centralPanel.Controls.Add(postprocessView);
 								postprocessView.SplitterDistance = 200;
+								postprocessView.ActiveScene = activeControl.SceneFacade;
 							}
 							break;
 						default:
@@ -1019,18 +1019,14 @@ namespace MeshEditor.WinUI
 
 		#region Help methods
 
-		private Control getContentControl()
+		private PreprocessViewControl getCurrentPreprocessView()
 		{
-			switch (LayoutMode)
-			{
-				case LayoutMode.None:
-					return new Panel { Dock = DockStyle.Fill };
-				case LayoutMode.Preprocessor:
-				case LayoutMode.Postprocessor:
-					return centralPanel.Controls.Cast<ContentViewControl>().Single().Content;
-				default:
-					throw new NotSupportedException();
-			}
+			return centralPanel.Controls.OfType<PreprocessViewControl>().SingleOrDefault();
+		}
+
+		private PostprocessViewControl getCurrentPostprocessView()
+		{
+			return centralPanel.Controls.OfType<PostprocessViewControl>().SingleOrDefault();
 		}
 
 		private void clearContentView()
@@ -1349,6 +1345,11 @@ namespace MeshEditor.WinUI
 			updateStatus();
 			updateColorModeButtons();
 			updateRenderModeButtons();
+
+			// update postprocess view
+			var postprocessView = getCurrentPostprocessView();
+			if (postprocessView != null)
+				postprocessView.ActiveScene = activeControl.SceneFacade;
 		}
 
 		private void updateCaption()
@@ -1575,59 +1576,34 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		private async void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			// TODO: ask to save changes of previous mesh
+			// TODO: close all open views, leave only one empty
+
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
-				var solutionHub = SolutionHub.CreateLocal(dialog.FileName);
-				loadSolution(solutionHub);
-
-				//	var layers = solutionHub.EnumerateAllLayers();
-
-				//	// TODO: load master layer and its data, show layers panel
-
-				//	var masterLayer = layers.Single(l => l.Name == "master");
-				//	string masterLayerFilename = Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString(), "mesh.json");
-				//	activeControl.LoadFiles(masterLayerFilename);
-
-				//	await Task.Delay(2000); // mesh is beeing loaded asynchronously, it must be loaded before data can begin to load, so wait some time
-
-				//	var dataVisualizer = new ExactDataVisualizer();
-				//	setNewDataVisualizer(dataVisualizer);
-				//	var resultFiles = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString()), "result.*");
-				//	dataVisualizer.LoadData(new ApproximationParameters(loadInternalEntities: true), resultFiles.ToArray(), longOpNotifier);
-				//	dataVisualizer.FinishUp();
+				LayoutMode = LayoutMode.Postprocessor;
+				await getCurrentPostprocessView().LoadLocalSolution(dialog.FileName);
 			}
 		}
 
-		private void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		private async void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var solutions = SolutionHub.EnumerateAllRemoteSolutions();
-
-			RemoteSolutionsForm remoteSolutionsForm = new RemoteSolutionsForm(solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName))) { Owner = this };
-
-			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
-			{
-				int? selectedSolutionId = remoteSolutionsForm.SelectedSolutionId;
-				if (selectedSolutionId.HasValue)
-				{
-					var solutionHub = SolutionHub.CreateRemote(selectedSolutionId.Value);
-					loadSolution(solutionHub);
-				}
-			}
-		}
-
-		private void loadSolution(SolutionHub solutionHub)
-		{
-			throw new NotImplementedException();
-
-			var layers = solutionHub.EnumerateAllLayers();
+			// TODO: ask to save changes of previous mesh
+			// TODO: close all open views, leave only one empty
 
 			LayoutMode = LayoutMode.Postprocessor;
-			
-			// ...
+			await getCurrentPostprocessView().LoadRemoteSolution();
+		}
+
+		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, null);
+			//activeControl.ClearScene();
+			LayoutMode = LayoutMode.Preprocessor;
 		}
 
 		#endregion
