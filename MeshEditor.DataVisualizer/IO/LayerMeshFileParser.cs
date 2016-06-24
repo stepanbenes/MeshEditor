@@ -7,11 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Data;
 using MeshEditor.IO;
-using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Data;
-using MeshEditor.LayerManager.Import;
-using MeshEditor.LayerManager.Serialization;
-using MeshEditor.LayerManager.Storage;
 using OpenTK;
 
 namespace MeshEditor.DataVisualizer.IO
@@ -19,12 +15,6 @@ namespace MeshEditor.DataVisualizer.IO
 	class LayerMeshFileParser : IMeshFileParser
 	{
 		GeometryDescription geometry;
-
-		public LayerMeshFileParser(string filename)
-		{
-			Debug.Assert(!string.IsNullOrEmpty(filename));
-			Filename = filename;
-		}
 
 		public LayerMeshFileParser(GeometryDescription geometry)
 		{
@@ -39,11 +29,6 @@ namespace MeshEditor.DataVisualizer.IO
 
 		public IEnumerable<Node> ReadNodes()
 		{
-			if (geometry == null)
-			{
-				loadGeometry();
-			}
-
 			for (int i = 0; i < geometry.NumberOfPoints; i++)
 			{
 				float x = (geometry.NumberOfCoordinateComponents > 0) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 0] : 0f;
@@ -57,11 +42,6 @@ namespace MeshEditor.DataVisualizer.IO
 
 		public IEnumerable<ElementDraft> ReadElements()
 		{
-			if (geometry == null)
-			{
-				loadGeometry();
-			}
-
 			int offset = 0;
 			for (int i = 0; i < geometry.NumberOfCells; i++)
 			{
@@ -77,13 +57,6 @@ namespace MeshEditor.DataVisualizer.IO
 		}
 
 		#region Private methods
-
-		private void loadGeometry()
-		{
-			var localStorage = new LocalFileSystemStorageService(Path.GetDirectoryName(Filename));
-			geometry = new LayerGenerator(sourceStorage: localStorage, destinationStorage: null).LoadGeometry(Path.GetFileName(Filename));
-			/* TODO: load cell attributes */
-		}
 
 		private static ElementType mapCellTypeToElementType(CellType cellType)
 		{

@@ -120,7 +120,6 @@
     <Compile Include="Graphics\VBO.cs" />
     <Compile Include="IO\GiDMshFileFormatParser.cs" />
     <Compile Include="IO\GiDMshFileFormatSaver.cs" />
-    <Compile Include="IO\LayerMeshFileParser.cs" />
     <Compile Include="IO\MeshParserFactory.cs" />
     <Compile Include="IO\MeshSaverFactory.cs" />
     <Compile Include="IO\MultipleFilesParser.cs" />
@@ -237,10 +236,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
-      <Project>{315E6AA6-A925-44BC-8F13-76CFF7DCB02F}</Project>
-      <Name>MeshEditor.LayerManager</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.OpenTKCompatibility\MeshEditor.OpenTKCompatibility.csproj">
       <Project>{3ED73469-9212-4EC7-B450-EC243B344A39}</Project>
       <Name>MeshEditor.OpenTKCompatibility</Name>
