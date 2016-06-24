@@ -11,6 +11,8 @@ using MeshEditor.SolutionManager;
 using MeshEditor.CoreInterface;
 using MeshEditor.DataVisualizer;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.DataVisualizer.IO;
+using System.Diagnostics;
 
 namespace MeshEditor.WinUI
 {
@@ -26,6 +28,7 @@ namespace MeshEditor.WinUI
 		{
 			InitializeComponent();
 			splitContainer1.FixedPanel = FixedPanel.Panel1;
+			layersTreeView.SelectedLayerChanged += layersTreeView_SelectedLayerChanged;
 		}
 
 		#endregion
@@ -129,6 +132,24 @@ namespace MeshEditor.WinUI
 
 			var layers = solutionHub.EnumerateAllLayers();
 			layersTreeView.SetLayerTree(layers);
+		}
+
+		private void layersTreeView_SelectedLayerChanged(object sender, LayerEventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+
+			if (e.LayerId.HasValue)
+			{
+				var geometry = solutionHub.LoadGeometry(e.LayerId.Value, 1 /* TODO: handle mesh index */);
+				ActiveScene.LoadMesh(new LayerMeshFileParser(geometry), null, null);
+			}
+			else
+			{
+				// TODO: clear scene
+				throw new NotImplementedException();
+			}
+
+			ActiveScene.PerformAction(AvailableAction.Refresh);
 		}
 
 		#endregion

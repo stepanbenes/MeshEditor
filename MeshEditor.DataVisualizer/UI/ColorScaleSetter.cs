@@ -5,9 +5,10 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using MeshEditor.DataVisualizer;
 using MeshEditor.DataVisualizer.Data;
 
-namespace MeshEditor.DataVisualizer.UI
+namespace MeshEditor.WinUI
 {
 	public partial class ColorScaleSetter : UserControl
 	{

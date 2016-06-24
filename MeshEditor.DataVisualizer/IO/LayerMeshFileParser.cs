@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Data;
+using MeshEditor.IO;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Import;
@@ -13,7 +14,7 @@ using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 using OpenTK;
 
-namespace MeshEditor.IO
+namespace MeshEditor.DataVisualizer.IO
 {
 	class LayerMeshFileParser : IMeshFileParser
 	{
@@ -21,7 +22,14 @@ namespace MeshEditor.IO
 
 		public LayerMeshFileParser(string filename)
 		{
+			Debug.Assert(!string.IsNullOrEmpty(filename));
 			Filename = filename;
+		}
+
+		public LayerMeshFileParser(GeometryDescription geometry)
+		{
+			Debug.Assert(geometry != null);
+			this.geometry = geometry;
 		}
 
 		public string Filename { get; }
@@ -73,9 +81,7 @@ namespace MeshEditor.IO
 		private void loadGeometry()
 		{
 			var localStorage = new LocalFileSystemStorageService(Path.GetDirectoryName(Filename));
-			var layerGenerator = new LayerGenerator(sourceStorage: localStorage, destinationStorage: null);
-			this.geometry = layerGenerator.LoadGeometry(Path.GetFileName(Filename));
-
+			geometry = new LayerGenerator(sourceStorage: localStorage, destinationStorage: null).LoadGeometry(Path.GetFileName(Filename));
 			/* TODO: load cell attributes */
 		}
 

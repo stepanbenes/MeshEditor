@@ -190,7 +190,7 @@ namespace MeshEditor.LayerManager
 						break;
 				}
 
-				GeometryDescription originalGeometry = LoadGeometry(getLayerMeshRecordName(parentLayerId, parentMesh.Index));
+				GeometryDescription originalGeometry = LoadGeometry(parentLayerId, parentMesh.Index);
 				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
 
 				// TODO: check if filteredGeometry is not empty
@@ -225,7 +225,7 @@ namespace MeshEditor.LayerManager
 			int resultIndex = 1;
 			foreach (var mesh in layerSummary.Meshes)
 			{
-				GeometryDescription geometry = LoadGeometry(getLayerMeshRecordName(layerId, mesh.Index));
+				GeometryDescription geometry = LoadGeometry(layerId, mesh.Index);
 				var attributeRecordNames = mesh.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.Index));
 				IEnumerable<AttributeDescription> attributeDescriptions = attributeRecordNames.Select(record => LoadAttribute(record));
 
@@ -247,9 +247,14 @@ namespace MeshEditor.LayerManager
 
 		#endregion
 
-		public GeometryDescription LoadGeometry(string record)
+		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
 		{
-			using (Stream meshStream = sourceStorage.Load(record))
+			return LoadGeometry(getLayerMeshRecordName(layerId, meshIndex));
+		}
+
+		public GeometryDescription LoadGeometry(string recordName)
+		{
+			using (Stream meshStream = sourceStorage.Load(recordName))
 			{
 				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
 				return createGeometryFromLayerMesh(layerMesh);

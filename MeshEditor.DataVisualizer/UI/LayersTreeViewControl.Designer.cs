@@ -1,4 +1,4 @@
-﻿namespace MeshEditor.DataVisualizer.UI
+﻿namespace MeshEditor.WinUI
 {
 	partial class LayersTreeViewControl
 	{

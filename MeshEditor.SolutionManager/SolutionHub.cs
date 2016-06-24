@@ -116,6 +116,12 @@ namespace MeshEditor.SolutionManager
 			return from layer in solutionController.Get(solutionId).Layers select layer;
 		}
 
+		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
+		{
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null);
+			return layerGenerator.LoadGeometry(layerId, meshIndex);
+		}
+
 		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
 		{
 			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);

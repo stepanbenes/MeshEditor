@@ -76,6 +76,7 @@ namespace MeshEditor.SolutionManager.AzureStorage
 			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
 
 			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
+
 			return blockBlob.OpenRead();
 		}
 

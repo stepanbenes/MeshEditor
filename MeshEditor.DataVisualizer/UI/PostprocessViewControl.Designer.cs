@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.layersTreeView = new MeshEditor.DataVisualizer.UI.LayersTreeViewControl();
+			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -115,7 +115,7 @@
 
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-		private DataVisualizer.UI.LayersTreeViewControl layersTreeView;
+		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
 	}
 }
