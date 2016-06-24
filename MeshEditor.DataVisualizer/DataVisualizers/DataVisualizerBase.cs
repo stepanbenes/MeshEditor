@@ -19,21 +19,14 @@ namespace MeshEditor.DataVisualizer
 {
 	public abstract class DataVisualizerBase : IDataVisualizer, IDataVisualizerController
 	{
-		public bool DisplayColors
+		public DataVisualizerBase()
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			Settings = new VisualizerSettings();
 		}
 
-		public IVisualizerSettings Settings
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public bool DisplayColors => Settings.ShowScalars;
+
+		public IVisualizerSettings Settings { get; }
 
 		public void BeginDraw(bool lightingEnabled)
 		{
@@ -62,13 +55,12 @@ namespace MeshEditor.DataVisualizer
 
 		public int GetColorForDataValue(double dataValue)
 		{
-			throw new NotImplementedException();
+			if (double.IsNaN(dataValue))
+				return ColorScale.UndefinedValueColor;
+			return Settings.ColorScale.GetColorForValue(dataValue);
 		}
 
-		public int GetDataColor(Node node, Element element)
-		{
-			throw new NotImplementedException();
-		}
+		public abstract int GetDataColor(Node node, Element element);
 
 		public double GetDataValue(Node node)
 		{

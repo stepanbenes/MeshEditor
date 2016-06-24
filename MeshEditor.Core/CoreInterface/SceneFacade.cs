@@ -1103,8 +1103,21 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public void LoadMesh(IMeshFileParser parser, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
+		public void ReloadMesh(IMeshFileParser parser)
 		{
+			IMeshCreator meshCreator = new MeshConstructor();
+			Mesh result = meshCreator.CreateMesh(parser, cancelled: null);
+			scene.SetMesh(result);
+			createBuffers();
+			needToComputeVisibleNodesFlag = true;
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
+		}
+
+		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
+		{
+			Debug.Assert(filenames != null && filenames.Length > 0);
+			IMeshFileParser parser = MeshParserFactory.Create(filenames);
+
 			Mesh result = null;
 			using (parser)
 			{
@@ -1135,13 +1148,6 @@ namespace MeshEditor.CoreInterface
 			{
 				scene.SetMesh(result);
 			}
-		}
-
-		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
-		{
-			Debug.Assert(filenames != null && filenames.Length > 0);
-			IMeshFileParser parser = MeshParserFactory.Create(filenames);
-			LoadMesh(parser, progressNotifier, cancelled);
 		}
 
 		public void SaveMeshToFile(string filename, bool saveWithoutCuttedElements, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)

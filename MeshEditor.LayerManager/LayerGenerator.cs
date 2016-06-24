@@ -253,6 +253,11 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
+		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
+		{
+			return LoadData(getLayerResultRecordName(layerId, dataIndex));
+		}
+
 		public IEnumerable<ComponentDataDescription> LoadData(string record)
 		{
 			using (Stream stream = sourceStorage.Load(record))

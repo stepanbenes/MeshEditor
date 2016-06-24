@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.WinUI
 {
-	public class LayerEventArgs : EventArgs
+	public class LayerSelectionEventArgs : EventArgs
 	{
 		public Guid? LayerId { get; }
 
-		public LayerEventArgs(Guid? layerId)
+		public LayerSelectionEventArgs(Guid? layerId)
 		{
 			LayerId = layerId;
 		}

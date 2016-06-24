@@ -59,4 +59,82 @@ namespace MeshEditor.DataVisualizer.Data
 		/// </summary>
 		int IsoAreasSubIntervalNumber { get; set; }
 	}
+
+	internal class VisualizerSettings : IVisualizerSettings
+	{
+		public VisualizerSettings()
+		{
+			ColorScale = new ColorScale(ColorScale.Types.LightSpectrum);
+			ShowScalars = true;
+		}
+
+		public ColorScale ColorScale { get; }
+
+		public int DataIndex
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public bool DrawIsoAreas
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public int IsoAreasSubIntervalNumber
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public string ScalarDataDescription
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public bool ShowColorScaleLegend
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public bool ShowScalars { get; set; }
+	}
 }

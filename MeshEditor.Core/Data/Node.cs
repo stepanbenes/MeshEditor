@@ -82,6 +82,11 @@ namespace MeshEditor.Data
 
 		#region ToString methods
 
+		public override string ToString()
+		{
+			return "Node " + id;
+		}
+
 		public string ToStringWithOriginalCoordinates(float meshResizeFactor, Vector3 meshPositionOffset)
 		{
 			Vector3 transformedPosition = (this.position / meshResizeFactor) + meshPositionOffset;

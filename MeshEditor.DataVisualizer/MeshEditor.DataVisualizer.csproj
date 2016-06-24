@@ -97,7 +97,8 @@
     <Compile Include="UI\DataSelectionControl.Designer.cs">
       <DependentUpon>DataSelectionControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\LayerEventArgs.cs" />
+    <Compile Include="UI\DataSelectionEventArgs.cs" />
+    <Compile Include="UI\LayerSelectionEventArgs.cs" />
     <Compile Include="UI\LayersTreeViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

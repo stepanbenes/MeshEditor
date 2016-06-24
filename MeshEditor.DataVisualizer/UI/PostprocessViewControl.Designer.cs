@@ -31,7 +31,7 @@
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
-			this.dataSelectionControl = new MeshEditor.DataVisualizer.UI.DataSelectionControl();
+			this.dataSelectionControl = new MeshEditor.WinUI.DataSelectionControl();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
@@ -111,6 +111,6 @@
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
-		private DataVisualizer.UI.DataSelectionControl dataSelectionControl;
+		private MeshEditor.WinUI.DataSelectionControl dataSelectionControl;
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace MeshEditor.DataVisualizer.UI
+﻿namespace MeshEditor.WinUI
 {
 	partial class DataSelectionControl
 	{
@@ -55,6 +55,7 @@
 			this.comboBoxField.Name = "comboBoxField";
 			this.comboBoxField.Size = new System.Drawing.Size(214, 21);
 			this.comboBoxField.TabIndex = 1;
+			this.comboBoxField.SelectedIndexChanged += new System.EventHandler(this.comboBoxField_SelectedIndexChanged);
 			// 
 			// label2
 			// 
@@ -75,6 +76,7 @@
 			this.comboBoxComponent.Name = "comboBoxComponent";
 			this.comboBoxComponent.Size = new System.Drawing.Size(214, 21);
 			this.comboBoxComponent.TabIndex = 3;
+			this.comboBoxComponent.SelectedIndexChanged += new System.EventHandler(this.comboBoxComponent_SelectedIndexChanged);
 			// 
 			// label3
 			// 
@@ -95,6 +97,7 @@
 			this.comboBoxTimeStep.Name = "comboBoxTimeStep";
 			this.comboBoxTimeStep.Size = new System.Drawing.Size(214, 21);
 			this.comboBoxTimeStep.TabIndex = 5;
+			this.comboBoxTimeStep.SelectedIndexChanged += new System.EventHandler(this.comboBoxTimeStep_SelectedIndexChanged);
 			// 
 			// DataSelectionControl
 			// 

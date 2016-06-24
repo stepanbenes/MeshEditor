@@ -13,7 +13,7 @@ namespace MeshEditor.WinUI
 {
 	public partial class LayersTreeViewControl : UserControl
 	{
-		public event EventHandler<LayerEventArgs> SelectedLayerChanged;
+		public event EventHandler<LayerSelectionEventArgs> SelectedLayerChanged;
 
 		Dictionary<Guid, TreeNode> layerIdTreeNodeMap;
 
@@ -56,7 +56,7 @@ namespace MeshEditor.WinUI
 
 		private void treeViewLayers_AfterSelect(object sender, TreeViewEventArgs e)
 		{
-			SelectedLayerChanged?.Invoke(this, new LayerEventArgs(SelectedLayerId));
+			SelectedLayerChanged?.Invoke(this, new LayerSelectionEventArgs(SelectedLayerId));
 		}
 
 		private TreeNode createTreeNode(ILayerInfo layer)

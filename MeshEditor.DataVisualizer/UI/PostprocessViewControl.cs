@@ -23,12 +23,16 @@ namespace MeshEditor.WinUI
 		Control contentPanel;
 		SolutionHub solutionHub;
 		SceneFacade activeScene;
+		bool changingActiveScene;
+		bool changingDataSelectionSource;
 
 		public PostprocessViewControl()
 		{
 			InitializeComponent();
 			splitContainer1.FixedPanel = FixedPanel.Panel1;
+
 			layersTreeView.SelectedLayerChanged += layersTreeView_SelectedLayerChanged;
+			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 		}
 
 		#endregion
@@ -120,8 +124,6 @@ namespace MeshEditor.WinUI
 		private void loadSolution(SolutionHub solutionHub)
 		{
 			this.solutionHub = solutionHub;
-			// TODO:
-			//ActiveScene.SetValue(AvailableValue.DataVisualizer, new LayerDataVisualizer());
 			updateLayerTree();
 		}
 
@@ -134,14 +136,12 @@ namespace MeshEditor.WinUI
 			layersTreeView.SetLayerTree(layers);
 		}
 
-		bool updatingControlPanel;
-
 		private void onActiveSceneChanged()
 		{
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
 			try
 			{
-				updatingControlPanel = true;
+				changingActiveScene = true;
 				if (layerDataVisualizer != null)
 				{
 					layersTreeView.SelectedLayerId = layerDataVisualizer.LayerId;
@@ -153,30 +153,41 @@ namespace MeshEditor.WinUI
 			}
 			finally
 			{
-				updatingControlPanel = false;
+				changingActiveScene = false;
 			}
-		}
-
-		private IDataVisualizer createDataVisualizerFor(Guid layerId, int meshIndex)
-		{
-			return new LayerDataVisualizer(layerId, meshIndex);
 		}
 
 		private void loadLayer(Guid layerId)
 		{
 			var summary = solutionHub.LoadLayerSummary(layerId);
-			var firstMesh = summary.Meshes.First(); // TODO: handle case when Meshes is null or empty 
-			var geometry = solutionHub.LoadGeometry(layerId, firstMesh.Index);
 
-			ActiveScene.LoadMesh(new LayerMeshFileParser(geometry), null, null);
-			ActiveScene.SetValue(AvailableValue.DataVisualizer, createDataVisualizerFor(layerId, firstMesh.Index));
+			try
+			{
+				changingDataSelectionSource = true;
+				dataSelectionControl.UpdateDataSource(summary);
+			}
+			finally
+			{
+				changingDataSelectionSource = false;
+			}
+
+			int? meshIndex = dataSelectionControl.SelectedMeshIndex;
+			int? dataIndex = dataSelectionControl.SelectedDataIndex;
+
+			if (meshIndex.HasValue)
+			{
+				var geometry = solutionHub.LoadGeometry(layerId, meshIndex.Value);
+				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
+
+				var dataVisualizer = new LayerDataVisualizer(layerId, meshIndex.Value);
+				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
+			}
 		}
 
-		private void layersTreeView_SelectedLayerChanged(object sender, LayerEventArgs e)
+		private void layersTreeView_SelectedLayerChanged(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
-
-			if (updatingControlPanel)
+			if (changingActiveScene)
 				return;
 
 			if (e.LayerId.HasValue)
@@ -188,8 +199,28 @@ namespace MeshEditor.WinUI
 				// TODO: clear scene
 				throw new NotImplementedException();
 			}
+		}
 
-			ActiveScene.PerformAction(AvailableAction.Refresh);
+		private void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+			if (changingActiveScene || changingDataSelectionSource)
+				return;
+
+			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+			if (layerDataVisualizer == null)
+				return;
+
+			if (layerDataVisualizer.MeshIndex != e.MeshIndex)
+			{
+				var geometry = solutionHub.LoadGeometry(layerDataVisualizer.LayerId, e.MeshIndex);
+				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
+				layerDataVisualizer.MeshIndex = e.MeshIndex;
+			}
+
+			layerDataVisualizer.LoadData(solutionHub, e.DataIndex, e.TimeStep);
+
+			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 		}
 
 		#endregion

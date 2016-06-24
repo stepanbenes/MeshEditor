@@ -18,8 +18,6 @@ using MeshEditor.CoreInterface;
 using System.ComponentModel;
 using OpenTK;
 using System.Threading;
-using MeshEditor.DataVisualizer;
-using MeshEditor.DataVisualizer.Data;
 using System.Threading.Tasks;
 
 namespace MeshEditor.WinUI

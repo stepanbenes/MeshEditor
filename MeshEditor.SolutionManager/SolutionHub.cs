@@ -122,6 +122,12 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadGeometry(layerId, meshIndex);
 		}
 
+		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
+		{
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			return layerGenerator.LoadData(layerId, dataIndex);
+		}
+
 		public SummaryFile LoadLayerSummary(Guid layerId)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
