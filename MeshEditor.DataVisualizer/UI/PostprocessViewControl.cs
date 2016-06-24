@@ -65,7 +65,7 @@ namespace MeshEditor.WinUI
 				if (activeScene != value)
 				{
 					activeScene = value;
-					updateView();
+					onActiveSceneChanged();
 				}
 			}
 		}
@@ -122,10 +122,10 @@ namespace MeshEditor.WinUI
 			this.solutionHub = solutionHub;
 			// TODO:
 			//ActiveScene.SetValue(AvailableValue.DataVisualizer, new LayerDataVisualizer());
-			updateView();
+			updateLayerTree();
 		}
 
-		private void updateView()
+		private void updateLayerTree()
 		{
 			if (solutionHub == null)
 				return;
@@ -134,14 +134,54 @@ namespace MeshEditor.WinUI
 			layersTreeView.SetLayerTree(layers);
 		}
 
+		bool updatingControlPanel;
+
+		private void onActiveSceneChanged()
+		{
+			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+			try
+			{
+				updatingControlPanel = true;
+				if (layerDataVisualizer != null)
+				{
+					layersTreeView.SelectedLayerId = layerDataVisualizer.LayerId;
+				}
+				else
+				{
+					layersTreeView.SelectedLayerId = null;
+				}
+			}
+			finally
+			{
+				updatingControlPanel = false;
+			}
+		}
+
+		private IDataVisualizer createDataVisualizerFor(Guid layerId, int meshIndex)
+		{
+			return new LayerDataVisualizer(layerId, meshIndex);
+		}
+
+		private void loadLayer(Guid layerId)
+		{
+			var summary = solutionHub.LoadLayerSummary(layerId);
+			var firstMesh = summary.Meshes.First(); // TODO: handle case when Meshes is null or empty 
+			var geometry = solutionHub.LoadGeometry(layerId, firstMesh.Index);
+
+			ActiveScene.LoadMesh(new LayerMeshFileParser(geometry), null, null);
+			ActiveScene.SetValue(AvailableValue.DataVisualizer, createDataVisualizerFor(layerId, firstMesh.Index));
+		}
+
 		private void layersTreeView_SelectedLayerChanged(object sender, LayerEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 
+			if (updatingControlPanel)
+				return;
+
 			if (e.LayerId.HasValue)
 			{
-				var geometry = solutionHub.LoadGeometry(e.LayerId.Value, 1 /* TODO: handle mesh index */);
-				ActiveScene.LoadMesh(new LayerMeshFileParser(geometry), null, null);
+				loadLayer(e.LayerId.Value);
 			}
 			else
 			{

@@ -29,9 +29,9 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
-			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
+			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
+			this.dataSelectionControl = new MeshEditor.DataVisualizer.UI.DataSelectionControl();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
@@ -54,27 +54,6 @@
 			this.splitContainer1.SplitterDistance = 363;
 			this.splitContainer1.TabIndex = 0;
 			// 
-			// layersTreeView
-			// 
-			this.layersTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.layersTreeView.Location = new System.Drawing.Point(0, 0);
-			this.layersTreeView.Name = "layersTreeView";
-			this.layersTreeView.Size = new System.Drawing.Size(363, 430);
-			this.layersTreeView.TabIndex = 1;
-			// 
-			// tableLayoutPanel1
-			// 
-			this.tableLayoutPanel1.ColumnCount = 1;
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-			this.tableLayoutPanel1.RowCount = 2;
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(363, 427);
-			this.tableLayoutPanel1.TabIndex = 2;
-			// 
 			// leftSplitContainer
 			// 
 			this.leftSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -88,10 +67,26 @@
 			// 
 			// leftSplitContainer.Panel2
 			// 
-			this.leftSplitContainer.Panel2.Controls.Add(this.tableLayoutPanel1);
+			this.leftSplitContainer.Panel2.Controls.Add(this.dataSelectionControl);
 			this.leftSplitContainer.Size = new System.Drawing.Size(363, 861);
 			this.leftSplitContainer.SplitterDistance = 430;
 			this.leftSplitContainer.TabIndex = 3;
+			// 
+			// layersTreeView
+			// 
+			this.layersTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.layersTreeView.Location = new System.Drawing.Point(0, 0);
+			this.layersTreeView.Name = "layersTreeView";
+			this.layersTreeView.Size = new System.Drawing.Size(363, 430);
+			this.layersTreeView.TabIndex = 1;
+			// 
+			// dataSelectionControl
+			// 
+			this.dataSelectionControl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.dataSelectionControl.Location = new System.Drawing.Point(0, 0);
+			this.dataSelectionControl.Name = "dataSelectionControl";
+			this.dataSelectionControl.Size = new System.Drawing.Size(363, 427);
+			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl
 			// 
@@ -114,8 +109,8 @@
 		#endregion
 
 		private System.Windows.Forms.SplitContainer splitContainer1;
-		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
 		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
+		private DataVisualizer.UI.DataSelectionControl dataSelectionControl;
 	}
 }

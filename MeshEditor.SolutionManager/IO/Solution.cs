@@ -20,6 +20,19 @@ namespace MeshEditor.SolutionManager.IO
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
 			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
+
+			public override int GetHashCode()
+			{
+				return Id.GetHashCode();
+			}
+
+			public override bool Equals(object obj)
+			{
+				var other = obj as ILayerInfo;
+				if (other == null)
+					return false;
+				return this.Id.Equals(other.Id);
+			}
 		}
 
 		public Layer[] Layers { get; set; }

@@ -91,6 +91,12 @@
     <Compile Include="UI\ContentViewControl.Designer.cs">
       <DependentUpon>ContentViewControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\DataSelectionControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\DataSelectionControl.Designer.cs">
+      <DependentUpon>DataSelectionControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\LayerEventArgs.cs" />
     <Compile Include="UI\LayersTreeViewControl.cs">
       <SubType>UserControl</SubType>
@@ -120,6 +126,9 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\ColorScaleSetter.resx">
       <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DataSelectionControl.resx">
+      <DependentUpon>DataSelectionControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\LayersTreeViewControl.resx">
       <DependentUpon>LayersTreeViewControl.cs</DependentUpon>

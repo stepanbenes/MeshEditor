@@ -34,6 +34,7 @@
 			// treeViewLayers
 			// 
 			this.treeViewLayers.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.treeViewLayers.HideSelection = false;
 			this.treeViewLayers.Location = new System.Drawing.Point(0, 0);
 			this.treeViewLayers.Name = "treeViewLayers";
 			this.treeViewLayers.Size = new System.Drawing.Size(150, 150);

@@ -118,8 +118,14 @@ namespace MeshEditor.SolutionManager
 
 		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null);
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
 			return layerGenerator.LoadGeometry(layerId, meshIndex);
+		}
+
+		public SummaryFile LoadLayerSummary(Guid layerId)
+		{
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			return layerGenerator.LoadLayerSummary(layerId);
 		}
 
 		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)

@@ -8,6 +8,14 @@ namespace MeshEditor.DataVisualizer
 {
 	internal class LayerDataVisualizer : DataVisualizerBase
 	{
+		public LayerDataVisualizer(Guid layerId, int meshIndex)
+		{
+			LayerId = layerId;
+			MeshIndex = meshIndex;
+		}
 
+		public Guid LayerId { get; }
+
+		public int MeshIndex { get; }
 	}
 }

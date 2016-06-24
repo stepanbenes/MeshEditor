@@ -15,16 +15,38 @@ namespace MeshEditor.WinUI
 	{
 		public event EventHandler<LayerEventArgs> SelectedLayerChanged;
 
+		Dictionary<Guid, TreeNode> layerIdTreeNodeMap;
+
 		public LayersTreeViewControl()
 		{
 			InitializeComponent();
 			treeViewLayers.AfterSelect += treeViewLayers_AfterSelect;
+			layerIdTreeNodeMap = new Dictionary<Guid, TreeNode>();
 		}
 
-		public Guid? SelectedLayerId => (treeViewLayers.SelectedNode?.Tag as ILayerInfo)?.Id;
+		public Guid? SelectedLayerId
+		{
+			get
+			{
+				if (treeViewLayers.SelectedNode == null)
+					return null;
+				var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+				return layerInfo.Id;
+			}
+			set
+			{
+				TreeNode treeNodeToSelect = null;
+				if (value.HasValue && layerIdTreeNodeMap.TryGetValue(value.Value, out treeNodeToSelect))
+					treeViewLayers.SelectedNode = treeNodeToSelect;
+				else
+					treeViewLayers.SelectedNode = null;
+			}
+		}
 
 		public void SetLayerTree(IEnumerable<ILayerInfo> layers)
 		{
+			treeViewLayers.Nodes.Clear();
+			layerIdTreeNodeMap.Clear();
 			foreach (var layer in layers)
 			{
 				treeViewLayers.Nodes.Add(createTreeNode(layer));
@@ -40,6 +62,7 @@ namespace MeshEditor.WinUI
 		private TreeNode createTreeNode(ILayerInfo layer)
 		{
 			var treeNode = new TreeNode(layer.Name) { Tag = layer };
+			layerIdTreeNodeMap[layer.Id] = treeNode;
 			if (layer.Children != null)
 			{
 				foreach (var child in layer.Children)

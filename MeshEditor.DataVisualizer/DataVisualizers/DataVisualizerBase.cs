@@ -37,22 +37,22 @@ namespace MeshEditor.DataVisualizer
 
 		public void BeginDraw(bool lightingEnabled)
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		public void Dispose()
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		public void DrawItems(PropertyColorsMode propertyColorsMode)
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		public void EndDraw()
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		public void FinishUp()
@@ -102,7 +102,7 @@ namespace MeshEditor.DataVisualizer
 
 		public void Initialize(Mesh mesh)
 		{
-			throw new NotImplementedException();
+			// TODO: implement this method
 		}
 
 		public void LoadData(string[] filenames, LongOpNotifier longOpNotifier)

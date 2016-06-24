@@ -132,11 +132,7 @@ namespace MeshEditor.LayerManager
 		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)
 		{
 			// find parentLayer in storage and download summary
-			SummaryFile parentLayer;
-			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(parentLayerId)))
-			{
-				parentLayer = serializationService.Deserialize<SummaryFile>(stream);
-			}
+			SummaryFile parentLayer = LoadLayerSummary(parentLayerId);
 
 			IMeshFilterCreator meshFilterCreator;
 			string filterLayerName;
@@ -213,11 +209,7 @@ namespace MeshEditor.LayerManager
 		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
 		{
 			// find layer in storage and download summary
-			SummaryFile layerSummary;
-			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
-			{
-				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
-			}
+			SummaryFile layerSummary = LoadLayerSummary(layerId);
 
 			Guid compressedLayerId = Guid.NewGuid();
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
@@ -276,6 +268,15 @@ namespace MeshEditor.LayerManager
 			{
 				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
 				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
+			}
+		}
+
+		public SummaryFile LoadLayerSummary(Guid layerId)
+		{
+			// find parentLayer in storage and download summary
+			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
+			{
+				return serializationService.Deserialize<SummaryFile>(stream);
 			}
 		}
 
