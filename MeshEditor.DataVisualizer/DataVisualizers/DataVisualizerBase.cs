@@ -17,7 +17,7 @@ using System.Text;
 
 namespace MeshEditor.DataVisualizer
 {
-	public abstract class DataVisualizerBase : IDataVisualizer, IDataVisualizerController
+	internal abstract class DataVisualizerBase : IDataVisualizer, IDataVisualizerController
 	{
 		public DataVisualizerBase()
 		{

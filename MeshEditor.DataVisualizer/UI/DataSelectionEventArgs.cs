@@ -3,20 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.DataVisualizer;
 
 namespace MeshEditor.WinUI
 {
 	public class DataSelectionEventArgs : EventArgs
 	{
-		public int MeshIndex { get; }
-		public int DataIndex { get; }
-		public double TimeStep { get; }
+		public DataSelection DataSelection { get; }
 
-		public DataSelectionEventArgs(int meshIndex, int dataIndex, double timeStep)
+		public DataSelectionEventArgs(DataSelection dataSelection)
 		{
-			MeshIndex = meshIndex;
-			DataIndex = dataIndex;
-			TimeStep = timeStep;
+			DataSelection = dataSelection;
 		}
 	}
 }

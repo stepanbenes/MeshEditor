@@ -915,17 +915,21 @@ namespace MeshEditor.WinUI
 			removeActiveWindow();
 		}
 
-		private void removeActiveWindow()
+		private bool removeActiveWindow()
 		{
 			if (!(activeControl.MyContainer is SplitterPanel))
-				return;
+				return false;
 			SplitContainer container = activeControl.MyContainer.Parent as SplitContainer;
 			if (container == null)
-				return;
+				return false;
 			SplitterPanel toRemove = (SplitterPanel)activeControl.MyContainer;
 			SplitterPanel toExtend = (container.Panel1 == activeControl.MyContainer) ? container.Panel2 : container.Panel1;
 			if (removePanel(toRemove))
+			{
 				extendPanel(toExtend);
+				return true;
+			}
+			return false;
 		}
 
 		private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1575,13 +1579,11 @@ namespace MeshEditor.WinUI
 
 		private async void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			// TODO: ask to save changes of previous mesh
-			// TODO: close all open views, leave only one empty
-
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
+				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
 				await getCurrentPostprocessView().LoadLocalSolution(dialog.FileName);
 			}
@@ -1589,17 +1591,35 @@ namespace MeshEditor.WinUI
 
 		private async void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			// TODO: ask to save changes of previous mesh
-			// TODO: close all open views, leave only one empty
+			RemoteSolutionsForm remoteSolutionsForm = new RemoteSolutionsForm { Owner = this };
 
-			LayoutMode = LayoutMode.Postprocessor;
-			await getCurrentPostprocessView().LoadRemoteSolution();
+			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
+			{
+				int? selectedSolutionId = remoteSolutionsForm.SelectedSolutionId;
+				if (selectedSolutionId.HasValue)
+				{
+					closeSolution();
+					LayoutMode = LayoutMode.Postprocessor;
+					await getCurrentPostprocessView().LoadRemoteSolution(selectedSolutionId.Value);
+				}
+			}
 		}
 
 		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, null);
-			//activeControl.ClearScene();
+			closeSolution();
+		}
+
+		private void closeSolution()
+		{
+			// close all open views, leave only one empty
+			while (true)
+			{
+				activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, null);
+				activeControl.ClearScene();
+				if (!removeActiveWindow())
+					break;
+			}
 			LayoutMode = LayoutMode.Preprocessor;
 		}
 

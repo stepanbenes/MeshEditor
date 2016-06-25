@@ -101,20 +101,11 @@ namespace MeshEditor.WinUI
 			//	dataVisualizer.FinishUp();
 		}
 
-		public async Task LoadRemoteSolution()
+		public async Task LoadRemoteSolution(int solutionId)
 		{
 			await Task.Yield();
 
-			RemoteSolutionsForm remoteSolutionsForm = new RemoteSolutionsForm { Owner = Application.OpenForms?[0] };
-
-			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
-			{
-				int? selectedSolutionId = remoteSolutionsForm.SelectedSolutionId;
-				if (selectedSolutionId.HasValue)
-				{
-					loadSolution(SolutionHub.CreateRemote(selectedSolutionId.Value));
-				}
-			}
+			loadSolution(SolutionHub.CreateRemote(solutionId));
 		}
 
 		#endregion
@@ -145,10 +136,12 @@ namespace MeshEditor.WinUI
 				if (layerDataVisualizer != null)
 				{
 					layersTreeView.SelectedLayerId = layerDataVisualizer.LayerId;
+					dataSelectionControl.UpdateDataSelection(layerDataVisualizer.DataSelection);
 				}
 				else
 				{
 					layersTreeView.SelectedLayerId = null;
+					dataSelectionControl.UpdateDataSelection(null);
 				}
 			}
 			finally
@@ -171,16 +164,17 @@ namespace MeshEditor.WinUI
 				changingDataSelectionSource = false;
 			}
 
-			int? meshIndex = dataSelectionControl.SelectedMeshIndex;
-			int? dataIndex = dataSelectionControl.SelectedDataIndex;
+			var dataSelection = dataSelectionControl.GetDataSelection();
 
-			if (meshIndex.HasValue)
+			if (dataSelection != null)
 			{
-				var geometry = solutionHub.LoadGeometry(layerId, meshIndex.Value);
+				var geometry = solutionHub.LoadGeometry(layerId, dataSelection.MeshIndex);
 				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
 
-				var dataVisualizer = new LayerDataVisualizer(layerId, meshIndex.Value);
+				var dataVisualizer = new LayerDataVisualizer(layerId);
+				dataVisualizer.UpdateDataSelection(solutionHub, dataSelection);
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
+				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
 		}
 
@@ -211,14 +205,13 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
-			if (layerDataVisualizer.MeshIndex != e.MeshIndex)
+			if (e.DataSelection != null && layerDataVisualizer.DataSelection?.MeshIndex != e.DataSelection.MeshIndex)
 			{
-				var geometry = solutionHub.LoadGeometry(layerDataVisualizer.LayerId, e.MeshIndex);
+				var geometry = solutionHub.LoadGeometry(layerDataVisualizer.LayerId, e.DataSelection.MeshIndex);
 				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
-				layerDataVisualizer.MeshIndex = e.MeshIndex;
 			}
 
-			layerDataVisualizer.LoadData(solutionHub, e.DataIndex, e.TimeStep);
+			layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
 
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 		}

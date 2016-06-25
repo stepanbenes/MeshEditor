@@ -70,6 +70,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataVisualizers\DataSelection.cs" />
     <Compile Include="DataVisualizers\LayerDataVisualizer.cs" />
     <Compile Include="Data\Interval.cs" />
     <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
