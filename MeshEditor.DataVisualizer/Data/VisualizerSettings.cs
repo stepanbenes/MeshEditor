@@ -19,16 +19,6 @@ namespace MeshEditor.DataVisualizer.Data
 		//bool ShowVectors { get; set; }
 
 		/// <summary>
-		/// Gets or Sets current data component (scalar) that is currently visualized with colors on mesh surface.
-		/// </summary>
-		int DataIndex { get; set; }
-
-		/// <summary>
-		/// Gets or Sets textual description of currently displayed scalar data. (Data value name and component name)
-		/// </summary>
-		string ScalarDataDescription { get; set; }
-
-		/// <summary>
 		/// Gets or Sets multiplier factor of vector arrows lengths.
 		/// </summary>
 		//double VectorLengthFactor { get; set; }
@@ -66,74 +56,18 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			ColorScale = new ColorScale(ColorScale.Types.LightSpectrum);
 			ShowScalars = true;
+			ShowColorScaleLegend = true;
+			DrawIsoAreas = true;
+			IsoAreasSubIntervalNumber = 5;
 		}
 
 		public ColorScale ColorScale { get; }
 
-		public int DataIndex
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+		public bool DrawIsoAreas { get; set; }
 
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public int IsoAreasSubIntervalNumber { get; set; }
 
-		public bool DrawIsoAreas
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		public int IsoAreasSubIntervalNumber
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		public string ScalarDataDescription
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		public bool ShowColorScaleLegend
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public bool ShowColorScaleLegend { get; set; }
 
 		public bool ShowScalars { get; set; }
 	}

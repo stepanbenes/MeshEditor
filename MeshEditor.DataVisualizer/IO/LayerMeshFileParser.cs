@@ -35,7 +35,7 @@ namespace MeshEditor.DataVisualizer.IO
 				float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 1] : 0f;
 				float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 2] : 0f;
 
-				Node node = new Node(id: i, position: new Vector3(x, y, z), properties: null);
+				Node node = new Node(id: i /* IMPORTANT: index as id is bound to result data, do not change*/, position: new Vector3(x, y, z), properties: null);
 				yield return node;
 			}
 		}

@@ -13,6 +13,8 @@ namespace MeshEditor.DataVisualizer
 {
 	internal class LayerDataVisualizer : DataVisualizerBase
 	{
+		#region Fields, constructor
+
 		Dictionary<double, ComponentDataDescription> data;
 		DataSelection dataSelection;
 
@@ -21,10 +23,18 @@ namespace MeshEditor.DataVisualizer
 			LayerId = layerId;
 		}
 
+		#endregion
+
+		#region Properties
+
 		public Guid LayerId { get; }
 
 		public DataSelection DataSelection => dataSelection;
-		
+
+		#endregion
+
+		#region Public methods
+
 		public void UpdateDataSelection(SolutionHub solutionHub, DataSelection newDataSelection)
 		{
 			if (newDataSelection == null)
@@ -44,12 +54,7 @@ namespace MeshEditor.DataVisualizer
 			Settings.ColorScale.SetMinMaxValue(dataComponent.Values.Min(), dataComponent.Values.Max()); // TODO: handle NaN values
 
 			dataSelection = newDataSelection;
-		}
-
-		private void clearData()
-		{
-			data = null;
-			dataSelection = null;
+			buildDataDescription();
 		}
 
 		public override int GetDataColor(Node node, Element element)
@@ -62,5 +67,25 @@ namespace MeshEditor.DataVisualizer
 			}
 			return ColorScale.UndefinedValueColor;
 		}
+
+		#endregion
+
+		#region Private methods
+
+		private void clearData()
+		{
+			data = null;
+			dataSelection = null;
+		}
+
+		private void buildDataDescription()
+		{
+			if (dataSelection == null)
+				ScalarDataDescription = "";
+			else
+				ScalarDataDescription = dataSelection.FieldName + Environment.NewLine + dataSelection.ComponentName + Environment.NewLine + "t = " + dataSelection.TimeStep;
+		}
+
+		#endregion
 	}
 }
