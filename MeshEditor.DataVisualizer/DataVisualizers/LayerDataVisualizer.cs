@@ -8,6 +8,7 @@ using MeshEditor.Data;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.SolutionManager;
+using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -17,6 +18,7 @@ namespace MeshEditor.DataVisualizer
 
 		Dictionary<double, ComponentDataDescription> data;
 		DataSelection dataSelection;
+		ComponentDataDescription currentDataComponent;
 
 		public LayerDataVisualizer(Guid layerId)
 		{
@@ -30,6 +32,8 @@ namespace MeshEditor.DataVisualizer
 		public Guid LayerId { get; }
 
 		public DataSelection DataSelection => dataSelection;
+
+		public override bool DisplayColors => base.DisplayColors && currentDataComponent != null;
 
 		#endregion
 
@@ -49,20 +53,32 @@ namespace MeshEditor.DataVisualizer
 				data = solutionHub.LoadData(LayerId, newDataSelection.DataIndex).ToDictionary(d => d.TimeStep);
 			}
 
-			var dataComponent = data[newDataSelection.TimeStep];
-			
-			Settings.ColorScale.SetMinMaxValue(dataComponent.Values.Min(), dataComponent.Values.Max()); // TODO: handle NaN values
-
 			dataSelection = newDataSelection;
+			data.TryGetValue(dataSelection.TimeStep, out currentDataComponent);
+			setupColorScale();
 			buildDataDescription();
+		}
+
+		private void setupColorScale()
+		{
+			if (currentDataComponent != null)
+			{
+				double? min = currentDataComponent.Values.Min(ignore: double.NaN);
+				double? max = currentDataComponent.Values.Max(ignore: double.NaN);
+
+				Settings.ColorScale.SetMinMaxValue(min ?? double.NaN, max ?? double.NaN);
+			}
+			else
+			{
+				Settings.ColorScale.SetMinMaxValue(double.NaN, double.NaN);
+			}
 		}
 
 		public override int GetDataColor(Node node, Element element)
 		{
-			ComponentDataDescription dataComponent;
-			if (data != null && dataSelection != null && data.TryGetValue(dataSelection.TimeStep, out dataComponent) && dataComponent.Location == DataLocationType.Points)
+			if (currentDataComponent != null && currentDataComponent.Location == DataLocationType.Points)
 			{
-				double dataValue = dataComponent.Values[node.ID];
+				double dataValue = currentDataComponent.Values[node.ID];
 				return GetColorForDataValue(dataValue);
 			}
 			return ColorScale.UndefinedValueColor;
@@ -76,6 +92,7 @@ namespace MeshEditor.DataVisualizer
 		{
 			data = null;
 			dataSelection = null;
+			currentDataComponent = null;
 		}
 
 		private void buildDataDescription()

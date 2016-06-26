@@ -62,7 +62,7 @@ namespace MeshEditor.WinUI
 		private TreeNode createTreeNode(ILayerInfo layer)
 		{
 			var treeNode = new TreeNode(layer.Name) { Tag = layer };
-			layerIdTreeNodeMap[layer.Id] = treeNode;
+			layerIdTreeNodeMap[layer.Id] = treeNode; // put in cache
 			if (layer.Children != null)
 			{
 				foreach (var child in layer.Children)

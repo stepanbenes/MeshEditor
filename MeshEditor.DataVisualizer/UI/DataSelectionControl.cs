@@ -30,6 +30,7 @@ namespace MeshEditor.WinUI
 		}
 
 		SummaryFile layerSummary;
+		bool updatingDataSource;
 
 		//public int? GetMeshIndexOfCurrentDataSelection()
 		//{
@@ -48,18 +49,18 @@ namespace MeshEditor.WinUI
 			return new DataSelection(selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, selectedTimeStepComboBoxItem.Value.DataIndex, selectedTimeStepComboBoxItem.Value.MeshIndex);
 		}
 
-		public void UpdateDataSelection(DataSelection dataSelection)
-		{
-			if (dataSelection == null)
-			{
-				comboBoxField.SelectedItem = null;
-				return;
-			}
+		//public void UpdateDataSelection(DataSelection dataSelection)
+		//{
+		//	if (dataSelection == null)
+		//	{
+		//		comboBoxField.SelectedItem = null;
+		//		return;
+		//	}
 
-			comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(f => f.Key == dataSelection.FieldName);
-			comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(c => c.Key == dataSelection.ComponentName);
-			comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, TimeStepDescriptor>>().SingleOrDefault(t => t.Key == dataSelection.TimeStep);
-		}
+		//	comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(f => f.Key == dataSelection.FieldName);
+		//	comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(c => c.Key == dataSelection.ComponentName);
+		//	comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, TimeStepDescriptor>>().SingleOrDefault(t => t.Key == dataSelection.TimeStep);
+		//}
 
 		public event EventHandler<DataSelectionEventArgs> DataSelectionChanged;
 
@@ -68,17 +69,53 @@ namespace MeshEditor.WinUI
 			InitializeComponent();
 		}
 
-		public void UpdateDataSource(SummaryFile layerSummary)
+		public void UpdateDataSource(SummaryFile layerSummary, DataSelection dataSelection)
 		{
-			this.layerSummary = layerSummary;
+			try
+			{
+				updatingDataSource = true;
+				this.layerSummary = layerSummary;
 
-			comboBoxTimeStep.Items.Clear();
-			comboBoxComponent.Items.Clear();
-			comboBoxField.Items.Clear();
+				comboBoxTimeStep.Items.Clear();
+				comboBoxComponent.Items.Clear();
+				comboBoxField.Items.Clear();
 
-			comboBoxField.Items.AddRange(layerSummary.Fields.Select(pair => new ComboBoxItem<string, FieldDescriptor>(pair.Key, pair.Value)).ToArray());
-			if (comboBoxField.Items.Count > 0)
-				comboBoxField.SelectedIndex = 0;
+				if (layerSummary != null)
+				{
+					comboBoxField.Items.AddRange(layerSummary.Fields.Select(pair => new ComboBoxItem<string, FieldDescriptor>(pair.Key, pair.Value)).ToArray());
+					if (comboBoxField.Items.Count > 0)
+					{
+						ComboBoxItem<string, FieldDescriptor> itemToSelect = null;
+						if (dataSelection != null)
+						{
+							itemToSelect = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(f => f.Key == dataSelection.FieldName);
+						}
+						comboBoxField.SelectedItem = itemToSelect;
+					}
+					if (comboBoxComponent.Items.Count > 0)
+					{
+						ComboBoxItem<string, ComponentDescriptor> itemToSelect = null;
+						if (dataSelection != null)
+						{
+							itemToSelect = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(c => c.Key == dataSelection.ComponentName);
+						}
+						comboBoxComponent.SelectedItem = itemToSelect;
+					}
+					if (comboBoxTimeStep.Items.Count > 0)
+					{
+						ComboBoxItem<double, TimeStepDescriptor> itemToSelect = null;
+						if (dataSelection != null)
+						{
+							itemToSelect = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, TimeStepDescriptor>>().SingleOrDefault(t => t.Key == dataSelection.TimeStep);
+						}
+						comboBoxTimeStep.SelectedItem = itemToSelect;
+					}
+				}
+			}
+			finally
+			{
+				updatingDataSource = false;
+			}
 		}
 
 		private void comboBoxField_SelectedIndexChanged(object sender, EventArgs e)
@@ -88,7 +125,7 @@ namespace MeshEditor.WinUI
 			if (selectedFieldComboBoxItem != null)
 			{
 				comboBoxComponent.Items.AddRange(selectedFieldComboBoxItem.Value.Components.Select(pair => new ComboBoxItem<string, ComponentDescriptor>(pair.Key, pair.Value)).ToArray());
-				if (comboBoxComponent.Items.Count > 0)
+				if (!updatingDataSource && comboBoxComponent.Items.Count > 0)
 					comboBoxComponent.SelectedIndex = 0;
 			}
 		}
@@ -100,13 +137,16 @@ namespace MeshEditor.WinUI
 			if (selectedComponentComboBoxItem != null)
 			{
 				comboBoxTimeStep.Items.AddRange(selectedComponentComboBoxItem.Value.TimeSteps.Select(pair => new ComboBoxItem<double, TimeStepDescriptor>(pair.Key, pair.Value)).ToArray());
-				if (comboBoxTimeStep.Items.Count > 0)
+				if (!updatingDataSource && comboBoxTimeStep.Items.Count > 0)
 					comboBoxTimeStep.SelectedIndex = 0;
 			}
 		}
 
 		private void comboBoxTimeStep_SelectedIndexChanged(object sender, EventArgs e)
 		{
+			if (updatingDataSource)
+				return;
+
 			DataSelectionChanged?.Invoke(this, new DataSelectionEventArgs(GetDataSelection()));
 		}
 	}

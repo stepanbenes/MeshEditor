@@ -32,7 +32,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Properties
 
-		public bool DisplayColors => Settings.ShowScalars;
+		public virtual bool DisplayColors => Settings.ShowScalars;
 
 		public IVisualizerSettings Settings { get; }
 
@@ -66,7 +66,7 @@ namespace MeshEditor.DataVisualizer
 
 		public void EndDraw()
 		{
-			if (Settings.DrawIsoAreas)
+			if (Settings.DrawIsoAreas && DisplayColors)
 			{
 				isoAreasShader.Unuse();
 			}

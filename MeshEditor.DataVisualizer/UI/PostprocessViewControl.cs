@@ -13,6 +13,7 @@ using MeshEditor.DataVisualizer;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.DataVisualizer.IO;
 using System.Diagnostics;
+using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.WinUI
 {
@@ -24,7 +25,7 @@ namespace MeshEditor.WinUI
 		SolutionHub solutionHub;
 		SceneFacade activeScene;
 		bool changingActiveScene;
-		bool changingDataSelectionSource;
+		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
 
 		public PostprocessViewControl()
 		{
@@ -136,12 +137,13 @@ namespace MeshEditor.WinUI
 				if (layerDataVisualizer != null)
 				{
 					layersTreeView.SelectedLayerId = layerDataVisualizer.LayerId;
-					dataSelectionControl.UpdateDataSelection(layerDataVisualizer.DataSelection);
+					var summary = getSummaryFileFor(layerDataVisualizer.LayerId);
+					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 				}
 				else
 				{
 					layersTreeView.SelectedLayerId = null;
-					dataSelectionControl.UpdateDataSelection(null);
+					dataSelectionControl.UpdateDataSource(null, null);
 				}
 			}
 			finally
@@ -150,29 +152,26 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private SummaryFile getSummaryFileFor(Guid layerId)
+		{
+			SummaryFile summary;
+			if (!layerSummaryCache.TryGetValue(layerId, out summary))
+				summary = layerSummaryCache[layerId] = solutionHub.LoadLayerSummary(layerId);
+			return summary;
+		}
+
 		private void loadLayer(Guid layerId)
 		{
-			var summary = solutionHub.LoadLayerSummary(layerId);
+			var summary = getSummaryFileFor(layerId);
+			dataSelectionControl.UpdateDataSource(summary, null);
 
-			try
+			if (summary.Meshes?.Length > 0)
 			{
-				changingDataSelectionSource = true;
-				dataSelectionControl.UpdateDataSource(summary);
-			}
-			finally
-			{
-				changingDataSelectionSource = false;
-			}
-
-			var dataSelection = dataSelectionControl.GetDataSelection();
-
-			if (dataSelection != null)
-			{
-				var geometry = solutionHub.LoadGeometry(layerId, dataSelection.MeshIndex);
+				var geometry = solutionHub.LoadGeometry(layerId, summary.Meshes.First().Index);
 				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
 
 				var dataVisualizer = new LayerDataVisualizer(layerId);
-				dataVisualizer.UpdateDataSelection(solutionHub, dataSelection);
+				dataVisualizer.UpdateDataSelection(solutionHub, null);
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
@@ -198,21 +197,29 @@ namespace MeshEditor.WinUI
 		private void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
-			if (changingActiveScene || changingDataSelectionSource)
+			if (changingActiveScene)
 				return;
 
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+			Debug.Assert(layerDataVisualizer != null);
 			if (layerDataVisualizer == null)
 				return;
 
 			if (e.DataSelection != null && layerDataVisualizer.DataSelection?.MeshIndex != e.DataSelection.MeshIndex)
 			{
+				// change of mesh is needed
 				var geometry = solutionHub.LoadGeometry(layerDataVisualizer.LayerId, e.DataSelection.MeshIndex);
 				ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry));
+				layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
+				ActiveScene.SetValue(AvailableValue.DataVisualizer, layerDataVisualizer);
 			}
-
-			layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
-
+			else
+			{
+				// change only data selection
+				layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
+			}
+			
+			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 		}
 
