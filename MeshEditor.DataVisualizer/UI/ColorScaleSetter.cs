@@ -12,35 +12,30 @@ namespace MeshEditor.WinUI
 {
 	public partial class ColorScaleSetter : UserControl
 	{
-		IDataVisualizerController dataVisualizer;
+		ColorScale colorScale;
 
 		public ColorScaleSetter()
 		{
 			InitializeComponent();
 		}
 
-		public IDataVisualizerController DataVisualizer
+		public ColorScale ColorScale
 		{
-			get { return dataVisualizer; }
+			get { return colorScale; }
 			set
 			{
-				if (dataVisualizer != value)
+				if (colorScale != value)
 				{
-					dataVisualizer = value;
-					setupControlPoints();
+					colorScale = value;
+					SetupControlPoints();
 				}
 			}
 		}
 
-		public ColorScale ColorScale
-		{
-			get { return dataVisualizer != null ? dataVisualizer.Settings.ColorScale : null; }
-		}
-
-		private void setupControlPoints()
+		public void SetupControlPoints()
 		{
 			dataGridViewControlPoints.DataSource = null;
-			if (dataVisualizer == null || ColorScale == null || ColorScale.ControlPoints == null)
+			if (ColorScale == null || ColorScale.ControlPoints == null)
 				return;
 			dataGridViewControlPoints.DataSource = ColorScale.ControlPoints.Reverse().ToArray(); // minimum on bottom, maximum on top
 		}

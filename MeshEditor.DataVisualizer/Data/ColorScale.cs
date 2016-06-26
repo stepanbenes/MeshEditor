@@ -28,6 +28,18 @@ namespace MeshEditor.DataVisualizer.Data
 			private int color;
 			private double value;
 
+			public ControlPoint(int color)
+			{
+				this.color = color;
+			}
+
+			public ControlPoint(ControlPoint toClone)
+			{
+				this.color = toClone.color;
+				this.isFixed = toClone.isFixed;
+				this.value = toClone.value;
+			}
+
 			// TODO: while setting fixed values, check for monotony must be done
 			public bool IsFixed
 			{
@@ -37,7 +49,7 @@ namespace MeshEditor.DataVisualizer.Data
 					if (isFixed != value)
 					{
 						isFixed = value;
-						OnPropertyChanged("IsFixed");
+						OnPropertyChanged(nameof(IsFixed));
 					}
 				}
 			}
@@ -49,7 +61,7 @@ namespace MeshEditor.DataVisualizer.Data
 					if (this.value != value)
 					{
 						this.value = value;
-						OnPropertyChanged("Value");
+						OnPropertyChanged(nameof(Value));
 					}
 				}
 			}
@@ -65,7 +77,7 @@ namespace MeshEditor.DataVisualizer.Data
 					if (color != value)
 					{
 						color = value;
-						OnPropertyChanged("Color");
+						OnPropertyChanged(nameof(Color));
 					}
 				}
 			}
@@ -76,9 +88,7 @@ namespace MeshEditor.DataVisualizer.Data
 
 			protected void OnPropertyChanged(string propertyName)
 			{
-				var handler = PropertyChanged;
-				if (handler != null)
-					handler(this, new PropertyChangedEventArgs(propertyName));
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 			}
 
 			#endregion
@@ -104,7 +114,17 @@ namespace MeshEditor.DataVisualizer.Data
 		public ColorScale(Types type)
 		{
 			this.type = type;
-			setupControlPoints();
+			this.controlPoints = createControlPoints(type);
+			registerControlPointsPropertyChangedEvent();
+		}
+
+		public ColorScale(ColorScale toClone)
+		{
+			this.minValue = toClone.minValue;
+			this.maxValue = toClone.maxValue;
+			this.type = toClone.type;
+			this.controlPoints = toClone.controlPoints.Select(cp => new ControlPoint(cp)).ToArray(); // clone control points
+			registerControlPointsPropertyChangedEvent();
 		}
 
 		#endregion
@@ -124,7 +144,8 @@ namespace MeshEditor.DataVisualizer.Data
 				if (type != value)
 				{
 					type = value;
-					setupControlPoints();
+					controlPoints = createControlPoints(type);
+					registerControlPointsPropertyChangedEvent();
 					SetMinMaxValue(minValue, maxValue);
 				}
 			}
@@ -239,42 +260,54 @@ namespace MeshEditor.DataVisualizer.Data
 
 		#region Private methods
 
-		private void setupControlPoints()
+		private static ControlPoint[] createControlPoints(Types type)
 		{
 			switch (type)
 			{
 				case Types.Grayscale:
-					controlPoints = new ControlPoint[2];
-					// Black to White gradient
-					controlPoints[0] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(0, 0, 0, 255) };
-					controlPoints[1] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(255, 255, 255, 255) };
-					break;
+					{
+						var controlPoints = new ControlPoint[2];
+						// Black to White gradient
+						controlPoints[0] = new ControlPoint(Utilities.Functions.ColorToRgba32(0, 0, 0, 255));
+						controlPoints[1] = new ControlPoint(Utilities.Functions.ColorToRgba32(255, 255, 255, 255));
+						return controlPoints;
+					}
 				case Types.LightSpectrum:
-					controlPoints = new ControlPoint[5];
-					// Standard (linear) color scale
-					controlPoints[0] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(51, 51, 254, 255) };
-					controlPoints[1] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(51, 186, 193, 255) };
-					controlPoints[2] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(12, 197, 7, 255) };
-					controlPoints[3] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(238, 250, 9, 255) };
-					controlPoints[4] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(237, 15, 3, 255) };
-					break;
+					{
+						var controlPoints = new ControlPoint[5];
+						// Standard (linear) color scale
+						controlPoints[0] = new ControlPoint(Utilities.Functions.ColorToRgba32(51, 51, 254, 255));
+						controlPoints[1] = new ControlPoint(Utilities.Functions.ColorToRgba32(51, 186, 193, 255));
+						controlPoints[2] = new ControlPoint(Utilities.Functions.ColorToRgba32(12, 197, 7, 255));
+						controlPoints[3] = new ControlPoint(Utilities.Functions.ColorToRgba32(238, 250, 9, 255));
+						controlPoints[4] = new ControlPoint(Utilities.Functions.ColorToRgba32(237, 15, 3, 255));
+						return controlPoints;
+					}
 				case Types.HeatGradient:
-					controlPoints = new ControlPoint[2];
-					// Blue to Red gradient
-					controlPoints[0] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(0, 0, 255, 255) };
-					controlPoints[1] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(255, 0, 0, 255) };
-					break;
+					{
+						var controlPoints = new ControlPoint[2];
+						// Blue to Red gradient
+						controlPoints[0] = new ControlPoint(Utilities.Functions.ColorToRgba32(0, 0, 255, 255));
+						controlPoints[1] = new ControlPoint(Utilities.Functions.ColorToRgba32(255, 0, 0, 255));
+						return controlPoints;
+					}
 				case Types.SeparatedByZero:
-					controlPoints = new ControlPoint[3];
-					// Non-linear Separated-by-zero color scale
-					controlPoints[0] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(0, 0, 255, 255) }; // blue
-					controlPoints[1] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(255, 255, 255, 255), IsFixed = true, Value = 0.0 }; // white, fixed zero
-					controlPoints[2] = new ControlPoint { Color = Utilities.Functions.ColorToRgba32(255, 0, 0, 255) }; // red
-					break;
+					{
+						var controlPoints = new ControlPoint[3];
+						// Non-linear Separated-by-zero color scale
+						controlPoints[0] = new ControlPoint(Utilities.Functions.ColorToRgba32(0, 0, 255, 255)); // blue
+						controlPoints[1] = new ControlPoint(Utilities.Functions.ColorToRgba32(255, 255, 255, 255)) { IsFixed = true, Value = 0.0 }; // white, fixed zero
+						controlPoints[2] = new ControlPoint(Utilities.Functions.ColorToRgba32(255, 0, 0, 255)); // red
+						return controlPoints;
+					}
 				default:
-					throw new NotImplementedException();
+					throw new NotSupportedException();
 			}
+		}
 
+		private void registerControlPointsPropertyChangedEvent()
+		{
+			Debug.Assert(controlPoints != null);
 			foreach (ControlPoint cp in controlPoints)
 			{
 				cp.PropertyChanged += controlPoint_PropertyChanged;

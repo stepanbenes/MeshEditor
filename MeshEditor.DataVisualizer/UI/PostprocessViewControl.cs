@@ -34,6 +34,7 @@ namespace MeshEditor.WinUI
 
 			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
+			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
 		}
 
 		#endregion
@@ -137,13 +138,14 @@ namespace MeshEditor.WinUI
 				if (layerDataVisualizer != null)
 				{
 					layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
-					var summary = getSummaryFileFor(layerDataVisualizer.LayerId);
-					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
+					dataSelectionControl.UpdateDataSource(getSummaryFileFor(layerDataVisualizer.LayerId), layerDataVisualizer.DataSelection);
+					visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 				}
 				else
 				{
 					layersTreeView.SetSelectedLayer(null);
 					dataSelectionControl.UpdateDataSource(null, null);
+					visualizerSettingsControl.Settings = null;
 				}
 			}
 			finally
@@ -174,6 +176,8 @@ namespace MeshEditor.WinUI
 				dataVisualizer.UpdateDataSelection(solutionHub, null);
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+
+				visualizerSettingsControl.Settings = dataVisualizer.Settings;
 			}
 		}
 
@@ -220,6 +224,16 @@ namespace MeshEditor.WinUI
 				layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
 			}
 			
+			// update colors
+			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+		}
+
+		private void visualizerSettingsControl_SettingsChanged(object sender, EventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+			if (changingActiveScene)
+				return;
+
 			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 		}

@@ -61,5 +61,13 @@ namespace MeshEditor.WinUI
 				Process.Start(url);
 			}
 		}
+
+		private void listBoxSolutions_DoubleClick(object sender, EventArgs e)
+		{
+			if (listBoxSolutions.SelectedItem != null)
+			{
+				DialogResult = DialogResult.OK;
+			}
+		}
 	}
 }

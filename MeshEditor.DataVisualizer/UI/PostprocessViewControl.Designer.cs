@@ -31,6 +31,7 @@
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
+			this.visualizerSettingsControl = new MeshEditor.DataVisualizer.UI.VisualizerSettingsControl();
 			this.dataSelectionControl = new MeshEditor.WinUI.DataSelectionControl();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -67,6 +68,7 @@
 			// 
 			// leftSplitContainer.Panel2
 			// 
+			this.leftSplitContainer.Panel2.Controls.Add(this.visualizerSettingsControl);
 			this.leftSplitContainer.Panel2.Controls.Add(this.dataSelectionControl);
 			this.leftSplitContainer.Size = new System.Drawing.Size(363, 861);
 			this.leftSplitContainer.SplitterDistance = 430;
@@ -80,12 +82,22 @@
 			this.layersTreeView.Size = new System.Drawing.Size(363, 430);
 			this.layersTreeView.TabIndex = 1;
 			// 
+			// visualizerSettingsControl
+			// 
+			this.visualizerSettingsControl.Dock = System.Windows.Forms.DockStyle.Top;
+			this.visualizerSettingsControl.Enabled = false;
+			this.visualizerSettingsControl.Location = new System.Drawing.Point(0, 134);
+			this.visualizerSettingsControl.Name = "visualizerSettingsControl";
+			this.visualizerSettingsControl.Settings = null;
+			this.visualizerSettingsControl.Size = new System.Drawing.Size(363, 128);
+			this.visualizerSettingsControl.TabIndex = 1;
+			// 
 			// dataSelectionControl
 			// 
-			this.dataSelectionControl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.dataSelectionControl.Dock = System.Windows.Forms.DockStyle.Top;
 			this.dataSelectionControl.Location = new System.Drawing.Point(0, 0);
 			this.dataSelectionControl.Name = "dataSelectionControl";
-			this.dataSelectionControl.Size = new System.Drawing.Size(363, 427);
+			this.dataSelectionControl.Size = new System.Drawing.Size(363, 134);
 			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl
@@ -112,5 +124,6 @@
 		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
 		private MeshEditor.WinUI.DataSelectionControl dataSelectionControl;
+		private DataVisualizer.UI.VisualizerSettingsControl visualizerSettingsControl;
 	}
 }

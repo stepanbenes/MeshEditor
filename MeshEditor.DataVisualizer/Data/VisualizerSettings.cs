@@ -37,7 +37,7 @@ namespace MeshEditor.DataVisualizer.Data
 		/// <summary>
 		/// Color scale object used to modify displayed range of values and colors assigned to values.
 		/// </summary>
-		ColorScale ColorScale { get; }
+		ColorScale ColorScale { get; set; }
 
 		/// <summary>
 		/// Show iso areas when drawing colors.
@@ -61,7 +61,7 @@ namespace MeshEditor.DataVisualizer.Data
 			IsoAreasSubIntervalNumber = 5;
 		}
 
-		public ColorScale ColorScale { get; }
+		public ColorScale ColorScale { get; set; }
 
 		public bool DrawIsoAreas { get; set; }
 

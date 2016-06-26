@@ -45,6 +45,7 @@
 			this.listBoxSolutions.Size = new System.Drawing.Size(391, 251);
 			this.listBoxSolutions.TabIndex = 0;
 			this.listBoxSolutions.SelectedIndexChanged += new System.EventHandler(this.listBoxSolutions_SelectedIndexChanged);
+			this.listBoxSolutions.DoubleClick += new System.EventHandler(this.listBoxSolutions_DoubleClick);
 			// 
 			// buttonOk
 			// 
@@ -81,8 +82,10 @@
 			// 
 			// RemoteSolutionsForm
 			// 
+			this.AcceptButton = this.buttonOk;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.CancelButton = this.buttonCancel;
 			this.ClientSize = new System.Drawing.Size(415, 318);
 			this.Controls.Add(this.buttonOpenInBrowser);
 			this.Controls.Add(this.buttonCancel);
