@@ -13,34 +13,22 @@ namespace MeshEditor.WinUI
 {
 	public partial class LayersTreeViewControl : UserControl
 	{
-		public event EventHandler<LayerSelectionEventArgs> SelectedLayerChanged;
-
 		Dictionary<Guid, TreeNode> layerIdTreeNodeMap;
+		bool checkingTreeNodes;
 
 		public LayersTreeViewControl()
 		{
 			InitializeComponent();
 			treeViewLayers.AfterSelect += treeViewLayers_AfterSelect;
+			treeViewLayers.AfterCheck += treeViewLayers_AfterCheck;
 			layerIdTreeNodeMap = new Dictionary<Guid, TreeNode>();
 		}
 
-		public Guid? SelectedLayerId
+		public event EventHandler<LayerSelectionEventArgs> LayerSelectionChanged;
+
+		public void SetSelectedLayer(Guid? guid)
 		{
-			get
-			{
-				if (treeViewLayers.SelectedNode == null)
-					return null;
-				var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
-				return layerInfo.Id;
-			}
-			set
-			{
-				TreeNode treeNodeToSelect = null;
-				if (value.HasValue && layerIdTreeNodeMap.TryGetValue(value.Value, out treeNodeToSelect))
-					treeViewLayers.SelectedNode = treeNodeToSelect;
-				else
-					treeViewLayers.SelectedNode = null;
-			}
+
 		}
 
 		public void SetLayerTree(IEnumerable<ILayerInfo> layers)
@@ -56,7 +44,31 @@ namespace MeshEditor.WinUI
 
 		private void treeViewLayers_AfterSelect(object sender, TreeViewEventArgs e)
 		{
-			SelectedLayerChanged?.Invoke(this, new LayerSelectionEventArgs(SelectedLayerId));
+			var layerInfo = (ILayerInfo)e.Node.Tag;
+			// TODO: update context commands
+		}
+
+		private void treeViewLayers_AfterCheck(object sender, TreeViewEventArgs e)
+		{
+			if (checkingTreeNodes)
+				return;
+
+			try
+			{
+				checkingTreeNodes = true;
+				if (e.Node.Checked)
+				{
+					checkAllNodes(treeViewLayers.Nodes, false);
+					e.Node.Checked = true;
+
+					var layerInfo = (ILayerInfo)e.Node.Tag;
+					LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo.Id));
+				}
+			}
+			finally
+			{
+				checkingTreeNodes = false;
+			}
 		}
 
 		private TreeNode createTreeNode(ILayerInfo layer)
@@ -71,6 +83,24 @@ namespace MeshEditor.WinUI
 				}
 			}
 			return treeNode;
+		}
+
+		private void checkAllNodes(TreeNodeCollection nodes, bool isChecked)
+		{
+			foreach (TreeNode node in nodes)
+			{
+				node.Checked = isChecked;
+				checkChildren(node, isChecked);
+			}
+		}
+
+		private void checkChildren(TreeNode rootNode, bool isChecked)
+		{
+			foreach (TreeNode node in rootNode.Nodes)
+			{
+				checkChildren(node, isChecked);
+				node.Checked = isChecked;
+			}
 		}
 	}
 }

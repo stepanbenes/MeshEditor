@@ -32,7 +32,7 @@ namespace MeshEditor.WinUI
 			InitializeComponent();
 			splitContainer1.FixedPanel = FixedPanel.Panel1;
 
-			layersTreeView.SelectedLayerChanged += layersTreeView_SelectedLayerChanged;
+			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 		}
 
@@ -136,13 +136,13 @@ namespace MeshEditor.WinUI
 				changingActiveScene = true;
 				if (layerDataVisualizer != null)
 				{
-					layersTreeView.SelectedLayerId = layerDataVisualizer.LayerId;
+					layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
 					var summary = getSummaryFileFor(layerDataVisualizer.LayerId);
 					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 				}
 				else
 				{
-					layersTreeView.SelectedLayerId = null;
+					layersTreeView.SetSelectedLayer(null);
 					dataSelectionControl.UpdateDataSource(null, null);
 				}
 			}
@@ -177,7 +177,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void layersTreeView_SelectedLayerChanged(object sender, LayerSelectionEventArgs e)
+		private void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)

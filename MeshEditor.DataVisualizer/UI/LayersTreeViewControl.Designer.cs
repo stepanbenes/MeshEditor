@@ -33,6 +33,7 @@
 			// 
 			// treeViewLayers
 			// 
+			this.treeViewLayers.CheckBoxes = true;
 			this.treeViewLayers.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.treeViewLayers.HideSelection = false;
 			this.treeViewLayers.Location = new System.Drawing.Point(0, 0);
