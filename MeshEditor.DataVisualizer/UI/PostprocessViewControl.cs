@@ -190,7 +190,8 @@ namespace MeshEditor.WinUI
 			else
 			{
 				// TODO: clear scene
-				throw new NotImplementedException();
+				// !! do not allow to hide all layers for now
+				//throw new NotImplementedException();
 			}
 		}
 

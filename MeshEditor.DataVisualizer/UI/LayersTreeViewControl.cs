@@ -26,9 +26,22 @@ namespace MeshEditor.WinUI
 
 		public event EventHandler<LayerSelectionEventArgs> LayerSelectionChanged;
 
-		public void SetSelectedLayer(Guid? guid)
+		public void SetSelectedLayer(Guid? layerId)
 		{
-
+			try
+			{
+				checkingTreeNodes = true;
+				checkAllNodes(treeViewLayers.Nodes, false);
+				TreeNode treeNode;
+				if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out treeNode))
+				{
+					treeNode.Checked = true;
+				}
+			}
+			finally
+			{
+				checkingTreeNodes = false;
+			}
 		}
 
 		public void SetLayerTree(IEnumerable<ILayerInfo> layers)
@@ -56,13 +69,17 @@ namespace MeshEditor.WinUI
 			try
 			{
 				checkingTreeNodes = true;
+				bool isChecked = e.Node.Checked;
+				checkAllNodes(treeViewLayers.Nodes, false);
+				e.Node.Checked = isChecked;
 				if (e.Node.Checked)
 				{
-					checkAllNodes(treeViewLayers.Nodes, false);
-					e.Node.Checked = true;
-
 					var layerInfo = (ILayerInfo)e.Node.Tag;
 					LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo.Id));
+				}
+				else
+				{
+					LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(null));
 				}
 			}
 			finally
