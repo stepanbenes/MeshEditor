@@ -25,12 +25,8 @@ namespace MeshEditor.Data
 		#region Instance fields & constructor
 
 		private Camera camera;
-		private Mesh mesh;
-
+		
 		private RenderMode renderMode;
-
-		private List<Node> cutPlaneDefinitionNodes;
-		private List<CutPlane> cutPlanes;
 
 		private bool drawAxesFlag;
 		private bool drawAxisArrowsFlag;
@@ -38,6 +34,11 @@ namespace MeshEditor.Data
 		private bool drawElementNumbersFlag;
 		private bool drawBeamsFlag;
 		private bool drawBeamNumbersFlag;
+
+		private Mesh mesh;
+
+		private List<Node> cutPlaneDefinitionNodes;
+		private List<CutPlane> cutPlanes;
 
 		private int[] nodeSignal;
 		private int? elementSignal;
@@ -51,22 +52,34 @@ namespace MeshEditor.Data
 
 		public Scene()
 		{
-			this.mesh = null;
 			this.camera = new Camera();
 			this.renderMode = DefaultRenderMode;
 			this.drawAxesFlag = true;
 			this.drawAxisArrowsFlag = true;
 			this.drawNodeNumbersFlag = true;
 			this.drawElementNumbersFlag = false;
-			
+
 			this.drawBeamsFlag = true;
 			this.drawBeamNumbersFlag = false;
+
+			initializeMeshDependentFields();
+		}
+
+		private void initializeMeshDependentFields()
+		{
+			this.mesh = null;
 
 			this.cutPlaneDefinitionNodes = new List<Node>();
 			this.cutPlanes = new List<CutPlane>();
 
 			this.nodeSignal = null;
 			this.elementSignal = null;
+			this.nodeSignalPositions = null;
+			this.elementSignalPosition = Vector3.Zero;
+
+			this.lastUsedCutInfo = null;
+
+			this.tempElement3DAddedToSurfaceRepresentation = null;
 		}
 
 		#endregion
@@ -271,17 +284,23 @@ namespace MeshEditor.Data
 
 		public void SetMesh(Mesh newMesh)
 		{
-			if (newMesh != null && newMesh != this.mesh)
+			if (newMesh != this.mesh)
 			{
-				newMesh.ReferenceCount++;
-				if (this.mesh != null)
+				if (newMesh != null)
 				{
-					this.mesh.ReferenceCount--;
-					if (this.mesh.ReferenceCount <= 0)
-						this.mesh.Dispose();
+					newMesh.ReferenceCount++;
+					if (this.mesh != null)
+					{
+						this.mesh.ReferenceCount--;
+						if (this.mesh.ReferenceCount <= 0)
+							this.mesh.Dispose();
+					}
 				}
+
+				initializeMeshDependentFields();
+
+				this.mesh = newMesh;
 			}
-			this.mesh = newMesh;
 		}
 
 		public List<CutPlane> CutPlanes
