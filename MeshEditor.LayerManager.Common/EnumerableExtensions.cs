@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -159,6 +160,59 @@ namespace MeshEditor.LayerManager.Common
 			}
 
 			return true;
+		}
+
+		public static IEnumerable<int> IndicesOfMinElements<T>(this IEnumerable<T> source)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			return indicesOfExtremeElements(source, -1);
+		}
+
+		public static IEnumerable<int> IndicesOfMaxElements<T>(this IEnumerable<T> source)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			return indicesOfExtremeElements(source, +1);
+		}
+
+		private static IEnumerable<int> indicesOfExtremeElements<T>(IEnumerable<T> source, int extremeSign)
+		{
+			Debug.Assert(source != null);
+
+			using (var iterator = source.GetEnumerator())
+			{
+				if (!iterator.MoveNext())
+					return Enumerable.Empty<int>();
+
+				List<int> indices = new List<int>();
+				var comparer = Comparer<T>.Default;
+				int currentIndex = 0;
+
+				T currentExtreme = iterator.Current;
+				indices.Add(currentIndex);
+
+				while (iterator.MoveNext())
+				{
+					T next = iterator.Current;
+					currentIndex += 1;
+					int compareResult = comparer.Compare(currentExtreme, next);
+					if (compareResult == 0) // equal to current extreme
+					{
+						indices.Add(currentIndex);
+					}
+					else if (compareResult * extremeSign < 0) // next is extreme-er :) than currentExtreme, reset is needed
+					{
+						currentExtreme = next;
+						indices.Clear();
+						indices.Add(currentIndex);
+					}
+					// else currentExtreme holds
+				}
+				return indices;
+			}
 		}
 	}
 }

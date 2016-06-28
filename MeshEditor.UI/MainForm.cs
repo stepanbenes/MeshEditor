@@ -999,7 +999,7 @@ namespace MeshEditor.WinUI
 				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
 				if (dataVisualizer != null)
 				{
-					activeControl.SignalNodeByID(dataVisualizer.GetEntitiesWithMaximumDataValue());
+					activeControl.SignalNodeByID(dataVisualizer.GetIDsOfNodesWithMaximumDataValue());
 				}
 			}
 		}
@@ -1011,7 +1011,7 @@ namespace MeshEditor.WinUI
 				IDataVisualizer dataVisualizer = activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer;
 				if (dataVisualizer != null)
 				{
-					activeControl.SignalNodeByID(dataVisualizer.GetEntitiesWithMinimumDataValue());
+					activeControl.SignalNodeByID(dataVisualizer.GetIDsOfNodesWithMinimumDataValue());
 				}
 			}
 		}
@@ -1603,6 +1603,12 @@ namespace MeshEditor.WinUI
 					await getCurrentPostprocessView().LoadRemoteSolution(selectedSolutionId.Value);
 				}
 			}
+		}
+
+		private void postprocessToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+		{
+			closeSolutionToolStripMenuItem.Enabled = LayoutMode == LayoutMode.Postprocessor;
+			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayColors ?? false;
 		}
 
 		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)

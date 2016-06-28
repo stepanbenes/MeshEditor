@@ -61,27 +61,81 @@ namespace MeshEditor.DataVisualizer
 
 		private void setupColorScale()
 		{
-			if (currentDataComponent != null)
-			{
-				double? min = currentDataComponent.Values.Min(ignore: double.NaN);
-				double? max = currentDataComponent.Values.Max(ignore: double.NaN);
+			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
+		}
 
-				Settings.ColorScale.SetMinMaxValue(min ?? double.NaN, max ?? double.NaN);
-			}
-			else
+		public override double GetDataValue(Node node, Element element)
+		{
+			if (currentDataComponent == null)
+				return double.NaN;
+
+			switch (currentDataComponent.Location)
 			{
-				Settings.ColorScale.SetMinMaxValue(double.NaN, double.NaN);
+				case DataLocationType.Points:
+					return currentDataComponent.Values[node.ID];
+				case DataLocationType.CellPoints:
+
+					throw new NotImplementedException(); // TODO: I need GeometryDescription object (or specifically CellOffsets array)
+
+				case DataLocationType.Cells:
+					return currentDataComponent.Values[element.ID];
+				default:
+					throw new NotSupportedException();
 			}
 		}
 
-		public override int GetDataColor(Node node, Element element)
+		public override double GetDataValue(Node node, out double error)
 		{
+			error = 0.0;
 			if (currentDataComponent != null && currentDataComponent.Location == DataLocationType.Points)
 			{
-				double dataValue = currentDataComponent.Values[node.ID];
-				return GetColorForDataValue(dataValue);
+				return currentDataComponent.Values[node.ID];
 			}
-			return ColorScale.UndefinedValueColor;
+			return double.NaN;
+		}
+
+		public override int[] GetIDsOfNodesWithMaximumDataValue()
+		{
+			if (currentDataComponent == null)
+				return Array.Empty<int>();
+
+			switch (currentDataComponent.Location)
+			{
+				case DataLocationType.Points:
+					return currentDataComponent.Values.IndicesOfMaxElements().ToArray();
+				case DataLocationType.CellPoints:
+				case DataLocationType.Cells:
+					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		public override int[] GetIDsOfNodesWithMinimumDataValue()
+		{
+			if (currentDataComponent == null)
+				return Array.Empty<int>();
+
+			switch (currentDataComponent.Location)
+			{
+				case DataLocationType.Points:
+					return currentDataComponent.Values.IndicesOfMinElements().ToArray();
+				case DataLocationType.CellPoints:
+				case DataLocationType.Cells:
+					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		public override double GetMaximumDataValue()
+		{
+			return currentDataComponent?.Values.Max(ignore: double.NaN) ?? double.NaN;
+		}
+
+		public override double GetMinimumDataValue()
+		{
+			return currentDataComponent?.Values.Min(ignore: double.NaN) ?? double.NaN;
 		}
 
 		#endregion

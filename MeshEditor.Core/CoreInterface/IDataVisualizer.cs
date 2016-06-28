@@ -23,20 +23,6 @@ namespace MeshEditor.CoreInterface
 		void Initialize(Mesh mesh);
 
 		/// <summary>
-		/// Loads result data stored in file specified by parameter.
-		/// </summary>
-		/// <param name="filenames">Path to result files with data to be loaded.</param>
-		/// <param name="longOpNotifier">Object that notifies UI about progress in loading data and handles cancellation.</param>
-		void LoadData(string[] filenames, LongOpNotifier longOpNotifier);
-
-		/// <summary>
-		/// Completes creation of Data visualizer object.
-		/// It is supposed to be called after LoadData() method from the UI thread.
-		/// It should set default values of DataVisualizerController settings.
-		/// </summary>
-		void FinishUp();
-
-		/// <summary>
 		/// Returns True if showing of scalars is enabled - that means drawing of data values as colors on mesh surface can be performed.
 		/// Returns False if drawing colors on mesh surface is not allowed.
 		/// </summary>
@@ -60,13 +46,6 @@ namespace MeshEditor.CoreInterface
 		void DrawItems(PropertyColorsMode propertyColorsMode);
 
 		/// <summary>
-		/// Returns color in RGBA32 format that corresponds to data value at specified position.
-		/// </summary>
-		/// <param name="position">Position of point where color should be displayed</param>
-		/// <returns>color in RGBA32 format</returns>
-		//int GetDataColor(Vector3 position);
-
-		/// <summary>
 		/// Returns color in RGBA32 format that corresponds to data value on specified node.
 		/// </summary>
 		/// <param name="node">node with value</param>
@@ -82,17 +61,17 @@ namespace MeshEditor.CoreInterface
 		double GetDataValue(Node node);
 
 		/// <summary>
-		/// Returns color of specified data value.
+		/// Returns current data on specified element node.
 		/// </summary>
-		int GetColorForDataValue(double dataValue);
+		double GetDataValue(Node node, Element element);
 
 		/// <summary>
 		/// Returns current data on specified node.
 		/// </summary>
 		/// <param name="node">node with value</param>
-		/// <param name="maxError">maximal error of returned value</param>
+		/// <param name="error">maximal error of returned value</param>
 		/// <returns>current data value</returns>
-		double GetDataValue(Node node, out float maxError);
+		double GetDataValue(Node node, out double error);
 
 		/// <summary>
 		/// Returns maximum data value of current ScalarDataIndex in whole mesh.
@@ -107,11 +86,11 @@ namespace MeshEditor.CoreInterface
 		/// <summary>
 		/// Returns ids of nodes (one or more) that have the maximum data value (currently set).
 		/// </summary>
-		int[] GetEntitiesWithMaximumDataValue();
+		int[] GetIDsOfNodesWithMaximumDataValue();
 
 		/// <summary>
 		/// Returns ids of nodes (one or more) that have the minimum data value (currently set).
 		/// </summary>
-		int[] GetEntitiesWithMinimumDataValue();
+		int[] GetIDsOfNodesWithMinimumDataValue();
 	}
 }

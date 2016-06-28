@@ -813,7 +813,7 @@ namespace MeshEditor.WinUI
 		public void SignalNodeByID(int[] ids)
 		{
 			//Cursor temp = this.Cursor;
-			if (ids == null)
+			if (ids == null || ids.Length == 0)
 			{
 				//try
 				//{

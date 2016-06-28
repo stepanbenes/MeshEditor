@@ -72,63 +72,44 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		public void FinishUp()
+		public int GetDataColor(Node node, Element element)
 		{
-			throw new NotImplementedException();
+			return getColorForDataValue(GetDataValue(node, element));
 		}
 
-		public int GetColorForDataValue(double dataValue)
+		public double GetDataValue(Node node)
+		{
+			double error;
+			return GetDataValue(node, out error);
+		}
+
+		public void Initialize(Mesh mesh)
+		{
+			// Do nothing
+		}
+
+		public abstract double GetDataValue(Node node, Element element);
+
+		public abstract double GetDataValue(Node node, out double error);
+
+		public abstract int[] GetIDsOfNodesWithMaximumDataValue();
+
+		public abstract int[] GetIDsOfNodesWithMinimumDataValue();
+
+		public abstract double GetMaximumDataValue();
+
+		public abstract double GetMinimumDataValue();
+
+		#endregion
+
+		#region Private methods
+
+		private int getColorForDataValue(double dataValue)
 		{
 			if (double.IsNaN(dataValue))
 				return ColorScale.UndefinedValueColor;
 			return Settings.ColorScale.GetColorForValue(dataValue);
 		}
-
-		public abstract int GetDataColor(Node node, Element element);
-
-		public double GetDataValue(Node node)
-		{
-			throw new NotImplementedException();
-		}
-
-		public double GetDataValue(Node node, out float maxError)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int[] GetEntitiesWithMaximumDataValue()
-		{
-			throw new NotImplementedException();
-		}
-
-		public int[] GetEntitiesWithMinimumDataValue()
-		{
-			throw new NotImplementedException();
-		}
-
-		public double GetMaximumDataValue()
-		{
-			throw new NotImplementedException();
-		}
-
-		public double GetMinimumDataValue()
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Initialize(Mesh mesh)
-		{
-			// TODO: implement this method
-		}
-
-		public void LoadData(string[] filenames, LongOpNotifier longOpNotifier)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
-		#region Private methods
 
 		private void initIsoAreasShader()
 		{

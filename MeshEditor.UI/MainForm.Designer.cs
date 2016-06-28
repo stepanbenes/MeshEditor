@@ -117,6 +117,7 @@
 			this.postprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openLocalSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openRemoteSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.closeSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
 			this.signalDataMaximumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.signalDataMinimumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -182,7 +183,6 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-			this.closeSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -933,6 +933,7 @@
 			this.postprocessToolStripMenuItem.Name = "postprocessToolStripMenuItem";
 			this.postprocessToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
 			this.postprocessToolStripMenuItem.Text = "&POSTPROCESS";
+			this.postprocessToolStripMenuItem.DropDownOpening += new System.EventHandler(this.postprocessToolStripMenuItem_DropDownOpening);
 			// 
 			// openLocalSolutionToolStripMenuItem
 			// 
@@ -948,6 +949,13 @@
 			this.openRemoteSolutionToolStripMenuItem.Text = "Open remote solution...";
 			this.openRemoteSolutionToolStripMenuItem.Click += new System.EventHandler(this.openRemoteSolutionToolStripMenuItem_Click);
 			// 
+			// closeSolutionToolStripMenuItem
+			// 
+			this.closeSolutionToolStripMenuItem.Name = "closeSolutionToolStripMenuItem";
+			this.closeSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.closeSolutionToolStripMenuItem.Text = "Close solution";
+			this.closeSolutionToolStripMenuItem.Click += new System.EventHandler(this.closeSolutionToolStripMenuItem_Click);
+			// 
 			// toolStripSeparator24
 			// 
 			this.toolStripSeparator24.Name = "toolStripSeparator24";
@@ -955,7 +963,6 @@
 			// 
 			// signalDataMaximumToolStripMenuItem
 			// 
-			this.signalDataMaximumToolStripMenuItem.Enabled = false;
 			this.signalDataMaximumToolStripMenuItem.Name = "signalDataMaximumToolStripMenuItem";
 			this.signalDataMaximumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
 			this.signalDataMaximumToolStripMenuItem.Text = "Signal data &maximum";
@@ -963,7 +970,6 @@
 			// 
 			// signalDataMinimumToolStripMenuItem
 			// 
-			this.signalDataMinimumToolStripMenuItem.Enabled = false;
 			this.signalDataMinimumToolStripMenuItem.Name = "signalDataMinimumToolStripMenuItem";
 			this.signalDataMinimumToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
 			this.signalDataMinimumToolStripMenuItem.Text = "Signal data mi&nimum";
@@ -983,19 +989,19 @@
 			// 
 			this.readDocumentationToolStripMenuItem.Name = "readDocumentationToolStripMenuItem";
 			this.readDocumentationToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
 			this.readDocumentationToolStripMenuItem.Text = "&User guide";
 			this.readDocumentationToolStripMenuItem.Click += new System.EventHandler(this.readDocumentationToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator5
 			// 
 			this.toolStripSeparator5.Name = "toolStripSeparator5";
-			this.toolStripSeparator5.Size = new System.Drawing.Size(146, 6);
+			this.toolStripSeparator5.Size = new System.Drawing.Size(149, 6);
 			// 
 			// aboutToolStripMenuItem1
 			// 
 			this.aboutToolStripMenuItem1.Name = "aboutToolStripMenuItem1";
-			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(149, 22);
+			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
 			this.aboutToolStripMenuItem1.Text = "&About";
 			this.aboutToolStripMenuItem1.Click += new System.EventHandler(this.aboutToolStripMenuItem1_Click);
 			// 
@@ -1546,13 +1552,6 @@
 			this.centralPanel.Name = "centralPanel";
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
-			// 
-			// closeSolutionToolStripMenuItem
-			// 
-			this.closeSolutionToolStripMenuItem.Name = "closeSolutionToolStripMenuItem";
-			this.closeSolutionToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-			this.closeSolutionToolStripMenuItem.Text = "Close solution";
-			this.closeSolutionToolStripMenuItem.Click += new System.EventHandler(this.closeSolutionToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
