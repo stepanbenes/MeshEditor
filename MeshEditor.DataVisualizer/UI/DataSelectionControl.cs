@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.DataVisualizer;
+using System.Diagnostics;
 
 namespace MeshEditor.WinUI
 {
@@ -46,7 +47,12 @@ namespace MeshEditor.WinUI
 			if (selectedFieldComboBoxItem == null || selectedComponentComboBoxItem == null || selectedTimeStepComboBoxItem == null)
 				return null;
 
-			return new DataSelection(selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, selectedTimeStepComboBoxItem.Value.DataIndex, selectedTimeStepComboBoxItem.Value.MeshIndex);
+			Debug.Assert(layerSummary != null);
+			int dataIndex = selectedTimeStepComboBoxItem.Value.DataIndex;
+			int meshIndex = selectedTimeStepComboBoxItem.Value.MeshIndex;
+			int? elementPropertyAttributeIndex = layerSummary.Meshes.Single(m => m.Index == meshIndex).Attributes?.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
+
+			return new DataSelection(selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, dataIndex, meshIndex, elementPropertyAttributeIndex);
 		}
 
 		//public void UpdateDataSelection(DataSelection dataSelection)

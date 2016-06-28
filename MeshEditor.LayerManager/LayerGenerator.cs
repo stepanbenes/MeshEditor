@@ -180,7 +180,7 @@ namespace MeshEditor.LayerManager
 						{
 							var attributeSelectionFilter = (AttributeSelectionFilter)filter;
 							var attributeDescriptor = parentMesh.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-							var attribute = LoadAttribute(getLayerAttributeRecordName(parentLayerId, attributeDescriptor.Index));
+							var attribute = LoadAttribute(parentLayerId, attributeDescriptor.Index);
 							meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
 						}
 						break;
@@ -218,8 +218,7 @@ namespace MeshEditor.LayerManager
 			foreach (var mesh in layerSummary.Meshes)
 			{
 				GeometryDescription geometry = LoadGeometry(layerId, mesh.Index);
-				var attributeRecordNames = mesh.Attributes.Select(a => getLayerAttributeRecordName(layerId, a.Index));
-				IEnumerable<AttributeDescription> attributeDescriptions = attributeRecordNames.Select(record => LoadAttribute(record));
+				IEnumerable<AttributeDescription> attributeDescriptions = mesh.Attributes.Select(a => LoadAttribute(layerId, a.Index));
 
 				var dataDescriptionGroups = from result in mesh.Results
 											where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
@@ -239,43 +238,6 @@ namespace MeshEditor.LayerManager
 
 		#endregion
 
-		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
-		{
-			return LoadGeometry(getLayerMeshRecordName(layerId, meshIndex));
-		}
-
-		public GeometryDescription LoadGeometry(string recordName)
-		{
-			using (Stream meshStream = sourceStorage.Load(recordName))
-			{
-				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
-				return createGeometryFromLayerMesh(layerMesh);
-			}
-		}
-
-		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
-		{
-			return LoadData(getLayerResultRecordName(layerId, dataIndex));
-		}
-
-		public IEnumerable<ComponentDataDescription> LoadData(string record)
-		{
-			using (Stream stream = sourceStorage.Load(record))
-			{
-				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
-				return createDataDescriptionFromLayerResult(layerResult);
-			}
-		}
-
-		public AttributeDescription LoadAttribute(string record)
-		{
-			using (Stream attributeStream = sourceStorage.Load(record))
-			{
-				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
-				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
-			}
-		}
-
 		public SummaryFile LoadLayerSummary(Guid layerId)
 		{
 			// find parentLayer in storage and download summary
@@ -285,14 +247,56 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
+		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
+		{
+			return loadGeometry(getLayerMeshRecordName(layerId, meshIndex));
+		}
+
+		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
+		{
+			return loadData(getLayerResultRecordName(layerId, dataIndex));
+		}
+
+		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
+		{
+			return loadAttribute(getLayerAttributeRecordName(layerId, attributeIndex));
+		}
+
 		#endregion
 
 		#region Private methods
 
+		private GeometryDescription loadGeometry(string recordName)
+		{
+			using (Stream meshStream = sourceStorage.Load(recordName))
+			{
+				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
+				return createGeometryFromLayerMesh(layerMesh);
+			}
+		}
+
+		private IEnumerable<ComponentDataDescription> loadData(string record)
+		{
+			using (Stream stream = sourceStorage.Load(record))
+			{
+				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
+				return createDataDescriptionFromLayerResult(layerResult);
+			}
+		}
+
+		private AttributeDescription loadAttribute(string record)
+		{
+			using (Stream attributeStream = sourceStorage.Load(record))
+			{
+				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
+				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
+			}
+		}
+
 		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalAttributeRecordNames)
 		{
 			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
-			foreach (AttributeDescription oldAttribute in originalAttributeRecordNames.Select(record => LoadAttribute(record)))
+			foreach (AttributeDescription oldAttribute in originalAttributeRecordNames.Select(record => loadAttribute(record)))
 			{
 				int[] newValues;
 				switch (oldAttribute.Location)
@@ -370,7 +374,7 @@ namespace MeshEditor.LayerManager
 		{
 			const double EMPTY_VALUE = double.NaN;
 			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
-			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => LoadData(record)))
+			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => loadData(record)))
 			{
 				double[] newValues;
 
@@ -460,7 +464,7 @@ namespace MeshEditor.LayerManager
 			double[] keyTimes = keyTimeSteps.ToArray();
 			int keyTimeIndex = 0;
 			List<ComponentDataDescription> dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
-			foreach (var data in descriptors.SelectMany(r => LoadData(getLayerResultRecordName(layerId, r.Index))))
+			foreach (var data in descriptors.SelectMany(r => LoadData(layerId, r.Index)))
 			{
 				if (keyTimeIndex < keyTimes.Length)
 				{

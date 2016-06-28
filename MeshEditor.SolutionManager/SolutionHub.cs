@@ -128,6 +128,12 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadData(layerId, dataIndex);
 		}
 
+		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
+		{
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			return layerGenerator.LoadAttribute(layerId, attributeIndex);
+		}
+
 		public SummaryFile LoadLayerSummary(Guid layerId)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());

@@ -49,12 +49,22 @@ namespace MeshEditor.DataVisualizer
 
 			if (dataSelection == null || dataSelection.DataIndex != newDataSelection.DataIndex)
 			{
-				Debug.Assert(solutionHub != null);
-				data = solutionHub.LoadData(LayerId, newDataSelection.DataIndex).ToDictionary(d => d.TimeStep);
+				if (!newDataSelection.DataIndex.HasValue)
+				{
+					data = null;
+				}
+				else
+				{
+					Debug.Assert(solutionHub != null);
+					data = solutionHub.LoadData(LayerId, newDataSelection.DataIndex.Value).ToDictionary(d => d.TimeStep);
+				}
 			}
 
 			dataSelection = newDataSelection;
-			data.TryGetValue(dataSelection.TimeStep, out currentDataComponent);
+			if (data == null || !data.TryGetValue(dataSelection.TimeStep, out currentDataComponent))
+			{
+				currentDataComponent = null;
+			}
 			setupColorScale();
 			buildDataDescription();
 		}
