@@ -9,6 +9,8 @@ using MeshEditor.DataVisualizer.Data;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.SolutionManager;
 using MeshEditor.LayerManager.Common;
+using MeshEditor.IO;
+using MeshEditor.DataVisualizer.IO;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -20,6 +22,8 @@ namespace MeshEditor.DataVisualizer
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
 
+		GeometryDescription currentGeometry;
+
 		public LayerDataVisualizer(Guid layerId)
 		{
 			LayerId = layerId;
@@ -28,6 +32,8 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Properties
+
+		public event Action<IMeshFileParser> MeshReloadRequested;
 
 		public Guid LayerId { get; }
 
@@ -39,12 +45,17 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateDataSelection(SolutionHub solutionHub, DataSelection newDataSelection)
+		public void UpdateDataSelection(SolutionHub solutionHub, DataSelection newDataSelection) // TODO: make async
 		{
 			if (newDataSelection == null)
 			{
 				clearData();
 				return;
+			}
+
+			if (newDataSelection.MeshIndex != dataSelection?.MeshIndex)
+			{
+				reloadMesh(solutionHub, newDataSelection);
 			}
 
 			if (dataSelection == null || dataSelection.DataIndex != newDataSelection.DataIndex)
@@ -85,7 +96,12 @@ namespace MeshEditor.DataVisualizer
 					return currentDataComponent.Values[node.ID];
 				case DataLocationType.CellPoints:
 
-					throw new NotImplementedException(); // TODO: I need GeometryDescription object (or specifically CellOffsets array)
+					Debug.Assert(currentGeometry != null);
+					int cellOffset = (element.ID > 0) ? currentGeometry.CellOffsets[element.ID - 1] : 0;
+					int? nodeIndex = element.IndexOfNode_IncludingMiddleNodes(node);
+					Debug.Assert(nodeIndex.HasValue); // node has to be contained in element
+					double value = currentDataComponent.Values[cellOffset + nodeIndex.Value]; // WARNING: correct node ordering is supposed
+					return value;
 
 				case DataLocationType.Cells:
 					return currentDataComponent.Values[element.ID];
@@ -151,6 +167,20 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Private methods
+
+		private void reloadMesh(SolutionHub solutionHub, DataSelection newDataSelection)
+		{
+			var geometry = solutionHub.LoadGeometry(LayerId, newDataSelection.MeshIndex);
+			AttributeDescription elementPropertiesAttribute = null;
+			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
+			{
+				elementPropertiesAttribute = solutionHub.LoadAttribute(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value);
+			}
+
+			MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute));
+
+			currentGeometry = geometry;
+		}
 
 		private void clearData()
 		{

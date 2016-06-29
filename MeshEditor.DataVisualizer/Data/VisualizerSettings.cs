@@ -57,7 +57,7 @@ namespace MeshEditor.DataVisualizer.Data
 			ColorScale = new ColorScale(ColorScale.Types.LightSpectrum);
 			ShowScalars = true;
 			ShowColorScaleLegend = true;
-			DrawIsoAreas = true;
+			DrawIsoAreas = false;
 			IsoAreasSubIntervalNumber = 5;
 		}
 

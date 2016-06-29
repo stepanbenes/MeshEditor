@@ -118,7 +118,7 @@ namespace MeshEditor.Data
 			return Vector3.Cross(node2.Position - node1.Position, node3.Position - node1.Position).Length * 0.5f;
 		}
 
-		public override bool ContainsNode(Node n)
+		public override bool ContainsNode_IgnoreMiddleNodes(Node n)
 		{
 			return n == node1 || n == node2 || n == node3;
 		}

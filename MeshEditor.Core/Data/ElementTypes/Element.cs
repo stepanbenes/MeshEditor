@@ -80,12 +80,24 @@ namespace MeshEditor.Data
 		public abstract IEnumerable<Node> IterateThroughAllNodesIncludingEdgeMiddleNodes();
 		public abstract int NodeCount { get; }
 
-		public virtual bool ContainsNode(Node n)
+		public virtual bool ContainsNode_IgnoreMiddleNodes(Node n)
 		{
 			foreach (Node test in IterateThroughAllNodes())
-				if (n == test)
+				if (n.Equals(test))
 					return true;
 			return false;
+		}
+
+		public virtual int? IndexOfNode_IncludingMiddleNodes(Node n)
+		{
+			int index = 0;
+			foreach (Node test in IterateThroughAllNodesIncludingEdgeMiddleNodes())
+			{
+				if (n.Equals(test))
+					return index;
+				index += 1;
+			}
+			return null;
 		}
 
 		public virtual Vector3 GetCenter()

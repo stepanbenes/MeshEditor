@@ -562,7 +562,6 @@ namespace MeshEditor.LayerManager
 				Filter = filter,
 				Meshes = meshFileDescriptors.ToArray()
 			};
-
 			var fields = new Dictionary<string, FieldDescriptor>();
 			foreach (var fieldGroup in from mesh in meshFileDescriptors
 									   from result in mesh.Results
@@ -582,7 +581,12 @@ namespace MeshEditor.LayerManager
 												  group result by timeStep into resultGroup
 												  select resultGroup)
 					{
-						var timeStep = timeStepGroup.Single();
+						//if (timeStepGroup.Count() > 1)
+						//{
+						//	Console.WriteLine($"Time step group for key {timeStepGroup.Key}, {fieldGroup.Key}/{componentGroup.Key}: " + string.Join("; ", timeStepGroup.Select(t => $"({t.Mesh.Index}, {t.Result.Index})")));
+						//}
+						//var timeStep = timeStepGroup.Single();
+						var timeStep = timeStepGroup.First();
 						timeSteps[timeStepGroup.Key] = new TimeStepDescriptor
 						{
 							MeshIndex = timeStep.Mesh.Index,

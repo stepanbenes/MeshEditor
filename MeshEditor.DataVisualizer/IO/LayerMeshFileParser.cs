@@ -48,16 +48,18 @@ namespace MeshEditor.DataVisualizer.IO
 			int offset = 0;
 			for (int i = 0; i < geometry.NumberOfCells; i++)
 			{
-				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(geometry.CellConnectivity, offset, GeometryDescription.MapCellTypeToNumberOfPoints(geometry.CellTypes[i]));
+				int nextOffset = geometry.CellOffsets[i];
+				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(geometry.CellConnectivity, offset, nextOffset - offset);
 				ElementDraft element = new ElementDraft { ID = i, NodeIDs = nodeIDs, Type = mapCellTypeToElementType(geometry.CellTypes[i]) };
 				if (elementPropertiesAttribute != null)
 				{
 					Debug.Assert(elementPropertiesAttribute.Location == DataLocationType.Cells);
 					element.Property = new Property(elementPropertiesAttribute.Values[i]);
 				}
+
 				yield return element;
 
-				offset = geometry.CellOffsets[i];
+				offset = nextOffset;
 			}
 		}
 

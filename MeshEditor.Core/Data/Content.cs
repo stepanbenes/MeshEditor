@@ -696,12 +696,18 @@ namespace MeshEditor.Data
 				{
 					if (dataVisualizer != null && dataVisualizer.DisplayColors)
 					{
-						items[vertexIndex] = dataVisualizer.GetDataColor(beam.BeginNode, beam);
-						items[vertexIndex + 1] = dataVisualizer.GetDataColor(beam.EndNode, beam);
+						int beginColor = Utils.SetAlphaOfColor(dataVisualizer.GetDataColor(beam.BeginNode, beam), alpha: 252); // zero alpha byte to mark color to be handled special in iso-areas shader,
+						int endColor = Utils.SetAlphaOfColor(dataVisualizer.GetDataColor(beam.EndNode, beam), alpha: 252);     // but blending is on, so I can't set alpha to zero, alpha is set almost to ze 1.0, but not entirely to help shader to distinguish selected entity
+
 						if (selected.Contains(beam))
 						{
-							items[vertexIndex] = Utils.InvertColor(items[vertexIndex], alpha: 252); // zero alpha byte to mark color to be handled special in iso-areas shader,
-							items[vertexIndex + 1] = Utils.InvertColor(items[vertexIndex + 1], alpha: 252); // but blending is on, so I can't set alpha to zero, alpha is set almost to ze 1.0, but not entirely to help shader to distinguish selected entity
+							items[vertexIndex] = Utils.InvertColorKeepAlpha(items[vertexIndex]);
+							items[vertexIndex + 1] = Utils.InvertColorKeepAlpha(items[vertexIndex + 1]); 
+						}
+						else
+						{
+							items[vertexIndex] = beginColor;
+							items[vertexIndex + 1] = endColor;
 						}
 					}
 					else

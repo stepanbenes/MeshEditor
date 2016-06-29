@@ -143,7 +143,7 @@ namespace MeshEditor.Data
 			return area1 + area2;
 		}
 
-		public override bool ContainsNode(Node n)
+		public override bool ContainsNode_IgnoreMiddleNodes(Node n)
 		{
 			return n == node1 || n == node2 || n == node3 || n == node4;
 		}

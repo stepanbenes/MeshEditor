@@ -27,8 +27,6 @@ namespace MeshEditor.WinUI
 		bool changingActiveScene;
 		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
 
-		readonly bool loadPropertyElements = true;
-
 		public PostprocessViewControl()
 		{
 			InitializeComponent();
@@ -173,9 +171,8 @@ namespace MeshEditor.WinUI
 			if (firstMesh != null)
 			{
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
-				loadMesh(layerId, firstMesh.Index, elementPropertyAttributeIndex);
-
 				var dataVisualizer = new LayerDataVisualizer(layerId);
+				dataVisualizer.MeshReloadRequested += parser => ActiveScene.ReloadMesh(parser);
 				dataVisualizer.UpdateDataSelection(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex));
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
@@ -213,32 +210,10 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
-			if (e.DataSelection != null && e.DataSelection.MeshIndex != layerDataVisualizer.DataSelection?.MeshIndex)
-			{
-				// change of mesh is needed
-				loadMesh(layerDataVisualizer.LayerId, e.DataSelection.MeshIndex, e.DataSelection.ElementPropertyAttributeIndex);
-				layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
-				ActiveScene.SetValue(AvailableValue.DataVisualizer, layerDataVisualizer);
-			}
-			else
-			{
-				// change only data selection
-				layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
-			}
+			layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
 
 			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
-		}
-
-		private void loadMesh(Guid layerId, int meshIndex, int? elementPropertiesAttributeIndex)
-		{
-			var geometry = solutionHub.LoadGeometry(layerId, meshIndex);
-			AttributeDescription elementPropertiesAttribute = null;
-			if (loadPropertyElements && elementPropertiesAttributeIndex.HasValue)
-			{
-				elementPropertiesAttribute = solutionHub.LoadAttribute(layerId, elementPropertiesAttributeIndex.Value);
-			}
-			ActiveScene.ReloadMesh(new LayerMeshFileParser(geometry, elementPropertiesAttribute));
 		}
 
 		private void visualizerSettingsControl_SettingsChanged(object sender, EventArgs e)

@@ -561,7 +561,7 @@ namespace MeshEditor.Graphics
 				Element2D f = good.Pop();
 				foreach (Element2D neighbor in f.GetNeighbors(hardBorderLimit))
 				{
-					if (!result.Contains(neighbor) && neighbor.ContainsNode(node))
+					if (!result.Contains(neighbor) && neighbor.ContainsNode_IgnoreMiddleNodes(node))
 					{
 						result.Add(neighbor);
 						good.Push(neighbor);

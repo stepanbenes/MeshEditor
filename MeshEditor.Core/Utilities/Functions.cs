@@ -490,10 +490,18 @@ namespace MeshEditor.Utilities
 		/// </summary>
 		/// <param name="colorRGBA32">color to invert in RGBA 32 bit format</param>
 		/// <returns>Inverted color</returns>
-		public static int InvertColor(int colorRGBA32, byte alpha)
+		public static int InvertColorKeepAlpha(int colorRGBA32)
 		{
+			int alpha = unchecked((int)0xFF000000) & colorRGBA32;
 			int result = 0x00FFFFFF ^ colorRGBA32;
 			result &= 0x00FFFFFF;
+			result |= alpha;
+			return result;
+		}
+
+		public static int SetAlphaOfColor(int colorRGBA32, byte alpha)
+		{
+			int result = colorRGBA32 & 0x00FFFFFF;
 			result |= alpha << 24;
 			return result;
 		}

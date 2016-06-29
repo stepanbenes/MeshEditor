@@ -2213,7 +2213,7 @@ namespace MeshEditor.Data
 		{
 			foreach (Node n in backFace.IterateThroughAllNodes())
 			{
-				if (!frontFace.ContainsNode(n))
+				if (!frontFace.ContainsNode_IgnoreMiddleNodes(n))
 				{
 					if (Vector3.Dot(n.Position - frontFace.GetSignificantPoint(), frontFace.NormalVector) > 0)
 						return false;
