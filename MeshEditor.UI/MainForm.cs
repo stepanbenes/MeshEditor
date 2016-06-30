@@ -1626,7 +1626,13 @@ namespace MeshEditor.WinUI
 				if (!removeActiveWindow())
 					break;
 			}
+
 			LayoutMode = LayoutMode.Preprocessor;
+
+			updateCaption();
+			updateStatus();
+			updateColorModeButtons();
+			updateRenderModeButtons();
 		}
 
 		#endregion

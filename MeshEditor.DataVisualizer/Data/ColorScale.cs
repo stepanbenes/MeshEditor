@@ -99,8 +99,8 @@ namespace MeshEditor.DataVisualizer.Data
 		#region Static members
 
 		//public static readonly int UndefinedValueColor = 0x003232FD; // blood color for undefined values
-		public static readonly int UndefinedValueColor = 0x00000000; // black color for undefined values
-		public static readonly int OutOfRangeColor = 0x00808080; // gray color for value out of minimum and maximum limit in color scale
+		public static readonly int UndefinedValueColor = unchecked((int)0xFE000000); // black color for undefined values; alpha must be set to this value correctly display color on beams (not zero, almost 255, but not exactly to disable iso-areas shader)
+		public static readonly int OutOfRangeColor = unchecked((int)0xFE808080); // gray color for value out of minimum and maximum limit in color scale
 
 		#endregion
 

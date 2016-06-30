@@ -1105,11 +1105,26 @@ namespace MeshEditor.CoreInterface
 
 		public void ReloadMesh(IMeshFileParser parser)
 		{
-			IMeshCreator meshCreator = new MeshConstructor();
-			Mesh result = meshCreator.CreateMesh(parser, cancelled: null);
-			scene.SetMesh(result);
+			bool isFirstMesh = !ContainsMesh;
+			
+			{
+				IMeshCreator meshCreator = new MeshConstructor();
+				Mesh result;
+				using (parser)
+				{
+					result = meshCreator.CreateMesh(parser, cancelled: null);
+				}
+				scene.SetMesh(result);
+			}
+
 			createBuffers();
 			needToComputeVisibleNodesFlag = true;
+
+			if (isFirstMesh)
+			{
+				scene.SetDefaultCameraView();
+			}
+
 			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
