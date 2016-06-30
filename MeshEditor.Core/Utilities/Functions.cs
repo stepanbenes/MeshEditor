@@ -506,6 +506,11 @@ namespace MeshEditor.Utilities
 			return result;
 		}
 
+		public static int InvertColorSetAlpha(int colorRGBA32, byte alpha)
+		{
+			return InvertColor(colorRGBA32) | (alpha << 24);
+		}
+
 		public static Color HslToColor(float hue, float saturation, float luminance)
 		{
 			float q = (luminance < 0.5f) ? (luminance * (1.0f + saturation)) : (luminance + saturation - (luminance * saturation));

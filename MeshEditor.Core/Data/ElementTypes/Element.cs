@@ -63,10 +63,9 @@ namespace MeshEditor.Data
 		//    set { edgeProperties = value; }
 		//}
 
-		public abstract Node SignificantNode
-		{
-			get;
-		}
+		public abstract Node SignificantNode { get; }
+
+		public abstract int NodeCount { get; }
 
 		#endregion
 
@@ -78,7 +77,6 @@ namespace MeshEditor.Data
 
 		public abstract IEnumerable<Node> IterateThroughAllNodes();
 		public abstract IEnumerable<Node> IterateThroughAllNodesIncludingEdgeMiddleNodes();
-		public abstract int NodeCount { get; }
 
 		public virtual bool ContainsNode_IgnoreMiddleNodes(Node n)
 		{
