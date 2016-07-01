@@ -17,6 +17,7 @@ using MeshEditor.Cuts;
 using System.Text;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MeshEditor.CoreInterface
 {
@@ -1102,7 +1103,7 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public void ReloadMesh(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, LongOpNotifier longOpNotifier)
+		public async Task ReloadMeshAsync(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, LongOpNotifier longOpNotifier)
 		{
 			bool isFirstMesh = !ContainsMesh;
 			
@@ -1116,7 +1117,7 @@ namespace MeshEditor.CoreInterface
 				Mesh result;
 				using (parser)
 				{
-					result = meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested);
+					result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested));
 				}
 				scene.SetMesh(result);
 			}

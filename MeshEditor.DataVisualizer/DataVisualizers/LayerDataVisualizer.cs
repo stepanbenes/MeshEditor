@@ -12,6 +12,7 @@ using MeshEditor.LayerManager.Common;
 using MeshEditor.IO;
 using MeshEditor.DataVisualizer.IO;
 using System.Threading;
+using MeshEditor.CoreInterface;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -34,8 +35,6 @@ namespace MeshEditor.DataVisualizer
 
 		#region Properties
 
-		public event Action<IMeshFileParser> MeshReloadRequested;
-
 		public Guid LayerId { get; }
 
 		public DataSelection DataSelection => dataSelection;
@@ -46,7 +45,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public async Task UpdateDataSelectionAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken)
+		public async Task UpdateDataSelectionAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, LongOpNotifier longOpNotifier)
 		{
 			if (newDataSelection == null)
 			{
@@ -56,7 +55,7 @@ namespace MeshEditor.DataVisualizer
 
 			if (newDataSelection.MeshIndex != dataSelection?.MeshIndex)
 			{
-				await reloadMeshAsync(solutionHub, newDataSelection, cancellationToken);
+				await reloadMeshAsync(solutionHub, newDataSelection, cancellationToken, scene, longOpNotifier);
 			}
 
 			if (dataSelection == null || dataSelection.DataIndex != newDataSelection.DataIndex)
@@ -170,7 +169,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Private methods
 
-		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken)
+		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, LongOpNotifier longOpNotifier)
 		{
 			var geometry = await solutionHub.LoadGeometryAsync(LayerId, newDataSelection.MeshIndex, cancellationToken);
 			AttributeDescription elementPropertiesAttribute = null;
@@ -179,9 +178,7 @@ namespace MeshEditor.DataVisualizer
 				elementPropertiesAttribute = solutionHub.LoadAttribute(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value);
 			}
 
-			// run mesh construction in parallel
-			await Task.Run(() => MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute)));
-			//MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute));
+			await scene.ReloadMeshAsync(new LayerMeshFileParser(geometry, elementPropertiesAttribute), cancellationToken, longOpNotifier);
 
 			currentGeometry = geometry;
 		}

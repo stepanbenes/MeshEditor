@@ -176,10 +176,7 @@ namespace MeshEditor.WinUI
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
 				var dataVisualizer = new LayerDataVisualizer(layerId);
 
-				// NOTE: mesh reloading is made on new thread
-				dataVisualizer.MeshReloadRequested += parser => ActiveScene.ReloadMesh(parser, cancellationToken, longOpNotifier);
-
-				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken);
+				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, longOpNotifier);
 
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
@@ -262,7 +259,7 @@ namespace MeshEditor.WinUI
 			try
 			{
 				var cancellationToken = beginLongOperation();
-				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken);
+				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken, ActiveScene, longOpNotifier);
 				// update colors
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
