@@ -165,7 +165,7 @@ namespace MeshEditor.WinUI
 			return summary;
 		}
 
-		private async Task loadLayerAsync(Guid layerId, CancellationToken cancellationToken)
+		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, CancellationToken cancellationToken)
 		{
 			longOpNotifier.ReportProgress(new LongOpNotifier.State("Loading layer summary...", -1));
 			var summary = getSummaryFileFor(layerId);
@@ -178,8 +178,8 @@ namespace MeshEditor.WinUI
 
 				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, longOpNotifier);
 
-				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
-				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+				scene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
+				scene.PerformAction(AvailableAction.UpdateColorBuffers);
 				visualizerSettingsControl.Settings = dataVisualizer.Settings;
 			}
 
@@ -230,7 +230,7 @@ namespace MeshEditor.WinUI
 				try
 				{
 					var cancellationToken = beginLongOperation();
-					await loadLayerAsync(e.LayerId.Value, cancellationToken);
+					await loadLayerAsync(e.LayerId.Value, ActiveScene, cancellationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -261,9 +261,10 @@ namespace MeshEditor.WinUI
 			try
 			{
 				var cancellationToken = beginLongOperation();
-				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken, ActiveScene, longOpNotifier);
+				var originalScene = ActiveScene;
+				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken, originalScene, longOpNotifier);
 				// update colors
-				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+				originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
 			catch (OperationCanceledException)
 			{ }
