@@ -540,7 +540,7 @@ namespace MeshEditor.WinUI
 				delayTimer.Stop();
 				if (backgroundFileLoader.IsBusy)
 				{
-					progressViewForm = new ProgressViewForm("Loading " + Utilities.Functions.GetFileBatchDescription(files));
+					progressViewForm = new ProgressViewForm("Loading " + Utilities.Functions.GetFileBatchDescription(files), enableCancellation: true);
 					progressViewForm.Cancel += delegate { backgroundFileLoader.CancelAsync(); ioProcessCancelled = true; };
 					progressViewForm.Show();
 				}
@@ -666,7 +666,7 @@ namespace MeshEditor.WinUI
 				delayTimer.Stop();
 				if (backgroundFileSaver.IsBusy)
 				{
-					progressViewForm = new ProgressViewForm("Saving " + Path.GetFileName(filename));
+					progressViewForm = new ProgressViewForm("Saving " + Path.GetFileName(filename), enableCancellation: true);
 					progressViewForm.Cancel += delegate { backgroundFileSaver.CancelAsync(); ioProcessCancelled = true; };
 					progressViewForm.Show();
 				}
@@ -888,21 +888,17 @@ namespace MeshEditor.WinUI
 
 		public void SignalElementByID(bool clear, LongOpNotifier longOpNotifier)
 		{
-			Cursor temp = this.Cursor;
+			
 			if (clear)
 			{
-				try
+				Cursor temp = this.Cursor;
+				using (longOpNotifier.Begin())
 				{
-					longOpNotifier.Begin();
 					this.Cursor = Cursors.WaitCursor;
 					sceneFacade.PerformAction(AvailableAction.ClearSignalElement);
-					return;
 				}
-				finally
-				{
-					this.Cursor = temp;
-					longOpNotifier.End();
-				}
+				this.Cursor = temp;
+				return;
 			}
 
 			InputValueForm form = new InputValueForm("Insert element ID", "Signal element with ID:");

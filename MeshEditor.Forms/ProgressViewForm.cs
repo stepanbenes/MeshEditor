@@ -51,10 +51,11 @@ namespace MeshEditor.WinUI
 		/// Konstruktor formulare
 		/// </summary>
 		/// <param name="caption">titulek, ktery se zobrazi v zahlavi</param>
-		public ProgressViewForm(string caption)
+		public ProgressViewForm(string caption, bool enableCancellation)
 		{
 			InitializeComponent();
 			this.Caption = caption;
+			this.buttonCancel.Enabled = enableCancellation;
 			progressBar.Minimum = 0;
 			progressBar.Maximum = 100;
 		}

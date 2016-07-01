@@ -179,7 +179,9 @@ namespace MeshEditor.DataVisualizer
 				elementPropertiesAttribute = solutionHub.LoadAttribute(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value);
 			}
 
-			MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute));
+			// run mesh construction in parallel
+			await Task.Run(() => MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute)));
+			//MeshReloadRequested?.Invoke(new LayerMeshFileParser(geometry, elementPropertiesAttribute));
 
 			currentGeometry = geometry;
 		}

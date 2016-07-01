@@ -14,23 +14,10 @@ namespace MeshEditor.CoreInterface
 	/// </summary>
 	public class MeshIOEventArgs : EventArgs
 	{
-		private int percentDone; // <0;100>
-		public int PercentDone
-		{
-			get { return percentDone; }
-			set
-			{
-				//if (value < 0)
-				//	percentDone = 0;
-				//else if (value > 100)
-				//	percentDone = 100;
-				//else
-				percentDone = value;
-			}
-		}
+		public int PercentDone { get; set; }
 		
-		public string TaskName { get; private set; }
-		public string OperationName	{ get; set; }
+		public string TaskName { get; }
+		public string OperationName	{ get; }
 
 		public MeshIOEventArgs(int percentDone)
 		{

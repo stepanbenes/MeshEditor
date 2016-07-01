@@ -70,7 +70,7 @@ namespace MeshEditor.IO
 			if (outputFileFormat != VTKFileFormats.SimpleASCII)
 				throw new NotSupportedException(outputFileFormat.ToString() + " file format is not supported.");
 
-			ioea = new MeshIOEventArgs(0);
+			ioea = new MeshIOEventArgs(0, "Saving mesh", null);
 			// TODO: implement SimpleBinary and XML formats
 			// TODO: report progress
 

@@ -169,11 +169,12 @@ namespace MeshEditor.WinUI
 		{
 			Cursor savedCursor = this.Cursor;
 			this.Cursor = Cursors.WaitCursor;
-			longOpNotifier.Begin();
-			// --------------------------------
-			this.sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
-			// --------------------------------
-			longOpNotifier.End();
+			using (longOpNotifier.Begin())
+			{
+				// --------------------------------
+				this.sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
+				// --------------------------------
+			}
 			this.Cursor = savedCursor;
 		}
 
@@ -322,11 +323,12 @@ namespace MeshEditor.WinUI
 			buttonRestoreMesh.Refresh();
 			Cursor savedCursor = this.Cursor;
 			this.Cursor = Cursors.WaitCursor;
-			longOpNotifier.Begin();
-			// --------------------------------
-			sceneFacade.PerformAction(AvailableAction.RestoreMesh);
-			// --------------------------------
-			longOpNotifier.End();
+			using (longOpNotifier.Begin())
+			{
+				// --------------------------------
+				sceneFacade.PerformAction(AvailableAction.RestoreMesh);
+				// --------------------------------
+			}
 			this.Cursor = savedCursor;
 			buttonRestoreMesh.Enabled = true;
 		}

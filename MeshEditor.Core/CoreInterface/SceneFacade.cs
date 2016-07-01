@@ -18,7 +18,6 @@ using System.Text;
 using System.Diagnostics;
 using System.Linq;
 
-
 namespace MeshEditor.CoreInterface
 {
 	/// <summary>
@@ -1103,16 +1102,21 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public void ReloadMesh(IMeshFileParser parser)
+		public void ReloadMesh(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, LongOpNotifier longOpNotifier)
 		{
 			bool isFirstMesh = !ContainsMesh;
 			
 			{
 				IMeshCreator meshCreator = new MeshConstructor();
+				if (longOpNotifier != null)
+				{
+					meshCreator.Step += (s, e) => longOpNotifier.ReportProgress(new LongOpNotifier.State(e.TaskName, e.OperationName, e.PercentDone));
+				}
+
 				Mesh result;
 				using (parser)
 				{
-					result = meshCreator.CreateMesh(parser, cancelled: null);
+					result = meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested);
 				}
 				scene.SetMesh(result);
 			}

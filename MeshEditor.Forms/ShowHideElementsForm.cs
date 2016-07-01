@@ -130,34 +130,35 @@ namespace MeshEditor.WinUI
 
 		private void doIt()
 		{
-			Cursor temp = this.Cursor;
-			this.Cursor = Cursors.WaitCursor;
-			longOpNotifier.Begin();
-
 			MeshStatistics statistics = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
 			if (sceneFacade.ContainsMesh && statistics != null)
 			{
-				CutInfo cutInfo = new CutInfo();
-
-				cutInfo.Action = CutInfo.ActionType.ShowHideElements;
-				cutInfo.ElementPropertiesToShow = getPropertiesToShow(statistics);
-				cutInfo.ElementTypesToShow = getElementTypesToShow(statistics);
-
-				try
+				Cursor temp = this.Cursor;
+				this.Cursor = Cursors.WaitCursor;
+				using (longOpNotifier.Begin())
 				{
-					cutInfo.ValueLimit = getDataValueLimitToShow();
-				}
-				catch (Exception ex)
-				{
-					MessageBox.Show(ex.Message, "Value limit error");
-				}
+					CutInfo cutInfo = new CutInfo();
 
-				cutInfo.HitDecision = checkBoxAllNodesInRange.Checked ? CutInfo.ItemHitDecision.AllNodes : CutInfo.ItemHitDecision.SomeNodes;
+					cutInfo.Action = CutInfo.ActionType.ShowHideElements;
+					cutInfo.ElementPropertiesToShow = getPropertiesToShow(statistics);
+					cutInfo.ElementTypesToShow = getElementTypesToShow(statistics);
 
-				sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
+					try
+					{
+						cutInfo.ValueLimit = getDataValueLimitToShow();
+					}
+					catch (Exception ex)
+					{
+						MessageBox.Show(ex.Message, "Value limit error");
+					}
+
+					cutInfo.HitDecision = checkBoxAllNodesInRange.Checked ? CutInfo.ItemHitDecision.AllNodes : CutInfo.ItemHitDecision.SomeNodes;
+
+					sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
+				}
+				this.Cursor = temp;
 			}
-			longOpNotifier.End();
-			this.Cursor = temp;
+			
 		}
 
 		private Property[] getPropertiesToShow(MeshStatistics statistics)

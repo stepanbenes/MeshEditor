@@ -1,57 +1,131 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace MeshEditor.CoreInterface
 {
-
 	/// <summary>
 	/// trida urcena pro informovani klienta o zacatku a konci nejake operace
 	/// </summary>
 	public class LongOpNotifier
 	{
-		public event EventHandler HasBegun;
-		public event EventHandler HasEnded;
-
-		public event MeshIOEventHandler ProgressChanged;
-
-		public bool IsCancelled
+		public struct Token : IDisposable
 		{
-			get;
-			private set;
-		}
+			private static int tokenCounter = 0;
 
-		public bool IsRunning
-		{
-			get;
-			private set;
-		}
+			public static Token None = default(Token);
 
-		public void Begin()
-		{
-			IsCancelled = false;
-			if (!IsRunning)
+			public static Token CreateNew(LongOpNotifier source)
 			{
-				IsRunning = true;
-				HasBegun?.Invoke(this, EventArgs.Empty);
+				return new Token(source);
+			}
+
+			private LongOpNotifier source;
+			private Token(LongOpNotifier source)
+			{
+				Debug.Assert(source != null);
+				this.source = source;
+				tokenCounter = unchecked(tokenCounter + 1);
+				LongOpId = tokenCounter;
+			}
+
+			public int LongOpId { get; }
+
+			public void Dispose()
+			{
+				source?.End(this);
+			}
+
+			public override int GetHashCode()
+			{
+				return LongOpId.GetHashCode();
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (!(obj is Token))
+					return false;
+				return this.LongOpId == ((Token)obj).LongOpId;
 			}
 		}
 
-		public void End()
+		public struct State
 		{
-			IsRunning = false;
-			HasEnded?.Invoke(this, EventArgs.Empty);
-			//IsCancelled = false;
+			public string TaskName { get; }
+			public string OperationName { get; }
+			public int PercentDone { get; }
+
+			public State(string taskName, string operationName, int percentDone)
+			{
+				TaskName = taskName;
+				OperationName = operationName;
+				PercentDone = percentDone;
+			}
+
+			public State(string taskName, int percentDone)
+				: this(taskName, null, percentDone)
+			{ }
+
+			public State(string taskName)
+				: this(taskName, null, -1)
+			{ }
+
+			public override string ToString()
+			{
+				string state;
+				if (!string.IsNullOrEmpty(TaskName) && !string.IsNullOrEmpty(OperationName))
+					state = TaskName + " / " + OperationName;
+				else if (!string.IsNullOrEmpty(TaskName))
+					state = TaskName;
+				else
+					state = OperationName ?? "";
+
+				if (PercentDone > 0)
+					return $"{state} ({PercentDone}%)";
+
+				return state;
+			}
 		}
 
-		public void Cancel()
+		public event Action<Token, bool> HasBegun;
+		public event Action<Token> HasEnded;
+		public event Action<Token> CancellationRequested;
+
+		public event Action<State> ProgressChanged;
+
+		HashSet<Token> runningOperations = new HashSet<Token>();
+
+		public Token Begin(bool enableCancellation = false)
 		{
-			IsCancelled = true;
+			var token = Token.CreateNew(this);
+			Debug.Assert(!runningOperations.Contains(token));
+			runningOperations.Add(token);
+			HasBegun?.Invoke(token, enableCancellation);
+			return token;
 		}
 
-		public void ReportProgress(int percentDone, string taskName, string operationName = null)
+		public void End(Token operationToken)
 		{
-			ProgressChanged?.Invoke(this, new MeshIOEventArgs(percentDone, taskName, operationName));
+			if (runningOperations.Remove(operationToken))
+			{
+				HasEnded?.Invoke(operationToken);
+			}
+		}
+
+		public void Cancel(Token operationToken)
+		{
+			CancellationRequested?.Invoke(operationToken);
+		}
+
+		public void ReportProgress(State operationState)
+		{
+			ProgressChanged?.Invoke(operationState);
+		}
+
+		public bool IsRunningSingle(Token operationToken)
+		{
+			return runningOperations.Count == 1 && runningOperations.Contains(operationToken);
 		}
 	}
 }

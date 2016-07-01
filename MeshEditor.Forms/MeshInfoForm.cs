@@ -180,14 +180,15 @@ namespace MeshEditor.WinUI
 				}
 
 				// -----------------------------------------------
-				longOpNotifier.Begin();
-				Cursor temp = this.Cursor;
-				this.Cursor = Cursors.WaitCursor;
-				// -----------------------------------------------
-				sceneFacade.PerformAction(AvailableAction.Refresh);
-				// -----------------------------------------------
-				this.Cursor = temp;
-				longOpNotifier.End();
+				using (longOpNotifier.Begin())
+				{
+					Cursor temp = this.Cursor;
+					this.Cursor = Cursors.WaitCursor;
+					// -----------------------------------------------
+					sceneFacade.PerformAction(AvailableAction.Refresh);
+					// -----------------------------------------------
+					this.Cursor = temp;
+				}
 				// -----------------------------------------------
 			}
 		}

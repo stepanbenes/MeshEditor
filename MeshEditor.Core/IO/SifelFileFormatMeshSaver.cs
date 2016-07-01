@@ -47,7 +47,7 @@ namespace MeshEditor.IO
 		public void SaveMesh(Mesh mesh, string filename, bool saveWithoutHiddenElements, YesNoQuestion cancelled)
 		{
 			itemIndex = itemsToWrite = 0;
-			ioea = new MeshIOEventArgs(0);
+			ioea = new MeshIOEventArgs(0, "Saving mesh", null);
 			this.mesh = mesh;
 			string destinationFile = Path.GetTempFileName();
 			initOutput(destinationFile);

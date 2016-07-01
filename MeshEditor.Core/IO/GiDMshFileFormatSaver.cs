@@ -30,7 +30,7 @@ namespace MeshEditor.IO
 
 		public void SaveMesh(Mesh mesh, string filename, bool saveWithoutCuttedElements, YesNoQuestion cancelled)
 		{
-			ioea = new MeshIOEventArgs(0);
+			ioea = new MeshIOEventArgs(0, "Saving mesh", null);
 			generateMaps(mesh, saveWithoutCuttedElements);
             string meshName = Path.GetFileNameWithoutExtension(mesh.Filename);
 
@@ -45,7 +45,7 @@ namespace MeshEditor.IO
 		public void SaveMesh(IMeshFileParser fileParser, string destination, YesNoQuestion cancelled)
 		{
 			Debug.Assert(fileParser != null && !string.IsNullOrEmpty(destination));
-			ioea = new MeshIOEventArgs(0);
+			ioea = new MeshIOEventArgs(0, "Saving mesh", null);
 			generateMaps(fileParser);
 			string meshName = Path.GetFileNameWithoutExtension(fileParser.Filename);
 

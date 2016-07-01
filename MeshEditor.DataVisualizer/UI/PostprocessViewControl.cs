@@ -175,34 +175,43 @@ namespace MeshEditor.WinUI
 			{
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
 				var dataVisualizer = new LayerDataVisualizer(layerId);
-				dataVisualizer.MeshReloadRequested += parser => ActiveScene.ReloadMesh(parser);
+
+				// NOTE: mesh reloading is made on new thread
+				dataVisualizer.MeshReloadRequested += parser => ActiveScene.ReloadMesh(parser, cancellationToken, longOpNotifier);
+
 				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken);
+
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
-
 				visualizerSettingsControl.Settings = dataVisualizer.Settings;
 			}
 		}
 
 		CancellationTokenSource currentCts;
+		LongOpNotifier.Token currentOperationToken;
 
-		private CancellationToken beginCancellableOperation()
+		private CancellationToken beginLongOperation()
 		{
-			if (currentCts != null)
-			{
-				currentCts.Cancel();
-				endCancellableOperation();
-			}
+			cancelOperation(); // ongoing operation exists
 
-			//longOpNotifier.Begin();
+			currentOperationToken = longOpNotifier.Begin();
 
 			currentCts = new CancellationTokenSource();
 			return currentCts.Token;
 		}
 
-		private void endCancellableOperation()
+		private void cancelOperation()
 		{
-			//longOpNotifier.End();
+			if (currentCts != null)
+			{
+				currentCts.Cancel();
+				endLongOperation();
+			}
+		}
+
+		private void endLongOperation()
+		{
+			longOpNotifier.End(currentOperationToken);
 
 			if (currentCts != null)
 			{
@@ -221,14 +230,14 @@ namespace MeshEditor.WinUI
 			{
 				try
 				{
-					var cancellationToken = beginCancellableOperation();
+					var cancellationToken = beginLongOperation();
 					await loadLayerAsync(e.LayerId.Value, cancellationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
 				finally
 				{
-					endCancellableOperation();
+					endLongOperation();
 				}
 			}
 			else
@@ -252,18 +261,17 @@ namespace MeshEditor.WinUI
 
 			try
 			{
-				var cancellationToken = beginCancellableOperation();
+				var cancellationToken = beginLongOperation();
 				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken);
+				// update colors
+				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
 			catch (OperationCanceledException)
 			{ }
 			finally
 			{
-				endCancellableOperation();
+				endLongOperation();
 			}
-
-			// update colors
-			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 		}
 
 		private void visualizerSettingsControl_SettingsChanged(object sender, EventArgs e)
@@ -274,6 +282,28 @@ namespace MeshEditor.WinUI
 
 			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+		}
+
+		#endregion
+
+		#region Overrides
+
+		/// <summary> 
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				cancelOperation();
+
+				if (components != null)
+				{
+					components.Dispose();
+				}
+			}
+			base.Dispose(disposing);
 		}
 
 		#endregion

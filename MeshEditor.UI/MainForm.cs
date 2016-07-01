@@ -59,7 +59,7 @@ namespace MeshEditor.WinUI
 			this.userGuideFilePath = Path.Combine(Application.StartupPath, SceneFacade.UserGuideFileName);
 			this.propertyColorsConfigFilePath = Path.Combine(Application.StartupPath, SceneFacade.PropertyColorsConfigFileName);
 
-            SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
+			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
 			SceneFacade.ShowError += new ShowErrorEventHandler(SceneFacade_ShowError);
 
 			this.cutEditorForm = null;
@@ -113,7 +113,7 @@ namespace MeshEditor.WinUI
 							break;
 						case LayoutMode.Postprocessor:
 							{
-								var postprocessView = new PostprocessViewControl (longOpNotifier) { Content = content, Dock = DockStyle.Fill };
+								var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = content, Dock = DockStyle.Fill };
 								centralPanel.Controls.Add(postprocessView);
 								postprocessView.SplitterDistance = 200;
 								postprocessView.ActiveScene = activeControl.SceneFacade;
@@ -560,16 +560,18 @@ namespace MeshEditor.WinUI
 
 		private void deleteSelectedElementsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			longOpNotifier.Begin();
-			activeControl.SceneFacade.PerformAction(AvailableAction.DeleteSelectedElements);
-			longOpNotifier.End();
+			using (longOpNotifier.Begin())
+			{
+				activeControl.SceneFacade.PerformAction(AvailableAction.DeleteSelectedElements);
+			}
 		}
 
 		private void restoreMeshToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			longOpNotifier.Begin();
-			activeControl.SceneFacade.PerformAction(AvailableAction.RestoreMesh);
-			longOpNotifier.End();
+			using (longOpNotifier.Begin())
+			{
+				activeControl.SceneFacade.PerformAction(AvailableAction.RestoreMesh);
+			}
 		}
 
 		private void splitActiveWindowToolStripMenuItem_Click(object sender, EventArgs e)
@@ -761,7 +763,7 @@ namespace MeshEditor.WinUI
 			selectAllToolStripMenuItem.Text = "Select all " + selectAllName;
 			selectItemsByPropertyToolStripMenuItem.Text = prefix + selectAllName + suffixByProperty;
 			takeScreenshotToolStripMenuItem.Enabled = activeControl.SceneFacade.ContainsMesh;
-        }
+		}
 
 		private void renderMode_item_click(object sender, EventArgs e)
 		{
@@ -941,9 +943,11 @@ namespace MeshEditor.WinUI
 		{
 			if (!activeControl.SceneFacade.ContainsMesh)
 				return;
-			longOpNotifier.Begin();
-			ListOfSelectedItemsForm form = new ListOfSelectedItemsForm(activeControl.SceneFacade);
-			longOpNotifier.End();
+			ListOfSelectedItemsForm form;
+			using (longOpNotifier.Begin())
+			{
+				form = new ListOfSelectedItemsForm(activeControl.SceneFacade);
+			}
 			form.ShowDialog();
 		}
 
@@ -1126,17 +1130,17 @@ namespace MeshEditor.WinUI
 		{
 			longOpNotifier = new LongOpNotifier();
 
-			longOpNotifier.HasBegun += delegate
+			longOpNotifier.HasBegun += (token, enableCancellation) =>
 			{
 				this.Cursor = Cursors.WaitCursor;
 				activeControl.Cursor = Cursors.WaitCursor;
-				statusLabel.Text = "Wait for operation to finish ...";
+				statusLabel.Text = "Operation in progress...";
 				statusLabel.ForeColor = Color.Blue;
 				statusStrip.Refresh();
 
-				setupProgressViewTimer();
+				setupProgressViewTimer(token, enableCancellation);
 			};
-			longOpNotifier.HasEnded += delegate
+			longOpNotifier.HasEnded += token =>
 			{
 				this.Cursor = Cursors.Default;
 				activeControl.SetCursorAccordingToEditorMode();
@@ -1148,47 +1152,45 @@ namespace MeshEditor.WinUI
 					progressViewForm = null;
 				}
 			};
-			longOpNotifier.ProgressChanged += delegate (object s, MeshIOEventArgs e)
+			longOpNotifier.ProgressChanged += state =>
 			{
-				Action reportAction = delegate
-				{
-					reportOperationProgress(e.PercentDone, e.TaskName, e.OperationName);
-				};
-				this.Invoke(reportAction); // dispatch to UI thread
+				Action<LongOpNotifier.State> reportAction = reportOperationProgress;
+				this.Invoke(reportAction, state); // dispatch to UI thread
 			};
 		}
 
-		private void reportOperationProgress(int percentDone, string taskName, string operationName)
+		private void reportOperationProgress(LongOpNotifier.State operationState)
 		{
-			statusLabel.Text = taskName;
-			if (percentDone > 0)
-				statusLabel.Text += string.Format(" ({0}%)", percentDone);
+			statusLabel.Text = operationState.ToString();
 			statusStrip.Refresh();
 
 			if (progressViewForm != null)
 			{
-				progressViewForm.Caption = taskName;
-				progressViewForm.OperationName = operationName;
-				progressViewForm.SetProgressState(percentDone);
+				progressViewForm.Caption = operationState.TaskName;
+				progressViewForm.OperationName = operationState.OperationName;
+				progressViewForm.SetProgressState(operationState.PercentDone);
 			}
 		}
 
-		private void setupProgressViewTimer()
+		private void setupProgressViewTimer(LongOpNotifier.Token operationToken, bool enableCancellation)
 		{
 			System.Windows.Forms.Timer delayTimer = new System.Windows.Forms.Timer();
 			delayTimer.Interval = 500;
 			delayTimer.Tick += delegate
 			{
 				delayTimer.Stop();
-				if (longOpNotifier.IsRunning)
+
+				if (longOpNotifier.IsRunningSingle(operationToken))
 				{
 					Debug.Assert(progressViewForm == null);
-					progressViewForm = new ProgressViewForm("Processing operation ...");
-					progressViewForm.Cancel += delegate { longOpNotifier.Cancel(); };
-
+					progressViewForm = new ProgressViewForm("Operation in progress...", enableCancellation);
+					if (enableCancellation)
+					{
+						progressViewForm.Cancel += delegate { longOpNotifier.Cancel(operationToken); };
+					}
 					this.Cursor = Cursors.Default;
 					activeControl.SetCursorAccordingToEditorMode();
-
+					progressViewForm.SetProgressState(-1);
 					progressViewForm.Show();
 				}
 			};
