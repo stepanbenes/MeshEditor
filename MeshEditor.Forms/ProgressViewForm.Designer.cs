@@ -73,7 +73,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(386, 75);
+			this.ClientSize = new System.Drawing.Size(386, 70);
 			this.ControlBox = false;
 			this.Controls.Add(this.labelOperationName);
 			this.Controls.Add(this.buttonCancel);
@@ -85,7 +85,7 @@
 			this.MinimumSize = new System.Drawing.Size(229, 109);
 			this.Name = "ProgressViewForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Processing operation ...";
+			this.Text = "Operation in progress ...";
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

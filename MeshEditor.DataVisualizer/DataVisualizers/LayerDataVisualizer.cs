@@ -67,6 +67,7 @@ namespace MeshEditor.DataVisualizer
 				else
 				{
 					Debug.Assert(solutionHub != null);
+					longOpNotifier.ReportProgress(new LongOpNotifier.State($"Loading {newDataSelection.FieldName}...", -1));
 					var componentList = await solutionHub.LoadDataAsync(LayerId, newDataSelection.DataIndex.Value, cancellationToken);
 					data = componentList.ToDictionary(d => d.TimeStep);
 				}
@@ -171,6 +172,7 @@ namespace MeshEditor.DataVisualizer
 
 		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, LongOpNotifier longOpNotifier)
 		{
+			longOpNotifier.ReportProgress(new LongOpNotifier.State("Loading geometry...", -1));
 			var geometry = await solutionHub.LoadGeometryAsync(LayerId, newDataSelection.MeshIndex, cancellationToken);
 			AttributeDescription elementPropertiesAttribute = null;
 			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)

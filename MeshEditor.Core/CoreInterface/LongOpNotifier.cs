@@ -88,20 +88,22 @@ namespace MeshEditor.CoreInterface
 			}
 		}
 
-		public event Action<Token, bool> HasBegun;
+		public event Action<Token> HasBegun;
 		public event Action<Token> HasEnded;
 		public event Action<Token> CancellationRequested;
 
 		public event Action<State> ProgressChanged;
 
+		public State LastReportedState { get; private set; }
+
 		HashSet<Token> runningOperations = new HashSet<Token>();
 
-		public Token Begin(bool enableCancellation = false)
+		public Token Begin()
 		{
 			var token = Token.CreateNew(this);
 			Debug.Assert(!runningOperations.Contains(token));
 			runningOperations.Add(token);
-			HasBegun?.Invoke(token, enableCancellation);
+			HasBegun?.Invoke(token);
 			return token;
 		}
 
@@ -120,6 +122,7 @@ namespace MeshEditor.CoreInterface
 
 		public void ReportProgress(State operationState)
 		{
+			LastReportedState = operationState;
 			ProgressChanged?.Invoke(operationState);
 		}
 

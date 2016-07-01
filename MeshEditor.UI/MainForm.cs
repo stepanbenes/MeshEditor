@@ -1130,7 +1130,7 @@ namespace MeshEditor.WinUI
 		{
 			longOpNotifier = new LongOpNotifier();
 
-			longOpNotifier.HasBegun += (token, enableCancellation) =>
+			longOpNotifier.HasBegun += token =>
 			{
 				this.Cursor = Cursors.WaitCursor;
 				activeControl.Cursor = Cursors.WaitCursor;
@@ -1138,7 +1138,7 @@ namespace MeshEditor.WinUI
 				statusLabel.ForeColor = Color.Blue;
 				statusStrip.Refresh();
 
-				setupProgressViewTimer(token, enableCancellation);
+				setupProgressViewTimer(token);
 			};
 			longOpNotifier.HasEnded += token =>
 			{
@@ -1172,7 +1172,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void setupProgressViewTimer(LongOpNotifier.Token operationToken, bool enableCancellation)
+		private void setupProgressViewTimer(LongOpNotifier.Token operationToken)
 		{
 			System.Windows.Forms.Timer delayTimer = new System.Windows.Forms.Timer();
 			delayTimer.Interval = 500;
@@ -1183,14 +1183,13 @@ namespace MeshEditor.WinUI
 				if (longOpNotifier.IsRunningSingle(operationToken))
 				{
 					Debug.Assert(progressViewForm == null);
-					progressViewForm = new ProgressViewForm("Operation in progress...", enableCancellation);
-					if (enableCancellation)
-					{
-						progressViewForm.Cancel += delegate { longOpNotifier.Cancel(operationToken); };
-					}
+					progressViewForm = new ProgressViewForm(longOpNotifier.LastReportedState.TaskName ?? "Operation in progress...", enableCancellation: false);
+					progressViewForm.OperationName = longOpNotifier.LastReportedState.OperationName;
+					progressViewForm.SetProgressState(longOpNotifier.LastReportedState.PercentDone);
+
 					this.Cursor = Cursors.Default;
 					activeControl.SetCursorAccordingToEditorMode();
-					progressViewForm.SetProgressState(-1);
+					
 					progressViewForm.Show();
 				}
 			};
@@ -1364,8 +1363,11 @@ namespace MeshEditor.WinUI
 
 		private void updateStatus()
 		{
-			string desc = (string)this.activeControl.SceneFacade.GetValue(AvailableValue.Status);
-			this.statusLabel.Text = string.IsNullOrEmpty(desc) ? "Ready" : desc;
+			if (statusLabel.ForeColor == Color.Black)
+			{
+				string desc = (string)activeControl.SceneFacade.GetValue(AvailableValue.Status);
+				statusLabel.Text = string.IsNullOrEmpty(desc) ? "Ready" : desc;
+			}
 		}
 
 		private bool activeWindowCanBeClosed()

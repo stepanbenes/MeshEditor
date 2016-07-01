@@ -167,9 +167,9 @@ namespace MeshEditor.WinUI
 
 		private async Task loadLayerAsync(Guid layerId, CancellationToken cancellationToken)
 		{
+			longOpNotifier.ReportProgress(new LongOpNotifier.State("Loading layer summary...", -1));
 			var summary = getSummaryFileFor(layerId);
-			dataSelectionControl.UpdateDataSource(summary, null);
-
+			
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
@@ -182,6 +182,8 @@ namespace MeshEditor.WinUI
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 				visualizerSettingsControl.Settings = dataVisualizer.Settings;
 			}
+
+			dataSelectionControl.UpdateDataSource(summary, null);
 		}
 
 		CancellationTokenSource currentCts;
