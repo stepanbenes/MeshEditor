@@ -14,6 +14,7 @@ using MeshEditor.SolutionManager.IO;
 using MeshEditor.DataVisualizer.IO;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
+using System.Threading;
 
 namespace MeshEditor.WinUI
 {
@@ -26,10 +27,12 @@ namespace MeshEditor.WinUI
 		SceneFacade activeScene;
 		bool changingActiveScene;
 		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
+		LongOpNotifier longOpNotifier;
 
-		public PostprocessViewControl()
+		public PostprocessViewControl(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
+			this.longOpNotifier = longOpNotifier;
 			splitContainer1.FixedPanel = FixedPanel.Panel1;
 
 			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
@@ -162,7 +165,7 @@ namespace MeshEditor.WinUI
 			return summary;
 		}
 
-		private void loadLayer(Guid layerId)
+		private async Task loadLayerAsync(Guid layerId, CancellationToken cancellationToken)
 		{
 			var summary = getSummaryFileFor(layerId);
 			dataSelectionControl.UpdateDataSource(summary, null);
@@ -173,7 +176,7 @@ namespace MeshEditor.WinUI
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
 				var dataVisualizer = new LayerDataVisualizer(layerId);
 				dataVisualizer.MeshReloadRequested += parser => ActiveScene.ReloadMesh(parser);
-				dataVisualizer.UpdateDataSelection(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex));
+				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken);
 				ActiveScene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
 
@@ -181,7 +184,34 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
+		CancellationTokenSource currentCts;
+
+		private CancellationToken beginCancellableOperation()
+		{
+			if (currentCts != null)
+			{
+				currentCts.Cancel();
+				endCancellableOperation();
+			}
+
+			//longOpNotifier.Begin();
+
+			currentCts = new CancellationTokenSource();
+			return currentCts.Token;
+		}
+
+		private void endCancellableOperation()
+		{
+			//longOpNotifier.End();
+
+			if (currentCts != null)
+			{
+				currentCts.Dispose();
+				currentCts = null;
+			}
+		}
+
+		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
@@ -189,7 +219,17 @@ namespace MeshEditor.WinUI
 
 			if (e.LayerId.HasValue)
 			{
-				loadLayer(e.LayerId.Value);
+				try
+				{
+					var cancellationToken = beginCancellableOperation();
+					await loadLayerAsync(e.LayerId.Value, cancellationToken);
+				}
+				catch (OperationCanceledException)
+				{ }
+				finally
+				{
+					endCancellableOperation();
+				}
 			}
 			else
 			{
@@ -199,7 +239,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
+		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
@@ -210,7 +250,17 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
-			layerDataVisualizer.UpdateDataSelection(solutionHub, e.DataSelection);
+			try
+			{
+				var cancellationToken = beginCancellableOperation();
+				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken);
+			}
+			catch (OperationCanceledException)
+			{ }
+			finally
+			{
+				endCancellableOperation();
+			}
 
 			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);

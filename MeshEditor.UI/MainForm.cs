@@ -113,7 +113,7 @@ namespace MeshEditor.WinUI
 							break;
 						case LayoutMode.Postprocessor:
 							{
-								var postprocessView = new PostprocessViewControl { Content = content, Dock = DockStyle.Fill };
+								var postprocessView = new PostprocessViewControl (longOpNotifier) { Content = content, Dock = DockStyle.Fill };
 								centralPanel.Controls.Add(postprocessView);
 								postprocessView.SplitterDistance = 200;
 								postprocessView.ActiveScene = activeControl.SceneFacade;

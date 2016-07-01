@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Common;
@@ -116,16 +117,16 @@ namespace MeshEditor.SolutionManager
 			return from layer in solutionController.Get(solutionId).Layers select layer;
 		}
 
-		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
+		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
-			return layerGenerator.LoadGeometry(layerId, meshIndex);
+			return layerGenerator.LoadGeometryAsync(layerId, meshIndex, cancellationToken);
 		}
 
-		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
+		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
-			return layerGenerator.LoadData(layerId, dataIndex);
+			return layerGenerator.LoadDataAsync(layerId, dataIndex, cancellationToken);
 		}
 
 		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)

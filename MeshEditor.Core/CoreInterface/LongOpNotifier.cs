@@ -30,18 +30,17 @@ namespace MeshEditor.CoreInterface
 		public void Begin()
 		{
 			IsCancelled = false;
-			IsRunning = true;
-			var handler = HasBegun;
-			if (handler != null)
-				handler(this, EventArgs.Empty);
+			if (!IsRunning)
+			{
+				IsRunning = true;
+				HasBegun?.Invoke(this, EventArgs.Empty);
+			}
 		}
 
 		public void End()
 		{
 			IsRunning = false;
-			var handler = HasEnded;
-			if (handler != null)
-				handler(this, EventArgs.Empty);
+			HasEnded?.Invoke(this, EventArgs.Empty);
 			//IsCancelled = false;
 		}
 
@@ -52,9 +51,7 @@ namespace MeshEditor.CoreInterface
 
 		public void ReportProgress(int percentDone, string taskName, string operationName = null)
 		{
-			var handler = ProgressChanged;
-			if (handler != null)
-				handler(this, new MeshIOEventArgs(percentDone, taskName, operationName));
+			ProgressChanged?.Invoke(this, new MeshIOEventArgs(percentDone, taskName, operationName));
 		}
 	}
 }

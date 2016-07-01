@@ -14,6 +14,7 @@ using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.LayerManager.Common;
 using MeshEditor.LayerManager.MeshFiltering;
+using System.Threading;
 
 namespace MeshEditor.LayerManager
 {
@@ -249,12 +250,30 @@ namespace MeshEditor.LayerManager
 
 		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
 		{
-			return loadGeometry(getLayerMeshRecordName(layerId, meshIndex));
+			using (Stream meshStream = sourceStorage.Load(getLayerMeshRecordName(layerId, meshIndex)))
+			{
+				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
+				return createGeometryFromLayerMesh(layerMesh);
+			}
+		}
+
+		public async Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
+		{
+			using (Stream meshStream = sourceStorage.Load(getLayerMeshRecordName(layerId, meshIndex)))
+			{
+				MeshFile layerMesh = await serializationService.DeserializeAsync<MeshFile>(meshStream, cancellationToken);
+				return createGeometryFromLayerMesh(layerMesh);
+			}
 		}
 
 		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
 		{
 			return loadData(getLayerResultRecordName(layerId, dataIndex));
+		}
+
+		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
+		{
+			return loadDataAsync(getLayerResultRecordName(layerId, dataIndex), cancellationToken);
 		}
 
 		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
@@ -266,20 +285,20 @@ namespace MeshEditor.LayerManager
 
 		#region Private methods
 
-		private GeometryDescription loadGeometry(string recordName)
-		{
-			using (Stream meshStream = sourceStorage.Load(recordName))
-			{
-				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
-				return createGeometryFromLayerMesh(layerMesh);
-			}
-		}
-
 		private IEnumerable<ComponentDataDescription> loadData(string record)
 		{
 			using (Stream stream = sourceStorage.Load(record))
 			{
 				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
+				return createDataDescriptionFromLayerResult(layerResult);
+			}
+		}
+
+		private async Task<IEnumerable<ComponentDataDescription>> loadDataAsync(string record, CancellationToken cancellationToken)
+		{
+			using (Stream stream = sourceStorage.Load(record))
+			{
+				DataFile layerResult = await serializationService.DeserializeAsync<DataFile>(stream, cancellationToken);
 				return createDataDescriptionFromLayerResult(layerResult);
 			}
 		}

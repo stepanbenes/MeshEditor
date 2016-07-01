@@ -11,6 +11,7 @@ using MeshEditor.SolutionManager;
 using MeshEditor.LayerManager.Common;
 using MeshEditor.IO;
 using MeshEditor.DataVisualizer.IO;
+using System.Threading;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -45,7 +46,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateDataSelection(SolutionHub solutionHub, DataSelection newDataSelection) // TODO: make async
+		public async Task UpdateDataSelectionAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken)
 		{
 			if (newDataSelection == null)
 			{
@@ -55,7 +56,7 @@ namespace MeshEditor.DataVisualizer
 
 			if (newDataSelection.MeshIndex != dataSelection?.MeshIndex)
 			{
-				reloadMesh(solutionHub, newDataSelection);
+				await reloadMeshAsync(solutionHub, newDataSelection, cancellationToken);
 			}
 
 			if (dataSelection == null || dataSelection.DataIndex != newDataSelection.DataIndex)
@@ -67,7 +68,8 @@ namespace MeshEditor.DataVisualizer
 				else
 				{
 					Debug.Assert(solutionHub != null);
-					data = solutionHub.LoadData(LayerId, newDataSelection.DataIndex.Value).ToDictionary(d => d.TimeStep);
+					var componentList = await solutionHub.LoadDataAsync(LayerId, newDataSelection.DataIndex.Value, cancellationToken);
+					data = componentList.ToDictionary(d => d.TimeStep);
 				}
 			}
 
@@ -168,9 +170,9 @@ namespace MeshEditor.DataVisualizer
 
 		#region Private methods
 
-		private void reloadMesh(SolutionHub solutionHub, DataSelection newDataSelection)
+		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken)
 		{
-			var geometry = solutionHub.LoadGeometry(LayerId, newDataSelection.MeshIndex);
+			var geometry = await solutionHub.LoadGeometryAsync(LayerId, newDataSelection.MeshIndex, cancellationToken);
 			AttributeDescription elementPropertiesAttribute = null;
 			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
 			{
