@@ -50,7 +50,7 @@ namespace MeshEditor.WinUI
 			Debug.Assert(layerSummary != null);
 			int dataIndex = selectedTimeStepComboBoxItem.Value.DataIndex;
 			int meshIndex = selectedTimeStepComboBoxItem.Value.MeshIndex;
-			int? elementPropertyAttributeIndex = layerSummary.Meshes.Single(m => m.Index == meshIndex).Attributes?.FirstOrDefault(a => a.FieldName == "ElementProperty")?.Index;
+			int? elementPropertyAttributeIndex = layerSummary.Meshes.Single(m => m.Index == meshIndex).Attributes?.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 
 			return new DataSelection(selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, dataIndex, meshIndex, elementPropertyAttributeIndex);
 		}
