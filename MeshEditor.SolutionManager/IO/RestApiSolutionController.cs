@@ -6,9 +6,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Common;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
-using MeshEditor.SolutionManager.Logging;
 using RestSharp;
 
 namespace MeshEditor.SolutionManager.IO
@@ -128,11 +128,11 @@ namespace MeshEditor.SolutionManager.IO
 
 		private IRestResponse executeRequest(RestClient client, RestRequest request)
 		{
-			logger?.LogMessage($"{request.Method} {request.Resource}");
+			logger?.LogOperationProgress($"{request.Method} {request.Resource}");
 
 			var response = client.Execute(request);
 
-			logger?.LogMessage($"Status: {response.StatusDescription} ({(int)response.StatusCode})");
+			logger?.LogOperationProgress($"Status: {response.StatusDescription} ({(int)response.StatusCode})");
 			if (response.ErrorException != null)
 				throw response.ErrorException;
 			if (isErrorStatusCode(response.StatusCode))

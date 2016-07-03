@@ -16,7 +16,6 @@ using MeshEditor.LayerManager.Storage;
 using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.Configuration;
 using MeshEditor.SolutionManager.IO;
-using MeshEditor.SolutionManager.Logging;
 
 namespace MeshEditor.SolutionManager
 {
@@ -119,25 +118,25 @@ namespace MeshEditor.SolutionManager
 
 		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			return layerGenerator.LoadGeometryAsync(layerId, meshIndex, cancellationToken);
 		}
 
 		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			return layerGenerator.LoadDataAsync(layerId, dataIndex, cancellationToken);
 		}
 
 		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			return layerGenerator.LoadAttribute(layerId, attributeIndex);
 		}
 
 		public SummaryFile LoadLayerSummary(Guid layerId)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			return layerGenerator.LoadLayerSummary(layerId);
 		}
 
@@ -157,7 +156,7 @@ namespace MeshEditor.SolutionManager
 
 			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result));
 
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices);
 			logNewLayer(masterLayer);
 			
@@ -175,7 +174,7 @@ namespace MeshEditor.SolutionManager
 
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			var filterLayer = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, layerName);
 			logNewLayer(filterLayer);
 			// convert filter layer to layer record and append it to parent layer's children
@@ -194,7 +193,7 @@ namespace MeshEditor.SolutionManager
 
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
-			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method, compressionParameters), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method, compressionParameters), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, compressedLayerName ?? $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
 			logNewLayer(compressedLayer);
 			// convert filter layer to layer record and append it to parent layer's children
@@ -206,7 +205,7 @@ namespace MeshEditor.SolutionManager
 		public void Delete(string layerIdOrName, bool deleteAll)
 		{
 			Solution solution = solutionController.Get(solutionId);
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, progressReporter: createProgressReporter());
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			IEnumerable<Solution.Layer> layersToDelete = deleteAll ? solution.Layers : Enumerable.Repeat(findLayer(solution, layerIdOrName), 1);
 			foreach (var rootLayer in layersToDelete)
 			{
@@ -310,14 +309,6 @@ namespace MeshEditor.SolutionManager
 				}
 			}
 			return null;
-		}
-
-		private IProgress<OperationState> createProgressReporter()
-		{
-			return new Progress<OperationState>
-				(
-					state => logger?.LogMessage(state.State)
-				);
 		}
 
 		private void logNewLayer(SummaryFile layerSummary)

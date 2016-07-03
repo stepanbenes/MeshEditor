@@ -6,10 +6,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
-using MeshEditor.LayerManager.Storage;
-using MeshEditor.SolutionManager.AzureStorage;
-using MeshEditor.SolutionManager.IO;
-using MeshEditor.SolutionManager.Logging;
 
 namespace MeshEditor.SolutionManager.Configuration
 {

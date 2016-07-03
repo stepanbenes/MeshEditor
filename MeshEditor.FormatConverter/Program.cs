@@ -7,9 +7,9 @@ using CommandLine;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MeshEditor.SolutionManager;
-using MeshEditor.SolutionManager.Logging;
 using MeshEditor.SolutionManager.IO;
 using Microsoft.Azure.WebJobs;
+using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.FormatConverter
 {
@@ -40,19 +40,16 @@ namespace MeshEditor.FormatConverter
 
 				int returnCode = 1;
 				Stopwatch stopwatch = new Stopwatch();
-				var program = new Program(isRunningLocally, StorageType.Local);
+				var program = new Program(isRunningLocally, storageType: StorageType.Local, logger: new ConsoleLogger());
 				stopwatch.Start();
 				try
 				{
-					returnCode = program.Run(args, Console.Out);
+					returnCode = program.Run(args);
 				}
 				catch (Exception ex)
 				{
-					var color = Console.ForegroundColor;
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine($"{ex.GetType().FullName}");
-					Console.WriteLine($"{ex.Message + Environment.NewLine + Environment.NewLine} {ex.StackTrace}");
-					Console.ForegroundColor = color;
+					ConsoleLogger.WriteLineColored(ex.GetType().FullName, ConsoleColor.Red);
+					ConsoleLogger.WriteLineColored(ex.Message + Environment.NewLine + Environment.NewLine + ex.StackTrace, ConsoleColor.Red);
 					returnCode = -1;
 				}
 				finally
@@ -60,20 +57,15 @@ namespace MeshEditor.FormatConverter
 					stopwatch.Stop();
 					if (returnCode != 1)
 					{
-						var color = Console.ForegroundColor;
 						if (returnCode == 0)
 						{
-							Console.ForegroundColor = ConsoleColor.Green;
-							Console.Write("Success. ");
+							ConsoleLogger.WriteColored("Success. ", ConsoleColor.Green);
 						}
 						else
 						{
-							Console.ForegroundColor = ConsoleColor.Red;
-							Console.Write("Fail. ");
+							ConsoleLogger.WriteColored("Fail. ", ConsoleColor.Red);
 						}
-						Console.ForegroundColor = ConsoleColor.Gray;
-						Console.WriteLine($"Execution time: {stopwatch.Elapsed}");
-						Console.ForegroundColor = color;
+						ConsoleLogger.WriteLineColored($"Execution time: {stopwatch.Elapsed}", ConsoleColor.Gray);
 					}
 				}
 				return returnCode;
@@ -97,20 +89,21 @@ namespace MeshEditor.FormatConverter
 		readonly bool isRunningLocally;
 		readonly StorageType storageType;
 
-		public Program(bool isRunningLocally, StorageType storageType)
+		public Program(bool isRunningLocally, StorageType storageType, ILogger logger)
 		{
 			this.isRunningLocally = isRunningLocally;
 			this.storageType = storageType;
+			this.logger = logger;
 		}
 
 		#endregion
 
 		#region Public methods
 
-		public int Run(IEnumerable<string> args, TextWriter log)
+		public int Run(IEnumerable<string> args)
 		{
 			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions>(args)
-					.WithParsed((Options options) => initializeSolutionHub(options, log))
+					.WithParsed((Options options) => initializeSolutionHub(options))
 					.MapResult(
 						(CreateOptions options) => runCreateCommand(options),
 						(ImportOptions options) => runImportCommand(options),
@@ -168,9 +161,12 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private void initializeSolutionHub(Options options, TextWriter log)
+		private void initializeSolutionHub(Options options)
 		{
-			logger = new Logger(log, options.Verbose);
+			if (logger != null)
+			{
+				logger.VerbosityLevel = options.Verbose ? LogVerbosityLevel.All : LogVerbosityLevel.Message;
+			}
 
 			if (!isRunningLocally && !options.SolutionId.HasValue)
 			{
@@ -242,7 +238,7 @@ namespace MeshEditor.FormatConverter
 
 		private void printLayerInfo(ILayerInfo layerInfo, int depth)
 		{
-			logger.LogMessage($"{new string(' ', depth * 2)}+ '{layerInfo.Name}', filter: {layerInfo.FilterType}, {layerInfo.Id}", LogMessagePriority.High);
+			logger.LogMessage($"{new string(' ', depth * 2)}+ '{layerInfo.Name}', filter: {layerInfo.FilterType}, {layerInfo.Id}");
 			foreach (var child in layerInfo.Children)
 			{
 				printLayerInfo(child, depth + 1);
@@ -276,10 +272,7 @@ namespace MeshEditor.FormatConverter
 ",
 			};
 
-			var color = Console.ForegroundColor;
-			Console.ForegroundColor = ConsoleColor.Cyan;
-			Console.WriteLine(excavators[new Random().Next(excavators.Length)]);
-			Console.ForegroundColor = color;
+			ConsoleLogger.WriteLineColored(excavators[new Random().Next(excavators.Length)], ConsoleColor.Cyan);
 		}
 
 		#endregion

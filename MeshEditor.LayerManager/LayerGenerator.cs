@@ -83,7 +83,7 @@ namespace MeshEditor.LayerManager
 		ISerializationService serializationService;
 		ICompressionService compressionService;
 		IEncodingService encodingService;
-		IProgress<OperationState> progressReporter;
+		ILogger logger;
 
 		public LayerGenerator(
 			IReadStorageService sourceStorage,
@@ -91,14 +91,14 @@ namespace MeshEditor.LayerManager
 			ISerializationService serializationService = null,
 			ICompressionService compressionService = null,
 			IEncodingService encodingService = null,
-			IProgress<OperationState> progressReporter = null)
+			ILogger logger = null)
 		{
 			this.sourceStorage = sourceStorage;
 			this.destinationStorage = destinationStorage;
 			this.serializationService = serializationService ?? new JsonSerializationService();
 			this.compressionService = compressionService ?? new TransparentCompressionService();
 			this.encodingService = encodingService ?? new Base64EncodingService();
-			this.progressReporter = progressReporter;
+			this.logger = logger;
 		}
 
 		#endregion
@@ -518,7 +518,7 @@ namespace MeshEditor.LayerManager
 
 		private MeshFileDescriptor generateDataFilesForMesh(int meshIndex, Guid layerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, ref int attributeIndex, ref int resultIndex)
 		{
-			progressReporter?.Report(new OperationState("Generating mesh file"));
+			logger?.LogOperationProgress("Generating mesh file");
 
 			MeshFile layerMesh = createLayerMeshFromGeometry(geometry, layerId, meshIndex);
 			storeLayerFile(layerMesh, getLayerMeshRecordName(layerId, meshIndex));
@@ -527,7 +527,7 @@ namespace MeshEditor.LayerManager
 			var attributeDescriptors = new List<DataFileDescriptor>();
 			foreach (var attribute in attributeDescriptions)
 			{
-				progressReporter?.Report(new OperationState($"Generating attribute file '{attribute.Name}'"));
+				logger?.LogOperationProgress($"Generating attribute file '{attribute.Name}'");
 
 				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex, meshIndex);
 				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeRecordName(layerId, elementPropertyAttributeLayer.Index));
@@ -545,7 +545,7 @@ namespace MeshEditor.LayerManager
 				{
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
-					progressReporter?.Report(new OperationState($"Generating result file for field '{firstDataField.FieldName}' component {string.Join(", ", Enumerable.Range(0, firstDataField.NumberOfComponents).Select(index => $"'{firstDataField.GetComponentName(index)}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}"));
+					logger?.LogOperationProgress($"Generating result file for field '{firstDataField.FieldName}' component {string.Join(", ", Enumerable.Range(0, firstDataField.NumberOfComponents).Select(index => $"'{firstDataField.GetComponentName(index)}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}");
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
@@ -557,7 +557,8 @@ namespace MeshEditor.LayerManager
 					}
 				}
 			}
-			progressReporter?.Report(new OperationState(compressionCounter.ToString()));
+
+			logger?.LogMessage(compressionCounter.ToString());
 
 			MeshFileDescriptor meshFileDescriptor = new MeshFileDescriptor
 			{
@@ -571,7 +572,7 @@ namespace MeshEditor.LayerManager
 
 		private SummaryFile generateSummaryFile(string layerName, Guid? parentLayerId, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors)
 		{
-			progressReporter?.Report(new OperationState("Generating summary file"));
+			logger?.LogOperationProgress("Generating summary file");
 
 			SummaryFile layerSummary = new SummaryFile
 			{
@@ -600,11 +601,10 @@ namespace MeshEditor.LayerManager
 												  group result by timeStep into resultGroup
 												  select resultGroup)
 					{
-						//if (timeStepGroup.Count() > 1)
-						//{
-						//	Console.WriteLine($"Time step group for key {timeStepGroup.Key}, {fieldGroup.Key}/{componentGroup.Key}: " + string.Join("; ", timeStepGroup.Select(t => $"({t.Mesh.Index}, {t.Result.Index})")));
-						//}
-						//var timeStep = timeStepGroup.Single();
+						if (timeStepGroup.Count() > 1)
+						{
+							logger.LogWarning($"Multiple data components for {fieldGroup.Key}/{componentGroup.Key}/t={timeStepGroup.Key}. Data indices: " + string.Join(", ", timeStepGroup.Select(t => t.Result.Index)));
+						}
 						var timeStep = timeStepGroup.First();
 						timeSteps[timeStepGroup.Key] = new TimeStepDescriptor
 						{
