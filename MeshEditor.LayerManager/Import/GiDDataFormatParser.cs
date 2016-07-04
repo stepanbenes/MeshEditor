@@ -38,7 +38,6 @@ namespace MeshEditor.LayerManager.Import
 
 		private enum FileDataLocation
 		{
-			Unknown = 0,
 			Nodes,
 			GaussPoints
 		}
@@ -47,7 +46,7 @@ namespace MeshEditor.LayerManager.Import
 		{
 			public int LineCounter { get; set; }
 
-			public string Name { get; set; }
+			public string FieldName { get; set; }
 			public double TimeStep { get; set; }
 			public FieldType? FieldType { get; set; }
 
@@ -83,12 +82,14 @@ namespace MeshEditor.LayerManager.Import
 				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
 				FieldDataDescription data = new FieldDataDescription
 				{
-					FieldName = Name,
+					FieldName = FieldName,
 					TimeStep = TimeStep,
 					ComponentNames = finalComponentNames,
 					FieldType = FieldType.Value,
 					Location = targetDataLocation,
 				};
+
+				// TODO: merge multiple data corresponing to same field and timestep together
 
 				data.Values = convertValues(
 					DataValues,
@@ -106,7 +107,7 @@ namespace MeshEditor.LayerManager.Import
 			public void ClearResultBlockData()
 			{
 				LineCounter = 0;
-				Name = null;
+				FieldName = null;
 				TimeStep = 0.0;
 				FieldType = null;
 				NumberOfComponents = null;
@@ -179,7 +180,7 @@ namespace MeshEditor.LayerManager.Import
 									if (tokens.Length >= 6)
 									{
 										parserData.ResultTypeString = tokens[4];
-										parserData.Name = tokens[1];
+										parserData.FieldName = tokens[1];
 										parserData.TimeStep = ParseFloat64(tokens[3]);
 										parserData.FieldType = convertResultTypeStringToFieldType(parserData.ResultTypeString);
 										parserData.Location = convertLocationStringToDataLocation(tokens[5]);
@@ -230,6 +231,8 @@ namespace MeshEditor.LayerManager.Import
 												gpDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Given;
 												state = ParserState.GaussPointsGivenNaturalCoordinates;
 												break;
+											default:
+												throw new FormatException("Unknown natural coordinates type.");
 										}
 									}
 									else if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))

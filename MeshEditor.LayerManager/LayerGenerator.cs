@@ -124,6 +124,8 @@ namespace MeshEditor.LayerManager
 				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
 				IEnumerable<FieldDataDescription> dataDescriptions = analysisResultImportService.ReadData(geometry);
 
+				// TODO: divide dataDescriptions to time step chunks according to --merge-time-steps command line option value
+
 				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
 				meshDescriptors.Add(meshDescriptor);
 			}
@@ -199,6 +201,8 @@ namespace MeshEditor.LayerManager
 				// filter results
 				var originalResultRecordNames = parentMesh.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
 				IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
+
+				// TODO: divide filteredDataDescriptions to time step chunks according to--merge - time - steps command line option value
 
 				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
 				meshFileDescriptors.Add(meshFileDesriptor);
