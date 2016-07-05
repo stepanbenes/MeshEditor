@@ -58,22 +58,24 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
+		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			Solution updatedSolution = Solution.CreateNewByAddingLayer(solution, newLayer, parentLayer?.Id);
 			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
 			{
 				serializer.Serialize(updatedSolution, stream);
 			}
+			return updatedSolution;
 		}
 
-		public void DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
 			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
 			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
 			{
 				serializer.Serialize(updatedSolution, stream);
 			}
+			return updatedSolution;
 		}
 
 		public ISolutionInfo LoadSolutionFromFileName(string relativeFilename)

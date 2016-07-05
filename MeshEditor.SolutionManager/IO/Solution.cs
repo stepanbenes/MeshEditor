@@ -79,7 +79,7 @@ namespace MeshEditor.SolutionManager.IO
 				Id = layer.Id,
 				Name = layer.Name,
 				FilterType = layer.FilterType,
-				Children = layer.Children?.Where(child => child.Id != exceptLayerId).Select(child => cloneLayerExcept(child, exceptLayerId)).ToArray()
+				Children = layer.Children?.Where(child => child.Id != exceptLayerId).Select(child => cloneLayerExcept(child, exceptLayerId)).NullIfEmpty()?.ToArray()
 			};
 		}
 

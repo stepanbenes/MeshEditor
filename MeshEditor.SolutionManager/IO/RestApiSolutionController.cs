@@ -83,7 +83,7 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<Solution>(response);
 		}
 
-		public void AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
+		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			var client = new RestClient(uri);
 			var request = new RestRequest($"api/solution/{solution.Id}/layer", Method.POST);
@@ -108,9 +108,10 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
 			var response = executeRequest(client, request);
+			return parseResponse<Solution>(response);
 		}
 
-		public void DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
 			var client = new RestClient(uri);
 			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
@@ -120,6 +121,7 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddQueryParameter("dontDeleteLayerBlobs", "true"); // do not initiate deleting layer files from server
 
 			var response = executeRequest(client, request);
+			return parseResponse<Solution>(response);
 		}
 
 		#endregion

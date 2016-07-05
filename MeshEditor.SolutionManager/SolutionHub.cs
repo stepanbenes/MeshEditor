@@ -159,8 +159,8 @@ namespace MeshEditor.SolutionManager
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices);
 			logNewLayer(masterLayer);
-			
-			solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
+
+			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
 		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
@@ -180,7 +180,7 @@ namespace MeshEditor.SolutionManager
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(filterLayer);
 
-			solutionController.AddLayer(solution, parentLayer, childLayer);
+			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
 		public void Compress(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, IEnumerable<string> compressionParameters, string compressedLayerName = null)
@@ -199,19 +199,20 @@ namespace MeshEditor.SolutionManager
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);
 
-			solutionController.AddLayer(solution, parentLayer, childLayer);
+			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
 		public void Delete(string layerIdOrName, bool deleteAll)
 		{
+			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
 			Solution solution = solutionController.Get(solutionId);
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			IEnumerable<Solution.Layer> layersToDelete = deleteAll ? solution.Layers : Enumerable.Repeat(findLayer(solution, layerIdOrName), 1);
-			foreach (var rootLayer in layersToDelete)
+			IEnumerable<Solution.Layer> rootLayersOfTreesToDelete = deleteAll ? solution.Layers /*all master layers*/ : Enumerable.Repeat(findLayer(solution, layerIdOrName), 1) /*single general layer*/;
+			foreach (var rootLayer in rootLayersOfTreesToDelete)
 			{
 				foreach (var layer in traverseLayerTreePostOrder(rootLayer))
 				{
-					solutionController.DeleteLayer(solution, layer);
+					solution = solutionController.DeleteLayer(solution, layer);
 					layerGenerator.DeleteAllLayerFiles(layer.Id);
 				}
 			}
