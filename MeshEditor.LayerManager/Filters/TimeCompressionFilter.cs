@@ -13,8 +13,5 @@ namespace MeshEditor.LayerManager.Filters
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string FieldName { get; set; } = null;
-
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public string ComponentName { get; set; } = null;
 	}
 }

@@ -146,7 +146,7 @@ namespace MeshEditor.SolutionManager
 			Solution solution = solutionController.CreateNew(solutionId, analysisResults, projectName);
 		}
 
-		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
+		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, string fieldName)
 		{
 			const string masterLayerName = "master";
 
@@ -157,13 +157,13 @@ namespace MeshEditor.SolutionManager
 			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result));
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices);
+			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
 			logNewLayer(masterLayer);
 
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
-		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName)
+		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, string layerName, IEnumerable<double> keyTimeSteps, string fieldName)
 		{
 			FilterType filterType;
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
@@ -175,7 +175,7 @@ namespace MeshEditor.SolutionManager
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			var filterLayer = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, layerName);
+			var filterLayer = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, layerName, keyTimeSteps, fieldName);
 			logNewLayer(filterLayer);
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(filterLayer);
@@ -183,7 +183,7 @@ namespace MeshEditor.SolutionManager
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, string componentName, IEnumerable<string> compressionParameters, string compressedLayerName = null)
+		public void Compress(string parentLayerIdOrName, string compressionMethodName, IEnumerable<double> keyTimeSteps, string fieldName, IEnumerable<string> compressionParameters, string compressedLayerName = null)
 		{
 			CompressionMethod method;
 			if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out method))
@@ -194,7 +194,7 @@ namespace MeshEditor.SolutionManager
 			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
 			var layerGenerator = new LayerGenerator(compressionService: CompressionServiceFactory.Create(method, compressionParameters), sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, compressedLayerName ?? $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName, componentName);
+			var compressedLayer = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, compressedLayerName ?? $"{method} {string.Join(" ", compressionParameters)}".Trim(), fieldName);
 			logNewLayer(compressedLayer);
 			// convert filter layer to layer record and append it to parent layer's children
 			var childLayer = createLayerRecordLayerSummaryFile(compressedLayer);

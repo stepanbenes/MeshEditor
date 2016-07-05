@@ -22,8 +22,12 @@ namespace MeshEditor.FormatConverter
 		//public string ConfigFile { get; set; }
 	}
 
-	abstract class AnalysisResultOptions : Options
+	[Verb("create", HelpText = "Create new solution")]
+	class CreateOptions : Options
 	{
+		[Option('p', "project", Required = false, HelpText = "Project name")]
+		public string ProjectName { get; set; }
+
 		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
 		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
 
@@ -31,21 +35,27 @@ namespace MeshEditor.FormatConverter
 		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
 	}
 
-	[Verb("create", HelpText = "Create new solution")]
-	class CreateOptions : AnalysisResultOptions
+	abstract class LayerProducerOptions : Options
 	{
-		[Option('p', "project", Required = false, HelpText = "Project name")]
-		public string ProjectName { get; set; }
+		[Option('k', "keytimes", Required = false, HelpText = "Key time steps")]
+		public IEnumerable<double> KeyTimeSteps { get; set; }
+
+		[Option("field", Required = false, HelpText = "Name of field to compress")]
+		public string FieldName { get; set; }
 	}
 
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
-	class ImportOptions : AnalysisResultOptions
+	class ImportOptions : LayerProducerOptions
 	{
-		
+		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
+		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
+
+		[Option('r', "results", Required = true, HelpText = "Mesh and result files to be processed (first file in each group is expected to be mesh, others data)")]
+		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
 	}
 	
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]
-	class FilterOptions : Options
+	class FilterOptions : LayerProducerOptions
 	{
 		[Value(index: 0, MetaName = "Parent layer", Required = true, HelpText = "Parent layer guid or name")]
 		public string ParentLayer { get; set; }
@@ -61,22 +71,13 @@ namespace MeshEditor.FormatConverter
 	}
 
 	[Verb("compress", HelpText = "Compress layer results")]
-	class CompressOptions : Options
+	class CompressOptions : LayerProducerOptions
 	{
 		[Value(index: 0, MetaName = "Layer to compress", Required = true, HelpText = "Layer's guid or name")]
 		public string Layer { get; set; }
 
 		[Value(index: 1, MetaName = "Compression method", Required = true, HelpText = "Compression method (Transparent, SVD, WT)")]
 		public string Method { get; set; }
-
-		[Option('k', "keytimes", Required = false, HelpText = "Key time steps")]
-		public IEnumerable<double> KeyTimeSteps { get; set; }
-
-		[Option("field", Required = false, HelpText = "Name of field to compress")]
-		public string FieldName { get; set; }
-
-		[Option("component", Required = false, HelpText = "Name of Component of field to compress")]
-		public string ComponentName { get; set; }
 
 		[Option('p', "params", Required = false, HelpText = "Compression parameters")]
 		public IEnumerable<string> CompressionParameters { get; set; }

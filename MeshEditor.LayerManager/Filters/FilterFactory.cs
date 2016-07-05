@@ -38,8 +38,7 @@ namespace MeshEditor.LayerManager.Filters
 				case FilterType.TimeCompression:
 					return new TimeCompressionFilter
 					{
-						FieldName = parameters.ElementAtOrDefault(0),
-						ComponentName = parameters.ElementAtOrDefault(1)
+						FieldName = parameters.ElementAtOrDefault(0)
 					};
 				default:
 					throw new NotSupportedException();

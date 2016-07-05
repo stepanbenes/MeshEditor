@@ -107,7 +107,7 @@ namespace MeshEditor.LayerManager
 
 		#region Console app Entry points
 
-		public SummaryFile GenerateMasterLayer(string layerName, IEnumerable<IAnalysisResultImportService> analysisResultImportServices)
+		public SummaryFile GenerateMasterLayer(string layerName, IEnumerable<IAnalysisResultImportService> analysisResultImportServices, IEnumerable<double> keyTimeSteps, string fieldName = null)
 		{
 			if (analysisResultImportServices == null)
 			{
@@ -124,15 +124,21 @@ namespace MeshEditor.LayerManager
 				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
 				IEnumerable<FieldDataDescription> dataDescriptions = analysisResultImportService.ReadData(geometry);
 
-				// TODO: divide dataDescriptions to time step chunks according to --merge-time-steps command line option value
+				if (fieldName != null) // filter fields
+				{
+					dataDescriptions = dataDescriptions.Where(data => fieldName == data.FieldName);
+				}
 
-				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
+				// divide dataDescriptions to time step chunks according to --keytimes option
+				var dataDescriptionsChunks = createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(dataDescriptions, keyTimeSteps);
+
+				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptionsChunks, ref attributeIndex, ref resultIndex);
 				meshDescriptors.Add(meshDescriptor);
 			}
 			return generateSummaryFile(layerName, null, newLayerId, null, meshDescriptors);
 		}
 
-		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName = null)
+		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName, IEnumerable<double> keyTimeSteps, string fieldName = null)
 		{
 			// find parentLayer in storage and download summary
 			SummaryFile parentLayer = LoadLayerSummary(parentLayerId);
@@ -199,19 +205,23 @@ namespace MeshEditor.LayerManager
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
 
 				// filter results
-				var originalResultRecordNames = parentMesh.Results.Select(r => getLayerResultRecordName(parentLayerId, r.Index));
+				var originalResultRecordNames = from result in parentMesh.Results
+												where (fieldName == null || fieldName == result.FieldName)
+												select getLayerResultRecordName(parentLayerId, result.Index);
+
 				IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
 
-				// TODO: divide filteredDataDescriptions to time step chunks according to--merge - time - steps command line option value
+				// divide filteredDataDescriptions to time step chunks according to --keytimes option
+				var filteredDataDescriptionsChunks = createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(filteredDataDescriptions, keyTimeSteps);
 
-				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptions.Select(d => new[] { d }), ref attributeIndex, ref resultIndex);
+				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptionsChunks, ref attributeIndex, ref resultIndex);
 				meshFileDescriptors.Add(meshFileDesriptor);
 			}
 
 			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
 		}
 
-		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null, string componentName = null)
+		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null)
 		{
 			// find layer in storage and download summary
 			SummaryFile layerSummary = LoadLayerSummary(layerId);
@@ -226,14 +236,15 @@ namespace MeshEditor.LayerManager
 				IEnumerable<AttributeDescription> attributeDescriptions = mesh.Attributes.Select(a => LoadAttribute(layerId, a.Index));
 
 				var dataDescriptionGroups = from result in mesh.Results
-											where (fieldName == null || fieldName == result.FieldName) && (componentName == null || componentName == result.ComponentName)
-											group result by new { result.FieldName, result.ComponentName } into g
-											from list in createDataDescriptionGroups(layerId, g, keyTimeSteps)
+											where (fieldName == null || fieldName == result.FieldName)
+											group result by new { result.FieldName, result.ComponentName } into descriptorsGroup
+											from list in createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(descriptorsGroup.SelectMany(r => LoadData(layerId, r.Index)), keyTimeSteps)
 											select list;
+
 				var meshFileDesriptor = generateDataFilesForMesh(mesh.Index, compressedLayerId, geometry, attributeDescriptions, dataDescriptionGroups, ref attributeIndex, ref resultIndex);
 				meshFileDescriptors.Add(meshFileDesriptor);
 			}
-			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName, ComponentName = componentName }, meshFileDescriptors);
+			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors);
 		}
 
 		public void DeleteAllLayerFiles(Guid layerId)
@@ -482,26 +493,39 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IReadOnlyList<ComponentDataDescription>> createDataDescriptionGroups(Guid layerId, IEnumerable<DataFileDescriptor> descriptors, IEnumerable<double> keyTimeSteps)
+		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(IEnumerable<DataDescription> dataComponents, IEnumerable<double> keyTimeSteps)
 		{
+			Debug.Assert(keyTimeSteps != null);
 			double[] keyTimes = keyTimeSteps.ToArray();
+
+			if (keyTimes.Length == 0) // this one is special, no key times means ALL key times
+			{
+				return dataComponents.Select(d => new[] { d });
+			}
+
+			return createDataDescriptionGroups(dataComponents, keyTimes);
+		}
+
+		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups(IEnumerable<DataDescription> dataComponents, double[] keyTimes)
+		{
+			Debug.Assert(keyTimes != null);
 			int keyTimeIndex = 0;
-			List<ComponentDataDescription> dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
-			foreach (var data in descriptors.SelectMany(r => LoadData(layerId, r.Index)))
+			List<DataDescription> dataListForCurrentTimeInterval = new List<DataDescription>();
+			foreach (var dataComponent in dataComponents)
 			{
 				if (keyTimeIndex < keyTimes.Length)
 				{
-					if (data.TimeStep >= keyTimes[keyTimeIndex])
+					if (dataComponent.TimeStep >= keyTimes[keyTimeIndex])
 					{
 						if (dataListForCurrentTimeInterval.Count > 0)
 						{
 							yield return dataListForCurrentTimeInterval;
-							dataListForCurrentTimeInterval = new List<ComponentDataDescription>();
+							dataListForCurrentTimeInterval = new List<DataDescription>();
 						}
 						keyTimeIndex += 1;
 					}
 				}
-				dataListForCurrentTimeInterval.Add(data);
+				dataListForCurrentTimeInterval.Add(dataComponent);
 			}
 			yield return dataListForCurrentTimeInterval;
 		}
