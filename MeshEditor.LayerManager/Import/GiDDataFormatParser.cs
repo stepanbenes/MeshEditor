@@ -42,81 +42,164 @@ namespace MeshEditor.LayerManager.Import
 			GaussPoints
 		}
 
-		private class ParserData
+		private class ParsedField
 		{
 			public int LineCounter { get; set; }
 
 			public string FieldName { get; set; }
-			public double TimeStep { get; set; }
-			public FieldType? FieldType { get; set; }
 
-			public int? NumberOfComponents { get; set; }
+			public double TimeStep { get; set; }
+
+			public int NumberOfComponents => ComponentNames?.Length ?? 0;
+
 			public string[] ComponentNames { get; set; }
-			public List<double> DataValues { get; set; }
-			public List<int> Ids { get; set; }
+
+			public List<double> DataValues { get; set; } = new List<double>();
+
+			public List<int> Ids { get; set; } = new List<int>();
+
 			public string ResultTypeString { get; set; }
+
 			public FileDataLocation? Location { get; set; }
 
-			public string LocationName { get; set; }
+			public GaussPointsInfo GaussPointsDescription { get; set; }
 
-			public IDictionary<string, GaussPointsInfo> GaussPointsDescriptions { get; } = new Dictionary<string, GaussPointsInfo>();
-
-			public FieldDataDescription CreateDataDescription(GeometryDescription geometry)
+			public bool IsMergeableWith(ParsedField other)
 			{
-				Debug.Assert(Location.HasValue);
+				Debug.Assert(other != null);
+				return
+					FieldName != null &&
+					FieldName.Equals(other.FieldName) &&
+					TimeStep.Equals(other.TimeStep) &&
+					Equals(ResultTypeString, other.ResultTypeString);
+			}
 
-				// TODO: This should be user-controlled
-				DataLocationType targetDataLocation;
-				switch (Location)
+			//private FieldDataDescription createDataDescription(GeometryDescription geometry)
+			//{
+			//	Debug.Assert(Location.HasValue);
+			//	Debug.Assert(GaussPointsDescription != null);
+			//	Debug.Assert(ComponentNames != null && ComponentNames.Length > 0);
+
+			//	// TODO: This should be user-controlled
+			//	DataLocationType targetDataLocation;
+			//	switch (Location)
+			//	{
+			//		case FileDataLocation.Nodes:
+			//			targetDataLocation = DataLocationType.Points  /*or Cells*/;
+			//			break;
+			//		case FileDataLocation.GaussPoints:
+			//			targetDataLocation = (GaussPointsDescription.NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
+			//			break;
+			//		default:
+			//			throw new NotSupportedException();
+			//	}
+
+			//	FieldDataDescription data = new FieldDataDescription
+			//	{
+			//		FieldName = FieldName,
+			//		TimeStep = TimeStep,
+			//		ComponentNames = ComponentNames,
+			//		FieldType = convertResultTypeStringToFieldType(ResultTypeString),
+			//		Location = targetDataLocation,
+			//	};
+
+			//	double[] result = createEmptyValueArray(geometry, targetDataLocation, NumberOfComponents);
+
+			//	convertValues(
+			//		DataValues,
+			//		Ids,
+			//		NumberOfComponents,
+			//		geometry,
+			//		targetDataLocation,
+			//		Location.Value,
+			//		GaussPointsDescription,
+			//		result
+			//	);
+
+			//	data.Values = result;
+
+			//	return data;
+			//}
+
+			private static DataLocationType chooseCommonTargetDataLocationFor(IReadOnlyCollection<ParsedField> fields)
+			{
+				Debug.Assert(fields.Count > 0);
+
+				// TODO: targetDataLocation should be user-controlled
+				// TODO: implement choosing common target data location if there is collision (can there be collision?)
+
+				DataLocationType? commonTargetDataLocation = null;
+				foreach (var field in fields)
 				{
-					case FileDataLocation.Nodes:
-						targetDataLocation = DataLocationType.Points  /*or Cells*/;
-						break;
-					case FileDataLocation.GaussPoints:
-						targetDataLocation = (GaussPointsDescriptions[LocationName].NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
-						break;
-					default:
-						throw new NotSupportedException();
+					DataLocationType targetDataLocation;
+					switch (field.Location)
+					{
+						case FileDataLocation.Nodes:
+							targetDataLocation = DataLocationType.Points /*or Cells*/;
+							break;
+						case FileDataLocation.GaussPoints:
+							targetDataLocation = (field.GaussPointsDescription.NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
+							break;
+						default:
+							throw new NotSupportedException();
+					}
+					if (commonTargetDataLocation.HasValue)
+					{
+						if (commonTargetDataLocation != targetDataLocation)
+						{
+							throw new NotImplementedException();
+						}
+					}
+					else
+					{
+						commonTargetDataLocation = targetDataLocation;
+					}
 				}
+				return commonTargetDataLocation.Value;
+			}
 
-				string[] finalComponentNames = ComponentNames ?? createGenericComponentNames(ResultTypeString);
-				FieldDataDescription data = new FieldDataDescription
+			/// <summary>
+			/// Merges multiple data corresponing to same field and timestep together
+			/// </summary>
+			public static FieldDataDescription CreateMergedDataDescription(IReadOnlyCollection<ParsedField> fields, GeometryDescription geometry)
+			{
+				// NOTE: fields is Stack<T>, so it is in reversed order!
+				Debug.Assert(fields.Count > 0);
+
+				DataLocationType targetDataLocation = chooseCommonTargetDataLocationFor(fields);
+
+				var firstParsedField = fields.First();
+
+				FieldDataDescription mergedField = new FieldDataDescription
 				{
-					FieldName = FieldName,
-					TimeStep = TimeStep,
-					ComponentNames = finalComponentNames,
-					FieldType = FieldType.Value,
+					FieldName = firstParsedField.FieldName,
+					TimeStep = firstParsedField.TimeStep,
+					ComponentNames = firstParsedField.ComponentNames,
+					FieldType = convertResultTypeStringToFieldType(firstParsedField.ResultTypeString),
 					Location = targetDataLocation,
 				};
 
-				// TODO: merge multiple data corresponing to same field and timestep together
+				double[] resultValues = createEmptyValueArray(geometry, targetDataLocation, firstParsedField.NumberOfComponents);
 
-				data.Values = convertValues(
-					DataValues,
-					Ids,
-					data.NumberOfComponents,
-					geometry,
-					targetDataLocation,
-					Location.Value,
-					(Location == FileDataLocation.GaussPoints) ? GaussPointsDescriptions[LocationName] : null
-				);
+				foreach (var field in fields)
+				{
+					convertValues(
+						field.DataValues,
+						field.Ids,
+						field.NumberOfComponents,
+						geometry,
+						targetDataLocation,
+						field.Location.Value,
+						field.GaussPointsDescription,
+						resultValues
+					);
+				}
 
-				return data;
-			}
+				mergedField.Values = resultValues;
 
-			public void ClearResultBlockData()
-			{
-				LineCounter = 0;
-				FieldName = null;
-				TimeStep = 0.0;
-				FieldType = null;
-				NumberOfComponents = null;
-				ComponentNames = null;
-				DataValues = null;
-				Ids = null;
-				ResultTypeString = null;
-				Location = null;
-				LocationName = null;
+				return mergedField;
+
+				//return fields.First().createDataDescription(geometry);
 			}
 		}
 
@@ -147,7 +230,11 @@ namespace MeshEditor.LayerManager.Import
 				using (TextReader reader = new StreamReader(fileStream))
 				{
 					ParserState state = ParserState.Init;
-					ParserData parserData = new ParserData();
+					Stack<ParsedField> parsedFieldsStack = new Stack<ParsedField>();
+
+					IDictionary<string, GaussPointsInfo> gaussPointsDescriptions = new Dictionary<string, GaussPointsInfo>();
+					GaussPointsInfo currentGaussPointsDescription = null;
+
 					string line;
 					while ((line = reader.ReadLine()) != null)
 					{
@@ -168,55 +255,67 @@ namespace MeshEditor.LayerManager.Import
 									string gaussPointsName = tokens[1];
 									Debug.Assert(string.Equals(tokens[2], "Elemtype", StringComparison.InvariantCultureIgnoreCase));
 
-									parserData.LocationName = gaussPointsName;
-									parserData.GaussPointsDescriptions[gaussPointsName] = new GaussPointsInfo(gaussPointsName, tokens[3], (tokens.Length >= 5) ? tokens[4] : null);
+									currentGaussPointsDescription = gaussPointsDescriptions[gaussPointsName] = new GaussPointsInfo(gaussPointsName, tokens[3], (tokens.Length >= 5) ? tokens[4] : null);
 								}
 								else if (line.StartsWith(ResultToken, StringComparison.InvariantCultureIgnoreCase)) // Result
 								{
+									var newParsedField = new ParsedField();
+
 									state = ParserState.ResultHeader;
 									string[] tokens = line.SplitToTokensWithQuotes();
 									Debug.Assert(tokens.Length >= 6);
 									// Result "result name" "analysis name" step_value my_result_type my_location "location name"
 									if (tokens.Length >= 6)
 									{
-										parserData.ResultTypeString = tokens[4];
-										parserData.FieldName = tokens[1];
-										parserData.TimeStep = ParseFloat64(tokens[3]);
-										parserData.FieldType = convertResultTypeStringToFieldType(parserData.ResultTypeString);
-										parserData.Location = convertLocationStringToDataLocation(tokens[5]);
+										newParsedField.FieldName = tokens[1];
+										// "analysis name": ignored
+										newParsedField.TimeStep = ParseFloat64(tokens[3]);
+										newParsedField.ResultTypeString = tokens[4];
+										newParsedField.ComponentNames = createGenericComponentNames(tokens[4]);
+										newParsedField.Location = convertLocationStringToDataLocation(tokens[5]);
 
 										if (tokens.Length >= 7) // location name
 										{
-											parserData.LocationName = tokens[6];
+											Debug.Assert(gaussPointsDescriptions.ContainsKey(tokens[6]));
+											newParsedField.GaussPointsDescription = gaussPointsDescriptions[tokens[6]];
 										}
 									}
 									else
 										throw new FormatException("Result block is not complete.");
+
+									if (parsedFieldsStack.Count > 0 && !parsedFieldsStack.Peek().IsMergeableWith(newParsedField))
+									{
+										// yield one or merge all accumulated fields
+										yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry);
+										parsedFieldsStack.Clear();
+									}
+
+									parsedFieldsStack.Push(newParsedField);
+
 								}
 								break;
 							case ParserState.GaussPointsDescription:
 								{
-									Debug.Assert(parserData.GaussPointsDescriptions.ContainsKey(parserData.LocationName));
-									var gpDescription = parserData.GaussPointsDescriptions[parserData.LocationName];
+									Debug.Assert(currentGaussPointsDescription != null);
 									string[] tokens = splitLineToTokens(line);
 
 									if (line.StartsWith("Number of Gauss Points:", StringComparison.InvariantCultureIgnoreCase))
 									{
 										int numberOfGaussPoints = ParseInt32(tokens[4]);
-										gpDescription.NumberOfGaussPoints = numberOfGaussPoints;
+										currentGaussPointsDescription.NumberOfGaussPoints = numberOfGaussPoints;
 									}
 									else if (line.StartsWith("Nodes", StringComparison.InvariantCultureIgnoreCase))
 									{
 										if (string.Equals(tokens[1], "included", StringComparison.InvariantCultureIgnoreCase))
 										{
-											gpDescription.NodesIncluded = true;
+											currentGaussPointsDescription.NodesIncluded = true;
 										}
 										else
 										{
 											Debug.Assert(string.Equals(tokens[1], "not", StringComparison.InvariantCultureIgnoreCase));
 											Debug.Assert(string.Equals(tokens[2], "included", StringComparison.InvariantCultureIgnoreCase));
 
-											gpDescription.NodesIncluded = false;
+											currentGaussPointsDescription.NodesIncluded = false;
 										}
 									}
 									else if (line.StartsWith("Natural Coordinates:", StringComparison.InvariantCultureIgnoreCase))
@@ -224,11 +323,11 @@ namespace MeshEditor.LayerManager.Import
 										switch (tokens[2].ToLower())
 										{
 											case "internal":
-												gpDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Internal;
-												gpDescription.SetInternalNaturalCoordinates();
+												currentGaussPointsDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Internal;
+												currentGaussPointsDescription.SetInternalNaturalCoordinates();
 												break;
 											case "given":
-												gpDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Given;
+												currentGaussPointsDescription.NaturalCoordinatesType = GaussPointsInfo.NaturalCoordinatesTypes.Given;
 												state = ParserState.GaussPointsGivenNaturalCoordinates;
 												break;
 											default:
@@ -239,23 +338,22 @@ namespace MeshEditor.LayerManager.Import
 									{
 										Debug.Assert(string.Equals(tokens[1], GaussPointsToken, StringComparison.InvariantCultureIgnoreCase));
 										state = ParserState.Init; // back to initial state
-										parserData.LocationName = null;
+										currentGaussPointsDescription = null;
 									}
 								}
 								break;
 							case ParserState.GaussPointsGivenNaturalCoordinates:
 								{
-									Debug.Assert(parserData.GaussPointsDescriptions.ContainsKey(parserData.LocationName));
-									var gpDescription = parserData.GaussPointsDescriptions[parserData.LocationName];
+									Debug.Assert(currentGaussPointsDescription != null);
 									if (line.StartsWith(EndToken, StringComparison.InvariantCultureIgnoreCase))
 									{
 										state = ParserState.Init; // back to initial state
-										parserData.LocationName = null;
+										currentGaussPointsDescription = null;
 									}
 									else
 									{
 										string[] tokens = splitLineToTokens(line);
-										gpDescription.AddNaturalCoordinates(tokens.Select(token => ParseFloat64(token)).ToArray());
+										currentGaussPointsDescription.AddNaturalCoordinates(tokens.Select(token => ParseFloat64(token)).ToArray());
 									}
 								}
 								break;
@@ -263,14 +361,11 @@ namespace MeshEditor.LayerManager.Import
 								if (line.StartsWith(ComponentNamesToken, StringComparison.InvariantCultureIgnoreCase)) // ComponentNames
 								{
 									string[] tokens = line.SplitToTokensWithQuotes();
-									parserData.ComponentNames = tokens.Skip(1).ToArray();
-									parserData.NumberOfComponents = parserData.ComponentNames.Length;
+									parsedFieldsStack.Peek().ComponentNames = tokens.Skip(1).ToArray();
 								}
 								else if (line.StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase)) // Values
 								{
 									state = ParserState.ResultValues;
-									parserData.Ids = new List<int>();
-									parserData.DataValues = new List<double>();
 								}
 								break;
 							case ParserState.ResultValues:
@@ -278,40 +373,35 @@ namespace MeshEditor.LayerManager.Import
 								{
 									Debug.Assert(line.Substring(EndToken.Length).TrimStart().StartsWith(ValuesToken, StringComparison.InvariantCultureIgnoreCase));
 									state = ParserState.Init;
-
-									if (parserData.DataValues.Count > 0)
-									{
-										yield return parserData.CreateDataDescription(correspondingGeometry);
-									}
-
-									parserData.ClearResultBlockData();
 								}
 								else
 								{
 									string[] tokens = splitLineToTokens(line);
 									Debug.Assert(tokens.Length >= 1);
 
-									if (parserData.NumberOfComponents == null)
-										parserData.NumberOfComponents = tokens.Length - 1;
+									var parsedField = parsedFieldsStack.Peek();
 
 									// save id (point's or element's) to list, it will be useful after reading all data in this block
 
-									int numberOfLinesPerRecord = parserData.LocationName == null ? 1 : parserData.GaussPointsDescriptions[parserData.LocationName].NumberOfGaussPoints;
-									if (parserData.LineCounter % numberOfLinesPerRecord == 0)
+									int numberOfLinesPerRecord = parsedField.GaussPointsDescription?.NumberOfGaussPoints ?? 1;
+									if (parsedField.LineCounter % numberOfLinesPerRecord == 0)
 									{
 										int id = ParseInt32(tokens[0]);
-										parserData.Ids.Add(id);
-										parserData.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)).Concat(zeroes((parserData.NumberOfComponents ?? 0) - (tokens.Length - 1)))); // fill in missing values
+										parsedField.Ids.Add(id);
+										parsedField.DataValues.AddRange(tokens.Skip(1).Select(token => ParseFloat64(token)).Concat(zeroes(parsedField.NumberOfComponents - (tokens.Length - 1)))); // fill in missing values
 									}
 									else
 									{
-										parserData.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)).Concat(zeroes((parserData.NumberOfComponents ?? 0) - tokens.Length))); // fill in missing values
+										parsedField.DataValues.AddRange(tokens.Select(token => ParseFloat64(token)).Concat(zeroes(parsedField.NumberOfComponents - tokens.Length))); // fill in missing values
 									}
-									parserData.LineCounter++;
+									parsedField.LineCounter++;
 								}
 								break;
-						}
-					}
+						} // state switch
+					} // end of file loop
+
+					// yield one or merge all remaining accumulated fields
+					yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry);
 				}
 			}
 		}
@@ -360,9 +450,9 @@ namespace MeshEditor.LayerManager.Import
 				case "scalar":
 					return new[] { "value" };
 				case "vector":
-					return new[] { "X", "Y", "Z" }; // optional fourth component signed_module_value !!
+					return new[] { "X", "Y", "Z" }; // WARNING: optional fourth component signed_module_value !!
 				case "matrix":
-					return new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // in 2D only four components !!
+					return new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // WARNING: in 2D only four components !!
 				case "plaindeformationmatrix":
 					return new[] { "Sxx", "Syy", "Sxy", "Szz" };
 				case "mainmatrix":

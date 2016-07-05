@@ -686,7 +686,7 @@ namespace MeshEditor.LayerManager.Import
 
 		}
 
-		private static double[] convertValues(IReadOnlyList<double> values, IReadOnlyList<int> ids, int numberOfComponents, GeometryDescription geometry, DataLocationType targetLocation, FileDataLocation fileLocation, GaussPointsInfo gaussPoints)
+		private static void convertValues(IReadOnlyList<double> values, IReadOnlyList<int> ids, int numberOfComponents, GeometryDescription geometry, DataLocationType targetLocation, FileDataLocation fileLocation, GaussPointsInfo gaussPoints, double[] result)
 		{
 			// Place values to appropriate position according to PointIdIndexMap resp. CellIdIndexMap (depending on nodes or gauss-points data location)
 			// Do extrapolation if Location is Gauss-points
@@ -694,12 +694,9 @@ namespace MeshEditor.LayerManager.Import
 			Debug.Assert((fileLocation == FileDataLocation.GaussPoints) == (gaussPoints != null));
 			Debug.Assert(values.Count == ids.Count * numberOfComponents * (gaussPoints?.NumberOfGaussPoints ?? 1));
 
-			double[] result;
-
 			switch (targetLocation)
 			{
 				case DataLocationType.Points:
-					result = createEmptyValueArray(geometry.NumberOfPoints * numberOfComponents);
 					switch (fileLocation)
 					{
 						case FileDataLocation.Nodes:
@@ -718,7 +715,8 @@ namespace MeshEditor.LayerManager.Import
 							break;
 						case FileDataLocation.GaussPoints:
 							// recursive call to calculate CellPoints values
-							double[] cellPointResult = convertValues(values, ids, numberOfComponents, geometry, DataLocationType.CellPoints, fileLocation, gaussPoints);
+							double[] cellPointResult = createEmptyValueArray(geometry, DataLocationType.CellPoints, numberOfComponents);
+							convertValues(values, ids, numberOfComponents, geometry, DataLocationType.CellPoints, fileLocation, gaussPoints, cellPointResult);
 
 							var map = new List<KeyValuePair<double, double[]>>[geometry.NumberOfPoints];
 
@@ -762,7 +760,6 @@ namespace MeshEditor.LayerManager.Import
 					}
 					break;
 				case DataLocationType.CellPoints:
-					result = createEmptyValueArray(geometry.CellConnectivity.Length * numberOfComponents);
 					switch (fileLocation)
 					{
 						case FileDataLocation.GaussPoints:
@@ -795,7 +792,6 @@ namespace MeshEditor.LayerManager.Import
 					}
 					break;
 				case DataLocationType.Cells:
-					result = createEmptyValueArray(geometry.NumberOfCells * numberOfComponents);
 					switch (fileLocation)
 					{
 						case FileDataLocation.Nodes: // TODO: do arithmetic mean of values in all nodes of a cell
@@ -827,8 +823,6 @@ namespace MeshEditor.LayerManager.Import
 				default:
 					throw new NotSupportedException();
 			}
-
-			return result;
 		}
 
 		private static double computeCellVolume(int cellIndex, GeometryDescription geometry)
@@ -836,8 +830,24 @@ namespace MeshEditor.LayerManager.Import
 			throw new NotImplementedException();
 		}
 
-		private static double[] createEmptyValueArray(int length)
+		private static double[] createEmptyValueArray(GeometryDescription geometry, DataLocationType targetLocation, int numberOfComponents)
 		{
+			int length;
+			switch (targetLocation)
+			{
+				case DataLocationType.Points:
+					length = geometry.NumberOfPoints * numberOfComponents;
+					break;
+				case DataLocationType.CellPoints:
+					length = geometry.CellConnectivity.Length * numberOfComponents;
+					break;
+				case DataLocationType.Cells:
+					length = geometry.NumberOfCells * numberOfComponents;
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+
 			const double EMPTY_VALUE = double.NaN;
 			double[] array = new double[length];
 			array.Fill(EMPTY_VALUE);
