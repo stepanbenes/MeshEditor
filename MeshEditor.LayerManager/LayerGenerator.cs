@@ -23,7 +23,7 @@ namespace MeshEditor.LayerManager
 		#region Static members
 
 		private static readonly CellType DefaultCellType = CellType.TriangleLinear;
-		
+
 		private class CompressionCounter
 		{
 			long inputDataLength;
@@ -122,15 +122,25 @@ namespace MeshEditor.LayerManager
 			{
 				IReadOnlyList<AttributeDescription> attributeDescriptions;
 				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
-				IEnumerable<FieldDataDescription> dataDescriptions = analysisResultImportService.ReadData(geometry);
-
-				if (fieldName != null) // filter fields
-				{
-					dataDescriptions = dataDescriptions.Where(data => fieldName == data.FieldName);
-				}
 
 				// divide dataDescriptions to time step chunks according to --keytimes option
-				var dataDescriptionsChunks = createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(dataDescriptions, keyTimeSteps);
+
+				IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionsChunks;
+
+				if (keyTimeSteps.Any())
+				{
+					dataDescriptionsChunks = from result in analysisResultImportService.ReadData(geometry) // TODO: pass logger to import service to view progress
+											 where (fieldName == null || fieldName == result.FieldName)
+											 group result by result.FieldName into resultGroup
+											 from list in createDataDescriptionGroups(resultGroup, keyTimeSteps)
+											 select list;
+				}
+				else // optimization
+				{
+					dataDescriptionsChunks = from result in analysisResultImportService.ReadData(geometry)
+											 where (fieldName == null || fieldName == result.FieldName)
+											 select new[] { result };
+				}
 
 				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptionsChunks, ref attributeIndex, ref resultIndex);
 				meshDescriptors.Add(meshDescriptor);
@@ -205,14 +215,25 @@ namespace MeshEditor.LayerManager
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
 
 				// filter results
-				var originalResultRecordNames = from result in parentMesh.Results
-												where (fieldName == null || fieldName == result.FieldName)
-												select getLayerResultRecordName(parentLayerId, result.Index);
-
-				IEnumerable<ComponentDataDescription> filteredDataDescriptions = filterDataByGeometry(filteredGeometry, originalResultRecordNames);
-
 				// divide filteredDataDescriptions to time step chunks according to --keytimes option
-				var filteredDataDescriptionsChunks = createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(filteredDataDescriptions, keyTimeSteps);
+
+				IEnumerable<IReadOnlyList<DataDescription>> filteredDataDescriptionsChunks;
+
+				if (keyTimeSteps.Any())
+				{
+					filteredDataDescriptionsChunks = from result in parentMesh.Results
+													 where (fieldName == null || fieldName == result.FieldName)
+													 group result by new { result.FieldName, result.ComponentName } into resultGroup
+													 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometry, resultGroup.Select(r => getLayerResultRecordName(parentLayerId, r.Index))), keyTimeSteps)
+													 select list;
+				}
+				else
+				{
+					filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometry, from result in parentMesh.Results
+																										 where (fieldName == null || fieldName == result.FieldName)
+																										 select getLayerResultRecordName(parentLayerId, result.Index))
+													 select new[] { data };
+				}
 
 				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptionsChunks, ref attributeIndex, ref resultIndex);
 				meshFileDescriptors.Add(meshFileDesriptor);
@@ -238,7 +259,7 @@ namespace MeshEditor.LayerManager
 				var dataDescriptionGroups = from result in mesh.Results
 											where (fieldName == null || fieldName == result.FieldName)
 											group result by new { result.FieldName, result.ComponentName } into descriptorsGroup
-											from list in createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(descriptorsGroup.SelectMany(r => LoadData(layerId, r.Index)), keyTimeSteps)
+											from list in createDataDescriptionGroups(descriptorsGroup.SelectMany(r => LoadData(layerId, r.Index)), keyTimeSteps)
 											select list;
 
 				var meshFileDesriptor = generateDataFilesForMesh(mesh.Index, compressedLayerId, geometry, attributeDescriptions, dataDescriptionGroups, ref attributeIndex, ref resultIndex);
@@ -493,25 +514,13 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups_NoKeyTimesAreAllKeyTimes(IEnumerable<DataDescription> dataComponents, IEnumerable<double> keyTimeSteps)
+		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups(IEnumerable<DataDescription> dataDescriptions, IEnumerable<double> keyTimeSteps)
 		{
 			Debug.Assert(keyTimeSteps != null);
 			double[] keyTimes = keyTimeSteps.ToArray();
-
-			if (keyTimes.Length == 0) // this one is special, no key times means ALL key times
-			{
-				return dataComponents.Select(d => new[] { d });
-			}
-
-			return createDataDescriptionGroups(dataComponents, keyTimes);
-		}
-
-		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups(IEnumerable<DataDescription> dataComponents, double[] keyTimes)
-		{
-			Debug.Assert(keyTimes != null);
 			int keyTimeIndex = 0;
 			List<DataDescription> dataListForCurrentTimeInterval = new List<DataDescription>();
-			foreach (var dataComponent in dataComponents)
+			foreach (var dataComponent in dataDescriptions)
 			{
 				if (keyTimeIndex < keyTimes.Length)
 				{
@@ -638,7 +647,7 @@ namespace MeshEditor.LayerManager
 						{
 							MeshIndex = timeStep.Mesh.Index,
 							DataIndex = timeStep.Result.Index
-						}; 
+						};
 					}
 				}
 			}
