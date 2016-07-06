@@ -105,6 +105,12 @@
     <Compile Include="UI\EditColorScaleForm.Designer.cs">
       <DependentUpon>EditColorScaleForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ImportFEMResultsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ImportFEMResultsForm.Designer.cs">
+      <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\LayerSelectionEventArgs.cs" />
     <Compile Include="UI\LayersTreeViewControl.cs">
       <SubType>UserControl</SubType>
@@ -146,6 +152,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\EditColorScaleForm.resx">
       <DependentUpon>EditColorScaleForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ImportFEMResultsForm.resx">
+      <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\LayersTreeViewControl.resx">
       <DependentUpon>LayersTreeViewControl.cs</DependentUpon>

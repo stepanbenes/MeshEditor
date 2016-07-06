@@ -140,13 +140,13 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadLayerSummary(layerId);
 		}
 
-		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
+		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName = null)
 		{
 			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
 			Solution solution = solutionController.CreateNew(solutionId, analysisResults, projectName);
 		}
 
-		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName, string newLayerName)
+		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			const string masterLayerName = "master";
 
@@ -168,7 +168,7 @@ namespace MeshEditor.SolutionManager
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));
 		}
 
-		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName, string newLayerName)
+		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			FilterType filterType;
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
@@ -193,7 +193,7 @@ namespace MeshEditor.SolutionManager
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName, string newLayerName)
+		public void Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			Solution solution = solutionController.Get(solutionId);
 
@@ -213,7 +213,7 @@ namespace MeshEditor.SolutionManager
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, childLayer);
 		}
 
-		public void Delete(string layerIdOrName, bool deleteAll)
+		public void Delete(string layerIdOrName, bool deleteAll = false)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
 			Solution solution = solutionController.Get(solutionId);

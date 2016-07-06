@@ -86,31 +86,19 @@ namespace MeshEditor.WinUI
 		public async Task LoadLocalSolution(string solutionFileFullPath)
 		{
 			await Task.Yield();
+			loadSolution(SolutionHub.CreateLocal(solutionFileFullPath)); // TODO: make async
+		}
 
-			loadSolution(SolutionHub.CreateLocal(solutionFileFullPath));
-
-			//	var layers = solutionHub.EnumerateAllLayers();
-
-			//	// TODO: load master layer and its data, show layers panel
-
-			//	var masterLayer = layers.Single(l => l.Name == "master");
-			//	string masterLayerFilename = Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString(), "mesh.json");
-			//	activeControl.LoadFiles(masterLayerFilename);
-
-			//	await Task.Delay(2000); // mesh is beeing loaded asynchronously, it must be loaded before data can begin to load, so wait some time
-
-			//	var dataVisualizer = new ExactDataVisualizer();
-			//	setNewDataVisualizer(dataVisualizer);
-			//	var resultFiles = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(dialog.FileName), masterLayer.Id.ToString()), "result.*");
-			//	dataVisualizer.LoadData(new ApproximationParameters(loadInternalEntities: true), resultFiles.ToArray(), longOpNotifier);
-			//	dataVisualizer.FinishUp();
+		public async Task LoadLocalSolution(int solutionId)
+		{
+			await Task.Yield();
+			loadSolution(SolutionHub.CreateLocal(solutionId)); // TODO: make async
 		}
 
 		public async Task LoadRemoteSolution(int solutionId)
 		{
 			await Task.Yield();
-
-			loadSolution(SolutionHub.CreateRemote(solutionId));
+			loadSolution(SolutionHub.CreateRemote(solutionId)); // TODO: make async
 		}
 
 		#endregion

@@ -183,6 +183,8 @@
 			this.centralPanel = new System.Windows.Forms.Panel();
 			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
+			this.importFEMResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -924,6 +926,8 @@
 			// postprocessToolStripMenuItem
 			// 
 			this.postprocessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.importFEMResultsToolStripMenuItem,
+            this.toolStripSeparator22,
             this.openLocalSolutionToolStripMenuItem,
             this.openRemoteSolutionToolStripMenuItem,
             this.closeSolutionToolStripMenuItem,
@@ -989,19 +993,19 @@
 			// 
 			this.readDocumentationToolStripMenuItem.Name = "readDocumentationToolStripMenuItem";
 			this.readDocumentationToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
 			this.readDocumentationToolStripMenuItem.Text = "&User guide";
 			this.readDocumentationToolStripMenuItem.Click += new System.EventHandler(this.readDocumentationToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator5
 			// 
 			this.toolStripSeparator5.Name = "toolStripSeparator5";
-			this.toolStripSeparator5.Size = new System.Drawing.Size(149, 6);
+			this.toolStripSeparator5.Size = new System.Drawing.Size(146, 6);
 			// 
 			// aboutToolStripMenuItem1
 			// 
 			this.aboutToolStripMenuItem1.Name = "aboutToolStripMenuItem1";
-			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(149, 22);
 			this.aboutToolStripMenuItem1.Text = "&About";
 			this.aboutToolStripMenuItem1.Click += new System.EventHandler(this.aboutToolStripMenuItem1_Click);
 			// 
@@ -1553,6 +1557,18 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// toolStripSeparator22
+			// 
+			this.toolStripSeparator22.Name = "toolStripSeparator22";
+			this.toolStripSeparator22.Size = new System.Drawing.Size(196, 6);
+			// 
+			// importFEMResultsToolStripMenuItem
+			// 
+			this.importFEMResultsToolStripMenuItem.Name = "importFEMResultsToolStripMenuItem";
+			this.importFEMResultsToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+			this.importFEMResultsToolStripMenuItem.Text = "Import FEM results...";
+			this.importFEMResultsToolStripMenuItem.Click += new System.EventHandler(this.importFEMResultsToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1735,6 +1751,8 @@
 		private System.Windows.Forms.ToolStripMenuItem openLocalSolutionToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openRemoteSolutionToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem closeSolutionToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator22;
+		private System.Windows.Forms.ToolStripMenuItem importFEMResultsToolStripMenuItem;
 	}
 }
 

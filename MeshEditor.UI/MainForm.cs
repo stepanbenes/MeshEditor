@@ -1189,7 +1189,7 @@ namespace MeshEditor.WinUI
 
 					this.Cursor = Cursors.Default;
 					activeControl.SetCursorAccordingToEditorMode();
-					
+
 					progressViewForm.Show();
 				}
 			};
@@ -1581,6 +1581,25 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private void postprocessToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+		{
+			closeSolutionToolStripMenuItem.Enabled = LayoutMode == LayoutMode.Postprocessor;
+			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayColors ?? false;
+		}
+
+		private async void importFEMResultsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var importFEMResultsForm = new ImportFEMResultsForm { Owner = this };
+			if (importFEMResultsForm.ShowDialog() == DialogResult.OK)
+			{
+				Debug.Assert(importFEMResultsForm.NewSolutionId.HasValue);
+
+				closeSolution();
+				LayoutMode = LayoutMode.Postprocessor;
+				await getCurrentPostprocessView().LoadLocalSolution(importFEMResultsForm.NewSolutionId.Value);
+			}
+		}
+
 		private async void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dialog = new OpenFileDialog();
@@ -1595,24 +1614,16 @@ namespace MeshEditor.WinUI
 
 		private async void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			RemoteSolutionsForm remoteSolutionsForm = new RemoteSolutionsForm { Owner = this };
+			var remoteSolutionsForm = new RemoteSolutionsForm { Owner = this };
 
 			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
 			{
-				int? selectedSolutionId = remoteSolutionsForm.SelectedSolutionId;
-				if (selectedSolutionId.HasValue)
-				{
-					closeSolution();
-					LayoutMode = LayoutMode.Postprocessor;
-					await getCurrentPostprocessView().LoadRemoteSolution(selectedSolutionId.Value);
-				}
-			}
-		}
+				Debug.Assert(remoteSolutionsForm.SelectedSolutionId.HasValue);
 
-		private void postprocessToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-		{
-			closeSolutionToolStripMenuItem.Enabled = LayoutMode == LayoutMode.Postprocessor;
-			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayColors ?? false;
+				closeSolution();
+				LayoutMode = LayoutMode.Postprocessor;
+				await getCurrentPostprocessView().LoadRemoteSolution(remoteSolutionsForm.SelectedSolutionId.Value);
+			}
 		}
 
 		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)
