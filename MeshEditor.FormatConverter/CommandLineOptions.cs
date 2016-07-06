@@ -42,6 +42,12 @@ namespace MeshEditor.FormatConverter
 
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }
+
+		[Option('c', "comparams", Required = false, HelpText = "Compression parameters. First should be compression method (Transparent, SVD, WT)")]
+		public IEnumerable<string> CompressionParameters { get; set; }
+
+		[Option('n', "name", Required = false, HelpText = "Name of new layer")]
+		public string LayerName { get; set; }
 	}
 
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
@@ -65,9 +71,6 @@ namespace MeshEditor.FormatConverter
 
 		[Option('p', "params", Required = false, HelpText = "Filter parameters")]
 		public IEnumerable<string> FilterParameters { get; set; }
-
-		[Option('n', "name", Required = false, HelpText = "Name of new layer")]
-		public string LayerName { get; set; }
 	}
 
 	[Verb("compress", HelpText = "Compress layer results")]
@@ -75,12 +78,6 @@ namespace MeshEditor.FormatConverter
 	{
 		[Value(index: 0, MetaName = "Layer to compress", Required = true, HelpText = "Layer's guid or name")]
 		public string Layer { get; set; }
-
-		[Value(index: 1, MetaName = "Compression method", Required = true, HelpText = "Compression method (Transparent, SVD, WT)")]
-		public string Method { get; set; }
-
-		[Option('p', "params", Required = false, HelpText = "Compression parameters")]
-		public IEnumerable<string> CompressionParameters { get; set; }
 	}
 
 	[Verb("list", HelpText = "Enumerate all solutions in base directory")]

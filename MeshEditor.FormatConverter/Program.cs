@@ -126,19 +126,19 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
-			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.KeyTimeSteps, options.FieldName);
+			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
 			return 0;
 		}
 
 		private int runFilterCommand(FilterOptions options)
 		{
-			solutionHub.Filter(options.ParentLayer, options.FilterType, options.FilterParameters, options.LayerName, options.KeyTimeSteps, options.FieldName);
+			solutionHub.Filter(options.ParentLayer, options.FilterType, options.FilterParameters, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
 			return 0;
 		}
 
 		private int runCompressCommand(CompressOptions options)
 		{
-			solutionHub.Compress(options.Layer, options.Method, options.KeyTimeSteps, options.FieldName, options.CompressionParameters);
+			solutionHub.Compress(options.Layer, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
 			return 0;
 		}
 

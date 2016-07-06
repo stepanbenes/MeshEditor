@@ -8,8 +8,39 @@ namespace MeshEditor.LayerManager.Compression
 {
 	public static class CompressionServiceFactory
 	{
-		public static ICompressionService Create(CompressionMethod compressionMethod, IEnumerable<string> parameters = null)
+		public static ICompressionService Create(CompressionMethod compressionMethod)
 		{
+			switch (compressionMethod)
+			{
+				case CompressionMethod.Transparent:
+					return new TransparentCompressionService();
+				case CompressionMethod.SVD:
+					return new SVDCompressionService(randomized: false);
+				case CompressionMethod.WT:
+					return new WaveletCompressionService();
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		public static ICompressionService Create(IEnumerable<string> parameters)
+		{
+			if (parameters == null)
+				throw new ArgumentNullException(nameof(parameters));
+
+			CompressionMethod compressionMethod;
+			if (!parameters.Any())
+			{
+				//throw new ArgumentException("Parameters can not be empty. First parameter has to be name of compression method.", nameof(parameters));
+				compressionMethod = CompressionMethod.Transparent; // default compression method
+			}
+			else
+			{
+				string compressionMethodName = parameters.First();
+				if (!Enum.TryParse(compressionMethodName, ignoreCase: true, result: out compressionMethod))
+					throw new ArgumentException($"Unknown compression method passed as first parameter ({compressionMethodName})", nameof(parameters));
+			}
+
 			switch (compressionMethod)
 			{
 				case CompressionMethod.Transparent:
@@ -20,7 +51,7 @@ namespace MeshEditor.LayerManager.Compression
 						SVDCompressionFocus? focus = null;
 						double? factor = null;
 
-						foreach (string parameter in parameters ?? Enumerable.Empty<string>())
+						foreach (string parameter in parameters.Skip(1))
 						{
 							SVDCompressionFocus testFocus;
 							double testFactor;
