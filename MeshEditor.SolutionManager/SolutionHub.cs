@@ -23,6 +23,12 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Public static methods
 
+		public static string GetLocalStorageDefaultDirectory()
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+		}
+
 		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
 		{
 			Debug.Assert(solutionFileName != null);
@@ -44,8 +50,7 @@ namespace MeshEditor.SolutionManager
 
 		public static SolutionHub CreateLocal(int solutionId, ILogger logger = null)
 		{
-			Config config = new ConfigLoader().ReadConfiguration();
-			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+			var solutionDirectory = GetLocalStorageDefaultDirectory();
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			return new SolutionHub(
 				solutionId: solutionId,

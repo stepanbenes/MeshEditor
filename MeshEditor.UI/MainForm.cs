@@ -1604,6 +1604,9 @@ namespace MeshEditor.WinUI
 		{
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
+			dialog.FilterIndex = 0;
+			dialog.AutoUpgradeEnabled = true;
+			dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
 				closeSolution();
