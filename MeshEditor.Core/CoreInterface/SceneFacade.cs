@@ -246,15 +246,13 @@ namespace MeshEditor.CoreInterface
 			}
 		}
 
-		public static string InputFileFormatFilter
-		{
-			get { return string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply;*.mesh.json|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
-		}
+		public static string InputFileFormatFilter => string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply)|*{0};*.msh;*.vtu;*.obj;*.ply;*.mesh.json|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension);
 
-		public static string OutputFileFormatFilter
-		{
-			get { return string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension); }
-		}
+		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension);
+
+		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu)|*.msh;*.vtu|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|All files (*.*)|*.*";
+
+		public static string ImportDataFileFormatFilter => "All supported files (*.res, *.vtu)|*.res;*.vtu|GiD data file format (*.res)|*.res|VTK XML unstructured grid data (*.vtu)|*.vtu|All files (*.*)|*.*";
 
 		#endregion
 

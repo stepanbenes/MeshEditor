@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
 using MeshEditor.LayerManager.Common;
+using System.IO;
 
 namespace MeshEditor.WinUI
 {
@@ -53,16 +54,24 @@ namespace MeshEditor.WinUI
 		private void buttonChooseMeshFile_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog openFileDialog = new OpenFileDialog();
+			openFileDialog.Filter = MeshEditor.CoreInterface.SceneFacade.ImportMeshFileFormatFilter;
+			openFileDialog.FilterIndex = 0;
 			openFileDialog.Multiselect = false;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				textBoxMeshFile.Text = openFileDialog.FileName;
+				if (string.IsNullOrEmpty(textBoxProjectName.Text)) // construct default project name
+				{
+					textBoxProjectName.Text = Path.GetFileNameWithoutExtension(openFileDialog.FileName).MakeAlphanumericFilename();
+				}
 			}
 		}
 
 		private void buttonChooseResultFiles_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog openFileDialog = new OpenFileDialog();
+			openFileDialog.Filter = MeshEditor.CoreInterface.SceneFacade.ImportDataFileFormatFilter;
+			openFileDialog.FilterIndex = 0;
 			openFileDialog.Multiselect = true;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{

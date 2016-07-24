@@ -20,6 +20,15 @@ namespace MeshEditor.WinUI
 {
 	public partial class PostprocessViewControl : ContentViewControl
 	{
+		#region Static members
+
+		public static string GetDefaultSolutionDirectory()
+		{
+			return SolutionHub.GetLocalStorageDefaultDirectory();
+		}
+
+		#endregion
+
 		#region Fields, constructor
 
 		Control contentPanel;
