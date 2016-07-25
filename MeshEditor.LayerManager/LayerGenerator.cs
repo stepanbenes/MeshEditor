@@ -284,6 +284,15 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
+		public async Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
+		{
+			// find parentLayer in storage and download summary
+			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
+			{
+				return await serializationService.DeserializeAsync<SummaryFile>(stream, cancellationToken);
+			}
+		}
+
 		public GeometryDescription LoadGeometry(Guid layerId, int meshIndex)
 		{
 			using (Stream meshStream = sourceStorage.Load(getLayerMeshRecordName(layerId, meshIndex)))

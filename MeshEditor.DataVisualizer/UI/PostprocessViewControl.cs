@@ -129,44 +129,55 @@ namespace MeshEditor.WinUI
 			layersTreeView.SetLayerTree(layers);
 		}
 
-		private void onActiveSceneChanged()
+		private async void onActiveSceneChanged()
 		{
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
-			try
+			if (layerDataVisualizer != null)
 			{
-				changingActiveScene = true;
-				if (layerDataVisualizer != null)
+				var cancellationToken = beginLongOperation();
+				try
 				{
-					layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
-					dataSelectionControl.UpdateDataSource(getSummaryFileFor(layerDataVisualizer.LayerId), layerDataVisualizer.DataSelection);
+					var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationToken);
+					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
+					try
+					{
+						changingActiveScene = true;
+						layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
+					}
+					finally
+					{
+						changingActiveScene = false;
+					}
 					visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 				}
-				else
+				catch (OperationCanceledException)
+				{ }
+				finally
 				{
-					layersTreeView.SetSelectedLayer(null);
-					dataSelectionControl.UpdateDataSource(null, null);
-					visualizerSettingsControl.Settings = null;
+					endLongOperation();
 				}
 			}
-			finally
+			else
 			{
-				changingActiveScene = false;
+				layersTreeView.SetSelectedLayer(null);
+				dataSelectionControl.UpdateDataSource(null, null);
+				visualizerSettingsControl.Settings = null;
 			}
 		}
 
-		private SummaryFile getSummaryFileFor(Guid layerId)
+		private async Task<SummaryFile> getSummaryFileForLayerAsync(Guid layerId, CancellationToken cancellationToken)
 		{
 			SummaryFile summary;
 			if (!layerSummaryCache.TryGetValue(layerId, out summary))
-				summary = layerSummaryCache[layerId] = solutionHub.LoadLayerSummary(layerId);
+				summary = layerSummaryCache[layerId] = await solutionHub.LoadLayerSummaryAsync(layerId, cancellationToken);
 			return summary;
 		}
 
 		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, CancellationToken cancellationToken)
 		{
 			longOpNotifier.ReportProgress(new LongOpNotifier.State("Loading layer summary...", -1));
-			var summary = getSummaryFileFor(layerId);
-			
+			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
+
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
@@ -188,7 +199,7 @@ namespace MeshEditor.WinUI
 
 		private CancellationToken beginLongOperation()
 		{
-			cancelOperation(); // ongoing operation exists
+			cancelOperation(); // cancel ongoing operation
 
 			currentOperationToken = longOpNotifier.Begin();
 

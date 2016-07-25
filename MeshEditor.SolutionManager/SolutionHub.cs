@@ -139,10 +139,10 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadAttributeAsync(layerId, attributeIndex, cancellationToken);
 		}
 
-		public SummaryFile LoadLayerSummary(Guid layerId)
+		public Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadLayerSummary(layerId);
+			return layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
 		}
 
 		public void Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName = null)

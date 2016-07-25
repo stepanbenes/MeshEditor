@@ -1117,10 +1117,12 @@ namespace MeshEditor.CoreInterface
 				{
 					result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested));
 				}
+
 				scene.SetMesh(result);
 			}
 
 			createBuffers();
+
 			needToComputeVisibleNodesFlag = true;
 
 			if (isFirstMesh)
