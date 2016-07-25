@@ -317,6 +317,11 @@ namespace MeshEditor.LayerManager
 			return loadAttribute(getLayerAttributeRecordName(layerId, attributeIndex));
 		}
 
+		public Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
+		{
+			return loadAttributeAsync(getLayerAttributeRecordName(layerId, attributeIndex), cancellationToken);
+		}
+
 		#endregion
 
 		#region Private methods
@@ -344,6 +349,15 @@ namespace MeshEditor.LayerManager
 			using (Stream attributeStream = sourceStorage.Load(record))
 			{
 				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
+				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
+			}
+		}
+
+		private async Task<AttributeDescription> loadAttributeAsync(string record, CancellationToken cancellationToken)
+		{
+			using (Stream attributeStream = sourceStorage.Load(record))
+			{
+				DataFile layerAttributes = await serializationService.DeserializeAsync<DataFile>(attributeStream, cancellationToken);
 				return createAttributeDescriptionFromDataLayerAttribute(layerAttributes);
 			}
 		}

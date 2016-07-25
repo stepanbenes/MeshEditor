@@ -177,7 +177,7 @@ namespace MeshEditor.DataVisualizer
 			AttributeDescription elementPropertiesAttribute = null;
 			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
 			{
-				elementPropertiesAttribute = solutionHub.LoadAttribute(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value);
+				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
 			}
 
 			await scene.ReloadMeshAsync(new LayerMeshFileParser(geometry, elementPropertiesAttribute), cancellationToken, longOpNotifier);

@@ -23,12 +23,6 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Public static methods
 
-		public static string GetLocalStorageDefaultDirectory()
-		{
-			Config config = new ConfigLoader().ReadConfiguration();
-			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
-		}
-
 		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
 		{
 			Debug.Assert(solutionFileName != null);
@@ -75,6 +69,12 @@ namespace MeshEditor.SolutionManager
 				layerDestinationStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
 				logger: logger
 			);
+		}
+
+		public static string GetLocalStorageDefaultDirectory(ILogger logger = null)
+		{
+			Config config = new ConfigLoader().ReadConfiguration();
+			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(ILogger logger = null)
@@ -133,10 +133,10 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadDataAsync(layerId, dataIndex, cancellationToken);
 		}
 
-		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
+		public Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadAttribute(layerId, attributeIndex);
+			return layerGenerator.LoadAttributeAsync(layerId, attributeIndex, cancellationToken);
 		}
 
 		public SummaryFile LoadLayerSummary(Guid layerId)
