@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.DataVisualizer;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.Data
 {
 	public class DataSelectionEventArgs : EventArgs
 	{

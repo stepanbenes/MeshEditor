@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.Data
 {
 	public class LayerSelectionEventArgs : EventArgs
 	{

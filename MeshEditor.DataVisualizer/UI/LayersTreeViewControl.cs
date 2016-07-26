@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.DataVisualizer.Data;
 
 namespace MeshEditor.WinUI
 {

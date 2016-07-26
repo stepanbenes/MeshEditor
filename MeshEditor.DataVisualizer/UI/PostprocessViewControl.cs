@@ -9,6 +9,7 @@ using MeshEditor.DataVisualizer;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
+using MeshEditor.DataVisualizer.Data;
 
 namespace MeshEditor.WinUI
 {

@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.DataVisualizer;
 using System.Diagnostics;
+using MeshEditor.DataVisualizer.Data;
 
 namespace MeshEditor.WinUI
 {

@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using MeshEditor.SolutionManager;
 using MeshEditor.LayerManager.Common;
 using System.IO;
+using MeshEditor.DataVisualizer.Services;
 
 namespace MeshEditor.WinUI
 {
@@ -23,26 +24,54 @@ namespace MeshEditor.WinUI
 
 		public int? NewSolutionId { get; private set; }
 
-		private void buttonImport_Click(object sender, EventArgs e)
+		private async void buttonImport_Click(object sender, EventArgs e)
 		{
 			// TODO: check pre-conditions
 
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
-			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxResultFiles.Text));
+			//Debug.Assert(!string.IsNullOrWhiteSpace(textBoxResultFiles.Text));
 
-			string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+			buttonImport.Enabled = false;
+			tabControl1.Enabled = false;
+			{
+				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-			IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
-			IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text);
-			string projectName = textBoxProjectName.Text;
+				IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
+				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text);
+				string projectName = textBoxProjectName.Text;
 
+				int? solutionId = await createNewSolution(analysisResultGroupLengths, analysisResultRecordNames, projectName);
+				if (solutionId.HasValue)
+				{
+					bool success = await importResultFiles(analysisResultGroupLengths, analysisResultRecordNames, solutionId.Value);
+					if (success)
+					{
+						NewSolutionId = solutionId;
+						DialogResult = DialogResult.OK; // close dialog
+					}
+				}
+			}
+			buttonImport.Enabled = true;
+			tabControl1.Enabled = true;
+		}
+
+		private async Task<int?> createNewSolution(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
+		{
 			int solutionId = getUniqueSolutionId();
-			var solutionHub = SolutionHub.CreateLocal(solutionId);
-			solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
-			solutionHub.Import(analysisResultGroupLengths, analysisResultRecordNames, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>());
 
-			NewSolutionId = solutionId;
-			DialogResult = DialogResult.OK; // close dialog
+			//var solutionHub = SolutionHub.CreateLocal(solutionId);
+			//solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
+
+			int returnCode = await LayerManagerProcessInvokeService.Invoke($"create -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose"); // TODO: quote record names with white space
+			return returnCode == 0 ? solutionId : (int?)null;
+		}
+
+		private async Task<bool> importResultFiles(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, int solutionId)
+		{
+			//solutionHub.Import(analysisResultGroupLengths, analysisResultRecordNames, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>());
+
+			int returnCode = await LayerManagerProcessInvokeService.Invoke($"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose"); // TODO: quote record names with white space
+			return returnCode == 0;
 		}
 
 		private static int getUniqueSolutionId()
