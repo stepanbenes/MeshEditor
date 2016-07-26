@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Common;
 using MeshEditor.LayerManager.Import;
@@ -35,7 +36,6 @@ namespace MeshEditor.SolutionManager.IO
 
 		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null /*ignored*/)
 		{
-			var client = new RestClient(uri);
 			var request = new RestRequest($"api/solution", Method.POST);
 
 			request.AddHeader("Accept", "application/json");
@@ -51,41 +51,26 @@ namespace MeshEditor.SolutionManager.IO
 			string jsonString = request.JsonSerializer.Serialize(body);
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
-			var response = executeRequest(client, request);
+			var response = executeRequest(request);
 			return parseResponse<Solution>(response);
 		}
 
 		public IEnumerable<ISolutionInfo> GetAll()
 		{
-			var client = new RestClient(uri);
-			var request = new RestRequest("api/solution", Method.GET);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			//request.RequestFormat = DataFormat.Json;
-
-			var response = executeRequest(client, request);
-
+			RestRequest request = createGetAllRequest();
+			var response = executeRequest(request);
 			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
 
 		public Solution Get(int solutionId)
 		{
-			var client = new RestClient(uri);
-			var request = new RestRequest($"api/solution/{solutionId}", Method.GET);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			//request.RequestFormat = DataFormat.Json;
-
-			var response = executeRequest(client, request);
-
+			RestRequest request = createGetRequest(solutionId);
+			var response = executeRequest(request);
 			return parseResponse<Solution>(response);
 		}
 
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			var client = new RestClient(uri);
 			var request = new RestRequest($"api/solution/{solution.Id}/layer", Method.POST);
 
 			//request.AddUrlSegment("id", simulationId.ToString());
@@ -107,20 +92,33 @@ namespace MeshEditor.SolutionManager.IO
 			string jsonString = request.JsonSerializer.Serialize(body);
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
-			var response = executeRequest(client, request);
+			var response = executeRequest(request);
 			return parseResponse<Solution>(response);
 		}
 
 		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
-			var client = new RestClient(uri);
 			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
 			request.AddQueryParameter("dontDeleteLayerBlobs", "true"); // do not initiate deleting layer files from server
 
-			var response = executeRequest(client, request);
+			var response = executeRequest(request);
+			return parseResponse<Solution>(response);
+		}
+
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
+		{
+			RestRequest request = createGetAllRequest();
+			var response = await executeRequestAsync(request, cancellationToken);
+			return parseResponse<IEnumerable<SolutionBase>>(response);
+		}
+
+		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
+		{
+			RestRequest request = createGetRequest(solutionId);
+			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<Solution>(response);
 		}
 
@@ -128,27 +126,44 @@ namespace MeshEditor.SolutionManager.IO
 
 		#region Private methods
 
-		private IRestResponse executeRequest(RestClient client, RestRequest request)
+		private IRestResponse executeRequest(RestRequest request)
+		{
+			logRequest(request);
+			var client = new RestClient(uri);
+			var response = client.Execute(request);
+			logResponse(response);
+			return response;
+		}
+
+		private async Task<IRestResponse> executeRequestAsync(RestRequest request, CancellationToken cancellationToken)
+		{
+			logRequest(request);
+			var client = new RestClient(uri);
+			var response = await client.ExecuteTaskAsync(request, cancellationToken);
+			logResponse(response);
+			return response;
+		}
+
+		private void logRequest(RestRequest request)
 		{
 			logger?.LogOperationProgress($"{request.Method} {request.Resource}");
+		}
 
-			var response = client.Execute(request);
-
+		private void logResponse(IRestResponse response)
+		{
 			logger?.LogOperationProgress($"Status: {response.StatusDescription} ({(int)response.StatusCode})");
 			if (response.ErrorException != null)
 				throw response.ErrorException;
 			if (isErrorStatusCode(response.StatusCode))
 				throw new Exception(/*response.Content*/response.StatusDescription);
-
-			return response;
 		}
 
-		private bool isSuccessStatusCode(HttpStatusCode statusCode)
+		private static bool isSuccessStatusCode(HttpStatusCode statusCode)
 		{
 			return ((int)statusCode >= 200) && ((int)statusCode <= 299);
 		}
 
-		private bool isErrorStatusCode(HttpStatusCode statusCode)
+		private static bool isErrorStatusCode(HttpStatusCode statusCode)
 		{
 			return ((int)statusCode >= 400) && ((int)statusCode <= 599);
 		}
@@ -169,6 +184,26 @@ namespace MeshEditor.SolutionManager.IO
 			writer.Flush();
 			stream.Position = 0;
 			return stream;
+		}
+
+		private static RestRequest createGetAllRequest()
+		{
+			var request = new RestRequest("api/solution", Method.GET);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			//request.RequestFormat = DataFormat.Json;
+			return request;
+		}
+
+		private static RestRequest createGetRequest(int solutionId)
+		{
+			var request = new RestRequest($"api/solution/{solutionId}", Method.GET);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			//request.RequestFormat = DataFormat.Json;
+			return request;
 		}
 
 		#endregion

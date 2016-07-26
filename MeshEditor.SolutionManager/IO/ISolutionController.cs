@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Import;
 
@@ -13,5 +14,8 @@ namespace MeshEditor.SolutionManager.IO
 		Solution Get(int solutionId);
 		Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
 		Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete);
+
+		Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken);
+		Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken);
 	}
 }

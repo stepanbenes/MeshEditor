@@ -92,6 +92,21 @@ namespace MeshEditor.SolutionManager
 			return solutionController.GetAll();
 		}
 
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
+		{
+			Config config = await new ConfigLoader().ReadConfigurationAsync(cancellationToken);
+			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+			var solutionController = new LocalSolutionController(solutionDirectory);
+			return await solutionController.GetAllAsync(cancellationToken);
+		}
+
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
+		{
+			Config config = await new ConfigLoader().ReadConfigurationAsync(cancellationToken);
+			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
+			return await solutionController.GetAllAsync(cancellationToken);
+		}
+
 		#endregion
 
 		#region Fields, Constructors

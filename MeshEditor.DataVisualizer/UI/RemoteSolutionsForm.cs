@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
@@ -31,21 +32,35 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		CancellationTokenSource cts;
+		Task initRemoteSolutionsTask;
+
 		public RemoteSolutionsForm()
 		{
 			InitializeComponent();
-
-			var solutions = SolutionHub.EnumerateAllRemoteSolutions();
-
-			foreach (var solution in solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName)))
-			{
-				listBoxSolutions.Items.Add(solution);
-			}
-
 			listBoxSolutions_SelectedIndexChanged(null, null);
+			cts = new CancellationTokenSource();
+			initRemoteSolutionsTask = initRemoteSolutionListAsync(cts.Token);
 		}
 
 		public int? SelectedSolutionId => (listBoxSolutions.SelectedItem as SolutionThumbnail?)?.SolutionId;
+
+		private async Task initRemoteSolutionListAsync(CancellationToken cancellationToken)
+		{
+			try
+			{
+				listBoxSolutions.Items.Add("Looking for remote solutions...");
+				var solutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken);
+				listBoxSolutions.Items.Clear();
+				foreach (var solution in solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName)))
+				{
+					listBoxSolutions.Items.Add(solution);
+				}
+				listBoxSolutions_SelectedIndexChanged(null, null);
+			}
+			catch (OperationCanceledException)
+			{ }
+		}
 
 		private void listBoxSolutions_SelectedIndexChanged(object sender, EventArgs e)
 		{
@@ -68,6 +83,15 @@ namespace MeshEditor.WinUI
 			{
 				DialogResult = DialogResult.OK;
 			}
+		}
+
+		protected override void OnClosed(EventArgs e)
+		{
+			if (initRemoteSolutionsTask.Status != TaskStatus.RanToCompletion)
+			{
+				cts.Cancel();
+			}
+			base.OnClosed(e);
 		}
 	}
 }

@@ -12,6 +12,7 @@ using MeshEditor.SolutionManager;
 using MeshEditor.LayerManager.Common;
 using System.IO;
 using MeshEditor.DataVisualizer.Services;
+using System.Threading;
 
 namespace MeshEditor.WinUI
 {
@@ -26,8 +27,6 @@ namespace MeshEditor.WinUI
 
 		private async void buttonImport_Click(object sender, EventArgs e)
 		{
-			// TODO: check pre-conditions
-
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
 			//Debug.Assert(!string.IsNullOrWhiteSpace(textBoxResultFiles.Text));
 
@@ -57,7 +56,7 @@ namespace MeshEditor.WinUI
 
 		private async Task<int?> createNewSolution(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
 		{
-			int solutionId = getUniqueSolutionId();
+			int solutionId = await getUniqueSolutionIdAsync();
 
 			//var solutionHub = SolutionHub.CreateLocal(solutionId);
 			//solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
@@ -74,9 +73,9 @@ namespace MeshEditor.WinUI
 			return returnCode == 0;
 		}
 
-		private static int getUniqueSolutionId()
+		private static async Task<int> getUniqueSolutionIdAsync()
 		{
-			var allSolutionsInDefaultDirectory = SolutionHub.EnumerateAllLocalSolutions();
+			var allSolutionsInDefaultDirectory = await SolutionHub.EnumerateAllLocalSolutionsAsync(CancellationToken.None);
 			return 1 + allSolutionsInDefaultDirectory.Select(solution => solution.Id).DefaultIfEmpty().Max();
 		}
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Common;
 using MeshEditor.LayerManager.Import;
@@ -83,6 +84,24 @@ namespace MeshEditor.SolutionManager.IO
 			using (Stream stream = localStorage.Load(relativeFilename))
 			{
 				return serializer.Deserialize<SolutionBase>(stream);
+			}
+		}
+
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
+		{
+			var streamQuery = from solutionFile in findAllSolutionFilesInSolutionDirectory() select localStorage.Load(Path.GetFileName(solutionFile));
+			var streamList = streamQuery.ToList();
+			var result = await Task.WhenAll(from stream in streamList select serializer.DeserializeAsync<SolutionBase>(stream, cancellationToken));
+			foreach (var stream in streamList) // dispose all streams, close all files
+				stream.Dispose();
+			return result;
+		}
+
+		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
+		{
+			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionId)))
+			{
+				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
 			}
 		}
 
