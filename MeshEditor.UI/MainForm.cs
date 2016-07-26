@@ -35,7 +35,7 @@ namespace MeshEditor.WinUI
 		private OpenGLControl activeControl;
 		private List<OpenGLControl> openGLControls;
 		private LongOpNotifier longOpNotifier;
-		private ProgressViewForm progressViewForm;
+		private Dictionary<LongOpNotifier.Token, ProgressViewForm> progressViewForms = new Dictionary<LongOpNotifier.Token, ProgressViewForm>();
 
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
@@ -560,7 +560,7 @@ namespace MeshEditor.WinUI
 
 		private void deleteSelectedElementsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			using (longOpNotifier.Begin())
+			using (longOpNotifier.Begin("Deleting selected elements"))
 			{
 				activeControl.SceneFacade.PerformAction(AvailableAction.DeleteSelectedElements);
 			}
@@ -568,7 +568,7 @@ namespace MeshEditor.WinUI
 
 		private void restoreMeshToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			using (longOpNotifier.Begin())
+			using (longOpNotifier.Begin("Restoring mesh"))
 			{
 				activeControl.SceneFacade.PerformAction(AvailableAction.RestoreMesh);
 			}
@@ -944,7 +944,7 @@ namespace MeshEditor.WinUI
 			if (!activeControl.SceneFacade.ContainsMesh)
 				return;
 			ListOfSelectedItemsForm form;
-			using (longOpNotifier.Begin())
+			using (longOpNotifier.Begin("Creating list of selected items"))
 			{
 				form = new ListOfSelectedItemsForm(activeControl.SceneFacade);
 			}
@@ -1134,7 +1134,8 @@ namespace MeshEditor.WinUI
 			{
 				this.Cursor = Cursors.WaitCursor;
 				activeControl.Cursor = Cursors.WaitCursor;
-				statusLabel.Text = "Operation in progress...";
+				string stateText = longOpNotifier.GetState(token).ToString();
+				statusLabel.Text = string.IsNullOrEmpty(stateText) ? "Operation in progress..." : stateText;
 				statusLabel.ForeColor = Color.Blue;
 				statusStrip.Refresh();
 
@@ -1146,25 +1147,29 @@ namespace MeshEditor.WinUI
 				activeControl.SetCursorAccordingToEditorMode();
 				statusLabel.ForeColor = Color.Black;
 				updateStatus();
-				if (progressViewForm != null)
+				ProgressViewForm progressViewForm;
+				if (progressViewForms.TryGetValue(token, out progressViewForm))
 				{
 					progressViewForm.Quit();
 					progressViewForm = null;
+					progressViewForms.Remove(token);
 				}
 			};
-			longOpNotifier.ProgressChanged += state =>
+			longOpNotifier.ProgressChanged += token =>
 			{
-				Action<LongOpNotifier.State> reportAction = reportOperationProgress;
-				this.Invoke(reportAction, state); // dispatch to UI thread
+				Action<LongOpNotifier.Token> reportAction = reportOperationProgress;
+				this.Invoke(reportAction, token); // dispatch to UI thread
 			};
 		}
 
-		private void reportOperationProgress(LongOpNotifier.State operationState)
+		private void reportOperationProgress(LongOpNotifier.Token operationToken)
 		{
+			LongOpNotifier.State operationState = longOpNotifier.GetState(operationToken);
 			statusLabel.Text = operationState.ToString();
 			statusStrip.Refresh();
 
-			if (progressViewForm != null)
+			ProgressViewForm progressViewForm;
+			if (progressViewForms.TryGetValue(operationToken, out progressViewForm))
 			{
 				progressViewForm.Caption = operationState.TaskName;
 				progressViewForm.OperationName = operationState.OperationName;
@@ -1179,15 +1184,16 @@ namespace MeshEditor.WinUI
 			delayTimer.Tick += delegate
 			{
 				delayTimer.Stop();
-
-				if (longOpNotifier.IsRunningSingle(operationToken))
+				if (longOpNotifier.IsRunning(operationToken))
 				{
-					Debug.Assert(progressViewForm == null);
-					progressViewForm = new ProgressViewForm(longOpNotifier.LastReportedState.TaskName ?? "Operation in progress...", isCancellable);
+					Debug.Assert(!progressViewForms.ContainsKey(operationToken));
+					LongOpNotifier.State state = longOpNotifier.GetState(operationToken);
+					ProgressViewForm progressViewForm = new ProgressViewForm(state.TaskName ?? "Operation in progress...", isCancellable);
+					progressViewForms[operationToken] = progressViewForm;
 					if (isCancellable)
 						progressViewForm.Cancel += (s, e) => longOpNotifier.Cancel(operationToken);
-					progressViewForm.OperationName = longOpNotifier.LastReportedState.OperationName;
-					progressViewForm.SetProgressState(longOpNotifier.LastReportedState.PercentDone);
+					progressViewForm.OperationName = state.OperationName;
+					progressViewForm.SetProgressState(state.PercentDone);
 
 					this.Cursor = Cursors.Default;
 					activeControl.SetCursorAccordingToEditorMode();

@@ -892,7 +892,7 @@ namespace MeshEditor.WinUI
 			if (clear)
 			{
 				Cursor temp = this.Cursor;
-				using (longOpNotifier.Begin())
+				using (longOpNotifier.Begin("Removing signalled element"))
 				{
 					this.Cursor = Cursors.WaitCursor;
 					sceneFacade.PerformAction(AvailableAction.ClearSignalElement);

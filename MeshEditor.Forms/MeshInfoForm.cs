@@ -180,7 +180,7 @@ namespace MeshEditor.WinUI
 				}
 
 				// -----------------------------------------------
-				using (longOpNotifier.Begin())
+				using (longOpNotifier.Begin("Updating border limits"))
 				{
 					Cursor temp = this.Cursor;
 					this.Cursor = Cursors.WaitCursor;

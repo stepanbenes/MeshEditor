@@ -135,7 +135,7 @@ namespace MeshEditor.WinUI
 			{
 				Cursor temp = this.Cursor;
 				this.Cursor = Cursors.WaitCursor;
-				using (longOpNotifier.Begin())
+				using (longOpNotifier.Begin("Updating set of visible elements"))
 				{
 					CutInfo cutInfo = new CutInfo();
 

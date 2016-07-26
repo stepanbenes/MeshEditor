@@ -132,7 +132,7 @@ namespace MeshEditor.WinUI
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
 			if (layerDataVisualizer != null)
 			{
-				LongOpNotifier.Token operationToken = beginLongOperation();
+				LongOpNotifier.Token operationToken = beginLongOperation("Loading layer summary");
 				try
 				{
 					var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationTokenSources[operationToken].Token);
@@ -177,9 +177,10 @@ namespace MeshEditor.WinUI
 			return summary;
 		}
 
-		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, CancellationToken cancellationToken)
+		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, LongOpNotifier.Token operationToken)
 		{
-			longOpNotifier.ReportProgress(new LongOpNotifier.State("Loading layer summary...", -1));
+			longOpNotifier.UpdateState(operationToken, "Loading layer summary...");
+			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
 			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
 
 			var firstMesh = summary.Meshes.FirstOrDefault();
@@ -188,7 +189,9 @@ namespace MeshEditor.WinUI
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 				var dataVisualizer = new LayerDataVisualizer(layerId);
 
-				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, longOpNotifier);
+				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
+
+				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, progressReport);
 
 				scene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				scene.PerformAction(AvailableAction.UpdateColorBuffers);
@@ -198,11 +201,11 @@ namespace MeshEditor.WinUI
 			dataSelectionControl.UpdateDataSource(summary, null);
 		}
 
-		private LongOpNotifier.Token beginLongOperation()
+		private LongOpNotifier.Token beginLongOperation(string taskName)
 		{
 			mainSplitContainer.Panel1.Enabled = false;
 			//cancelOperation(); // cancel ongoing operation
-			var operationToken = longOpNotifier.Begin(isCancellable: true);
+			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true);
 			cancellationTokenSources[operationToken] = new CancellationTokenSource();
 			return operationToken;
 		}
@@ -236,10 +239,10 @@ namespace MeshEditor.WinUI
 
 			if (e.LayerId.HasValue)
 			{
-				LongOpNotifier.Token operationToken = beginLongOperation();
+				LongOpNotifier.Token operationToken = beginLongOperation("Loading layer");
 				try
 				{
-					await loadLayerAsync(e.LayerId.Value, ActiveScene, cancellationTokenSources[operationToken].Token);
+					await loadLayerAsync(e.LayerId.Value, ActiveScene, operationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -268,11 +271,12 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
-			LongOpNotifier.Token operationToken = beginLongOperation();
+			LongOpNotifier.Token operationToken = beginLongOperation("Updating data selection");
 			try
 			{
 				var originalScene = ActiveScene;
-				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, longOpNotifier);
+				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
+				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, progressReport);
 				// update colors
 				originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}

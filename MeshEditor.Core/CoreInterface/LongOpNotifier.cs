@@ -52,6 +52,8 @@ namespace MeshEditor.CoreInterface
 
 		public struct State
 		{
+			public static readonly State Empty = default(State);
+
 			public string TaskName { get; }
 			public string OperationName { get; }
 			public int PercentDone { get; }
@@ -92,17 +94,17 @@ namespace MeshEditor.CoreInterface
 		public event Action<Token> HasEnded;
 		public event Action<Token> CancellationRequested;
 
-		public event Action<State> ProgressChanged;
-
-		public State LastReportedState { get; private set; }
+		public event Action<Token> ProgressChanged;
 
 		HashSet<Token> runningOperations = new HashSet<Token>();
+		Dictionary<Token, State> operationStateMap = new Dictionary<Token, State>();
 
-		public Token Begin(bool isCancellable = false)
+		public Token Begin(string taskName, bool isCancellable = false)
 		{
 			var token = Token.CreateNew(this);
 			Debug.Assert(!runningOperations.Contains(token));
 			runningOperations.Add(token);
+			operationStateMap[token] = new State(taskName);
 			HasBegun?.Invoke(token, isCancellable);
 			return token;
 		}
@@ -120,15 +122,25 @@ namespace MeshEditor.CoreInterface
 			CancellationRequested?.Invoke(operationToken);
 		}
 
-		public void ReportProgress(State operationState)
+		public State GetState(Token operationToken)
 		{
-			LastReportedState = operationState;
-			ProgressChanged?.Invoke(operationState);
+			if (!IsRunning(operationToken))
+				return State.Empty;
+			return operationStateMap[operationToken];
 		}
 
-		public bool IsRunningSingle(Token operationToken)
+		public void UpdateState(Token operationToken, string operationName, int percentDone = -1)
 		{
-			return runningOperations.Count == 1 && runningOperations.Contains(operationToken);
+			State state;
+			if (!operationStateMap.TryGetValue(operationToken, out state))
+				state = State.Empty;
+			operationStateMap[operationToken] = new State(state.TaskName, operationName, percentDone);
+			ProgressChanged?.Invoke(operationToken);
+		}
+
+		public bool IsRunning(Token token)
+		{
+			return runningOperations.Contains(token);
 		}
 	}
 }

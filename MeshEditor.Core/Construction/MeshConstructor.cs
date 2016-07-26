@@ -70,7 +70,7 @@ namespace MeshEditor.Construction
 		/// <returns>new mesh</returns>
 		public Mesh CreateMesh(IMeshFileParser meshFileParser, YesNoQuestion cancelled)
 		{
-			MeshIOEventArgs ioea = new MeshIOEventArgs(0, "Constructing mesh", "");
+			MeshIOEventArgs ioea = new MeshIOEventArgs(percentDone: 0, taskName: null, operationName: "Constructing mesh");
 			Mesh mesh = null;
 			try
 			{

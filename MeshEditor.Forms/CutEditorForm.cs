@@ -169,7 +169,7 @@ namespace MeshEditor.WinUI
 		{
 			Cursor savedCursor = this.Cursor;
 			this.Cursor = Cursors.WaitCursor;
-			using (longOpNotifier.Begin())
+			using (longOpNotifier.Begin("Creating cut through mesh"))
 			{
 				// --------------------------------
 				this.sceneFacade.PerformAction(AvailableAction.CutMesh, cutInfo);
@@ -323,7 +323,7 @@ namespace MeshEditor.WinUI
 			buttonRestoreMesh.Refresh();
 			Cursor savedCursor = this.Cursor;
 			this.Cursor = Cursors.WaitCursor;
-			using (longOpNotifier.Begin())
+			using (longOpNotifier.Begin("Restoring mesh"))
 			{
 				// --------------------------------
 				sceneFacade.PerformAction(AvailableAction.RestoreMesh);

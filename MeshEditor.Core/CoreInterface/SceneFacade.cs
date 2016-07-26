@@ -1101,15 +1101,15 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public async Task ReloadMeshAsync(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, LongOpNotifier longOpNotifier)
+		public async Task ReloadMeshAsync(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, Action<string, int> progressReport)
 		{
 			bool isFirstMesh = !ContainsMesh;
 			
 			{
 				IMeshCreator meshCreator = new MeshConstructor();
-				if (longOpNotifier != null)
+				if (progressReport != null)
 				{
-					meshCreator.Step += (s, e) => longOpNotifier.ReportProgress(new LongOpNotifier.State(e.TaskName, e.OperationName, e.PercentDone));
+					meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
 				}
 
 				Mesh result;
