@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
 using MeshEditor.CoreInterface;
 using MeshEditor.DataVisualizer;
-using MeshEditor.SolutionManager.IO;
-using MeshEditor.DataVisualizer.IO;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
@@ -36,13 +30,17 @@ namespace MeshEditor.WinUI
 		SceneFacade activeScene;
 		bool changingActiveScene;
 		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
+
 		LongOpNotifier longOpNotifier;
+		Dictionary<LongOpNotifier.Token, CancellationTokenSource> cancellationTokenSources = new Dictionary<LongOpNotifier.Token, CancellationTokenSource>();
 
 		public PostprocessViewControl(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
 			this.longOpNotifier = longOpNotifier;
-			splitContainer1.FixedPanel = FixedPanel.Panel1;
+			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
+
+			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
 
 			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
@@ -61,18 +59,18 @@ namespace MeshEditor.WinUI
 				if (contentPanel != value)
 				{
 					if (contentPanel != null)
-						splitContainer1.Panel2.Controls.Remove(contentPanel);
+						mainSplitContainer.Panel2.Controls.Remove(contentPanel);
 					contentPanel = value;
 					if (contentPanel != null)
-						splitContainer1.Panel2.Controls.Add(contentPanel);
+						mainSplitContainer.Panel2.Controls.Add(contentPanel);
 				}
 			}
 		}
 
 		public int SplitterDistance
 		{
-			get { return splitContainer1.SplitterDistance; }
-			set { splitContainer1.SplitterDistance = value; }
+			get { return mainSplitContainer.SplitterDistance; }
+			set { mainSplitContainer.SplitterDistance = value; }
 		}
 
 		public SceneFacade ActiveScene
@@ -83,7 +81,7 @@ namespace MeshEditor.WinUI
 				if (activeScene != value)
 				{
 					activeScene = value;
-					onActiveSceneChanged();
+					var firedAndForgottenTask = updateDataSelectionInLeftPanelAsync();
 				}
 			}
 		}
@@ -129,33 +127,36 @@ namespace MeshEditor.WinUI
 			layersTreeView.SetLayerTree(layers);
 		}
 
-		private async void onActiveSceneChanged()
+		private async Task updateDataSelectionInLeftPanelAsync()
 		{
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
 			if (layerDataVisualizer != null)
 			{
-				var cancellationToken = beginLongOperation();
+				LongOpNotifier.Token operationToken = beginLongOperation();
 				try
 				{
-					var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationToken);
+					var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationTokenSources[operationToken].Token);
 					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
-					try
-					{
-						changingActiveScene = true;
-						layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
-					}
-					finally
-					{
-						changingActiveScene = false;
-					}
-					visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 				}
 				catch (OperationCanceledException)
-				{ }
+				{
+					dataSelectionControl.UpdateDataSource(null, null);
+				}
 				finally
 				{
-					endLongOperation();
+					endLongOperation(operationToken);
 				}
+
+				try
+				{
+					changingActiveScene = true;
+					layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
+				}
+				finally
+				{
+					changingActiveScene = false;
+				}
+				visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 			}
 			else
 			{
@@ -169,7 +170,10 @@ namespace MeshEditor.WinUI
 		{
 			SummaryFile summary;
 			if (!layerSummaryCache.TryGetValue(layerId, out summary))
-				summary = layerSummaryCache[layerId] = await solutionHub.LoadLayerSummaryAsync(layerId, cancellationToken);
+			{
+				summary = await solutionHub.LoadLayerSummaryAsync(layerId, cancellationToken);
+				layerSummaryCache[layerId] = summary;
+			}
 			return summary;
 		}
 
@@ -194,37 +198,34 @@ namespace MeshEditor.WinUI
 			dataSelectionControl.UpdateDataSource(summary, null);
 		}
 
-		CancellationTokenSource currentCts;
-		LongOpNotifier.Token currentOperationToken;
-
-		private CancellationToken beginLongOperation()
+		private LongOpNotifier.Token beginLongOperation()
 		{
-			cancelOperation(); // cancel ongoing operation
-
-			currentOperationToken = longOpNotifier.Begin();
-
-			currentCts = new CancellationTokenSource();
-			return currentCts.Token;
+			mainSplitContainer.Panel1.Enabled = false;
+			//cancelOperation(); // cancel ongoing operation
+			var operationToken = longOpNotifier.Begin(isCancellable: true);
+			cancellationTokenSources[operationToken] = new CancellationTokenSource();
+			return operationToken;
 		}
 
-		private void cancelOperation()
+		private void cancelOperation(LongOpNotifier.Token operationToken)
 		{
-			if (currentCts != null)
+			CancellationTokenSource cts;
+			if (cancellationTokenSources.TryGetValue(operationToken, out cts))
 			{
-				currentCts.Cancel();
-				endLongOperation();
+				cts.Cancel();
 			}
 		}
 
-		private void endLongOperation()
+		private void endLongOperation(LongOpNotifier.Token operationToken)
 		{
-			longOpNotifier.End(currentOperationToken);
-
-			if (currentCts != null)
+			longOpNotifier.End(operationToken);
+			CancellationTokenSource cts;
+			if (cancellationTokenSources.TryGetValue(operationToken, out cts))
 			{
-				currentCts.Dispose();
-				currentCts = null;
+				cts.Dispose();
+				cancellationTokenSources.Remove(operationToken);
 			}
+			mainSplitContainer.Panel1.Enabled = true;
 		}
 
 		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
@@ -235,16 +236,17 @@ namespace MeshEditor.WinUI
 
 			if (e.LayerId.HasValue)
 			{
+				LongOpNotifier.Token operationToken = beginLongOperation();
 				try
 				{
-					var cancellationToken = beginLongOperation();
-					await loadLayerAsync(e.LayerId.Value, ActiveScene, cancellationToken);
+					await loadLayerAsync(e.LayerId.Value, ActiveScene, cancellationTokenSources[operationToken].Token);
 				}
 				catch (OperationCanceledException)
 				{ }
 				finally
 				{
-					endLongOperation();
+					endLongOperation(operationToken);
+					await updateDataSelectionInLeftPanelAsync();
 				}
 			}
 			else
@@ -266,11 +268,11 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
+			LongOpNotifier.Token operationToken = beginLongOperation();
 			try
 			{
-				var cancellationToken = beginLongOperation();
 				var originalScene = ActiveScene;
-				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationToken, originalScene, longOpNotifier);
+				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, longOpNotifier);
 				// update colors
 				originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
 			}
@@ -278,7 +280,8 @@ namespace MeshEditor.WinUI
 			{ }
 			finally
 			{
-				endLongOperation();
+				endLongOperation(operationToken);
+				await updateDataSelectionInLeftPanelAsync();
 			}
 		}
 
@@ -290,6 +293,11 @@ namespace MeshEditor.WinUI
 
 			// update colors
 			ActiveScene.PerformAction(AvailableAction.UpdateColorBuffers);
+		}
+
+		private void longOpNotifier_CancellationRequested(LongOpNotifier.Token operationToken)
+		{
+			cancelOperation(operationToken);
 		}
 
 		#endregion
@@ -304,12 +312,15 @@ namespace MeshEditor.WinUI
 		{
 			if (disposing)
 			{
-				cancelOperation();
+				foreach (var token in cancellationTokenSources.Keys)
+					cancelOperation(token);
 
 				if (components != null)
 				{
 					components.Dispose();
 				}
+
+				longOpNotifier.CancellationRequested -= longOpNotifier_CancellationRequested;
 			}
 			base.Dispose(disposing);
 		}

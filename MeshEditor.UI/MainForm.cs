@@ -1130,7 +1130,7 @@ namespace MeshEditor.WinUI
 		{
 			longOpNotifier = new LongOpNotifier();
 
-			longOpNotifier.HasBegun += token =>
+			longOpNotifier.HasBegun += (token, isCancellable) =>
 			{
 				this.Cursor = Cursors.WaitCursor;
 				activeControl.Cursor = Cursors.WaitCursor;
@@ -1138,7 +1138,7 @@ namespace MeshEditor.WinUI
 				statusLabel.ForeColor = Color.Blue;
 				statusStrip.Refresh();
 
-				setupProgressViewTimer(token);
+				setupProgressViewTimer(token, isCancellable);
 			};
 			longOpNotifier.HasEnded += token =>
 			{
@@ -1172,7 +1172,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void setupProgressViewTimer(LongOpNotifier.Token operationToken)
+		private void setupProgressViewTimer(LongOpNotifier.Token operationToken, bool isCancellable)
 		{
 			System.Windows.Forms.Timer delayTimer = new System.Windows.Forms.Timer();
 			delayTimer.Interval = 500;
@@ -1183,7 +1183,9 @@ namespace MeshEditor.WinUI
 				if (longOpNotifier.IsRunningSingle(operationToken))
 				{
 					Debug.Assert(progressViewForm == null);
-					progressViewForm = new ProgressViewForm(longOpNotifier.LastReportedState.TaskName ?? "Operation in progress...", enableCancellation: false);
+					progressViewForm = new ProgressViewForm(longOpNotifier.LastReportedState.TaskName ?? "Operation in progress...", isCancellable);
+					if (isCancellable)
+						progressViewForm.Cancel += (s, e) => longOpNotifier.Cancel(operationToken);
 					progressViewForm.OperationName = longOpNotifier.LastReportedState.OperationName;
 					progressViewForm.SetProgressState(longOpNotifier.LastReportedState.PercentDone);
 

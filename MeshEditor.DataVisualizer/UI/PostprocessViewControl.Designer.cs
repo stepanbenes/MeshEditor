@@ -15,32 +15,32 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+			this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
 			this.visualizerSettingsControl = new MeshEditor.DataVisualizer.UI.VisualizerSettingsControl();
 			this.dataSelectionControl = new MeshEditor.WinUI.DataSelectionControl();
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-			this.splitContainer1.Panel1.SuspendLayout();
-			this.splitContainer1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
+			this.mainSplitContainer.Panel1.SuspendLayout();
+			this.mainSplitContainer.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.leftSplitContainer)).BeginInit();
 			this.leftSplitContainer.Panel1.SuspendLayout();
 			this.leftSplitContainer.Panel2.SuspendLayout();
 			this.leftSplitContainer.SuspendLayout();
 			this.SuspendLayout();
 			// 
-			// splitContainer1
+			// mainSplitContainer
 			// 
-			this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-			this.splitContainer1.Name = "splitContainer1";
+			this.mainSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.mainSplitContainer.Location = new System.Drawing.Point(0, 0);
+			this.mainSplitContainer.Name = "mainSplitContainer";
 			// 
-			// splitContainer1.Panel1
+			// mainSplitContainer.Panel1
 			// 
-			this.splitContainer1.Panel1.Controls.Add(this.leftSplitContainer);
-			this.splitContainer1.Size = new System.Drawing.Size(1090, 861);
-			this.splitContainer1.SplitterDistance = 363;
-			this.splitContainer1.TabIndex = 0;
+			this.mainSplitContainer.Panel1.Controls.Add(this.leftSplitContainer);
+			this.mainSplitContainer.Size = new System.Drawing.Size(1090, 861);
+			this.mainSplitContainer.SplitterDistance = 363;
+			this.mainSplitContainer.TabIndex = 0;
 			// 
 			// leftSplitContainer
 			// 
@@ -91,12 +91,12 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.splitContainer1);
+			this.Controls.Add(this.mainSplitContainer);
 			this.Name = "PostprocessViewControl";
 			this.Size = new System.Drawing.Size(1090, 861);
-			this.splitContainer1.Panel1.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-			this.splitContainer1.ResumeLayout(false);
+			this.mainSplitContainer.Panel1.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).EndInit();
+			this.mainSplitContainer.ResumeLayout(false);
 			this.leftSplitContainer.Panel1.ResumeLayout(false);
 			this.leftSplitContainer.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.leftSplitContainer)).EndInit();
@@ -107,7 +107,7 @@
 
 		#endregion
 
-		private System.Windows.Forms.SplitContainer splitContainer1;
+		private System.Windows.Forms.SplitContainer mainSplitContainer;
 		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
 		private MeshEditor.WinUI.DataSelectionControl dataSelectionControl;

@@ -99,8 +99,7 @@ namespace MeshEditor.WinUI
 		/// </summary>
 		private void buttonCancel_Click(object sender, EventArgs e)
 		{
-			if (Cancel != null)
-				Cancel(this, EventArgs.Empty);
+			Cancel?.Invoke(this, EventArgs.Empty);
 			buttonCancel.Enabled = false;
 		}
 

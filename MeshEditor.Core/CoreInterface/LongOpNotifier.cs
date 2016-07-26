@@ -88,7 +88,7 @@ namespace MeshEditor.CoreInterface
 			}
 		}
 
-		public event Action<Token> HasBegun;
+		public event Action<Token, bool> HasBegun;
 		public event Action<Token> HasEnded;
 		public event Action<Token> CancellationRequested;
 
@@ -98,12 +98,12 @@ namespace MeshEditor.CoreInterface
 
 		HashSet<Token> runningOperations = new HashSet<Token>();
 
-		public Token Begin()
+		public Token Begin(bool isCancellable = false)
 		{
 			var token = Token.CreateNew(this);
 			Debug.Assert(!runningOperations.Contains(token));
 			runningOperations.Add(token);
-			HasBegun?.Invoke(token);
+			HasBegun?.Invoke(token, isCancellable);
 			return token;
 		}
 
