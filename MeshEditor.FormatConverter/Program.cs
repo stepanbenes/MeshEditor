@@ -48,8 +48,11 @@ namespace MeshEditor.FormatConverter
 				}
 				catch (Exception ex)
 				{
-					ConsoleLogger.WriteLineColored(ex.GetType().FullName, ConsoleColor.Red);
-					ConsoleLogger.WriteLineColored(ex.Message + Environment.NewLine + Environment.NewLine + ex.StackTrace, ConsoleColor.Red);
+					using (new ConsoleBrush(ConsoleColor.Red))
+					{
+						Console.Error.WriteLine(ex.GetType().FullName);
+						Console.Error.WriteLine(ex.Message + Environment.NewLine + Environment.NewLine + ex.StackTrace);
+					}
 					returnCode = -1;
 				}
 				finally
@@ -59,13 +62,23 @@ namespace MeshEditor.FormatConverter
 					{
 						if (returnCode == 0)
 						{
-							ConsoleLogger.WriteColored("Success. ", ConsoleColor.Green);
+							using (new ConsoleBrush(ConsoleColor.Green))
+								Console.Write("Success. ");
 						}
 						else
 						{
-							ConsoleLogger.WriteColored("Fail. ", ConsoleColor.Red);
+							using (new ConsoleBrush(ConsoleColor.Red))
+								Console.Write("Fail. ");
 						}
-						ConsoleLogger.WriteLineColored($"Execution time: {stopwatch.Elapsed}", ConsoleColor.Gray);
+
+						using (new ConsoleBrush(ConsoleColor.Gray))
+							Console.WriteLine($"Execution time: {stopwatch.Elapsed}");
+
+						if (returnCode != 0)
+						{
+							Console.Write("Press any key to quit...");
+							Console.ReadKey();
+						}
 					}
 				}
 				return returnCode;
@@ -272,7 +285,10 @@ namespace MeshEditor.FormatConverter
 ",
 			};
 
-			ConsoleLogger.WriteLineColored(excavators[new Random().Next(excavators.Length)], ConsoleColor.Cyan);
+			using (new ConsoleBrush(ConsoleColor.Cyan))
+			{
+				Console.WriteLine(excavators[new Random().Next(excavators.Length)]);
+			}
 		}
 
 		#endregion

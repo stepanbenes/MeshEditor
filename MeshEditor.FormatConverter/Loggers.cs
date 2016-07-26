@@ -56,25 +56,14 @@ namespace MeshEditor.FormatConverter
 	{
 		public LogVerbosityLevel VerbosityLevel { get; set; }
 
-		public static void WriteColored(string message, ConsoleColor color)
-		{
-			var previousConsoleColor = Console.ForegroundColor;
-			Console.ForegroundColor = color;
-			Console.Write(message);
-			Console.ForegroundColor = previousConsoleColor;
-		}
-
-		public static void WriteLineColored(string message, ConsoleColor color)
-		{
-			WriteColored(message, color);
-			Console.WriteLine();
-		}
-
 		public void LogOperationProgress(string message)
 		{
 			if (VerbosityLevel >= LogVerbosityLevel.OperationProgress)
 			{
-				WriteLineColored(message, ConsoleColor.Gray);
+				using (new ConsoleBrush(ConsoleColor.Gray))
+				{
+					Console.WriteLine(message);
+				}
 			}
 		}
 
@@ -90,7 +79,10 @@ namespace MeshEditor.FormatConverter
 		{
 			if (VerbosityLevel >= LogVerbosityLevel.Warning)
 			{
-				WriteLineColored("WARNING: " + message, ConsoleColor.Yellow);
+				using (new ConsoleBrush(ConsoleColor.Yellow))
+				{
+					Console.WriteLine("WARNING: " + message);
+				}
 			}
 		}
 
@@ -98,7 +90,10 @@ namespace MeshEditor.FormatConverter
 		{
 			if (VerbosityLevel >= LogVerbosityLevel.Error)
 			{
-				WriteLineColored("ERROR: " + message, ConsoleColor.Red);
+				using (new ConsoleBrush(ConsoleColor.Red))
+				{
+					Console.Error.WriteLine("ERROR: " + message);
+				}
 			}
 		}
 	}

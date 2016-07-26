@@ -18,7 +18,7 @@ namespace MeshEditor.DataVisualizer.Services
 			// Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().CodeBase), layerManagerExecutableName
 			process.StartInfo = new ProcessStartInfo("layer", arguments) { UseShellExecute = true };
 			TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
-			process.Exited += (s, e) => tcs.TrySetResult(process.ExitCode);
+			process.Exited += (s, e) =>	tcs.TrySetResult(process.ExitCode);
 			process.Start();
 			return tcs.Task;
 		}
