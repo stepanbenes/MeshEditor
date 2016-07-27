@@ -107,6 +107,12 @@
     <Compile Include="UI\EditColorScaleForm.Designer.cs">
       <DependentUpon>EditColorScaleForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ErrorReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ErrorReportForm.Designer.cs">
+      <DependentUpon>ErrorReportForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ImportFEMResultsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -154,6 +160,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\EditColorScaleForm.resx">
       <DependentUpon>EditColorScaleForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ErrorReportForm.resx">
+      <DependentUpon>ErrorReportForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ImportFEMResultsForm.resx">
       <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>

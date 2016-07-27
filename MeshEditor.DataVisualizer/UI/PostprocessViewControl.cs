@@ -120,16 +120,24 @@ namespace MeshEditor.WinUI
 
 		private async Task loadSolutionAsync(SolutionHub solutionHub)
 		{
-			LongOpNotifier.Token operationToken = beginLongOperation("Loading solution");
+			const string taskName = "Loading solution";
 			try
 			{
-				await updateLayerTreeAsync(operationToken);
+				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				try
+				{
+					await updateLayerTreeAsync(operationToken);
+				}
+				catch (OperationCanceledException)
+				{ }
+				finally
+				{
+					endLongOperation(operationToken);
+				}
 			}
-			catch (OperationCanceledException)
-			{ }
-			finally
+			catch (Exception ex)
 			{
-				endLongOperation(operationToken);
+				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
 		}
 
@@ -154,19 +162,28 @@ namespace MeshEditor.WinUI
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
 			if (layerDataVisualizer != null)
 			{
-				LongOpNotifier.Token operationToken = beginLongOperation("Loading layer summary");
+				const string taskName = "Loading layer summary";
 				try
 				{
-					var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationTokenSources[operationToken].Token);
-					dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
+					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+					try
+					{
+						var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationTokenSources[operationToken].Token);
+						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
+					}
+					catch (OperationCanceledException)
+					{
+						dataSelectionControl.UpdateDataSource(null, null);
+					}
+					finally
+					{
+						endLongOperation(operationToken);
+					}
 				}
-				catch (OperationCanceledException)
+				catch (Exception ex)
 				{
 					dataSelectionControl.UpdateDataSource(null, null);
-				}
-				finally
-				{
-					endLongOperation(operationToken);
+					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 				}
 
 				try
@@ -261,17 +278,25 @@ namespace MeshEditor.WinUI
 
 			if (e.LayerId.HasValue)
 			{
-				LongOpNotifier.Token operationToken = beginLongOperation("Loading layer");
+				const string taskName = "Loading layer";
 				try
 				{
-					await loadLayerAsync(e.LayerId.Value, ActiveScene, operationToken);
+					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+					try
+					{
+						await loadLayerAsync(e.LayerId.Value, ActiveScene, operationToken);
+					}
+					catch (OperationCanceledException)
+					{ }
+					finally
+					{
+						endLongOperation(operationToken);
+						await updateDataSelectionInLeftPanelAsync();
+					}
 				}
-				catch (OperationCanceledException)
-				{ }
-				finally
+				catch (Exception ex)
 				{
-					endLongOperation(operationToken);
-					await updateDataSelectionInLeftPanelAsync();
+					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 				}
 			}
 			else
@@ -293,21 +318,29 @@ namespace MeshEditor.WinUI
 			if (layerDataVisualizer == null)
 				return;
 
-			LongOpNotifier.Token operationToken = beginLongOperation("Updating data selection");
+			const string taskName = "Updating data selection";
 			try
 			{
-				var originalScene = ActiveScene;
-				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, progressReport);
-				// update colors
-				originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
+				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				try
+				{
+					var originalScene = ActiveScene;
+					Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
+					await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, progressReport);
+					// update colors
+					originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
+				}
+				catch (OperationCanceledException)
+				{ }
+				finally
+				{
+					endLongOperation(operationToken);
+					await updateDataSelectionInLeftPanelAsync();
+				}
 			}
-			catch (OperationCanceledException)
-			{ }
-			finally
+			catch (Exception ex)
 			{
-				endLongOperation(operationToken);
-				await updateDataSelectionInLeftPanelAsync();
+				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
 		}
 

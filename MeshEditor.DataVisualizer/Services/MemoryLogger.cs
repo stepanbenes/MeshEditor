@@ -29,6 +29,11 @@ namespace MeshEditor.DataVisualizer.Services
 				Type = type;
 				Content = content;
 			}
+
+			public override string ToString()
+			{
+				return $"{When}: [{Type}] {Content}";
+			}
 		}
 
 		List<Record> recordHistory = new List<Record>();

@@ -30,16 +30,19 @@ namespace MeshEditor.WinUI
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
 			//Debug.Assert(!string.IsNullOrWhiteSpace(textBoxResultFiles.Text));
 
-			buttonImport.Enabled = false;
-			tabControl1.Enabled = false;
+			var logger = new MemoryLogger();
+			try
 			{
+				buttonImport.Enabled = false;
+				tabControl1.Enabled = false;
+
 				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
 				IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
 				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text);
 				string projectName = textBoxProjectName.Text;
 
-				int? solutionId = await createNewSolution(analysisResultGroupLengths, analysisResultRecordNames, projectName);
+				int? solutionId = await createNewSolution(analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
 				if (solutionId.HasValue)
 				{
 					bool success = await importResultFiles(analysisResultGroupLengths, analysisResultRecordNames, solutionId.Value);
@@ -50,13 +53,20 @@ namespace MeshEditor.WinUI
 					}
 				}
 			}
-			buttonImport.Enabled = true;
-			tabControl1.Enabled = true;
+			catch (Exception ex)
+			{
+				new ExceptionReportForm("Import FEM results", ex, logger).ShowDialog();
+			}
+			finally
+			{
+				buttonImport.Enabled = true;
+				tabControl1.Enabled = true;
+			}
 		}
 
-		private async Task<int?> createNewSolution(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName)
+		private async Task<int?> createNewSolution(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName, ILogger logger)
 		{
-			int solutionId = await getUniqueSolutionIdAsync();
+			int solutionId = await getUniqueSolutionIdAsync(logger);
 
 			//var solutionHub = SolutionHub.CreateLocal(solutionId);
 			//solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
@@ -73,9 +83,8 @@ namespace MeshEditor.WinUI
 			return returnCode == 0;
 		}
 
-		private static async Task<int> getUniqueSolutionIdAsync()
+		private static async Task<int> getUniqueSolutionIdAsync(ILogger logger)
 		{
-			var logger = new MemoryLogger();
 			var allSolutionsInDefaultDirectory = await SolutionHub.EnumerateAllLocalSolutionsAsync(CancellationToken.None, logger);
 			return 1 + allSolutionsInDefaultDirectory.Select(solution => solution.Id).DefaultIfEmpty().Max();
 		}

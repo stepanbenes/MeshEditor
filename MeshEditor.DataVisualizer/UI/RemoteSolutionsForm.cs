@@ -70,7 +70,10 @@ namespace MeshEditor.WinUI
 			}
 			catch (OperationCanceledException)
 			{ }
-			// TODO: report error
+			catch (Exception ex)
+			{
+				new ExceptionReportForm("Loading remote solutions list", ex, logger).ShowDialog();
+			}
 		}
 
 		private void listBoxSolutions_SelectedIndexChanged(object sender, EventArgs e)
