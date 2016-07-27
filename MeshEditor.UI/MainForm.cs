@@ -1604,7 +1604,7 @@ namespace MeshEditor.WinUI
 
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadLocalSolution(importFEMResultsForm.NewSolutionId.Value);
+				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.NewSolutionId.Value);
 			}
 		}
 
@@ -1619,7 +1619,7 @@ namespace MeshEditor.WinUI
 			{
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadLocalSolution(dialog.FileName);
+				await getCurrentPostprocessView().LoadLocalSolutionAsync(dialog.FileName);
 			}
 		}
 
@@ -1633,7 +1633,7 @@ namespace MeshEditor.WinUI
 
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadRemoteSolution(remoteSolutionsForm.SelectedSolutionId.Value);
+				await getCurrentPostprocessView().LoadRemoteSolutionAsync(remoteSolutionsForm.SelectedSolutionId.Value);
 			}
 		}
 

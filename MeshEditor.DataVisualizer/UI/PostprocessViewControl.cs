@@ -91,41 +91,54 @@ namespace MeshEditor.WinUI
 
 		#region Public methods
 
-		public async Task LoadLocalSolution(string solutionFileFullPath)
+		public async Task LoadLocalSolutionAsync(string solutionFileFullPath)
 		{
-			await Task.Yield();
-			loadSolution(SolutionHub.CreateLocal(solutionFileFullPath)); // TODO: make async
+			await loadSolutionAsync(SolutionHub.CreateLocal(solutionFileFullPath));
 		}
 
-		public async Task LoadLocalSolution(int solutionId)
+		public async Task LoadLocalSolutionAsync(int solutionId)
 		{
-			await Task.Yield();
-			loadSolution(SolutionHub.CreateLocal(solutionId)); // TODO: make async
+			await loadSolutionAsync(SolutionHub.CreateLocal(solutionId));
 		}
 
-		public async Task LoadRemoteSolution(int solutionId)
+		public async Task LoadRemoteSolutionAsync(int solutionId)
 		{
-			await Task.Yield();
-			loadSolution(SolutionHub.CreateRemote(solutionId)); // TODO: make async
+			await loadSolutionAsync(SolutionHub.CreateRemote(solutionId));
 		}
 
 		#endregion
 
 		#region Private methods
 
-		private void loadSolution(SolutionHub solutionHub)
+		private async Task loadSolutionAsync(SolutionHub solutionHub)
 		{
 			this.solutionHub = solutionHub;
-			updateLayerTree();
+			LongOpNotifier.Token operationToken = beginLongOperation("Loading solution");
+			try
+			{
+				await updateLayerTreeAsync(operationToken);
+			}
+			catch (OperationCanceledException)
+			{ }
+			finally
+			{
+				endLongOperation(operationToken);
+			}
 		}
 
-		private void updateLayerTree()
+		private async Task updateLayerTreeAsync(LongOpNotifier.Token operationToken)
 		{
-			if (solutionHub == null)
-				return;
-
-			var layers = solutionHub.EnumerateAllLayers();
+			Debug.Assert(solutionHub != null);
+			Debug.Assert(ActiveScene != null);
+			longOpNotifier.UpdateState(operationToken, "Loading list of layers");
+			var layers = await solutionHub.EnumerateAllLayersAsync(cancellationTokenSources[operationToken].Token);
 			layersTreeView.SetLayerTree(layers);
+			if (layers.Any())
+			{
+				Guid layerId = layers.First().Id;
+				await loadLayerAsync(layerId, ActiveScene, operationToken);
+				layersTreeView.SetSelectedLayer(layerId);
+			}
 		}
 
 		private async Task updateDataSelectionInLeftPanelAsync()
@@ -180,7 +193,7 @@ namespace MeshEditor.WinUI
 
 		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, LongOpNotifier.Token operationToken)
 		{
-			longOpNotifier.UpdateState(operationToken, "Loading layer summary...");
+			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
 			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
 

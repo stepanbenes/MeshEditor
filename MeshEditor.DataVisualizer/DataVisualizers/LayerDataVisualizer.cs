@@ -67,7 +67,7 @@ namespace MeshEditor.DataVisualizer
 				else
 				{
 					Debug.Assert(solutionHub != null);
-					progressReport?.Invoke($"Loading {newDataSelection.FieldName}", -1);
+					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
 					var componentList = await solutionHub.LoadDataAsync(LayerId, newDataSelection.DataIndex.Value, cancellationToken);
 					data = componentList.ToDictionary(d => d.TimeStep);
 				}

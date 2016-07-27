@@ -133,7 +133,13 @@ namespace MeshEditor.SolutionManager
 
 		public IEnumerable<ILayerInfo> EnumerateAllLayers()
 		{
-			return from layer in solutionController.Get(solutionId).Layers select layer;
+			return solutionController.Get(solutionId).Layers;
+		}
+
+		public async Task<IEnumerable<ILayerInfo>> EnumerateAllLayersAsync(CancellationToken cancellationToken)
+		{
+			var solution = await solutionController.GetAsync(solutionId, cancellationToken);
+			return solution.Layers;
 		}
 
 		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
