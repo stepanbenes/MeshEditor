@@ -21,6 +21,19 @@ namespace MeshEditor.SolutionManager
 {
 	public class SolutionHub
 	{
+		#region Static fields, static constructor
+
+		static Config config;
+
+		static SolutionHub()
+		{
+			var configLoader = new ConfigLoader();
+			if (!configLoader.TryReadConfiguration(out config))
+				config = configLoader.GetDefaultConfiguration();
+		}
+
+		#endregion
+
 		#region Public static methods
 
 		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
@@ -59,7 +72,6 @@ namespace MeshEditor.SolutionManager
 
 		public static SolutionHub CreateRemote(int solutionId, ILogger logger = null)
 		{
-			Config config = new ConfigLoader().ReadConfiguration();
 			return new SolutionHub(
 				solutionId: solutionId,
 				solutionController: new RestApiSolutionController(config.RestApi.Uri, logger),
@@ -71,15 +83,13 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static string GetLocalStorageDefaultDirectory(ILogger logger = null)
+		public static string GetLocalStorageDefaultDirectory()
 		{
-			Config config = new ConfigLoader().ReadConfiguration();
 			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(ILogger logger = null)
 		{
-			Config config = new ConfigLoader().ReadConfiguration();
 			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 			var solutionController = new LocalSolutionController(solutionDirectory);
 			return solutionController.GetAll();
@@ -87,14 +97,12 @@ namespace MeshEditor.SolutionManager
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			Config config = new ConfigLoader().ReadConfiguration();
 			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
 			return solutionController.GetAll();
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			Config config = await new ConfigLoader().ReadConfigurationAsync(cancellationToken);
 			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 			var solutionController = new LocalSolutionController(solutionDirectory);
 			return await solutionController.GetAllAsync(cancellationToken);
@@ -102,7 +110,6 @@ namespace MeshEditor.SolutionManager
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			Config config = await new ConfigLoader().ReadConfigurationAsync(cancellationToken);
 			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
 			return await solutionController.GetAllAsync(cancellationToken);
 		}

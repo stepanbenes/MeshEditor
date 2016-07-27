@@ -9,7 +9,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.WinUI
 {
@@ -47,11 +49,19 @@ namespace MeshEditor.WinUI
 
 		private async Task initRemoteSolutionListAsync(CancellationToken cancellationToken)
 		{
+			var logger = new MemoryLogger();
 			try
 			{
 				listBoxSolutions.Items.Add("Looking for remote solutions...");
-				var solutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken);
-				listBoxSolutions.Items.Clear();
+				IEnumerable<ISolutionInfo> solutions;
+				try
+				{
+					solutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken, logger);
+				}
+				finally
+				{
+					listBoxSolutions.Items.Clear();
+				}
 				foreach (var solution in solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName)))
 				{
 					listBoxSolutions.Items.Add(solution);
@@ -60,6 +70,7 @@ namespace MeshEditor.WinUI
 			}
 			catch (OperationCanceledException)
 			{ }
+			// TODO: report error
 		}
 
 		private void listBoxSolutions_SelectedIndexChanged(object sender, EventArgs e)

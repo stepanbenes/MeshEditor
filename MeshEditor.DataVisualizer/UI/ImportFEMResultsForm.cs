@@ -75,7 +75,8 @@ namespace MeshEditor.WinUI
 
 		private static async Task<int> getUniqueSolutionIdAsync()
 		{
-			var allSolutionsInDefaultDirectory = await SolutionHub.EnumerateAllLocalSolutionsAsync(CancellationToken.None);
+			var logger = new MemoryLogger();
+			var allSolutionsInDefaultDirectory = await SolutionHub.EnumerateAllLocalSolutionsAsync(CancellationToken.None, logger);
 			return 1 + allSolutionsInDefaultDirectory.Select(solution => solution.Id).DefaultIfEmpty().Max();
 		}
 

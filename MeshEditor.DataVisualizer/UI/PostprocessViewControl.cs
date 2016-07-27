@@ -10,6 +10,7 @@ using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
 using MeshEditor.DataVisualizer.Data;
+using MeshEditor.DataVisualizer.Services;
 
 namespace MeshEditor.WinUI
 {
@@ -28,6 +29,7 @@ namespace MeshEditor.WinUI
 
 		Control contentPanel;
 		SolutionHub solutionHub;
+		MemoryLogger logger;
 		SceneFacade activeScene;
 		bool changingActiveScene;
 		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
@@ -93,17 +95,23 @@ namespace MeshEditor.WinUI
 
 		public async Task LoadLocalSolutionAsync(string solutionFileFullPath)
 		{
-			await loadSolutionAsync(SolutionHub.CreateLocal(solutionFileFullPath));
+			logger = new MemoryLogger();
+			solutionHub = SolutionHub.CreateLocal(solutionFileFullPath, logger);
+			await loadSolutionAsync(solutionHub);
 		}
 
 		public async Task LoadLocalSolutionAsync(int solutionId)
 		{
-			await loadSolutionAsync(SolutionHub.CreateLocal(solutionId));
+			logger = new MemoryLogger();
+			solutionHub = SolutionHub.CreateLocal(solutionId, logger);
+			await loadSolutionAsync(solutionHub);
 		}
 
 		public async Task LoadRemoteSolutionAsync(int solutionId)
 		{
-			await loadSolutionAsync(SolutionHub.CreateRemote(solutionId));
+			logger = new MemoryLogger();
+			solutionHub = SolutionHub.CreateRemote(solutionId, logger);
+			await loadSolutionAsync(solutionHub);
 		}
 
 		#endregion
@@ -112,7 +120,6 @@ namespace MeshEditor.WinUI
 
 		private async Task loadSolutionAsync(SolutionHub solutionHub)
 		{
-			this.solutionHub = solutionHub;
 			LongOpNotifier.Token operationToken = beginLongOperation("Loading solution");
 			try
 			{
@@ -133,7 +140,8 @@ namespace MeshEditor.WinUI
 			longOpNotifier.UpdateState(operationToken, "Loading list of layers");
 			var layers = await solutionHub.EnumerateAllLayersAsync(cancellationTokenSources[operationToken].Token);
 			layersTreeView.SetLayerTree(layers);
-			if (layers.Any())
+
+			if (layers.Any()) // load first layer
 			{
 				Guid layerId = layers.First().Id;
 				await loadLayerAsync(layerId, ActiveScene, operationToken);

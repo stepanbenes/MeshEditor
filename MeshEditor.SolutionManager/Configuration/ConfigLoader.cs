@@ -28,13 +28,32 @@ namespace MeshEditor.SolutionManager.Configuration
 			}
 		}
 
-		public async Task<Config> ReadConfigurationAsync(CancellationToken cancellationToken, string configFile = null)
+		public bool TryReadConfiguration(out Config result, string configFile = null)
 		{
-			using (var stream = getConfigFileStream(configFile))
+			try
 			{
-				ISerializationService serializer = new JsonSerializationService();
-				return await serializer.DeserializeAsync<Config>(stream, cancellationToken);
+				using (var stream = getConfigFileStream(configFile))
+				{
+					ISerializationService serializer = new JsonSerializationService();
+					result = serializer.Deserialize<Config>(stream);
+					return true;
+				}
 			}
+			catch
+			{
+				result = null;
+				return false;
+			}
+		}
+
+		public Config GetDefaultConfiguration()
+		{
+			return new Config
+			{
+				LocalStorage = new LocalStorageConfigPatameters(),
+				AzureBlobStorage = new AzureBlobStorageConfigParameters(),
+				RestApi = new RestApiConfigParameters()
+			}; 
 		}
 
 		private Stream getConfigFileStream(string configFile)
