@@ -89,23 +89,27 @@ namespace MeshEditor.SolutionManager.IO
 
 		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
 		{
-			var streamQuery = from solutionFile in findAllSolutionFilesInSolutionDirectory() select localStorage.Load(Path.GetFileName(solutionFile));
-			var streamList = streamQuery.ToList();
-			var result = await Task.WhenAll(from stream in streamList select serializer.DeserializeAsync<SolutionBase>(stream, cancellationToken));
-			foreach (var stream in streamList) // dispose all streams, close all files
-				stream.Dispose();
-			return result;
+			return await Task.WhenAll(from solutionFile in findAllSolutionFilesInSolutionDirectory()
+									  select loadSolutionInfo(solutionFile, cancellationToken));
 		}
 
 		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
 		{
-			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionId)))
+			using (Stream stream = localStorage.Load(await findRecordNameOfSolutionAsync(solutionId, cancellationToken)))
 			{
 				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
 			}
 		}
 
 		#region Private methods
+
+		private async Task<ISolutionInfo> loadSolutionInfo(string solutionFile, CancellationToken cancellationToken)
+		{
+			using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+			{
+				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
+			}
+		}
 
 		private IEnumerable<string> findAllSolutionFilesInSolutionDirectory()
 		{
@@ -119,6 +123,22 @@ namespace MeshEditor.SolutionManager.IO
 				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
 				{
 					var testSolution = serializer.Deserialize<SolutionBase>(stream);
+					if (testSolution.Id == solutionId)
+					{
+						return Path.GetFileName(solutionFile);
+					}
+				}
+			}
+			throw new FileNotFoundException();
+		}
+
+		private async Task<string> findRecordNameOfSolutionAsync(int solutionId, CancellationToken cancellationToken)
+		{
+			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			{
+				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				{
+					var testSolution = await serializer.DeserializeAsync<SolutionBase>(stream, cancellationToken);
 					if (testSolution.Id == solutionId)
 					{
 						return Path.GetFileName(solutionFile);
