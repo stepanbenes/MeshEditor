@@ -179,9 +179,9 @@ namespace MeshEditor.SolutionManager
 			Solution solution = solutionController.CreateNew(solutionId, analysisResults, projectName);
 		}
 
-		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string masterLayerName = null)
 		{
-			const string masterLayerName = "master";
+			const string defaultMasterLayerName = "master";
 
 			Solution solution = solutionController.Get(solutionId);
 
@@ -195,7 +195,7 @@ namespace MeshEditor.SolutionManager
 										compressionService: CompressionServiceFactory.Create(compressionParameters),
 										logger: logger);
 
-			var masterLayer = layerGenerator.GenerateMasterLayer(newLayerName ?? masterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
+			var masterLayer = layerGenerator.GenerateMasterLayer(masterLayerName ?? defaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
 			logNewLayer(masterLayer);
 
 			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: createLayerRecordLayerSummaryFile(masterLayer));

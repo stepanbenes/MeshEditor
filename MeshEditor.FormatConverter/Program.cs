@@ -39,9 +39,12 @@ namespace MeshEditor.FormatConverter
 				}
 
 				int returnCode = 1;
-				Stopwatch stopwatch = new Stopwatch();
+				
 				var program = new Program(isRunningLocally, storageType: StorageType.Local, logger: new ConsoleLogger());
+
+				Stopwatch stopwatch = new Stopwatch();
 				stopwatch.Start();
+
 				try
 				{
 					returnCode = program.Run(args);
@@ -55,32 +58,34 @@ namespace MeshEditor.FormatConverter
 					}
 					returnCode = -1;
 				}
-				finally
+
+				stopwatch.Stop();
+
+				if (returnCode != 1)
 				{
-					stopwatch.Stop();
-					if (returnCode != 1)
+					if (returnCode == 0)
 					{
-						if (returnCode == 0)
-						{
-							using (new ConsoleBrush(ConsoleColor.Green))
-								Console.Write("Success. ");
-						}
-						else
-						{
-							using (new ConsoleBrush(ConsoleColor.Red))
-								Console.Write("Fail. ");
-						}
-
-						using (new ConsoleBrush(ConsoleColor.Gray))
-							Console.WriteLine($"Execution time: {stopwatch.Elapsed}");
-
-						if (returnCode != 0)
-						{
-							Console.Write("Press any key to quit...");
-							Console.ReadKey();
-						}
+						using (new ConsoleBrush(ConsoleColor.Green))
+							Console.Write("Success. ");
 					}
+					else
+					{
+						using (new ConsoleBrush(ConsoleColor.Red))
+							Console.Write("Fail. ");
+					}
+
+					using (new ConsoleBrush(ConsoleColor.Gray))
+						Console.WriteLine($"Execution time: {stopwatch.Elapsed}");
 				}
+
+				if (args.Any(arg => string.Equals(arg, "--pressanykey", StringComparison.InvariantCultureIgnoreCase)))
+				{
+					Console.WriteLine();
+					using (new ConsoleBrush(ConsoleColor.Yellow))
+						Console.Write("Press any key to quit...");
+					Console.ReadKey();
+				}
+
 				return returnCode;
 			}
 			else

@@ -21,36 +21,40 @@ namespace MeshEditor.WinUI
 		public ImportFEMResultsForm()
 		{
 			InitializeComponent();
+			comboBoxCompressionMethod.SelectedIndex = 0;
+			radioButtonQuality.Checked = true;
+			trackBarCompressionFactor.Value = 95;
+
+			// update state of UI
+			updateUI();
 		}
 
 		public int? NewSolutionId { get; private set; }
 
+		bool isImportOperationRunning;
+
 		private async void buttonImport_Click(object sender, EventArgs e)
 		{
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
-			//Debug.Assert(!string.IsNullOrWhiteSpace(textBoxResultFiles.Text));
 
 			var logger = new MemoryLogger();
 			try
 			{
-				buttonImport.Enabled = false;
-				tabControl1.Enabled = false;
+				isImportOperationRunning = true;
+				updateUI();
 
 				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
 				IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
-				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text);
+				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text).Select(filename => filename.RemoveQuotes());
 				string projectName = textBoxProjectName.Text;
 
-				int? solutionId = await createNewSolution(analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
-				if (solutionId.HasValue)
+				int solutionId = await createNewSolutionAsync(analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
+				bool success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionId, buildCompressionParameters(), buildKeyTimeSteps());
+				if (success)
 				{
-					bool success = await importResultFiles(analysisResultGroupLengths, analysisResultRecordNames, solutionId.Value);
-					if (success)
-					{
-						NewSolutionId = solutionId;
-						DialogResult = DialogResult.OK; // close dialog
-					}
+					NewSolutionId = solutionId;
+					DialogResult = DialogResult.OK; // close dialog
 				}
 			}
 			catch (Exception ex)
@@ -59,27 +63,75 @@ namespace MeshEditor.WinUI
 			}
 			finally
 			{
-				buttonImport.Enabled = true;
-				tabControl1.Enabled = true;
+				isImportOperationRunning = false;
+				updateUI();
 			}
 		}
 
-		private async Task<int?> createNewSolution(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName, ILogger logger)
+		private IEnumerable<string> buildCompressionParameters()
+		{
+			List<string> parameters = new List<string>();
+			if (comboBoxCompressionMethod.SelectedIndex > 0)
+			{
+				parameters.Add((string)comboBoxCompressionMethod.SelectedItem);
+
+				// add compression factor parameters
+				if (radioButtonQuality.Checked)
+				{
+					parameters.Add("quality");
+					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
+				}
+				else if (radioButtonSize.Checked)
+				{
+					parameters.Add("size");
+					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
+				}
+			}
+			return parameters;
+		}
+
+		private IEnumerable<string> buildKeyTimeSteps()
+		{
+			if (checkBoxMergeTimeSteps.Checked)
+			{
+				string[] keyTimes = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				if (!keyTimes.Any())
+					return Enumerable.Repeat("Infinity", 1);
+				return keyTimes;
+			}
+			else
+			{
+				return Enumerable.Empty<string>();
+			}
+		}
+
+		private async Task<int> createNewSolutionAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName, ILogger logger)
 		{
 			int solutionId = await getUniqueSolutionIdAsync(logger);
 
-			//var solutionHub = SolutionHub.CreateLocal(solutionId);
-			//solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
+			var solutionHub = SolutionHub.CreateLocal(solutionId, logger);
+			solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName); // TODO: make it async
 
-			int returnCode = await LayerManagerProcessInvokeService.Invoke($"create -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose"); // TODO: quote record names with white space
-			return returnCode == 0 ? solutionId : (int?)null;
+			return solutionId;
+
+			//int returnCode = await LayerManagerProcessInvokeService.Invoke($"create -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose --pressanykey");
+			//return returnCode == 0 ? solutionId : (int?)null;
 		}
 
-		private async Task<bool> importResultFiles(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, int solutionId)
+		private async Task<bool> importResultFilesAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, int solutionId, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps)
 		{
 			//solutionHub.Import(analysisResultGroupLengths, analysisResultRecordNames, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>());
 
-			int returnCode = await LayerManagerProcessInvokeService.Invoke($"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose"); // TODO: quote record names with white space
+			string arguments = $"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace()))} --solution {solutionId} --verbose --pressanykey";
+			if (compressionParameters.Any())
+			{
+				arguments += " -c " + string.Join(" ", compressionParameters);
+			}
+			if (keyTimeSteps.Any())
+			{
+				arguments += " -k " + string.Join(" ", keyTimeSteps);
+			}
+			int returnCode = await LayerManagerProcessInvokeService.Invoke(arguments);
 			return returnCode == 0;
 		}
 
@@ -97,11 +149,7 @@ namespace MeshEditor.WinUI
 			openFileDialog.Multiselect = false;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
-				textBoxMeshFile.Text = openFileDialog.FileName;
-				if (string.IsNullOrEmpty(textBoxProjectName.Text)) // construct default project name
-				{
-					textBoxProjectName.Text = Path.GetFileNameWithoutExtension(openFileDialog.FileName).MakeAlphanumericFilename();
-				}
+				textBoxMeshFile.Text = openFileDialog.FileName.QuoteIfContainsWhiteSpace();
 			}
 		}
 
@@ -113,8 +161,38 @@ namespace MeshEditor.WinUI
 			openFileDialog.Multiselect = true;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
-				textBoxResultFiles.Text = string.Join(";", openFileDialog.FileNames);
+				textBoxResultFiles.Text = string.Join(" ", openFileDialog.FileNames.Select(filename => filename.QuoteIfContainsWhiteSpace()));
 			}
+		}
+
+		private void comboBoxCompressionMethod_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			checkBoxMergeTimeSteps.Checked = comboBoxCompressionMethod.SelectedIndex > 0;
+			updateUI();
+		}
+
+		private void checkBoxMergeTimeSteps_CheckedChanged(object sender, EventArgs e)
+		{
+			updateUI();
+		}
+
+		private void textBoxMeshFile_TextChanged(object sender, EventArgs e)
+		{
+			updateUI();
+		}
+
+		private void trackBarCompressionFactor_ValueChanged(object sender, EventArgs e)
+		{
+			labelCompressionFactor.Text = $"Compression factor: {trackBarCompressionFactor.Value} %";
+			updateUI();
+		}
+
+		private void updateUI()
+		{
+			groupBoxCompressionParameters.Enabled = comboBoxCompressionMethod.SelectedIndex > 0;
+			textBoxKeyTimeSteps.Enabled = checkBoxMergeTimeSteps.Checked;
+			buttonImport.Enabled = !isImportOperationRunning && !string.IsNullOrWhiteSpace(textBoxMeshFile.Text);
+			tabControl.Enabled = !isImportOperationRunning;
 		}
 	}
 }

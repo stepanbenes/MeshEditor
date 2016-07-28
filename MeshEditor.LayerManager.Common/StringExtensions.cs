@@ -38,13 +38,29 @@ namespace MeshEditor.LayerManager.Common
 			return text.ToString();
 		}
 
-		public static string[] SplitToTokensWithQuotes(this string line)
+		public static string[] SplitToTokensWithQuotes(this string text)
 		{
 			// parse correctly quoted tokens (enclosed by '"' characters); see: http://stackoverflow.com/questions/14655023/split-a-string-that-has-white-spaces-unless-they-are-enclosed-within-quotes
-			return Regex.Matches(line, tokensWithQuotesRegexPattern)
+			return Regex.Matches(text, tokensWithQuotesRegexPattern)
 				.Cast<Match>()
-				.Select(m => m.Value.Trim(quotesTrimChars))
+				.Select(m => m.Value.RemoveQuotes())
 				.ToArray();
+		}
+
+		public static string RemoveQuotes(this string text)
+		{
+			if (string.IsNullOrEmpty(text))
+				return string.Empty;
+			return text.Trim(quotesTrimChars);
+		}
+
+		public static string QuoteIfContainsWhiteSpace(this string text)
+		{
+			if (string.IsNullOrEmpty(text))
+				return string.Empty;
+			if (text.Any(char.IsWhiteSpace))
+				return "\"" + text + "\"";
+			return text;
 		}
 	}
 }
