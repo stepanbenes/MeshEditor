@@ -43,7 +43,7 @@ namespace MeshEditor.WinUI
 				isImportOperationRunning = true;
 				updateUI();
 
-				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
 				IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
 				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text).Select(filename => filename.RemoveQuotes());
@@ -125,7 +125,7 @@ namespace MeshEditor.WinUI
 			string arguments = $"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace()))} --solution {solutionId} --verbose --pressanykey";
 			if (compressionParameters.Any())
 			{
-				arguments += " -c " + string.Join(" ", compressionParameters);
+				arguments += " -c " + string.Join(" ", compressionParameters); // + " randomized";
 			}
 			if (keyTimeSteps.Any())
 			{

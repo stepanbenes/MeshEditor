@@ -21,7 +21,7 @@ namespace MeshEditor.FormatConverter
 		//[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
 		//public string ConfigFile { get; set; }
 
-		[Option("pressanykey", HelpText = "Enable to require pressing any key before quitting the program", Required = false)]
+		[Option("pressanykey", HelpText = "Require pressing any key before quitting the program", Required = false)]
 		public bool PressAnyKeyToQuit { get; set; }
 	}
 
