@@ -144,7 +144,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
-			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
+			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.KeyTimeSteps, options.CompressionParameters, options.GaussPointsExtrapolationStrategyName, options.FieldName, options.LayerName);
 			return 0;
 		}
 

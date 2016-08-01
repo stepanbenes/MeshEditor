@@ -11,11 +11,21 @@ namespace MeshEditor.LayerManager.Import
 {
 	public static class AnalysisResultImportServiceFactory
 	{
-		public static IAnalysisResultImportService Create(IReadStorageService geometryStorageService, IReadStorageService dataStorageService, AnalysisResult result)
+		public static IAnalysisResultImportService Create(IReadStorageService geometryStorageService, IReadStorageService dataStorageService, AnalysisResult result, string gaussPointsExtrapolationStrategyName)
 		{
+			GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy;
+			if (gaussPointsExtrapolationStrategyName == null)
+			{
+				gaussPointsExtrapolationStrategy = GaussPointsExtrapolationStrategy.Default;
+			}
+			else if (!Enum.TryParse(gaussPointsExtrapolationStrategyName, ignoreCase: true, result: out gaussPointsExtrapolationStrategy))
+			{
+				throw new ArgumentException($"Unknown compression method passed as first parameter ({gaussPointsExtrapolationStrategy})", nameof(gaussPointsExtrapolationStrategyName));
+			}
+
 			return new AnalysisResultImportService(
 				createGeometryImportService(geometryStorageService, result.MeshRecordNames.Single()),
-				(result.DataRecordNames.Count > 0) ? createDataImportService(dataStorageService, result.DataRecordNames) : null
+				(result.DataRecordNames.Count > 0) ? createDataImportService(dataStorageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
 			);
 		}
 
@@ -37,7 +47,7 @@ namespace MeshEditor.LayerManager.Import
 			}
 		}
 
-		private static IDataImportService createDataImportService(IReadStorageService storageService, IEnumerable<string> recordNames)
+		private static IDataImportService createDataImportService(IReadStorageService storageService, IEnumerable<string> recordNames, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
 		{
 			Debug.Assert(recordNames != null);
 			Debug.Assert(recordNames.Count() > 0);
@@ -47,7 +57,7 @@ namespace MeshEditor.LayerManager.Import
 			switch (extension)
 			{
 				case ".res": // GiD results 
-					return new GiDDataFormatParser(storageService, recordNames);
+					return new GiDDataFormatParser(storageService, recordNames, gaussPointsExtrapolationStrategy);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
 					return new VTKXmlDataFormatParser(storageService, recordNames);
 

@@ -18,20 +18,21 @@ namespace MeshEditor.WinUI
 {
 	public partial class ImportFEMResultsForm : Form
 	{
+		bool isImportOperationRunning;
+
 		public ImportFEMResultsForm()
 		{
 			InitializeComponent();
 			comboBoxCompressionMethod.SelectedIndex = 0;
 			radioButtonQuality.Checked = true;
 			trackBarCompressionFactor.Value = 95;
+			comboBoxGaussPointExtrapolationStrategy.SelectedIndex = 0;
 
 			// update state of UI
 			updateUI();
 		}
 
 		public int? NewSolutionId { get; private set; }
-
-		bool isImportOperationRunning;
 
 		private async void buttonImport_Click(object sender, EventArgs e)
 		{
@@ -50,7 +51,7 @@ namespace MeshEditor.WinUI
 				string projectName = textBoxProjectName.Text;
 
 				int solutionId = await createNewSolutionAsync(analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
-				bool success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionId, buildCompressionParameters(), buildKeyTimeSteps());
+				bool success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionId, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
 				if (success)
 				{
 					NewSolutionId = solutionId;
@@ -109,6 +110,11 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private string buildGaussPointsExtrapolationStrategyName()
+		{
+			return comboBoxGaussPointExtrapolationStrategy.SelectedItem as string;
+		}
+
 		private async Task<int> createNewSolutionAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName, ILogger logger)
 		{
 			int solutionId = await getUniqueSolutionIdAsync(logger);
@@ -122,20 +128,32 @@ namespace MeshEditor.WinUI
 			//return returnCode == 0 ? solutionId : (int?)null;
 		}
 
-		private async Task<bool> importResultFilesAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, int solutionId, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps)
+		private async Task<bool> importResultFilesAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, int solutionId, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
 		{
 			//solutionHub.Import(analysisResultGroupLengths, analysisResultRecordNames, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>());
 
-			string arguments = $"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace()))} --solution {solutionId} --verbose --pressanykey";
+			StringBuilder arguments = new StringBuilder();
+
+			arguments.Append("import");
+			arguments.Append(" -l " + string.Join(" ", analysisResultGroupLengths));
+			arguments.Append(" -r " + string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace())));
+			arguments.Append(" --solution " + solutionId);
 			if (compressionParameters.Any())
 			{
-				arguments += " -c " + string.Join(" ", compressionParameters);
+				arguments.Append(" -c " + string.Join(" ", compressionParameters));
 			}
 			if (keyTimeSteps.Any())
 			{
-				arguments += " -k " + string.Join(" ", keyTimeSteps);
+				arguments.Append(" -k " + string.Join(" ", keyTimeSteps));
 			}
-			int returnCode = await LayerManagerProcessInvokeService.Invoke(arguments);
+			if (gaussPointsExtrapolationStrategyName != null)
+			{
+				arguments.Append(" --gpextrapolation " + gaussPointsExtrapolationStrategyName);
+			}
+			arguments.Append(" --verbose");
+			arguments.Append(" --pressanykey");
+
+			int returnCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
 			return returnCode == 0;
 		}
 

@@ -32,7 +32,7 @@ namespace MeshEditor.LayerManager.Compression
 			if (!parameters.Any())
 			{
 				//throw new ArgumentException("Parameters can not be empty. First parameter has to be name of compression method.", nameof(parameters));
-				compressionMethod = CompressionMethod.Transparent; // default compression method
+				compressionMethod = CompressionMethod.Default;
 			}
 			else
 			{

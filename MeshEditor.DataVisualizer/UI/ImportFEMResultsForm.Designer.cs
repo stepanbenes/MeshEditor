@@ -41,6 +41,7 @@
 			this.tabPageCompression = new System.Windows.Forms.TabPage();
 			this.label5 = new System.Windows.Forms.Label();
 			this.groupBoxSVDCompressionParameters = new System.Windows.Forms.GroupBox();
+			this.checkBoxSVDParameterRandomized = new System.Windows.Forms.CheckBox();
 			this.label6 = new System.Windows.Forms.Label();
 			this.radioButtonSize = new System.Windows.Forms.RadioButton();
 			this.radioButtonQuality = new System.Windows.Forms.RadioButton();
@@ -50,15 +51,17 @@
 			this.label4 = new System.Windows.Forms.Label();
 			this.textBoxKeyTimeSteps = new System.Windows.Forms.TextBox();
 			this.checkBoxMergeTimeSteps = new System.Windows.Forms.CheckBox();
-			this.tabPageGaussPointExtrapolationStrategy = new System.Windows.Forms.TabPage();
+			this.tabPageGaussPointsExtrapolation = new System.Windows.Forms.TabPage();
+			this.comboBoxGaussPointExtrapolationStrategy = new System.Windows.Forms.ComboBox();
+			this.label7 = new System.Windows.Forms.Label();
 			this.buttonImport = new System.Windows.Forms.Button();
 			this.buttonClose = new System.Windows.Forms.Button();
-			this.checkBoxSVDParameterRandomized = new System.Windows.Forms.CheckBox();
 			this.tabControl.SuspendLayout();
 			this.tabPageResultFiles.SuspendLayout();
 			this.tabPageCompression.SuspendLayout();
 			this.groupBoxSVDCompressionParameters.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.trackBarCompressionFactor)).BeginInit();
+			this.tabPageGaussPointsExtrapolation.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// tabControl
@@ -68,7 +71,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tabControl.Controls.Add(this.tabPageResultFiles);
 			this.tabControl.Controls.Add(this.tabPageCompression);
-			this.tabControl.Controls.Add(this.tabPageGaussPointExtrapolationStrategy);
+			this.tabControl.Controls.Add(this.tabPageGaussPointsExtrapolation);
 			this.tabControl.Location = new System.Drawing.Point(0, 0);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
@@ -210,6 +213,16 @@
 			this.groupBoxSVDCompressionParameters.TabStop = false;
 			this.groupBoxSVDCompressionParameters.Text = "SVD parameters";
 			// 
+			// checkBoxSVDParameterRandomized
+			// 
+			this.checkBoxSVDParameterRandomized.AutoSize = true;
+			this.checkBoxSVDParameterRandomized.Location = new System.Drawing.Point(6, 111);
+			this.checkBoxSVDParameterRandomized.Name = "checkBoxSVDParameterRandomized";
+			this.checkBoxSVDParameterRandomized.Size = new System.Drawing.Size(304, 17);
+			this.checkBoxSVDParameterRandomized.TabIndex = 9;
+			this.checkBoxSVDParameterRandomized.Text = "Use Randomized SVD to accelerate compression algorithm";
+			this.checkBoxSVDParameterRandomized.UseVisualStyleBackColor = true;
+			// 
 			// label6
 			// 
 			this.label6.AutoSize = true;
@@ -269,7 +282,7 @@
 			this.comboBoxCompressionMethod.Items.AddRange(new object[] {
             "None",
             "SVD"});
-			this.comboBoxCompressionMethod.Location = new System.Drawing.Point(11, 30);
+			this.comboBoxCompressionMethod.Location = new System.Drawing.Point(11, 29);
 			this.comboBoxCompressionMethod.Name = "comboBoxCompressionMethod";
 			this.comboBoxCompressionMethod.Size = new System.Drawing.Size(121, 21);
 			this.comboBoxCompressionMethod.TabIndex = 1;
@@ -304,15 +317,37 @@
 			this.checkBoxMergeTimeSteps.UseVisualStyleBackColor = true;
 			this.checkBoxMergeTimeSteps.CheckedChanged += new System.EventHandler(this.checkBoxMergeTimeSteps_CheckedChanged);
 			// 
-			// tabPageGaussPointExtrapolationStrategy
+			// tabPageGaussPointsExtrapolation
 			// 
-			this.tabPageGaussPointExtrapolationStrategy.Location = new System.Drawing.Point(4, 22);
-			this.tabPageGaussPointExtrapolationStrategy.Name = "tabPageGaussPointExtrapolationStrategy";
-			this.tabPageGaussPointExtrapolationStrategy.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageGaussPointExtrapolationStrategy.Size = new System.Drawing.Size(447, 272);
-			this.tabPageGaussPointExtrapolationStrategy.TabIndex = 2;
-			this.tabPageGaussPointExtrapolationStrategy.Text = "Gauss point extrapolation strategy";
-			this.tabPageGaussPointExtrapolationStrategy.UseVisualStyleBackColor = true;
+			this.tabPageGaussPointsExtrapolation.Controls.Add(this.comboBoxGaussPointExtrapolationStrategy);
+			this.tabPageGaussPointsExtrapolation.Controls.Add(this.label7);
+			this.tabPageGaussPointsExtrapolation.Location = new System.Drawing.Point(4, 22);
+			this.tabPageGaussPointsExtrapolation.Name = "tabPageGaussPointsExtrapolation";
+			this.tabPageGaussPointsExtrapolation.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageGaussPointsExtrapolation.Size = new System.Drawing.Size(447, 272);
+			this.tabPageGaussPointsExtrapolation.TabIndex = 2;
+			this.tabPageGaussPointsExtrapolation.Text = "Gauss points extrapolation";
+			this.tabPageGaussPointsExtrapolation.UseVisualStyleBackColor = true;
+			// 
+			// comboBoxGaussPointExtrapolationStrategy
+			// 
+			this.comboBoxGaussPointExtrapolationStrategy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxGaussPointExtrapolationStrategy.FormattingEnabled = true;
+			this.comboBoxGaussPointExtrapolationStrategy.Items.AddRange(new object[] {
+            "Nearest"});
+			this.comboBoxGaussPointExtrapolationStrategy.Location = new System.Drawing.Point(11, 29);
+			this.comboBoxGaussPointExtrapolationStrategy.Name = "comboBoxGaussPointExtrapolationStrategy";
+			this.comboBoxGaussPointExtrapolationStrategy.Size = new System.Drawing.Size(121, 21);
+			this.comboBoxGaussPointExtrapolationStrategy.TabIndex = 1;
+			// 
+			// label7
+			// 
+			this.label7.AutoSize = true;
+			this.label7.Location = new System.Drawing.Point(8, 13);
+			this.label7.Name = "label7";
+			this.label7.Size = new System.Drawing.Size(46, 13);
+			this.label7.TabIndex = 0;
+			this.label7.Text = "Strategy";
 			// 
 			// buttonImport
 			// 
@@ -335,16 +370,6 @@
 			this.buttonClose.TabIndex = 2;
 			this.buttonClose.Text = "Close";
 			this.buttonClose.UseVisualStyleBackColor = true;
-			// 
-			// checkBoxSVDParameterRandomized
-			// 
-			this.checkBoxSVDParameterRandomized.AutoSize = true;
-			this.checkBoxSVDParameterRandomized.Location = new System.Drawing.Point(6, 111);
-			this.checkBoxSVDParameterRandomized.Name = "checkBoxSVDParameterRandomized";
-			this.checkBoxSVDParameterRandomized.Size = new System.Drawing.Size(304, 17);
-			this.checkBoxSVDParameterRandomized.TabIndex = 9;
-			this.checkBoxSVDParameterRandomized.Text = "Use Randomized SVD to accelerate compression algorithm";
-			this.checkBoxSVDParameterRandomized.UseVisualStyleBackColor = true;
 			// 
 			// ImportFEMResultsForm
 			// 
@@ -369,6 +394,8 @@
 			this.groupBoxSVDCompressionParameters.ResumeLayout(false);
 			this.groupBoxSVDCompressionParameters.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.trackBarCompressionFactor)).EndInit();
+			this.tabPageGaussPointsExtrapolation.ResumeLayout(false);
+			this.tabPageGaussPointsExtrapolation.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -380,7 +407,7 @@
 		private System.Windows.Forms.TabPage tabPageCompression;
 		private System.Windows.Forms.Button buttonImport;
 		private System.Windows.Forms.Button buttonClose;
-		private System.Windows.Forms.TabPage tabPageGaussPointExtrapolationStrategy;
+		private System.Windows.Forms.TabPage tabPageGaussPointsExtrapolation;
 		private System.Windows.Forms.TextBox textBoxProjectName;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Button buttonChooseResultFiles;
@@ -401,5 +428,7 @@
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.CheckBox checkBoxSVDParameterRandomized;
+		private System.Windows.Forms.ComboBox comboBoxGaussPointExtrapolationStrategy;
+		private System.Windows.Forms.Label label7;
 	}
 }

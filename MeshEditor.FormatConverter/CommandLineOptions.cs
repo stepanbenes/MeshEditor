@@ -9,7 +9,7 @@ namespace MeshEditor.FormatConverter
 	abstract class Options
 	{
 		// Omitting long name, default --verbose
-		[Option(HelpText = "Prints all messages to standard output.")]
+		[Option(Required = false, HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
 		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
@@ -18,11 +18,11 @@ namespace MeshEditor.FormatConverter
 		[Option("remote", Required = false, HelpText = "Use remote storage")]
 		public bool ForceUseRemoteStorage { get; set; }
 
+		[Option("pressanykey", Required = false, HelpText = "Require pressing any key before quitting the program")]
+		public bool PressAnyKeyToQuit { get; set; }
+
 		//[Option("config", HelpText = "Name of configuration file (relative or absolute path)")]
 		//public string ConfigFile { get; set; }
-
-		[Option("pressanykey", HelpText = "Require pressing any key before quitting the program", Required = false)]
-		public bool PressAnyKeyToQuit { get; set; }
 	}
 
 	[Verb("create", HelpText = "Create new solution")]
@@ -61,6 +61,9 @@ namespace MeshEditor.FormatConverter
 
 		[Option('r', "results", Required = true, HelpText = "Mesh and result files to be processed (first file in each group is expected to be mesh, others data)")]
 		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
+
+		[Option("gpextrapolation", Required = false, HelpText = "Gauss points extrapolation strategy (Default is Nearest)")]
+		public string GaussPointsExtrapolationStrategyName { get; set; }
 	}
 	
 	[Verb("filter", HelpText = "Add new filter layer based on parent layer")]

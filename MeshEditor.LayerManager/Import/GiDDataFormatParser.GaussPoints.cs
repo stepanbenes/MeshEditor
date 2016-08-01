@@ -686,7 +686,7 @@ namespace MeshEditor.LayerManager.Import
 
 		}
 
-		private static void convertValues(IReadOnlyList<double> values, IReadOnlyList<int> ids, int numberOfComponents, GeometryDescription geometry, DataLocationType targetLocation, FileDataLocation fileLocation, GaussPointsInfo gaussPoints, double[] result)
+		private static void convertValues(IReadOnlyList<double> values, IReadOnlyList<int> ids, int numberOfComponents, GeometryDescription geometry, DataLocationType targetLocation, FileDataLocation fileLocation, GaussPointsInfo gaussPoints, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy, double[] result)
 		{
 			// Place values to appropriate position according to PointIdIndexMap resp. CellIdIndexMap (depending on nodes or gauss-points data location)
 			// Do extrapolation if Location is Gauss-points
@@ -700,23 +700,27 @@ namespace MeshEditor.LayerManager.Import
 					switch (fileLocation)
 					{
 						case FileDataLocation.Nodes:
-							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 							{
-								int pointId = ids[idIndex];
-								int pointIndex;
-								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewPointId(pointId, out pointIndex))
+								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
-									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+									int pointId = ids[idIndex];
+									int pointIndex;
+									if (mapping.TryGetNewPointId(pointId, out pointIndex))
 									{
-										result[pointIndex * numberOfComponents + componentIndex] = values[idIndex * numberOfComponents + componentIndex];
+										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+										{
+											result[pointIndex * numberOfComponents + componentIndex] = values[idIndex * numberOfComponents + componentIndex];
+										}
 									}
 								}
 							}
 							break;
 						case FileDataLocation.GaussPoints:
-							// recursive call to calculate CellPoints values
+							
 							double[] cellPointResult = createEmptyValueArray(geometry, DataLocationType.CellPoints, numberOfComponents);
-							convertValues(values, ids, numberOfComponents, geometry, DataLocationType.CellPoints, fileLocation, gaussPoints, cellPointResult);
+							// recursive call to calculate CellPoints values
+							convertValues(values, ids, numberOfComponents, geometry, DataLocationType.CellPoints, fileLocation, gaussPoints, gaussPointsExtrapolationStrategy, cellPointResult);
 
 							var map = new List<KeyValuePair<double, double[]>>[geometry.NumberOfPoints];
 
@@ -764,27 +768,33 @@ namespace MeshEditor.LayerManager.Import
 					{
 						case FileDataLocation.GaussPoints:
 
-							// TODO: add parameter specifying extrapolation strategy
-
-							int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
-							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
+							if (gaussPointsExtrapolationStrategy == GaussPointsExtrapolationStrategy.Nearest)
 							{
-								int cellId = ids[idIndex];
-								int cellIndex;
-								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewCellId(cellId, out cellIndex))
+								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
-									int previousCellOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
-									int cellOffset = geometry.CellOffsets[cellIndex];
-									for (int offset = previousCellOffset; offset < cellOffset; offset++)
+									int cellId = ids[idIndex];
+									int cellIndex;
+									if (mapping.TryGetNewCellId(cellId, out cellIndex))
 									{
-										int nearestGaussPointIndex = gaussPoints.GetIndexOfNearestGaussPoint(geometry.CellTypes[cellIndex], offset - previousCellOffset);
-										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+										int previousCellOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
+										int cellOffset = geometry.CellOffsets[cellIndex];
+										for (int offset = previousCellOffset; offset < cellOffset; offset++)
 										{
-											result[offset * numberOfComponents + componentIndex] = values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + nearestGaussPointIndex * numberOfComponents + componentIndex];
+											int nearestGaussPointIndex = gaussPoints.GetIndexOfNearestGaussPoint(geometry.CellTypes[cellIndex], offset - previousCellOffset);
+											for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+											{
+												result[offset * numberOfComponents + componentIndex] = values[idIndex * gaussPoints.NumberOfGaussPoints * numberOfComponents + nearestGaussPointIndex * numberOfComponents + componentIndex];
+											}
 										}
 									}
 								}
 							}
+							else
+							{
+								throw new NotSupportedException();
+							}
+
 							break;
 						case FileDataLocation.Nodes:
 						default:
@@ -797,21 +807,24 @@ namespace MeshEditor.LayerManager.Import
 						case FileDataLocation.Nodes: // TODO: do arithmetic mean of values in all nodes of a cell
 							throw new NotImplementedException();
 						case FileDataLocation.GaussPoints: // do arithmetic mean of all values in gauss points if a cell
-							int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
-							for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 							{
-								int cellId = ids[idIndex];
-								int cellIndex;
-								if (((ImportGeometryEntityMapping)geometry.Mapping).TryGetNewCellId(cellId, out cellIndex))
+								int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
+								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
-									for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
+									int cellId = ids[idIndex];
+									int cellIndex;
+									if (mapping.TryGetNewCellId(cellId, out cellIndex))
 									{
-										double aggregate = 0.0;
-										for (int gpIndex = 0; gpIndex < numberOfGaussPoints; gpIndex++)
+										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 										{
-											aggregate += values[idIndex * numberOfGaussPoints * numberOfComponents + gpIndex * numberOfComponents + componentIndex];
+											double aggregate = 0.0;
+											for (int gpIndex = 0; gpIndex < numberOfGaussPoints; gpIndex++)
+											{
+												aggregate += values[idIndex * numberOfGaussPoints * numberOfComponents + gpIndex * numberOfComponents + componentIndex];
+											}
+											result[cellIndex * numberOfComponents + componentIndex] = aggregate / numberOfGaussPoints;
 										}
-										result[cellIndex * numberOfComponents + componentIndex] = aggregate / numberOfGaussPoints;
 									}
 								}
 							}

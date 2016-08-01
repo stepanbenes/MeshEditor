@@ -74,58 +74,11 @@ namespace MeshEditor.LayerManager.Import
 					Equals(ResultTypeString, other.ResultTypeString);
 			}
 
-			//private FieldDataDescription createDataDescription(GeometryDescription geometry)
-			//{
-			//	Debug.Assert(Location.HasValue);
-			//	Debug.Assert(GaussPointsDescription != null);
-			//	Debug.Assert(ComponentNames != null && ComponentNames.Length > 0);
-
-			//	// TODO: This should be user-controlled
-			//	DataLocationType targetDataLocation;
-			//	switch (Location)
-			//	{
-			//		case FileDataLocation.Nodes:
-			//			targetDataLocation = DataLocationType.Points  /*or Cells*/;
-			//			break;
-			//		case FileDataLocation.GaussPoints:
-			//			targetDataLocation = (GaussPointsDescription.NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
-			//			break;
-			//		default:
-			//			throw new NotSupportedException();
-			//	}
-
-			//	FieldDataDescription data = new FieldDataDescription
-			//	{
-			//		FieldName = FieldName,
-			//		TimeStep = TimeStep,
-			//		ComponentNames = ComponentNames,
-			//		FieldType = convertResultTypeStringToFieldType(ResultTypeString),
-			//		Location = targetDataLocation,
-			//	};
-
-			//	double[] result = createEmptyValueArray(geometry, targetDataLocation, NumberOfComponents);
-
-			//	convertValues(
-			//		DataValues,
-			//		Ids,
-			//		NumberOfComponents,
-			//		geometry,
-			//		targetDataLocation,
-			//		Location.Value,
-			//		GaussPointsDescription,
-			//		result
-			//	);
-
-			//	data.Values = result;
-
-			//	return data;
-			//}
-
 			private static DataLocationType chooseCommonTargetDataLocationFor(IReadOnlyCollection<ParsedField> fields)
 			{
 				Debug.Assert(fields.Count > 0);
 
-				// TODO: targetDataLocation should be user-controlled
+				// QUESTION: Should targetDataLocation be user-controlled?
 				// TODO: implement choosing common target data location if there is collision (can there be collision?)
 
 				DataLocationType? commonTargetDataLocation = null;
@@ -161,7 +114,7 @@ namespace MeshEditor.LayerManager.Import
 			/// <summary>
 			/// Merges multiple data corresponing to same field and timestep together
 			/// </summary>
-			public static FieldDataDescription CreateMergedDataDescription(IReadOnlyCollection<ParsedField> fields, GeometryDescription geometry)
+			public static FieldDataDescription CreateMergedDataDescription(IReadOnlyCollection<ParsedField> fields, GeometryDescription geometry, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
 			{
 				// NOTE: fields is Stack<T>, so it is in reversed order!
 				Debug.Assert(fields.Count > 0);
@@ -191,6 +144,7 @@ namespace MeshEditor.LayerManager.Import
 						targetDataLocation,
 						field.Location.Value,
 						field.GaussPointsDescription,
+						gaussPointsExtrapolationStrategy,
 						resultValues
 					);
 				}
@@ -209,11 +163,13 @@ namespace MeshEditor.LayerManager.Import
 
 		IReadStorageService storageService;
 		IEnumerable<string> recordNames;
+		GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy;
 
-		public GiDDataFormatParser(IReadStorageService storageService, IEnumerable<string> recordNames)
+		public GiDDataFormatParser(IReadStorageService storageService, IEnumerable<string> recordNames, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
 		{
 			this.storageService = storageService;
 			this.recordNames = recordNames;
+			this.gaussPointsExtrapolationStrategy = gaussPointsExtrapolationStrategy;
 		}
 
 		#endregion
@@ -286,7 +242,7 @@ namespace MeshEditor.LayerManager.Import
 									if (parsedFieldsStack.Count > 0 && !parsedFieldsStack.Peek().IsMergeableWith(newParsedField))
 									{
 										// yield one or merge all accumulated fields
-										yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry);
+										yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
 										parsedFieldsStack.Clear();
 									}
 
@@ -401,7 +357,7 @@ namespace MeshEditor.LayerManager.Import
 					} // end of file loop
 
 					// yield one or merge all remaining accumulated fields
-					yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry);
+					yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
 				}
 			}
 		}

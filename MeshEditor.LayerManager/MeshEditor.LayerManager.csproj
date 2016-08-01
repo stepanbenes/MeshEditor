@@ -82,6 +82,7 @@
     <Compile Include="Filters\TimeCompressionFilter.cs" />
     <Compile Include="Import\AnalysisResult.cs" />
     <Compile Include="Import\AnalysisResultImportServiceFactory.cs" />
+    <Compile Include="Import\GaussPointsExtrapolationStrategy.cs" />
     <Compile Include="Import\IAnalysisResultImportService.cs" />
     <Compile Include="MeshFiltering\GeometryBuilder.cs" />
     <Compile Include="Compression\SVDCompressionParameters.cs" />
@@ -92,7 +93,6 @@
     <Compile Include="Data\GeometryEntityMapping.cs" />
     <Compile Include="Encoding\Base64EncodingService.cs" />
     <Compile Include="Compression\ICompressionService.cs" />
-    <Compile Include="Import\DataFormatParserFactory.cs" />
     <Compile Include="Encoding\IEncodingService.cs" />
     <Compile Include="Data\AttributeDescription.cs" />
     <Compile Include="Data\CellType.cs" />
@@ -113,7 +113,6 @@
     <Compile Include="Data\DataDescription.cs" />
     <Compile Include="Data\GeometryDescription.cs" />
     <Compile Include="Filters\SliceFilter.cs" />
-    <Compile Include="Import\GeometryFormatParserFactory.cs" />
     <Compile Include="Import\FormatParserBase.cs" />
     <Compile Include="Import\GiDDataFormatParser.cs" />
     <Compile Include="Import\GiDDataFormatParser.GaussPoints.cs" />

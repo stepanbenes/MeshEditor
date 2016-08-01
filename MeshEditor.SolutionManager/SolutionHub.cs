@@ -179,7 +179,7 @@ namespace MeshEditor.SolutionManager
 			Solution solution = solutionController.CreateNew(solutionId, analysisResults, projectName);
 		}
 
-		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string masterLayerName = null)
+		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
 			const string defaultMasterLayerName = "master";
 
@@ -187,7 +187,7 @@ namespace MeshEditor.SolutionManager
 
 			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
 
-			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result));
+			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result, gaussPointsExtrapolationStrategyName));
 
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
