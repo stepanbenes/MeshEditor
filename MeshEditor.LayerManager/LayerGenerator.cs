@@ -605,13 +605,15 @@ namespace MeshEditor.LayerManager
 				{
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
-					logger?.LogOperationProgress($"Generating result file for field '{firstDataField.FieldName}' component {string.Join(", ", Enumerable.Range(0, firstDataField.NumberOfComponents).Select(index => $"'{firstDataField.GetComponentName(index)}'"))} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}");
-
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
 					{
+						logger?.LogOperationProgress($"Generating result file for field '{firstDataField.FieldName}' component {firstDataField.GetComponentName(componentIndex)} {(dataDescriptionGroup.Count == 1 ? $"(time step: {firstDataField.TimeStep})" : $"({dataDescriptionGroup.Count} time steps)")}");
+
 						var layerResult = createLayerResultFromDataDescriptions(firstDataField, restDataFields, dataDescriptionGroup.Count, componentIndex, layerId, resultIndex, meshIndex);
 						resultDescriptors.Add(DataFileDescriptor.CreateFrom(layerResult));
+
 						storeLayerFile(layerResult, getLayerResultRecordName(layerId, layerResult.Index));
+
 						compressionCounter.Increment(layerResult.Compression, layerResult.Encoding);
 						resultIndex += 1;
 					}
