@@ -40,7 +40,7 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.tabPageCompression = new System.Windows.Forms.TabPage();
 			this.label5 = new System.Windows.Forms.Label();
-			this.groupBoxCompressionParameters = new System.Windows.Forms.GroupBox();
+			this.groupBoxSVDCompressionParameters = new System.Windows.Forms.GroupBox();
 			this.label6 = new System.Windows.Forms.Label();
 			this.radioButtonSize = new System.Windows.Forms.RadioButton();
 			this.radioButtonQuality = new System.Windows.Forms.RadioButton();
@@ -53,10 +53,11 @@
 			this.tabPageGaussPointExtrapolationStrategy = new System.Windows.Forms.TabPage();
 			this.buttonImport = new System.Windows.Forms.Button();
 			this.buttonClose = new System.Windows.Forms.Button();
+			this.checkBoxSVDParameterRandomized = new System.Windows.Forms.CheckBox();
 			this.tabControl.SuspendLayout();
 			this.tabPageResultFiles.SuspendLayout();
 			this.tabPageCompression.SuspendLayout();
-			this.groupBoxCompressionParameters.SuspendLayout();
+			this.groupBoxSVDCompressionParameters.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.trackBarCompressionFactor)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -170,7 +171,7 @@
 			// tabPageCompression
 			// 
 			this.tabPageCompression.Controls.Add(this.label5);
-			this.tabPageCompression.Controls.Add(this.groupBoxCompressionParameters);
+			this.tabPageCompression.Controls.Add(this.groupBoxSVDCompressionParameters);
 			this.tabPageCompression.Controls.Add(this.comboBoxCompressionMethod);
 			this.tabPageCompression.Controls.Add(this.label4);
 			this.tabPageCompression.Controls.Add(this.textBoxKeyTimeSteps);
@@ -192,21 +193,22 @@
 			this.label5.TabIndex = 9;
 			this.label5.Text = "Key time steps";
 			// 
-			// groupBoxCompressionParameters
+			// groupBoxSVDCompressionParameters
 			// 
-			this.groupBoxCompressionParameters.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.groupBoxSVDCompressionParameters.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.groupBoxCompressionParameters.Controls.Add(this.label6);
-			this.groupBoxCompressionParameters.Controls.Add(this.radioButtonSize);
-			this.groupBoxCompressionParameters.Controls.Add(this.radioButtonQuality);
-			this.groupBoxCompressionParameters.Controls.Add(this.labelCompressionFactor);
-			this.groupBoxCompressionParameters.Controls.Add(this.trackBarCompressionFactor);
-			this.groupBoxCompressionParameters.Location = new System.Drawing.Point(11, 57);
-			this.groupBoxCompressionParameters.Name = "groupBoxCompressionParameters";
-			this.groupBoxCompressionParameters.Size = new System.Drawing.Size(426, 121);
-			this.groupBoxCompressionParameters.TabIndex = 5;
-			this.groupBoxCompressionParameters.TabStop = false;
-			this.groupBoxCompressionParameters.Text = "Parameters";
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.checkBoxSVDParameterRandomized);
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.label6);
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.radioButtonSize);
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.radioButtonQuality);
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.labelCompressionFactor);
+			this.groupBoxSVDCompressionParameters.Controls.Add(this.trackBarCompressionFactor);
+			this.groupBoxSVDCompressionParameters.Location = new System.Drawing.Point(11, 57);
+			this.groupBoxSVDCompressionParameters.Name = "groupBoxSVDCompressionParameters";
+			this.groupBoxSVDCompressionParameters.Size = new System.Drawing.Size(426, 134);
+			this.groupBoxSVDCompressionParameters.TabIndex = 5;
+			this.groupBoxSVDCompressionParameters.TabStop = false;
+			this.groupBoxSVDCompressionParameters.Text = "SVD parameters";
 			// 
 			// label6
 			// 
@@ -334,6 +336,16 @@
 			this.buttonClose.Text = "Close";
 			this.buttonClose.UseVisualStyleBackColor = true;
 			// 
+			// checkBoxSVDParameterRandomized
+			// 
+			this.checkBoxSVDParameterRandomized.AutoSize = true;
+			this.checkBoxSVDParameterRandomized.Location = new System.Drawing.Point(6, 111);
+			this.checkBoxSVDParameterRandomized.Name = "checkBoxSVDParameterRandomized";
+			this.checkBoxSVDParameterRandomized.Size = new System.Drawing.Size(304, 17);
+			this.checkBoxSVDParameterRandomized.TabIndex = 9;
+			this.checkBoxSVDParameterRandomized.Text = "Use Randomized SVD to accelerate compression algorithm";
+			this.checkBoxSVDParameterRandomized.UseVisualStyleBackColor = true;
+			// 
 			// ImportFEMResultsForm
 			// 
 			this.AcceptButton = this.buttonImport;
@@ -354,8 +366,8 @@
 			this.tabPageResultFiles.PerformLayout();
 			this.tabPageCompression.ResumeLayout(false);
 			this.tabPageCompression.PerformLayout();
-			this.groupBoxCompressionParameters.ResumeLayout(false);
-			this.groupBoxCompressionParameters.PerformLayout();
+			this.groupBoxSVDCompressionParameters.ResumeLayout(false);
+			this.groupBoxSVDCompressionParameters.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.trackBarCompressionFactor)).EndInit();
 			this.ResumeLayout(false);
 
@@ -381,12 +393,13 @@
 		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.TextBox textBoxKeyTimeSteps;
 		private System.Windows.Forms.CheckBox checkBoxMergeTimeSteps;
-		private System.Windows.Forms.GroupBox groupBoxCompressionParameters;
+		private System.Windows.Forms.GroupBox groupBoxSVDCompressionParameters;
 		private System.Windows.Forms.TrackBar trackBarCompressionFactor;
 		private System.Windows.Forms.RadioButton radioButtonSize;
 		private System.Windows.Forms.RadioButton radioButtonQuality;
 		private System.Windows.Forms.Label labelCompressionFactor;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.CheckBox checkBoxSVDParameterRandomized;
 	}
 }

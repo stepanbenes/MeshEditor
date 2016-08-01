@@ -86,6 +86,10 @@ namespace MeshEditor.WinUI
 					parameters.Add("size");
 					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
 				}
+				if (checkBoxSVDParameterRandomized.Checked)
+				{
+					parameters.Add("randomized");
+				}
 			}
 			return parameters;
 		}
@@ -125,7 +129,7 @@ namespace MeshEditor.WinUI
 			string arguments = $"import -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace()))} --solution {solutionId} --verbose --pressanykey";
 			if (compressionParameters.Any())
 			{
-				arguments += " -c " + string.Join(" ", compressionParameters); // + " randomized";
+				arguments += " -c " + string.Join(" ", compressionParameters);
 			}
 			if (keyTimeSteps.Any())
 			{
@@ -189,7 +193,7 @@ namespace MeshEditor.WinUI
 
 		private void updateUI()
 		{
-			groupBoxCompressionParameters.Enabled = comboBoxCompressionMethod.SelectedIndex > 0;
+			groupBoxSVDCompressionParameters.Enabled = comboBoxCompressionMethod.SelectedIndex > 0;
 			textBoxKeyTimeSteps.Enabled = checkBoxMergeTimeSteps.Checked;
 			buttonImport.Enabled = !isImportOperationRunning && !string.IsNullOrWhiteSpace(textBoxMeshFile.Text);
 			tabControl.Enabled = !isImportOperationRunning;
