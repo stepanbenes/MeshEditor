@@ -87,6 +87,15 @@ namespace MeshEditor.DataVisualizer
 			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
 		}
 
+		public override double GetDataValue(Node node)
+		{
+			if (currentDataComponent != null && currentDataComponent.Location == DataLocationType.Points)
+			{
+				return currentDataComponent.Values[node.ID];
+			}
+			return double.NaN;
+		}
+
 		public override double GetDataValue(Node node, Element element)
 		{
 			if (currentDataComponent == null)
@@ -110,16 +119,6 @@ namespace MeshEditor.DataVisualizer
 				default:
 					throw new NotSupportedException();
 			}
-		}
-
-		public override double GetDataValue(Node node, out double error)
-		{
-			error = 0.0;
-			if (currentDataComponent != null && currentDataComponent.Location == DataLocationType.Points)
-			{
-				return currentDataComponent.Values[node.ID];
-			}
-			return double.NaN;
 		}
 
 		public override int[] GetIDsOfNodesWithMaximumDataValue()

@@ -77,20 +77,14 @@ namespace MeshEditor.DataVisualizer
 			return getColorForDataValue(GetDataValue(node, element));
 		}
 
-		public double GetDataValue(Node node)
-		{
-			double error;
-			return GetDataValue(node, out error);
-		}
-
 		public void Initialize(Mesh mesh)
 		{
 			// Do nothing
 		}
 
-		public abstract double GetDataValue(Node node, Element element);
+		public abstract double GetDataValue(Node node);
 
-		public abstract double GetDataValue(Node node, out double error);
+		public abstract double GetDataValue(Node node, Element element);
 
 		public abstract int[] GetIDsOfNodesWithMaximumDataValue();
 

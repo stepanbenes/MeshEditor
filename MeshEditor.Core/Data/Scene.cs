@@ -1003,13 +1003,10 @@ namespace MeshEditor.Data
 				IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
 				if (dataVisualizer != null)
 				{
-					double error;
-					double value = dataVisualizer.GetDataValue(node, out error);
+					double value = dataVisualizer.GetDataValue(node);
 					if (!double.IsNaN(value))
 					{
 						nodeDescription += string.Format(" | Data value: {0:G4}", value);
-						if (!double.IsInfinity(value) && error != 0.0)
-							nodeDescription += string.Format(" \u00B1 {0:G2}", error); // +- error
 					}
 				}
 				return nodeDescription;

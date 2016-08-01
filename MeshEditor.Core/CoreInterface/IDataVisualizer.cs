@@ -66,14 +66,6 @@ namespace MeshEditor.CoreInterface
 		double GetDataValue(Node node, Element element);
 
 		/// <summary>
-		/// Returns current data on specified node.
-		/// </summary>
-		/// <param name="node">node with value</param>
-		/// <param name="error">maximal error of returned value</param>
-		/// <returns>current data value</returns>
-		double GetDataValue(Node node, out double error);
-
-		/// <summary>
 		/// Returns maximum data value of current ScalarDataIndex in whole mesh.
 		/// </summary>
 		double GetMaximumDataValue();
