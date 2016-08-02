@@ -82,17 +82,16 @@ namespace MeshEditor.DataVisualizer
 			buildDataDescription();
 		}
 
-		private void setupColorScale()
-		{
-			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
-		}
-
 		public override double GetDataValue(Node node)
 		{
-			if (currentDataComponent != null && currentDataComponent.Location == DataLocationType.Points)
+			if (currentDataComponent == null)
+				return double.NaN;
+
+			if (currentDataComponent.Location == DataLocationType.Points)
 			{
 				return currentDataComponent.Values[node.ID];
 			}
+			Debug.Assert(currentDataComponent.Location == DataLocationType.CellPoints || currentDataComponent.Location == DataLocationType.Cells);
 			return double.NaN;
 		}
 
@@ -109,7 +108,7 @@ namespace MeshEditor.DataVisualizer
 
 					Debug.Assert(currentGeometry != null);
 					int cellOffset = (element.ID > 0) ? currentGeometry.CellOffsets[element.ID - 1] : 0;
-					int? nodeIndex = element.IndexOfNode_IncludingMiddleNodes(node);
+					int? nodeIndex = element.GetIndexOfNode_IncludingMiddleNodes(node);
 					Debug.Assert(nodeIndex.HasValue); // node has to be contained in element
 					double value = currentDataComponent.Values[cellOffset + nodeIndex.Value]; // WARNING: correct node ordering is supposed
 					return value;
@@ -131,6 +130,7 @@ namespace MeshEditor.DataVisualizer
 				case DataLocationType.Points:
 					return currentDataComponent.Values.IndicesOfMaxElements().ToArray();
 				case DataLocationType.CellPoints:
+					return Array.Empty<int>(); // TODO: implement this
 				case DataLocationType.Cells:
 					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
 				default:
@@ -148,6 +148,7 @@ namespace MeshEditor.DataVisualizer
 				case DataLocationType.Points:
 					return currentDataComponent.Values.IndicesOfMinElements().ToArray();
 				case DataLocationType.CellPoints:
+					return Array.Empty<int>(); // TODO: implement this
 				case DataLocationType.Cells:
 					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
 				default:
@@ -182,6 +183,11 @@ namespace MeshEditor.DataVisualizer
 			await scene.ReloadMeshAsync(new LayerMeshFileParser(geometry, elementPropertiesAttribute), cancellationToken, progressReport);
 
 			currentGeometry = geometry;
+		}
+
+		private void setupColorScale()
+		{
+			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
 		}
 
 		private void clearData()

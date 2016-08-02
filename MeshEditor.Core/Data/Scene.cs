@@ -25,7 +25,7 @@ namespace MeshEditor.Data
 		#region Instance fields & constructor
 
 		private Camera camera;
-		
+
 		private RenderMode renderMode;
 
 		private bool drawAxesFlag;
@@ -988,33 +988,41 @@ namespace MeshEditor.Data
 			if (mesh == null || mesh.SelectedItems.Count == 0) // nothing selected
 				return string.Empty;
 
+			string description;
 			if (mesh.SelectedItems.Count > 1) // selected more than one entity
 			{
-				return getSelectionGroupSummary();
-			}
-
-			// otherwise show single selected entity description
-			ISelectable item = getFirstSelectedItem();
-
-			Node node = item as Node;
-			if (node != null)
-			{
-				string nodeDescription = node.ToStringWithOriginalCoordinates(mesh.ResizeFactor, mesh.PositionOffset);
-				IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
-				if (dataVisualizer != null)
-				{
-					double value = dataVisualizer.GetDataValue(node);
-					if (!double.IsNaN(value))
-					{
-						nodeDescription += string.Format(" | Data value: {0:G4}", value);
-					}
-				}
-				return nodeDescription;
+				description = getSelectionGroupSummary();
 			}
 			else
 			{
-				return item.ToString();
+				// otherwise show single selected entity description
+				ISelectable item = mesh.SelectedItems.FirstOrDefault();
+
+				Node node = item as Node;
+				if (node != null)
+				{
+					description = node.ToStringWithOriginalCoordinates(mesh.ResizeFactor, mesh.PositionOffset);
+				}
+				else
+				{
+					description = item.ToString();
+				}
 			}
+
+			{
+				double? minDataValue, maxDataValue;
+				getSelectionGroupDataValueRange(out minDataValue, out maxDataValue);
+				Debug.Assert(!(minDataValue.HasValue ^ maxDataValue.HasValue));
+				if (minDataValue.HasValue)
+				{
+					if (minDataValue == maxDataValue)
+						description += $" | Data value: {minDataValue:G4}";
+					else
+						description += $" | Data value range: <{minDataValue:G4}, {maxDataValue:G4}>";
+				}
+			}
+
+			return description;
 		}
 
 		public void SelectItems(Rectangle area, SelectMode mode, SelectOperationType opType, bool allVerticesInArea, ItemTypeToSelect itemType)
@@ -1108,7 +1116,7 @@ namespace MeshEditor.Data
 				return;
 
 			ItemTypeToSelect itemType;
-			ISelectable firstItem = getFirstSelectedItem();
+			ISelectable firstItem = mesh.SelectedItems.FirstOrDefault();
 			if (firstItem == null) // nic neni vybrano
 				return;
 			// -------------------------------------------
@@ -1260,9 +1268,6 @@ namespace MeshEditor.Data
 			HashSet<Property> properties = new HashSet<Property>();
 			HashSet<ElementType> elementTypes = new HashSet<ElementType>();
 
-			IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
-			double dataValueMin = double.MaxValue, dataValueMax = double.MinValue;
-
 			foreach (var entity in mesh.SelectedItems)
 			{
 				properties.Add(entity.Property);
@@ -1272,12 +1277,6 @@ namespace MeshEditor.Data
 				if (node != null)
 				{
 					edgeOnly = faceOnly = elementOnly = false;
-					if (dataVisualizer != null)
-					{
-						double dataValue = dataVisualizer.GetDataValue(node);
-						dataValueMin = Math.Min(dataValueMin, dataValue);
-						dataValueMax = Math.Max(dataValueMax, dataValue);
-					}
 				}
 				else if (entity is WingedEdge)
 				{
@@ -1329,18 +1328,96 @@ namespace MeshEditor.Data
 					text.Append(" | Property: ");
 				else
 					text.Append(" | Properties: ");
-				text.Append(string.Join(", ", properties.OrderBy(p => p.Value).Select(p => p.ToString()).ToArray()));
-			}
-
-			if (nodeOnly && dataVisualizer != null)
-			{
-				if (dataValueMin == dataValueMax)
-					text.AppendFormat(" | Data value: {0:G4}", dataValueMin);
-				else
-					text.AppendFormat(" | Data value range: <{0:G4}, {1:G4}>", dataValueMin, dataValueMax);
+				text.Append(string.Join(", ", properties.OrderBy(p => p.Value).Select(p => p.ToString())));
 			}
 
 			return text.ToString();
+		}
+
+		private void getSelectionGroupDataValueRange(out double? minDataValue, out double? maxDataValue)
+		{
+			minDataValue = null;
+			maxDataValue = null;
+
+			IDataVisualizer dataVisualizer = mesh.GetDataVisualizer();
+			if (dataVisualizer == null)
+			{
+				return;
+			}
+			
+			foreach (var selectedItem in mesh.SelectedItems)
+			{
+				Node node = selectedItem as Node;
+				if (node != null)
+				{
+					double dataValue = dataVisualizer.GetDataValue(node);
+					updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+				}
+				else
+				{
+					WingedEdge edge = selectedItem as WingedEdge;
+					if (edge != null)
+					{
+						double dataValue = dataVisualizer.GetDataValue(edge.BeginNode);
+						updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+						dataValue = dataVisualizer.GetDataValue(edge.EndNode);
+						updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+						QuadraticEdge quadEdge = edge as QuadraticEdge;
+						if (quadEdge != null)
+						{
+							dataValue = dataVisualizer.GetDataValue(quadEdge.MiddleNode);
+							updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+						}
+					}
+					else
+					{
+						IFaceOfElement3D face = selectedItem as IFaceOfElement3D;
+						if (face != null)
+						{
+							foreach (var elementNode in getElementNodesFor(face))
+							{
+								double dataValue = dataVisualizer.GetDataValue(elementNode.Key, elementNode.Value);
+								updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+							}
+						}
+						else
+						{
+							Element element = selectedItem as Element;
+							if (element != null)
+							{
+								foreach (var elementNode in getElementNodesFor(element))
+								{
+									double dataValue = dataVisualizer.GetDataValue(elementNode.Key, elementNode.Value);
+									updateMinAndMaxDataValues(dataValue, ref minDataValue, ref maxDataValue);
+								}
+							}
+							//else: not supported item type
+						}
+					}
+				}
+			}
+		}
+
+		private static void updateMinAndMaxDataValues(double dataValue, ref double? minDataValue, ref double? maxDataValue)
+		{
+			if (!double.IsNaN(dataValue))
+			{
+				minDataValue = minDataValue.HasValue ? Math.Min(minDataValue.GetValueOrDefault(), dataValue) : dataValue;
+				maxDataValue = maxDataValue.HasValue ? Math.Max(maxDataValue.GetValueOrDefault(), dataValue) : dataValue;
+			}
+		}
+
+		private static IEnumerable<KeyValuePair<Node, Element>> getElementNodesFor(IFaceOfElement3D face)
+		{
+			Debug.Assert(face is Element2D);
+			Element2D element2D = (Element2D)face;
+			return element2D.IterateThroughAllNodesIncludingEdgeMiddleNodes().Select(node => new KeyValuePair<Node, Element>(node, face.ParentElement));
+		}
+
+		private static IEnumerable<KeyValuePair<Node, Element>> getElementNodesFor(Element element)
+		{
+			Debug.Assert(!(element is IFaceOfElement3D));
+			return element.IterateThroughAllNodesIncludingEdgeMiddleNodes().Select(node => new KeyValuePair<Node, Element>(node, element));
 		}
 
 		private HashSet<ISelectable> getPointSelection(int x, int y, SelectMode mode, ItemTypeToSelect itemType)
@@ -1910,14 +1987,6 @@ namespace MeshEditor.Data
 					break;
 			}
 			return itemType;
-		}
-
-		private ISelectable getFirstSelectedItem()
-		{
-			//IEnumerator<ISelectable> enumerator = mesh.SelectedItems.GetEnumerator();
-			//enumerator.MoveNext();
-			//return enumerator.Current;
-			return mesh.SelectedItems.FirstOrDefault();
 		}
 
 		public static float GetPixelDepth(int x, int y, int[] viewport)

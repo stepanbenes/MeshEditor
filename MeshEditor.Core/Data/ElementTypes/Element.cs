@@ -86,7 +86,7 @@ namespace MeshEditor.Data
 			return false;
 		}
 
-		public virtual int? IndexOfNode_IncludingMiddleNodes(Node n)
+		public virtual int? GetIndexOfNode_IncludingMiddleNodes(Node n)
 		{
 			int index = 0;
 			foreach (Node test in IterateThroughAllNodesIncludingEdgeMiddleNodes())

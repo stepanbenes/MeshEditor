@@ -246,7 +246,7 @@ namespace MeshEditor.Cuts
 			{
 				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
 				{
-					if (!valueLimit.Contains(dataVisualizer.GetDataValue(node)))
+					if (!valueLimit.Contains(dataVisualizer.GetDataValue(node, element)))
 						return false;
 				}
 			}
@@ -254,7 +254,7 @@ namespace MeshEditor.Cuts
 			{
 				foreach (Node node in element.IterateThroughAllNodesIncludingEdgeMiddleNodes())
 				{
-					if (valueLimit.Contains(dataVisualizer.GetDataValue(node)))
+					if (valueLimit.Contains(dataVisualizer.GetDataValue(node, element)))
 						return true;
 				}
 				return false;
