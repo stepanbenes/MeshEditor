@@ -162,7 +162,7 @@ namespace MeshEditor.LayerManager.Common
 			return true;
 		}
 
-		public static IEnumerable<int> IndicesOfMinElements<T>(this IEnumerable<T> source)
+		public static IEnumerable<int> IndicesOfMinElements(this IEnumerable<double> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
@@ -170,7 +170,7 @@ namespace MeshEditor.LayerManager.Common
 			return indicesOfExtremeElements(source, -1);
 		}
 
-		public static IEnumerable<int> IndicesOfMaxElements<T>(this IEnumerable<T> source)
+		public static IEnumerable<int> IndicesOfMaxElements(this IEnumerable<double> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
@@ -178,41 +178,42 @@ namespace MeshEditor.LayerManager.Common
 			return indicesOfExtremeElements(source, +1);
 		}
 
-		private static IEnumerable<int> indicesOfExtremeElements<T>(IEnumerable<T> source, int extremeSign)
+		private static IEnumerable<int> indicesOfExtremeElements(IEnumerable<double> source, int extremeSign)
 		{
 			Debug.Assert(source != null);
 
-			using (var iterator = source.GetEnumerator())
+			List<int> indices = new List<int>();
+			int currentIndex = 0;
+			double? currentExtreme = null;
+
+			foreach (double currentValue in source)
 			{
-				if (!iterator.MoveNext())
-					return Enumerable.Empty<int>();
-
-				List<int> indices = new List<int>();
-				var comparer = Comparer<T>.Default;
-				int currentIndex = 0;
-
-				T currentExtreme = iterator.Current;
-				indices.Add(currentIndex);
-
-				while (iterator.MoveNext())
+				if (!double.IsNaN(currentValue))
 				{
-					T next = iterator.Current;
-					currentIndex += 1;
-					int compareResult = comparer.Compare(currentExtreme, next);
-					if (compareResult == 0) // equal to current extreme
+					if (currentExtreme.HasValue)
 					{
+						int compareResult = currentExtreme.Value.CompareTo(currentValue);
+						if (compareResult == 0) // equal to current extreme
+						{
+							indices.Add(currentIndex);
+						}
+						else if (compareResult * extremeSign < 0) // next is extreme-er :) than currentExtreme, reset is needed
+						{
+							currentExtreme = currentValue;
+							indices.Clear();
+							indices.Add(currentIndex);
+						}
+						// else currentExtreme holds
+					}
+					else
+					{
+						currentExtreme = currentValue;
 						indices.Add(currentIndex);
 					}
-					else if (compareResult * extremeSign < 0) // next is extreme-er :) than currentExtreme, reset is needed
-					{
-						currentExtreme = next;
-						indices.Clear();
-						indices.Add(currentIndex);
-					}
-					// else currentExtreme holds
 				}
-				return indices;
+				currentIndex += 1;
 			}
+			return indices;
 		}
 	}
 }

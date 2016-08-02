@@ -130,9 +130,9 @@ namespace MeshEditor.DataVisualizer
 				case DataLocationType.Points:
 					return currentDataComponent.Values.IndicesOfMaxElements().ToArray();
 				case DataLocationType.CellPoints:
-					return Array.Empty<int>(); // TODO: implement this
+					return currentDataComponent.Values.IndicesOfMaxElements().Select(cellPointIndex => currentGeometry.CellConnectivity[cellPointIndex]).ToArray();
 				case DataLocationType.Cells:
-					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
+					return currentDataComponent.Values.IndicesOfMaxElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => currentGeometry.CellConnectivity[cellPointIndex])).ToArray();
 				default:
 					throw new NotSupportedException();
 			}
@@ -148,9 +148,9 @@ namespace MeshEditor.DataVisualizer
 				case DataLocationType.Points:
 					return currentDataComponent.Values.IndicesOfMinElements().ToArray();
 				case DataLocationType.CellPoints:
-					return Array.Empty<int>(); // TODO: implement this
+					return currentDataComponent.Values.IndicesOfMinElements().Select(cellPointIndex => currentGeometry.CellConnectivity[cellPointIndex]).ToArray();
 				case DataLocationType.Cells:
-					return Array.Empty<int>(); // TODO: implement this. However, multiple elements are not supported by SignalElement function
+					return currentDataComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => currentGeometry.CellConnectivity[cellPointIndex])).ToArray();
 				default:
 					throw new NotSupportedException();
 			}
@@ -169,6 +169,24 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Private methods
+
+		private IEnumerable<int> getCellPointIndicesForCell(int cellIndex)
+		{
+			int startOffset, endOffset;
+			if (cellIndex > 0)
+			{
+				startOffset = currentGeometry.CellOffsets[cellIndex - 1];
+			}
+			else
+			{
+				startOffset = 0;
+			}
+			endOffset = currentGeometry.CellOffsets[cellIndex];
+			Debug.Assert(endOffset > startOffset);
+			Debug.Assert(startOffset >= 0);
+			Debug.Assert(endOffset < currentGeometry.CellConnectivity.Length);
+			return Enumerable.Range(startOffset, endOffset - startOffset);
+		}
 
 		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, Action<string, int> progressReport)
 		{
