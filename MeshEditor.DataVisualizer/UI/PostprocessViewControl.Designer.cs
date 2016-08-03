@@ -1,4 +1,4 @@
-﻿namespace MeshEditor.WinUI
+﻿namespace MeshEditor.DataVisualizer.UI
 {
 	partial class PostprocessViewControl
 	{
@@ -17,9 +17,9 @@
 		{
 			this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
-			this.layersTreeView = new MeshEditor.WinUI.LayersTreeViewControl();
+			this.layersTreeView = new MeshEditor.DataVisualizer.UI.LayersTreeViewControl();
 			this.visualizerSettingsControl = new MeshEditor.DataVisualizer.UI.VisualizerSettingsControl();
-			this.dataSelectionControl = new MeshEditor.WinUI.DataSelectionControl();
+			this.dataSelectionControl = new MeshEditor.DataVisualizer.UI.DataSelectionControl();
 			((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
 			this.mainSplitContainer.Panel1.SuspendLayout();
 			this.mainSplitContainer.SuspendLayout();
@@ -108,9 +108,9 @@
 		#endregion
 
 		private System.Windows.Forms.SplitContainer mainSplitContainer;
-		private MeshEditor.WinUI.LayersTreeViewControl layersTreeView;
+		private MeshEditor.DataVisualizer.UI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
-		private MeshEditor.WinUI.DataSelectionControl dataSelectionControl;
+		private MeshEditor.DataVisualizer.UI.DataSelectionControl dataSelectionControl;
 		private DataVisualizer.UI.VisualizerSettingsControl visualizerSettingsControl;
 	}
 }

@@ -33,7 +33,7 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.comboBoxColorScaleType = new System.Windows.Forms.ComboBox();
 			this.label2 = new System.Windows.Forms.Label();
-			this.colorScaleSetter = new MeshEditor.WinUI.ColorScaleSetter();
+			this.colorScaleSetter = new MeshEditor.DataVisualizer.UI.ColorScaleSetter();
 			this.SuspendLayout();
 			// 
 			// buttonOK
@@ -120,7 +120,7 @@
 
 		#endregion
 
-		private WinUI.ColorScaleSetter colorScaleSetter;
+		private MeshEditor.DataVisualizer.UI.ColorScaleSetter colorScaleSetter;
 		private System.Windows.Forms.Button buttonOK;
 		private System.Windows.Forms.Button buttonCancel;
 		private System.Windows.Forms.Label label1;

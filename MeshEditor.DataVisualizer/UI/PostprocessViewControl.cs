@@ -12,7 +12,7 @@ using System.Threading;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Services;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class PostprocessViewControl : ContentViewControl
 	{

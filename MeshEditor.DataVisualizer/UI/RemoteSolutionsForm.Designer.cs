@@ -1,4 +1,4 @@
-﻿namespace MeshEditor.WinUI
+﻿namespace MeshEditor.DataVisualizer.UI
 {
 	partial class RemoteSolutionsForm
 	{

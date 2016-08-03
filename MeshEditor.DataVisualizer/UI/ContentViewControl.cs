@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ContentViewControl : UserControl
 	{

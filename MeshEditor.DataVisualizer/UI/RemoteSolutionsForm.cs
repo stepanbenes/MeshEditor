@@ -13,7 +13,7 @@ using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class RemoteSolutionsForm : Form
 	{

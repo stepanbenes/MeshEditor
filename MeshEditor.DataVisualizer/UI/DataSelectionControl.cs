@@ -12,7 +12,7 @@ using MeshEditor.DataVisualizer;
 using System.Diagnostics;
 using MeshEditor.DataVisualizer.Data;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class DataSelectionControl : UserControl
 	{

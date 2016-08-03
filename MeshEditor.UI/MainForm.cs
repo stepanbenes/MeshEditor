@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using System.Linq;
 
-using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
-using MeshEditor.IO;
 using MeshEditor.Data;
-using MeshEditor.Construction;
 using System.IO;
 using System.Diagnostics;
-using MeshEditor.WinUI;
-using MeshEditor.Utilities;
 using MeshEditor.CoreInterface;
 using System.ComponentModel;
 using OpenTK;
 using System.Threading;
 using System.Threading.Tasks;
+using MeshEditor.DataVisualizer.UI;
 
 namespace MeshEditor.WinUI
 {

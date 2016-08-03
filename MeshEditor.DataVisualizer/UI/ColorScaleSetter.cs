@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using MeshEditor.DataVisualizer;
 using MeshEditor.DataVisualizer.Data;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ColorScaleSetter : UserControl
 	{

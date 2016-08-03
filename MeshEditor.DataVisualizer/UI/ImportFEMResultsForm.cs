@@ -14,7 +14,7 @@ using System.IO;
 using MeshEditor.DataVisualizer.Services;
 using System.Threading;
 
-namespace MeshEditor.WinUI
+namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ImportFEMResultsForm : Form
 	{
