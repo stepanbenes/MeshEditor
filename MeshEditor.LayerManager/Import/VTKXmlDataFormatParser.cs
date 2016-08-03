@@ -66,13 +66,11 @@ namespace MeshEditor.LayerManager.Import
 			Dictionary<string, FieldType> fieldNameTypeMap;
 			readToDataElement(input, location, out fieldNameTypeMap);
 
-			while (true)
-			{
-				if (!input.ReadToDescendant("DataArray") && !input.ReadToNextSibling("DataArray"))
-				{
-					break; // end of PointData, no DataArray found in this element
-				}
+			if (!input.ReadToDescendant("DataArray"))
+				yield break;
 
+			do
+			{
 				string dataArrayName = null;
 				int numberOfComponents = 1; // one component is default in case of missing attribute
 				DataArrayFormat? currentDataArrayFormat = null;
@@ -127,14 +125,15 @@ namespace MeshEditor.LayerManager.Import
 				{
 					FieldName = dataArrayName,
 					TimeStep = timeStep,
-					ComponentNames = new string[numberOfComponents],
+					ComponentNames = createGenericComponentNames(numberOfComponents, fieldType),
 					FieldType = fieldType,
 					Location = location,
 					Values = values
 				};
 
 				yield return dataDescription;
-			}
+
+			} while (input.ReadToNextSibling("DataArray"));
 		}
 
 		private static int? tryGetOrdinalFromFileName(string filename)
@@ -195,7 +194,7 @@ namespace MeshEditor.LayerManager.Import
 					throw new NotSupportedException();
 			}
 
-			if (!input.ReadToFollowing(elementName))
+			if ((input.NodeType != XmlNodeType.Element || input.Name != elementName) && !input.ReadToFollowing(elementName))
 			{
 				ThrowElementIsMissing(elementName);
 			}
@@ -228,6 +227,44 @@ namespace MeshEditor.LayerManager.Import
 			}
 
 			input.MoveToElement(); // move from attributes back to element
+		}
+
+		private static string[] createGenericComponentNames(int numberOfComponents, FieldType fieldType)
+		{
+			Debug.Assert(numberOfComponents > 0);
+			switch (fieldType)
+			{
+				case FieldType.Scalar:
+				case FieldType.Tensor: // TODO: use better names for tensors
+					if (numberOfComponents == 1)
+						return new[] { "value" };
+					return Enumerable.Range(1, numberOfComponents).Select(index => "value_" + index).ToArray();
+				case FieldType.Vector:
+					if (numberOfComponents <= 4)
+						return new[] { "X", "Y", "Z", "W" }.Take(numberOfComponents).ToArray();
+					return Enumerable.Range(0, numberOfComponents).Select(index => ((char)('A' + index)).ToString()).ToArray();
+				default:
+					throw new NotSupportedException();
+			}
+
+			// from GiD .res file format:
+			//switch (resultType.ToLower())
+			//{
+			//	case "scalar":
+			//		return new[] { "value" };
+			//	case "vector":
+			//		return new[] { "X", "Y", "Z" }; // WARNING: optional fourth component signed_module_value !!
+			//	case "matrix":
+			//		return new[] { "Sxx", "Syy", "Szz", "Sxy", "Syz", "Sxz" }; // WARNING: in 2D only four components !!
+			//	case "plaindeformationmatrix":
+			//		return new[] { "Sxx", "Syy", "Sxy", "Szz" };
+			//	case "mainmatrix":
+			//		return new[] { "Si", "Sii", "Siii", "Vix", "Viy", "Viz", "Viix", "Viiy", "Viiz", "Viiix", "Viiiy", "Viiiz" };
+			//	case "localaxes":
+			//		return new[] { "euler_ang_1", "euler_ang_2", "euler_ang_3" };
+			//	default:
+			//		throw new FormatException($"'{resultType}' result type is not supported.");
+			//}
 		}
 
 		#endregion
