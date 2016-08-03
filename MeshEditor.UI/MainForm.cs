@@ -851,7 +851,9 @@ namespace MeshEditor.WinUI
 				mode ^= PropertyColorsMode.Edges;
 			else if (sender == beamPropertyColorsToolStripMenuItem || sender == beamsPropertyColorsToolStripMenuItem2)
 				mode ^= PropertyColorsMode.Beams;
+
 			activeControl.SceneFacade.SetValue(AvailableValue.ColorMode, mode);
+			activeControl.SceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
 		}
 
 		private void midsideNodesToolStripMenuItem_Click(object sender, EventArgs e)

@@ -283,19 +283,19 @@ namespace MeshEditor.WinUI
 					return;
 
 				case Keys.D1:
-					swapPropertyColorMode(PropertyColorsMode.Elements);
+					togglePropertyColorMode(PropertyColorsMode.Elements);
 					return;
 				case Keys.D2:
-					swapPropertyColorMode(PropertyColorsMode.Nodes);
+					togglePropertyColorMode(PropertyColorsMode.Nodes);
 					return;
 				case Keys.D3:
-					swapPropertyColorMode(PropertyColorsMode.Faces);
+					togglePropertyColorMode(PropertyColorsMode.Faces);
 					return;
 				case Keys.D4:
-					swapPropertyColorMode(PropertyColorsMode.Edges);
+					togglePropertyColorMode(PropertyColorsMode.Edges);
 					return;
 				case Keys.D5:
-					swapPropertyColorMode(PropertyColorsMode.Beams);
+					togglePropertyColorMode(PropertyColorsMode.Beams);
 					return;
 
 				case Keys.D7:
@@ -355,7 +355,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void swapPropertyColorMode(PropertyColorsMode singleMode)
+		private void togglePropertyColorMode(PropertyColorsMode singleMode)
 		{
 			object parameter = sceneFacade.GetValue(AvailableValue.ColorMode);
 			if (parameter == null)
@@ -369,6 +369,7 @@ namespace MeshEditor.WinUI
 
 			mode ^= singleMode;
 			sceneFacade.SetValue(AvailableValue.ColorMode, mode);
+			sceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -618,11 +619,11 @@ namespace MeshEditor.WinUI
 		private void setSceneFacade(SceneFacade newSceneFacade)
 		{
 			object colorMode = sceneFacade.GetValue(AvailableValue.ColorMode);
-			object renderMode = sceneFacade.GetValue(AvailableValue.RenderMode);
-			SceneFacade = newSceneFacade; // dulezite je pouzit vlastnost, ne primo field (provadi se cinnost)
+			newSceneFacade.SetValue(AvailableValue.ColorMode, colorMode);
+			//object renderMode = sceneFacade.GetValue(AvailableValue.RenderMode);
+			//newSceneFacade.SetValue(AvailableValue.RenderMode, renderMode);
 
-			sceneFacade.SetValue(AvailableValue.ColorMode, colorMode);
-			//sceneFacade.SetValue(AvailableValue.RenderMode, renderMode);
+			SceneFacade = newSceneFacade; // dulezite je pouzit vlastnost, ne primo field (provadi se cinnost)
 		}
 
 		/// <summary>

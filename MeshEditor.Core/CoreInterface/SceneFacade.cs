@@ -1118,7 +1118,14 @@ namespace MeshEditor.CoreInterface
 					result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested));
 				}
 
+				PropertyColorsMode? oldColorMode = scene.Mesh?.ColorMode;
+
 				scene.SetMesh(result);
+
+				if (scene.Mesh != null && oldColorMode.HasValue)
+				{
+					scene.Mesh.ColorMode = oldColorMode.Value;
+				}
 			}
 
 			createBuffers();

@@ -238,9 +238,9 @@ namespace MeshEditor.Data
 			get { return this.colorMode; }
 			set
 			{
-				PropertyColorsMode oldMode = this.colorMode;
+				//PropertyColorsMode oldMode = this.colorMode;
 				this.colorMode = value;
-				UpdateColors(this.colorMode, oldMode);
+				//UpdateColors(this.colorMode, oldMode);
 			}
 		}
 
