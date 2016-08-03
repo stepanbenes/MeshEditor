@@ -32,10 +32,7 @@ namespace MeshEditor.Construction
 		private Dictionary<EdgeMark, WingedEdge> edgeMarks;
 		private EdgeFacePropertySet hiddenItemsProperties;
 
-		private List<Beam> oneDimensionalElements;
 		private Dictionary<EdgeMark, Node> quadraticNodesCache;
-
-		private Dictionary<EdgeMark, Property[]> edgeProperties;
 
 		private bool meshHasTwinElements;
 
@@ -51,10 +48,7 @@ namespace MeshEditor.Construction
 			this.edgeMarks = new Dictionary<EdgeMark, WingedEdge>();
 			this.hiddenItemsProperties = null;
 
-			this.oneDimensionalElements = new List<Beam>();
 			this.quadraticNodesCache = new Dictionary<EdgeMark, Node>();
-
-			this.edgeProperties = new Dictionary<EdgeMark, Property[]>();
 		}
 
 		#endregion
@@ -213,7 +207,6 @@ namespace MeshEditor.Construction
 				quadFaces = null;
 				edgeMarks = null;
 				hiddenItemsProperties = null;
-				oneDimensionalElements = null;
 				quadraticNodesCache = null;
 			}
 		}
@@ -1212,6 +1205,15 @@ namespace MeshEditor.Construction
 			{
 				processElement(elementToShow);
 				mesh.HiddenElements.Remove(elementToShow);
+
+				if (elementToShow.ApproximationIsQuadratic)
+				{
+					Element2D element2DToShow = elementToShow as Element2D;
+					if (element2DToShow != null)
+					{
+						processQuadraticNodesOfFace(element2DToShow);
+					}
+				}
 			}
 
 			if (elementsToHide.Count > 0)
