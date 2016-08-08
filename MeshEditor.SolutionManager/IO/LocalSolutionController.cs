@@ -31,20 +31,45 @@ namespace MeshEditor.SolutionManager.IO
 
 		public Solution CreateNew(object solutionLocator /*ignored*/, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
 		{
-			// TODO: solve conflicts (existing solution file)
 			projectName = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileNameWithoutExtension(analysisResults.First().MeshRecordNames.First()) : projectName;
-			string recordName = projectName.MakeAlphanumericFilename() + SolutionFileSuffix + serializer.FileExtension;
+			
+			string prefix = projectName.MakeAlphanumeric();
+			string suffix = SolutionFileSuffix + serializer.FileExtension;
+
+			// solve conflicts (existing solution files with same name)
+			var conflicts = (from fileMatch in Directory.EnumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
+							 let fileMatchRelativePath = Path.GetFileName(fileMatch)
+							 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray();
+			int solutionId;
+			string recordName;
+			if (conflicts.Length > 0)
+			{
+				int maxNumber = conflicts.Select(conflict => conflict.GetNumberAtTheEnd() ?? 0).Max();
+				solutionId = maxNumber + 1;
+				recordName = $"{prefix}_{solutionId}{suffix}";
+			}
+			else
+			{
+				solutionId = 0;
+				recordName = prefix + suffix;
+			}
+
 			Solution solution = new Solution
 			{
-				Id = 0,
+				Id = solutionId,
 				ProjectName = projectName,
 				Layers = new Solution.Layer[0]
 			};
+
+			Debug.Assert(!File.Exists(Path.Combine(solutionDirectory, recordName)));
+
 			using (Stream stream = localStorage.Save(recordName))
 			{
 				serializer.Serialize(solution, stream);
 			}
+
 			solution.Location = Path.Combine(solutionDirectory, recordName);
+
 			return solution;
 		}
 

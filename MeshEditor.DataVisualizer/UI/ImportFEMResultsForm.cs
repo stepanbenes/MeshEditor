@@ -54,7 +54,7 @@ namespace MeshEditor.DataVisualizer.UI
 				string solutionDirectory;
 				if (checkBoxCreateDirectoryForSolution.Checked)
 				{
-					solutionDirectory = Path.Combine(location, projectName.MakeAlphanumericFilename());
+					solutionDirectory = Path.Combine(location, projectName.MakeAlphanumeric());
 				}
 				else
 				{
@@ -172,7 +172,6 @@ namespace MeshEditor.DataVisualizer.UI
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				textBoxMeshFile.Text = openFileDialog.FileName.QuoteIfContainsWhiteSpace();
-				textBoxProjectName.Text = Path.GetFileNameWithoutExtension(openFileDialog.FileName).MakeAlphanumericFilename();
 			}
 		}
 
@@ -201,7 +200,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void textBoxMeshFile_TextChanged(object sender, EventArgs e)
 		{
-			updateUI();
+			textBoxProjectName.Text = Path.GetFileNameWithoutExtension(textBoxMeshFile.Text).MakeAlphanumeric();
+			//updateUI();
 		}
 
 		private void textBoxProjectName_TextChanged(object sender, EventArgs e)

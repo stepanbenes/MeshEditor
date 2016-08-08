@@ -13,17 +13,11 @@ namespace MeshEditor.LayerManager.Common
 		private static readonly string tokensWithQuotesRegexPattern = @"[\""].+?[\""]|[^ ]+";
 		private static readonly char[] quotesTrimChars = { '"' };
 
-		public static string MakeUniqueFilename(this string prefix)
-		{
-			return string.Format("{0}_{1}", MakeAlphanumericFilename(prefix), Guid.NewGuid().ToString());
-		}
-
-		public static string MakeAlphanumericFilename(this string filename)
+		public static string MakeAlphanumeric(this string filename)
 		{
 			if (string.IsNullOrEmpty(filename))
 				return string.Empty;
-			Regex rgx = new Regex("[^a-zA-Z0-9]");
-			return rgx.Replace(filename, "_");
+			return Regex.Replace(filename.RemoveDiacritics(), @"[^a-zA-Z0-9]", "_");
 		}
 
 		public static string MakeValidFilename(this string filename)
@@ -61,6 +55,24 @@ namespace MeshEditor.LayerManager.Common
 			if (text.Any(char.IsWhiteSpace))
 				return "\"" + text + "\"";
 			return text;
+		}
+
+		public static int? GetNumberAtTheEnd(this string text)
+		{
+			var match = Regex.Matches(text, @"\d+$").Cast<Match>().FirstOrDefault();
+			if (match != null)
+			{
+				return int.Parse(match.Value);
+			}
+			return null;
+		}
+
+		public static string RemoveDiacritics(this string text)
+		{
+			if (string.IsNullOrEmpty(text))
+				return string.Empty;
+			byte[] tempBytes = Encoding.GetEncoding("ISO-8859-8").GetBytes(text);
+			return Encoding.UTF8.GetString(tempBytes, 0, tempBytes.Length);
 		}
 	}
 }
