@@ -196,36 +196,31 @@ namespace MeshEditor.FormatConverter
 			switch (storageType)
 			{
 				case StorageType.Local:
-					solutionHub = SolutionHub.CreateLocal(options.SolutionId ?? chooseSolution(storageType), logger);
+					{
+						string solutionDirectory = options.SolutionDirectory ?? SolutionHub.GetLocalStorageDefaultDirectory();
+						int solutionId = options.SolutionId ?? chooseSolution(SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, logger).ToArray());
+						solutionHub = SolutionHub.CreateLocal(solutionId, solutionDirectory, logger);
+					}
 					break;
 				case StorageType.Remote:
-					solutionHub = SolutionHub.CreateRemote(options.SolutionId ?? chooseSolution(storageType), logger);
+					{
+						int solutionId = options.SolutionId ?? chooseSolution(SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray());
+						solutionHub = SolutionHub.CreateRemote(solutionId, logger);
+					}
 					break;
 				default:
 					throw new NotSupportedException();
 			}
 		}
 
-		private int chooseSolution(StorageType storageType)
+		private int chooseSolution(IReadOnlyList<ISolutionInfo> solutions)
 		{
-			ISolutionInfo[] solutions;
-			switch (storageType)
-			{
-				case StorageType.Local:
-					solutions = SolutionHub.EnumerateAllLocalSolutions(logger).ToArray();
-					break;
-				case StorageType.Remote:
-					solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
-					break;
-				default:
-					throw new NotSupportedException();
-			}
+			Debug.Assert(isRunningLocally);
 
-			if (solutions.Length == 0)
+			if (solutions.Count == 0)
 				throw new FileNotFoundException("No solution found");
-			if (solutions.Length == 1)
+			if (solutions.Count == 1)
 				return solutions[0].Id;
-
 
 			// otherwise show menu:
 			Console.WriteLine("Choose solution:");

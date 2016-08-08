@@ -42,9 +42,9 @@ namespace MeshEditor.SolutionManager.IO
 
 		public IEnumerable<ISolutionInfo> GetAll()
 		{
-			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
 			{
-				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				using (Stream stream = localStorage.Load(solutionRecord))
 				{
 					yield return serializer.Deserialize<SolutionBase>(stream);
 				}
@@ -89,8 +89,8 @@ namespace MeshEditor.SolutionManager.IO
 
 		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
 		{
-			return await Task.WhenAll(from solutionFile in findAllSolutionFilesInSolutionDirectory()
-									  select loadSolutionInfo(solutionFile, cancellationToken));
+			return await Task.WhenAll(from solutionRecord in findAllRecordsInSolutionDirectory()
+									  select loadSolutionInfo(solutionRecord, cancellationToken));
 		}
 
 		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
@@ -103,29 +103,30 @@ namespace MeshEditor.SolutionManager.IO
 
 		#region Private methods
 
-		private async Task<ISolutionInfo> loadSolutionInfo(string solutionFile, CancellationToken cancellationToken)
+		private async Task<ISolutionInfo> loadSolutionInfo(string solutionRecord, CancellationToken cancellationToken)
 		{
-			using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+			using (Stream stream = localStorage.Load(solutionRecord))
 			{
 				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
 			}
 		}
 
-		private IEnumerable<string> findAllSolutionFilesInSolutionDirectory()
+		private IEnumerable<string> findAllRecordsInSolutionDirectory()
 		{
-			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.TopDirectoryOnly);
+			return from filepath in Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.TopDirectoryOnly)
+				   select Path.GetFileName(filepath);
 		}
 
 		private string findRecordNameOfSolution(int solutionId)
 		{
-			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
 			{
-				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				using (Stream stream = localStorage.Load(solutionRecord))
 				{
 					var testSolution = serializer.Deserialize<SolutionBase>(stream);
 					if (testSolution.Id == solutionId)
 					{
-						return Path.GetFileName(solutionFile);
+						return solutionRecord;
 					}
 				}
 			}
@@ -134,14 +135,14 @@ namespace MeshEditor.SolutionManager.IO
 
 		private async Task<string> findRecordNameOfSolutionAsync(int solutionId, CancellationToken cancellationToken)
 		{
-			foreach (string solutionFile in findAllSolutionFilesInSolutionDirectory())
+			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
 			{
-				using (Stream stream = localStorage.Load(Path.GetFileName(solutionFile)))
+				using (Stream stream = localStorage.Load(solutionRecord))
 				{
 					var testSolution = await serializer.DeserializeAsync<SolutionBase>(stream, cancellationToken);
 					if (testSolution.Id == solutionId)
 					{
-						return Path.GetFileName(solutionFile);
+						return solutionRecord;
 					}
 				}
 			}

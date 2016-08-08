@@ -14,7 +14,10 @@ namespace MeshEditor.FormatConverter
 
 		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
 		public int? SolutionId { get; set; }
-		
+
+		[Option("solutiondirectory", Required = false, HelpText = "Solution directory path (without filename)")]
+		public string SolutionDirectory { get; set; }
+
 		[Option("remote", Required = false, HelpText = "Use remote storage")]
 		public bool ForceUseRemoteStorage { get; set; }
 

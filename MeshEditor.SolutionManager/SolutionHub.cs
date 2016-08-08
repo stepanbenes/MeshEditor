@@ -55,9 +55,8 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static SolutionHub CreateLocal(int solutionId, ILogger logger = null)
+		public static SolutionHub CreateLocal(int solutionId, string solutionDirectory, ILogger logger = null)
 		{
-			var solutionDirectory = GetLocalStorageDefaultDirectory();
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			return new SolutionHub(
 				solutionId: solutionId,
@@ -88,24 +87,22 @@ namespace MeshEditor.SolutionManager
 			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 		}
 
-		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(ILogger logger = null)
+		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, ILogger logger = null)
 		{
-			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 			var solutionController = new LocalSolutionController(solutionDirectory);
 			return solutionController.GetAll();
+		}
+
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, CancellationToken cancellationToken, ILogger logger = null)
+		{
+			var solutionController = new LocalSolutionController(solutionDirectory);
+			return await solutionController.GetAllAsync(cancellationToken);
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
 			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
 			return solutionController.GetAll();
-		}
-
-		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
-		{
-			var solutionDirectory = config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
-			var solutionController = new LocalSolutionController(solutionDirectory);
-			return await solutionController.GetAllAsync(cancellationToken);
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)

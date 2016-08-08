@@ -30,6 +30,10 @@
 		{
 			this.tabControl = new System.Windows.Forms.TabControl();
 			this.tabPageResultFiles = new System.Windows.Forms.TabPage();
+			this.checkBoxCreateDirectoryForSolution = new System.Windows.Forms.CheckBox();
+			this.buttonChooseSolutionDirectory = new System.Windows.Forms.Button();
+			this.textBoxLocation = new System.Windows.Forms.TextBox();
+			this.label8 = new System.Windows.Forms.Label();
 			this.buttonChooseResultFiles = new System.Windows.Forms.Button();
 			this.buttonChooseMeshFile = new System.Windows.Forms.Button();
 			this.textBoxResultFiles = new System.Windows.Forms.TextBox();
@@ -80,6 +84,10 @@
 			// 
 			// tabPageResultFiles
 			// 
+			this.tabPageResultFiles.Controls.Add(this.checkBoxCreateDirectoryForSolution);
+			this.tabPageResultFiles.Controls.Add(this.buttonChooseSolutionDirectory);
+			this.tabPageResultFiles.Controls.Add(this.textBoxLocation);
+			this.tabPageResultFiles.Controls.Add(this.label8);
 			this.tabPageResultFiles.Controls.Add(this.buttonChooseResultFiles);
 			this.tabPageResultFiles.Controls.Add(this.buttonChooseMeshFile);
 			this.tabPageResultFiles.Controls.Add(this.textBoxResultFiles);
@@ -96,10 +104,52 @@
 			this.tabPageResultFiles.Text = "Result files";
 			this.tabPageResultFiles.UseVisualStyleBackColor = true;
 			// 
+			// checkBoxCreateDirectoryForSolution
+			// 
+			this.checkBoxCreateDirectoryForSolution.AutoSize = true;
+			this.checkBoxCreateDirectoryForSolution.Checked = true;
+			this.checkBoxCreateDirectoryForSolution.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.checkBoxCreateDirectoryForSolution.Location = new System.Drawing.Point(9, 216);
+			this.checkBoxCreateDirectoryForSolution.Name = "checkBoxCreateDirectoryForSolution";
+			this.checkBoxCreateDirectoryForSolution.Size = new System.Drawing.Size(154, 17);
+			this.checkBoxCreateDirectoryForSolution.TabIndex = 11;
+			this.checkBoxCreateDirectoryForSolution.Text = "Create directory for solution";
+			this.checkBoxCreateDirectoryForSolution.UseVisualStyleBackColor = true;
+			// 
+			// buttonChooseSolutionDirectory
+			// 
+			this.buttonChooseSolutionDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonChooseSolutionDirectory.Location = new System.Drawing.Point(398, 188);
+			this.buttonChooseSolutionDirectory.Name = "buttonChooseSolutionDirectory";
+			this.buttonChooseSolutionDirectory.Size = new System.Drawing.Size(43, 23);
+			this.buttonChooseSolutionDirectory.TabIndex = 10;
+			this.buttonChooseSolutionDirectory.Text = "...";
+			this.buttonChooseSolutionDirectory.UseVisualStyleBackColor = true;
+			this.buttonChooseSolutionDirectory.Click += new System.EventHandler(this.buttonChooseSolutionDirectory_Click);
+			// 
+			// textBoxLocation
+			// 
+			this.textBoxLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxLocation.Location = new System.Drawing.Point(9, 190);
+			this.textBoxLocation.Name = "textBoxLocation";
+			this.textBoxLocation.Size = new System.Drawing.Size(383, 20);
+			this.textBoxLocation.TabIndex = 9;
+			this.textBoxLocation.TextChanged += new System.EventHandler(this.textBoxLocation_TextChanged);
+			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(6, 174);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(48, 13);
+			this.label8.TabIndex = 8;
+			this.label8.Text = "Location";
+			// 
 			// buttonChooseResultFiles
 			// 
 			this.buttonChooseResultFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonChooseResultFiles.Location = new System.Drawing.Point(398, 115);
+			this.buttonChooseResultFiles.Location = new System.Drawing.Point(398, 71);
 			this.buttonChooseResultFiles.Name = "buttonChooseResultFiles";
 			this.buttonChooseResultFiles.Size = new System.Drawing.Size(43, 23);
 			this.buttonChooseResultFiles.TabIndex = 7;
@@ -110,7 +160,7 @@
 			// buttonChooseMeshFile
 			// 
 			this.buttonChooseMeshFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonChooseMeshFile.Location = new System.Drawing.Point(398, 76);
+			this.buttonChooseMeshFile.Location = new System.Drawing.Point(398, 32);
 			this.buttonChooseMeshFile.Name = "buttonChooseMeshFile";
 			this.buttonChooseMeshFile.Size = new System.Drawing.Size(43, 23);
 			this.buttonChooseMeshFile.TabIndex = 6;
@@ -122,7 +172,7 @@
 			// 
 			this.textBoxResultFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxResultFiles.Location = new System.Drawing.Point(9, 117);
+			this.textBoxResultFiles.Location = new System.Drawing.Point(9, 73);
 			this.textBoxResultFiles.Name = "textBoxResultFiles";
 			this.textBoxResultFiles.Size = new System.Drawing.Size(383, 20);
 			this.textBoxResultFiles.TabIndex = 5;
@@ -131,7 +181,7 @@
 			// 
 			this.textBoxMeshFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxMeshFile.Location = new System.Drawing.Point(9, 78);
+			this.textBoxMeshFile.Location = new System.Drawing.Point(9, 34);
 			this.textBoxMeshFile.Name = "textBoxMeshFile";
 			this.textBoxMeshFile.Size = new System.Drawing.Size(383, 20);
 			this.textBoxMeshFile.TabIndex = 4;
@@ -140,7 +190,7 @@
 			// label3
 			// 
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(6, 101);
+			this.label3.Location = new System.Drawing.Point(6, 57);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(58, 13);
 			this.label3.TabIndex = 3;
@@ -149,7 +199,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(6, 62);
+			this.label2.Location = new System.Drawing.Point(6, 18);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(49, 13);
 			this.label2.TabIndex = 2;
@@ -157,15 +207,16 @@
 			// 
 			// textBoxProjectName
 			// 
-			this.textBoxProjectName.Location = new System.Drawing.Point(9, 29);
+			this.textBoxProjectName.Location = new System.Drawing.Point(9, 151);
 			this.textBoxProjectName.Name = "textBoxProjectName";
 			this.textBoxProjectName.Size = new System.Drawing.Size(132, 20);
 			this.textBoxProjectName.TabIndex = 1;
+			this.textBoxProjectName.TextChanged += new System.EventHandler(this.textBoxProjectName_TextChanged);
 			// 
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(6, 13);
+			this.label1.Location = new System.Drawing.Point(6, 135);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(69, 13);
 			this.label1.TabIndex = 0;
@@ -430,5 +481,9 @@
 		private System.Windows.Forms.CheckBox checkBoxSVDParameterRandomized;
 		private System.Windows.Forms.ComboBox comboBoxGaussPointExtrapolationStrategy;
 		private System.Windows.Forms.Label label7;
+		private System.Windows.Forms.Button buttonChooseSolutionDirectory;
+		private System.Windows.Forms.TextBox textBoxLocation;
+		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.CheckBox checkBoxCreateDirectoryForSolution;
 	}
 }

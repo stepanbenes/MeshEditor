@@ -1597,11 +1597,13 @@ namespace MeshEditor.WinUI
 			var importFEMResultsForm = new ImportFEMResultsForm { Owner = this };
 			if (importFEMResultsForm.ShowDialog() == DialogResult.OK)
 			{
-				Debug.Assert(importFEMResultsForm.NewSolutionId.HasValue);
+				Debug.Assert(importFEMResultsForm.SolutionId.HasValue);
+				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionDirectory));
+				Debug.Assert(Directory.Exists(importFEMResultsForm.SolutionDirectory));
 
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.NewSolutionId.Value);
+				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionId.Value, importFEMResultsForm.SolutionDirectory);
 			}
 		}
 
@@ -1611,7 +1613,7 @@ namespace MeshEditor.WinUI
 			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
 			dialog.FilterIndex = 0;
 			dialog.AutoUpgradeEnabled = true;
-			dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
+			//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
 				closeSolution();

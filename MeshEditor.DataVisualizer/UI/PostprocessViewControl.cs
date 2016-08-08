@@ -16,14 +16,6 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class PostprocessViewControl : ContentViewControl
 	{
-		#region Static members
-
-		public static string GetDefaultSolutionDirectory()
-		{
-			return SolutionHub.GetLocalStorageDefaultDirectory();
-		}
-
-		#endregion
 
 		#region Fields, constructor
 
@@ -100,10 +92,10 @@ namespace MeshEditor.DataVisualizer.UI
 			await loadSolutionAsync(solutionHub);
 		}
 
-		public async Task LoadLocalSolutionAsync(int solutionId)
+		public async Task LoadLocalSolutionAsync(int solutionId, string solutionDirectory)
 		{
 			logger = new MemoryLogger();
-			solutionHub = SolutionHub.CreateLocal(solutionId, logger);
+			solutionHub = SolutionHub.CreateLocal(solutionId, solutionDirectory, logger);
 			await loadSolutionAsync(solutionHub);
 		}
 
