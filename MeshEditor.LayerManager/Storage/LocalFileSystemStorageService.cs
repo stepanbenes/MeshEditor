@@ -21,12 +21,12 @@ namespace MeshEditor.LayerManager.Storage
 
 		public Stream Load(string record)
 		{
-			return new FileStream(Path.Combine(basePath, record), FileMode.Open, FileAccess.Read, FileShare.Read);
+			return new FileStream(combineWithBasePath(record), FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 
 		public Stream Save(string record)
 		{
-			string path = Path.Combine(basePath, record);
+			string path = combineWithBasePath(record);
 			string directory = Path.GetDirectoryName(path);
 			if (!Directory.Exists(directory))
 			{
@@ -37,12 +37,21 @@ namespace MeshEditor.LayerManager.Storage
 
 		public void Delete(string record)
 		{
-			File.Delete(Path.Combine(basePath, record));
+			File.Delete(combineWithBasePath(record));
 		}
 
 		public void DeleteDirectory(string name)
 		{
-			Directory.Delete(Path.Combine(basePath, name), recursive: true);
+			Directory.Delete(combineWithBasePath(name), recursive: true);
+		}
+
+		private string combineWithBasePath(string path)
+		{
+			Debug.Assert(basePath != null);
+			Debug.Assert(path != null);
+			if (Path.IsPathRooted(path))
+				return path;
+			return Path.Combine(basePath, path);
 		}
 	}
 }

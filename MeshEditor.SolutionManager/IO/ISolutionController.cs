@@ -9,13 +9,13 @@ namespace MeshEditor.SolutionManager.IO
 {
 	interface ISolutionController
 	{
-		Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null);
+		Solution CreateNew(object solutionLocator, IEnumerable<AnalysisResult> analysisResults, string projectName = null);
 		IEnumerable<ISolutionInfo> GetAll();
-		Solution Get(int solutionId);
+		Solution Get(object solutionLocator);
 		Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
 		Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete);
 
 		Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken);
-		Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken);
+		Task<Solution> GetAsync(object solutionLocator, CancellationToken cancellationToken);
 	}
 }

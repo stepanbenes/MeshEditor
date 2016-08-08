@@ -186,9 +186,10 @@ namespace MeshEditor.FormatConverter
 				logger.VerbosityLevel = options.Verbose ? LogVerbosityLevel.All : LogVerbosityLevel.Message;
 			}
 
-			if (!isRunningLocally && !options.SolutionId.HasValue)
+			int solutionId;
+			if (!isRunningLocally && !int.TryParse(options.Solution, out solutionId))
 			{
-				throw new ArgumentNullException(nameof(options.SolutionId));
+				throw new FormatException("Argument Solution is not an integer");
 			}
 
 			StorageType storageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
@@ -197,14 +198,47 @@ namespace MeshEditor.FormatConverter
 			{
 				case StorageType.Local:
 					{
-						string solutionDirectory = options.SolutionDirectory ?? SolutionHub.GetLocalStorageDefaultDirectory();
-						int solutionId = options.SolutionId ?? chooseSolution(SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, logger).ToArray());
-						solutionHub = SolutionHub.CreateLocal(solutionId, solutionDirectory, logger);
+						if (options.Solution == null)
+						{
+							//var solutionFiles = SolutionHub.EnumerateAllLocalSolutionFiles(SolutionHub.GetLocalStorageDefaultDirectory(), logger).ToArray();
+							//var solutionIndex = chooseSolution(solutionFiles.Select(solutionFile => SolutionHub.GetLocalSolutionInfo(solutionFile, logger)).ToArray());
+							//solutionHub = SolutionHub.CreateLocal(solutionFiles[solutionIndex], logger);
+
+							string solutionDirectory = SolutionHub.GetLocalStorageDefaultDirectory();
+							var solutions = SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, logger).ToArray();
+							var solutionIndex = chooseSolution(solutions);
+							if (solutionIndex.HasValue)
+							{
+								var solutionFileName = solutions[solutionIndex.Value].Location;
+								solutionHub = SolutionHub.CreateLocal(solutionFileName, logger);
+							}
+							else
+							{
+								solutionHub = SolutionHub.CreateEmptyLocal(solutionDirectory, logger);
+							}
+						}
+						else // option.Solution should be solution file full path
+						{
+							solutionHub = SolutionHub.CreateLocal(options.Solution, logger);
+						}
 					}
 					break;
 				case StorageType.Remote:
 					{
-						int solutionId = options.SolutionId ?? chooseSolution(SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray());
+						if (options.Solution == null)
+						{
+							var solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
+							var solutionIndex = chooseSolution(solutions);
+							if (!solutionIndex.HasValue)
+							{
+								throw new FileNotFoundException("No solution found.");
+							}
+							solutionId = solutions[solutionIndex.Value].Id;
+						}
+						else
+						{
+							solutionId = int.Parse(options.Solution);
+						}
 						solutionHub = SolutionHub.CreateRemote(solutionId, logger);
 					}
 					break;
@@ -213,39 +247,44 @@ namespace MeshEditor.FormatConverter
 			}
 		}
 
-		private int chooseSolution(IReadOnlyList<ISolutionInfo> solutions)
+		private int? chooseSolution(IReadOnlyList<ISolutionInfo> solutions)
 		{
 			Debug.Assert(isRunningLocally);
 
 			if (solutions.Count == 0)
-				throw new FileNotFoundException("No solution found");
+				return null;
 			if (solutions.Count == 1)
 				return solutions[0].Id;
 
 			// otherwise show menu:
 			Console.WriteLine("Choose solution:");
-			foreach (var solution in solutions)
+			for (int i = 0; i < solutions.Count; i++)
 			{
-				Console.WriteLine($"# Solution id: {solution.Id}, Project name: '{solution.ProjectName}'");
+				var solution = solutions[i];
+				Console.WriteLine($"# {i}, Solution id: {solution.Id}, Project name: '{solution.ProjectName}', Location: '{solution.Location}'");
 			}
 
 			// read input from keyboard
 			while (true)
 			{
-				Console.Write("Id = ");
+				Console.Write("Index = ");
 				string input = Console.ReadLine();
-				int id;
-				if (!int.TryParse(input, out id))
+				if (string.IsNullOrEmpty(input))
+				{
+					return null;
+				}
+				int index;
+				if (!int.TryParse(input, out index))
 				{
 					Console.WriteLine("Please insert valid integer value.");
 					continue;
 				}
-				if (!solutions.Any(s => s.Id == id))
+				if (index < 0 || index >= solutions.Count)
 				{
-					Console.WriteLine($"Solution with id '{id}' does not exist.");
+					Console.WriteLine($"Index '{index}' is out of range.");
 					continue;
 				}
-				return id;
+				return index;
 			}
 		}
 

@@ -1597,13 +1597,12 @@ namespace MeshEditor.WinUI
 			var importFEMResultsForm = new ImportFEMResultsForm { Owner = this };
 			if (importFEMResultsForm.ShowDialog() == DialogResult.OK)
 			{
-				Debug.Assert(importFEMResultsForm.SolutionId.HasValue);
-				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionDirectory));
-				Debug.Assert(Directory.Exists(importFEMResultsForm.SolutionDirectory));
+				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
+				Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
 
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionId.Value, importFEMResultsForm.SolutionDirectory);
+				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
 			}
 		}
 

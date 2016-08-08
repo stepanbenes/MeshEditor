@@ -29,124 +29,112 @@ namespace MeshEditor.SolutionManager.IO
 			serializer = new JsonSerializationService();
 		}
 
-		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
+		public Solution CreateNew(object solutionLocator /*ignored*/, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
 		{
+			// TODO: solve conflicts (existing solution file)
 			projectName = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileNameWithoutExtension(analysisResults.First().MeshRecordNames.First()) : projectName;
-			Solution solution = new Solution { Id = solutionId, ProjectName = projectName, Layers = new Solution.Layer[0] };
-			using (Stream stream = localStorage.Save(projectName.MakeAlphanumericFilename() + SolutionFileSuffix + serializer.FileExtension))
+			string recordName = projectName.MakeAlphanumericFilename() + SolutionFileSuffix + serializer.FileExtension;
+			Solution solution = new Solution
+			{
+				Id = 0,
+				ProjectName = projectName,
+				Layers = new Solution.Layer[0]
+			};
+			using (Stream stream = localStorage.Save(recordName))
 			{
 				serializer.Serialize(solution, stream);
 			}
+			solution.Location = Path.Combine(solutionDirectory, recordName);
 			return solution;
 		}
 
 		public IEnumerable<ISolutionInfo> GetAll()
 		{
-			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
+			foreach (string solutionFile in getAllSolutionFiles())
 			{
-				using (Stream stream = localStorage.Load(solutionRecord))
+				using (Stream stream = localStorage.Load(solutionFile))
 				{
-					yield return serializer.Deserialize<SolutionBase>(stream);
+					var solution = serializer.Deserialize<SolutionBase>(stream);
+					solution.Location = solutionFile;
+					yield return solution;
 				}
 			}
 		}
 
-		public Solution Get(int solutionId)
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
 		{
-			using (Stream stream = localStorage.Load(findRecordNameOfSolution(solutionId)))
+			return await Task.WhenAll(from solutionFile in getAllSolutionFiles()
+									  select loadSolutionInfoAsync(solutionFile, cancellationToken));
+		}
+
+		public Solution Get(object solutionLocator)
+		{
+			if (!(solutionLocator is string))
+				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
+
+			string solutionFile = (string)solutionLocator;
+			using (Stream stream = localStorage.Load(solutionFile))
 			{
-				return serializer.Deserialize<Solution>(stream);
+				var solution = serializer.Deserialize<Solution>(stream);
+				solution.Location = solutionFile;
+				return solution;
+			}
+		}
+
+		public async Task<Solution> GetAsync(object solutionLocator, CancellationToken cancellationToken)
+		{
+			if (!(solutionLocator is string))
+				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
+
+			string solutionFile = (string)solutionLocator;
+			using (Stream stream = localStorage.Load(solutionFile))
+			{
+				var solution = await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
+				solution.Location = solutionFile;
+				return solution;
 			}
 		}
 
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			Solution updatedSolution = Solution.CreateNewByAddingLayer(solution, newLayer, parentLayer?.Id);
-			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
+			string solutionFile = solution.Location;
+			using (Stream stream = localStorage.Save(solutionFile))
 			{
 				serializer.Serialize(updatedSolution, stream);
 			}
+			updatedSolution.Location = solutionFile;
 			return updatedSolution;
 		}
 
 		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
 			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
-			using (Stream stream = localStorage.Save(findRecordNameOfSolution(solution.Id)))
+			string solutionFile = solution.Location;
+			using (Stream stream = localStorage.Save(solutionFile))
 			{
 				serializer.Serialize(updatedSolution, stream);
 			}
+			updatedSolution.Location = solutionFile;
 			return updatedSolution;
-		}
-
-		public ISolutionInfo LoadSolutionFromFileName(string relativeFilename)
-		{
-			using (Stream stream = localStorage.Load(relativeFilename))
-			{
-				return serializer.Deserialize<SolutionBase>(stream);
-			}
-		}
-
-		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
-		{
-			return await Task.WhenAll(from solutionRecord in findAllRecordsInSolutionDirectory()
-									  select loadSolutionInfo(solutionRecord, cancellationToken));
-		}
-
-		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
-		{
-			using (Stream stream = localStorage.Load(await findRecordNameOfSolutionAsync(solutionId, cancellationToken)))
-			{
-				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
-			}
 		}
 
 		#region Private methods
 
-		private async Task<ISolutionInfo> loadSolutionInfo(string solutionRecord, CancellationToken cancellationToken)
+		private async Task<ISolutionInfo> loadSolutionInfoAsync(string solutionFile, CancellationToken cancellationToken)
 		{
-			using (Stream stream = localStorage.Load(solutionRecord))
+			using (Stream stream = localStorage.Load(solutionFile))
 			{
-				return await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
+				var solution = await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
+				solution.Location = solutionFile;
+				return solution;
 			}
 		}
 
-		private IEnumerable<string> findAllRecordsInSolutionDirectory()
+		private IEnumerable<string> getAllSolutionFiles()
 		{
-			return from filepath in Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.TopDirectoryOnly)
-				   select Path.GetFileName(filepath);
-		}
-
-		private string findRecordNameOfSolution(int solutionId)
-		{
-			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
-			{
-				using (Stream stream = localStorage.Load(solutionRecord))
-				{
-					var testSolution = serializer.Deserialize<SolutionBase>(stream);
-					if (testSolution.Id == solutionId)
-					{
-						return solutionRecord;
-					}
-				}
-			}
-			throw new FileNotFoundException();
-		}
-
-		private async Task<string> findRecordNameOfSolutionAsync(int solutionId, CancellationToken cancellationToken)
-		{
-			foreach (string solutionRecord in findAllRecordsInSolutionDirectory())
-			{
-				using (Stream stream = localStorage.Load(solutionRecord))
-				{
-					var testSolution = await serializer.DeserializeAsync<SolutionBase>(stream, cancellationToken);
-					if (testSolution.Id == solutionId)
-					{
-						return solutionRecord;
-					}
-				}
-			}
-			throw new FileNotFoundException();
+			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
+			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.AllDirectories);
 		}
 
 		#endregion

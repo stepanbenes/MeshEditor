@@ -12,11 +12,8 @@ namespace MeshEditor.FormatConverter
 		[Option(Required = false, HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("solution", Required = false, HelpText = "Solution id (same as Simulation id in db)")]
-		public int? SolutionId { get; set; }
-
-		[Option("solutiondirectory", Required = false, HelpText = "Solution directory path (without filename)")]
-		public string SolutionDirectory { get; set; }
+		[Option("solution", Required = false, HelpText = "Solution id (for remote solutions) or solution file path (for local solutions)")]
+		public string Solution { get; set; }
 
 		[Option("remote", Required = false, HelpText = "Use remote storage")]
 		public bool ForceUseRemoteStorage { get; set; }

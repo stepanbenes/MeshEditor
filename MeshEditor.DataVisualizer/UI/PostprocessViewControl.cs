@@ -92,13 +92,6 @@ namespace MeshEditor.DataVisualizer.UI
 			await loadSolutionAsync(solutionHub);
 		}
 
-		public async Task LoadLocalSolutionAsync(int solutionId, string solutionDirectory)
-		{
-			logger = new MemoryLogger();
-			solutionHub = SolutionHub.CreateLocal(solutionId, solutionDirectory, logger);
-			await loadSolutionAsync(solutionHub);
-		}
-
 		public async Task LoadRemoteSolutionAsync(int solutionId)
 		{
 			logger = new MemoryLogger();

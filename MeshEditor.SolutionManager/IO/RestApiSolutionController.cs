@@ -34,13 +34,18 @@ namespace MeshEditor.SolutionManager.IO
 
 		#region Public methods
 
-		public Solution CreateNew(int solutionId, IEnumerable<AnalysisResult> analysisResults, string projectName = null /*ignored*/)
+		public Solution CreateNew(object solutionLocator, IEnumerable<AnalysisResult> analysisResults, string projectName = null /*ignored*/)
 		{
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
 			var request = new RestRequest($"api/solution", Method.POST);
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
 			request.RequestFormat = DataFormat.Json;
+
+			int solutionId = (int)solutionLocator;
 
 			var body = new
 			{
@@ -62,10 +67,25 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
 
-		public Solution Get(int solutionId)
+		public Solution Get(object solutionLocator)
 		{
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
 			RestRequest request = createGetRequest(solutionId);
 			var response = executeRequest(request);
+			return parseResponse<Solution>(response);
+		}
+
+		public async Task<Solution> GetAsync(object solutionLocator, CancellationToken cancellationToken)
+		{
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+			RestRequest request = createGetRequest(solutionId);
+			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<Solution>(response);
 		}
 
@@ -113,13 +133,6 @@ namespace MeshEditor.SolutionManager.IO
 			RestRequest request = createGetAllRequest();
 			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<IEnumerable<SolutionBase>>(response);
-		}
-
-		public async Task<Solution> GetAsync(int solutionId, CancellationToken cancellationToken)
-		{
-			RestRequest request = createGetRequest(solutionId);
-			var response = await executeRequestAsync(request, cancellationToken);
-			return parseResponse<Solution>(response);
 		}
 
 		#endregion
