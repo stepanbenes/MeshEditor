@@ -23,12 +23,14 @@ namespace MeshEditor.DataVisualizer.UI
 			: this()
 		{
 			Debug.Assert(exception != null);
-			Debug.Assert(logger != null);
 
 			textBoxCaption.Text = "Error in processing task: " + taskName;
 			textBoxExceptionMessage.Text = exception.Message;
 			textBoxStackTrace.Text = exception.StackTrace;
-			listBoxLog.Items.AddRange(logger.GetRecordHistory().Cast<object>().ToArray());
+			if (logger != null)
+			{
+				listBoxLog.Items.AddRange(logger.GetRecordHistory().Cast<object>().ToArray());
+			}
 
 			linkLabelShowDetails_LinkClicked(null, null); // collapse panel 2
 		}

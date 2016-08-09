@@ -164,9 +164,17 @@ namespace MeshEditor.DataVisualizer.UI
 			SolutionThumbnail? selectedSolution = listBoxRemoteSolutions.SelectedItem as SolutionThumbnail?;
 			if (selectedSolution.HasValue)
 			{
-				var url = $"http://mesheditor.azurewebsites.net/postprocess/{selectedSolution.Value.SolutionId}";
-				//var url = selectedSolution.Value.Location;
-				Process.Start(url);
+				try
+				{
+					var location = new Uri(selectedSolution.Value.Location);
+					UriBuilder uriBuilder = new UriBuilder(location);
+					uriBuilder.Path = $"/postprocess/{selectedSolution.Value.SolutionId}";
+					Process.Start(uriBuilder.Uri.ToString());
+				}
+				catch (Exception ex)
+				{
+					new ExceptionReportForm("Open remote solution in browser", ex, logger: null).ShowDialog();
+				}
 			}
 		}
 
