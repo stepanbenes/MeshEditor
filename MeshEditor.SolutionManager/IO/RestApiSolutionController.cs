@@ -57,7 +57,14 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddParameter("application/json; charset=utf-8", jsonString, ParameterType.RequestBody);
 
 			var response = executeRequest(request);
-			return parseResponse<Solution>(response);
+
+			var newSolution = parseResponse<Solution>(response);
+			var headerParameterLocation = response.Headers.FirstOrDefault(parameter => parameter.Name == "Location");
+			if (headerParameterLocation != null)
+			{
+				newSolution.Location = headerParameterLocation.Value?.ToString();
+			}
+			return newSolution;
 		}
 
 		public IEnumerable<ISolutionInfo> GetAll()
