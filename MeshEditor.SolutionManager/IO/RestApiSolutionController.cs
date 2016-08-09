@@ -139,7 +139,6 @@ namespace MeshEditor.SolutionManager.IO
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
-			request.AddQueryParameter("dontDeleteLayerBlobs", "true"); // do not initiate deleting layer files from server
 
 			var response = executeRequest(request);
 			return parseResponse<Solution>(response);

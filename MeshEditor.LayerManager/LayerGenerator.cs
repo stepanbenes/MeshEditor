@@ -268,11 +268,6 @@ namespace MeshEditor.LayerManager
 			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors);
 		}
 
-		public void DeleteAllLayerFiles(Guid layerId)
-		{
-			destinationStorage.DeleteDirectory(layerId.ToString());
-		}
-
 		#endregion
 
 		public SummaryFile LoadLayerSummary(Guid layerId)

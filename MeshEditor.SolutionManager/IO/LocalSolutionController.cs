@@ -128,9 +128,15 @@ namespace MeshEditor.SolutionManager.IO
 			if (!(solutionLocator is string))
 				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
 
+			Solution solution = Get(solutionLocator);
+			foreach (var rootLayer in solution.Layers)
+			{
+				deleteAllLayerFilesOfLayerTree(rootLayer);
+			}
+
 			string solutionFile = (string)solutionLocator;
 
-			localStorage.Delete(solutionFile);
+			localStorage.Delete(solutionFile); // delete solution file itself
 
 			string solutionFileDirectory = Path.GetDirectoryName(solutionFile);
 			if (!string.Equals(Path.GetFullPath(SolutionHub.GetLocalStorageDefaultDirectory()), Path.GetFullPath(solutionFileDirectory))) // directory is different from default solution directory
@@ -158,8 +164,10 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
-		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete /*root layer*/)
 		{
+			deleteAllLayerFilesOfLayerTree(layerToDelete);
+
 			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
 			string solutionFile = solution.Location;
 			using (Stream stream = localStorage.Save(solutionFile))
@@ -186,6 +194,34 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
 			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.AllDirectories);
+		}
+
+		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
+		{
+			Stack<Solution.Layer> result = new Stack<Solution.Layer>();
+			Stack<Solution.Layer> children = new Stack<Solution.Layer>();
+			children.Push(root);
+			while (children.Count > 0)
+			{
+				var layer = children.Pop();
+				result.Push(layer);
+				if (layer.Children != null)
+				{
+					foreach (var child in layer.Children)
+					{
+						children.Push(child);
+					}
+				}
+			}
+			return result;
+		}
+
+		private void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer)
+		{
+			foreach (var childLayer in traverseLayerTreePostOrder(rootLayer))
+			{
+				localStorage.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
+			}
 		}
 
 		#endregion

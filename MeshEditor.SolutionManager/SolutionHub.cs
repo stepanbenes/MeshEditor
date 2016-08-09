@@ -250,47 +250,21 @@ namespace MeshEditor.SolutionManager
 		public void Delete(string layerIdOrName, bool deleteAll = false)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
-			Solution solution = solutionController.Get(solutionLocator);
-			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			IEnumerable<Solution.Layer> rootLayersOfTreesToDelete = deleteAll ? solution.Layers /*all master layers*/ : Enumerable.Repeat(findLayer(solution, layerIdOrName), 1) /*single general layer*/;
-			foreach (var rootLayer in rootLayersOfTreesToDelete)
-			{
-				foreach (var layer in traverseLayerTreePostOrder(rootLayer))
-				{
-					solution = solutionController.DeleteLayer(solution, layer);
-					layerGenerator.DeleteAllLayerFiles(layer.Id);
-				}
-			}
+			
 			if (deleteAll)
 			{
 				solutionController.Delete(solutionLocator); // delete solution itself
-				solution = null;
+			}
+			else
+			{
+				Solution solution = solutionController.Get(solutionLocator);
+				solution = solutionController.DeleteLayer(solution, findLayer(solution, layerIdOrName));
 			}
 		}
 
 		#endregion
 
 		#region Private helper methods
-
-		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
-		{
-			Stack<Solution.Layer> result = new Stack<Solution.Layer>();
-			Stack<Solution.Layer> children = new Stack<Solution.Layer>();
-			children.Push(root);
-			while (children.Count > 0)
-			{
-				var layer = children.Pop();
-				result.Push(layer);
-				if (layer.Children != null)
-				{
-					foreach (var child in layer.Children)
-					{
-						children.Push(child);
-					}
-				}
-			}
-			return result;
-		}
 
 		private static List<AnalysisResult> composeAnalysisResults(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
 		{
