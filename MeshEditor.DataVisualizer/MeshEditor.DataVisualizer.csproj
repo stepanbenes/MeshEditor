@@ -138,11 +138,11 @@
     <Compile Include="UI\PreprocessViewControl.Designer.cs">
       <DependentUpon>PreprocessViewControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\RemoteSolutionsForm.cs">
+    <Compile Include="UI\SolutionBrowserForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\RemoteSolutionsForm.Designer.cs">
-      <DependentUpon>RemoteSolutionsForm.cs</DependentUpon>
+    <Compile Include="UI\SolutionBrowserForm.Designer.cs">
+      <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\VisualizerSettingsControl.cs">
       <SubType>UserControl</SubType>
@@ -176,8 +176,8 @@
     <EmbeddedResource Include="UI\PreprocessViewControl.resx">
       <DependentUpon>PreprocessViewControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\RemoteSolutionsForm.resx">
-      <DependentUpon>RemoteSolutionsForm.cs</DependentUpon>
+    <EmbeddedResource Include="UI\SolutionBrowserForm.resx">
+      <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\VisualizerSettingsControl.resx">
       <DependentUpon>VisualizerSettingsControl.cs</DependentUpon>

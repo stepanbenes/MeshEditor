@@ -1606,32 +1606,29 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private async void openLocalSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		private async void openSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			OpenFileDialog dialog = new OpenFileDialog();
-			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
-			dialog.FilterIndex = 0;
-			dialog.AutoUpgradeEnabled = true;
-			//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
-			if (dialog.ShowDialog() == DialogResult.OK)
-			{
-				closeSolution();
-				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadLocalSolutionAsync(dialog.FileName);
-			}
-		}
+			var solutionBrowserForm = new SolutionBrowserForm { Owner = this };
 
-		private async void openRemoteSolutionToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			var remoteSolutionsForm = new RemoteSolutionsForm { Owner = this };
-
-			if (remoteSolutionsForm.ShowDialog() == DialogResult.OK)
+			if (solutionBrowserForm.ShowDialog() == DialogResult.OK)
 			{
-				Debug.Assert(remoteSolutionsForm.SelectedSolutionId.HasValue);
+				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Local || solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Remote);
 
 				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
-				await getCurrentPostprocessView().LoadRemoteSolutionAsync(remoteSolutionsForm.SelectedSolutionId.Value);
+				var postprocessView = getCurrentPostprocessView();
+
+				switch (solutionBrowserForm.SolutionLocation)
+				{
+					case SolutionBrowserForm.SolutionLocationType.Local:
+						Debug.Assert(solutionBrowserForm.LocalSolutionFileName != null);
+						await postprocessView.LoadLocalSolutionAsync(solutionBrowserForm.LocalSolutionFileName);
+						break;
+					case SolutionBrowserForm.SolutionLocationType.Remote:
+						Debug.Assert(solutionBrowserForm.RemoteSolutionId.HasValue);
+						await postprocessView.LoadRemoteSolutionAsync(solutionBrowserForm.RemoteSolutionId.Value);
+						break;
+				}
 			}
 		}
 

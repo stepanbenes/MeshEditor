@@ -67,6 +67,13 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
 
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
+		{
+			RestRequest request = createGetAllRequest();
+			var response = await executeRequestAsync(request, cancellationToken);
+			return parseResponse<IEnumerable<SolutionBase>>(response);
+		}
+
 		public Solution Get(object solutionLocator)
 		{
 			if (!(solutionLocator is int))
@@ -87,6 +94,16 @@ namespace MeshEditor.SolutionManager.IO
 			RestRequest request = createGetRequest(solutionId);
 			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<Solution>(response);
+		}
+
+		public void Delete(object solutionLocator)
+		{
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+			var request = createDeleteRequest(solutionId);
+			executeRequest(request);
 		}
 
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
@@ -126,13 +143,6 @@ namespace MeshEditor.SolutionManager.IO
 
 			var response = executeRequest(request);
 			return parseResponse<Solution>(response);
-		}
-
-		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
-		{
-			RestRequest request = createGetAllRequest();
-			var response = await executeRequestAsync(request, cancellationToken);
-			return parseResponse<IEnumerable<SolutionBase>>(response);
 		}
 
 		#endregion
@@ -212,6 +222,16 @@ namespace MeshEditor.SolutionManager.IO
 		private static RestRequest createGetRequest(int solutionId)
 		{
 			var request = new RestRequest($"api/solution/{solutionId}", Method.GET);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
+			//request.RequestFormat = DataFormat.Json;
+			return request;
+		}
+
+		private static RestRequest createDeleteRequest(int solutionId)
+		{
+			var request = new RestRequest($"api/solution/{solutionId}", Method.DELETE);
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");

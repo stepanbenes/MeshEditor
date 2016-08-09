@@ -11,11 +11,14 @@ namespace MeshEditor.SolutionManager.IO
 	{
 		Solution CreateNew(object solutionLocator, IEnumerable<AnalysisResult> analysisResults, string projectName = null);
 		IEnumerable<ISolutionInfo> GetAll();
+		Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken);
+
 		Solution Get(object solutionLocator);
+		Task<Solution> GetAsync(object solutionLocator, CancellationToken cancellationToken);
+
+		void Delete(object solutionLocator);
+
 		Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
 		Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete);
-
-		Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken);
-		Task<Solution> GetAsync(object solutionLocator, CancellationToken cancellationToken);
 	}
 }

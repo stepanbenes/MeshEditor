@@ -88,23 +88,16 @@ namespace MeshEditor.SolutionManager
 			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 		}
 
-		//public static IEnumerable<string> EnumerateAllLocalSolutionFiles(string solutionDirectory, ILogger logger = null)
-		//{
-		//	var solutionController = new LocalSolutionController(solutionDirectory);
-		//	return solutionController.GetAllSolutionFiles();
-		//}
-
-		//public static ISolutionInfo GetLocalSolutionInfo(string solutionFileName, ILogger logger = null)
-		//{
-		//	string solutionDirectory = Path.GetDirectoryName(solutionFileName);
-		//	var solutionController = new LocalSolutionController(solutionDirectory);
-		//	return solutionController.LoadSolutionFromFileName(Path.GetFileName(solutionFileName));
-		//}
-
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, ILogger logger = null)
 		{
 			var solutionController = new LocalSolutionController(solutionDirectory);
 			return solutionController.GetAll();
+		}
+
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, CancellationToken cancellationToken, ILogger logger = null)
+		{
+			var solutionController = new LocalSolutionController(solutionDirectory);
+			return await solutionController.GetAllAsync(cancellationToken);
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
@@ -267,6 +260,11 @@ namespace MeshEditor.SolutionManager
 					solution = solutionController.DeleteLayer(solution, layer);
 					layerGenerator.DeleteAllLayerFiles(layer.Id);
 				}
+			}
+			if (deleteAll)
+			{
+				solutionController.Delete(solutionLocator); // delete solution itself
+				solution = null;
 			}
 		}
 

@@ -32,14 +32,17 @@ namespace MeshEditor.SolutionManager.IO
 		public Solution CreateNew(object solutionLocator /*ignored*/, IEnumerable<AnalysisResult> analysisResults, string projectName = null)
 		{
 			projectName = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileNameWithoutExtension(analysisResults.First().MeshRecordNames.First()) : projectName;
-			
+
 			string prefix = projectName.MakeAlphanumeric();
 			string suffix = SolutionFileSuffix + serializer.FileExtension;
 
 			// solve conflicts (existing solution files with same name)
-			var conflicts = (from fileMatch in Directory.EnumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
-							 let fileMatchRelativePath = Path.GetFileName(fileMatch)
-							 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray();
+			var conflicts = Directory.Exists(solutionDirectory) ?
+								(from fileMatch in Directory.EnumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
+								 let fileMatchRelativePath = Path.GetFileName(fileMatch)
+								 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray()
+								:
+								Array.Empty<string>();
 			int solutionId;
 			string recordName;
 			if (conflicts.Length > 0)
@@ -117,6 +120,29 @@ namespace MeshEditor.SolutionManager.IO
 				var solution = await serializer.DeserializeAsync<Solution>(stream, cancellationToken);
 				solution.Location = solutionFile;
 				return solution;
+			}
+		}
+
+		public void Delete(object solutionLocator)
+		{
+			if (!(solutionLocator is string))
+				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
+
+			string solutionFile = (string)solutionLocator;
+
+			localStorage.Delete(solutionFile);
+
+			string solutionFileDirectory = Path.GetDirectoryName(solutionFile);
+			if (!string.Equals(Path.GetFullPath(SolutionHub.GetLocalStorageDefaultDirectory()), Path.GetFullPath(solutionFileDirectory))) // directory is different from default solution directory
+			{
+				DirectoryInfo solutionFileDirectoryInfo = new DirectoryInfo(Path.GetDirectoryName(solutionFile));
+				if (Path.GetFileName(solutionFile).StartsWith(solutionFileDirectoryInfo.Name)) // directory has same name as solution file and therefore was probably created during creation of solution
+				{
+					if (!Directory.EnumerateFileSystemEntries(solutionFileDirectory).Any()) // if directory is not empty
+					{
+						Directory.Delete(solutionFileDirectory);
+					}
+				}
 			}
 		}
 
