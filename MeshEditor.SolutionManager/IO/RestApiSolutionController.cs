@@ -106,6 +106,16 @@ namespace MeshEditor.SolutionManager.IO
 			executeRequest(request);
 		}
 
+		public async Task DeleteAsync(object solutionLocator, CancellationToken cancellationToken)
+		{
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+			var request = createDeleteRequest(solutionId);
+			await executeRequestAsync(request, cancellationToken);
+		}
+
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
 			var request = new RestRequest($"api/solution/{solution.Id}/layer", Method.POST);
@@ -135,12 +145,15 @@ namespace MeshEditor.SolutionManager.IO
 
 		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
 		{
-			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-
+			RestRequest request = createDeleteLayerRequest(solution, layerToDelete);
 			var response = executeRequest(request);
+			return parseResponse<Solution>(response);
+		}
+
+		public async Task<Solution> DeleteLayerAsync(Solution solution, Solution.Layer layerToDelete, CancellationToken cancellationToken)
+		{
+			RestRequest request = createDeleteLayerRequest(solution, layerToDelete);
+			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<Solution>(response);
 		}
 
@@ -235,6 +248,15 @@ namespace MeshEditor.SolutionManager.IO
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
 			//request.RequestFormat = DataFormat.Json;
+			return request;
+		}
+
+		private static RestRequest createDeleteLayerRequest(Solution solution, Solution.Layer layerToDelete)
+		{
+			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
+
+			request.AddHeader("Accept", "application/json");
+			request.AddHeader("Content-Type", "application/json");
 			return request;
 		}
 

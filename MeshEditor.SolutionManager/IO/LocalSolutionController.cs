@@ -129,27 +129,16 @@ namespace MeshEditor.SolutionManager.IO
 				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
 
 			Solution solution = Get(solutionLocator);
-			foreach (var rootLayer in solution.Layers)
-			{
-				deleteAllLayerFilesOfLayerTree(rootLayer);
-			}
+			deleteSolution(solution, (string)solutionLocator);
+		}
 
-			string solutionFile = (string)solutionLocator;
+		public async Task DeleteAsync(object solutionLocator, CancellationToken cancellationToken)
+		{
+			if (!(solutionLocator is string))
+				throw new ArgumentException("Solution file is not specified", nameof(solutionLocator));
 
-			localStorage.Delete(solutionFile); // delete solution file itself
-
-			string solutionFileDirectory = Path.GetDirectoryName(solutionFile);
-			if (!string.Equals(Path.GetFullPath(SolutionHub.GetLocalStorageDefaultDirectory()), Path.GetFullPath(solutionFileDirectory))) // directory is different from default solution directory
-			{
-				DirectoryInfo solutionFileDirectoryInfo = new DirectoryInfo(Path.GetDirectoryName(solutionFile));
-				if (Path.GetFileName(solutionFile).StartsWith(solutionFileDirectoryInfo.Name)) // directory has same name as solution file and therefore was probably created during creation of solution
-				{
-					if (!Directory.EnumerateFileSystemEntries(solutionFileDirectory).Any()) // if directory is not empty
-					{
-						Directory.Delete(solutionFileDirectory);
-					}
-				}
-			}
+			Solution solution = await GetAsync(solutionLocator, cancellationToken);
+			deleteSolution(solution, (string)solutionLocator);
 		}
 
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
@@ -178,7 +167,44 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
+		public async Task<Solution> DeleteLayerAsync(Solution solution, Solution.Layer layerToDelete, CancellationToken cancellationToken)
+		{
+			deleteAllLayerFilesOfLayerTree(layerToDelete);
+
+			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
+			string solutionFile = solution.Location;
+			using (Stream stream = localStorage.Save(solutionFile))
+			{
+				await serializer.SerializeAsync(updatedSolution, stream);
+			}
+			updatedSolution.Location = solutionFile;
+			return updatedSolution;
+		}
+
 		#region Private methods
+
+		private void deleteSolution(Solution solution, string solutionFile)
+		{
+			foreach (var rootLayer in solution.Layers)
+			{
+				deleteAllLayerFilesOfLayerTree(rootLayer);
+			}
+
+			localStorage.Delete(solutionFile); // delete solution file itself
+
+			string solutionFileDirectory = Path.GetDirectoryName(solutionFile);
+			if (!string.Equals(Path.GetFullPath(SolutionHub.GetLocalStorageDefaultDirectory()), Path.GetFullPath(solutionFileDirectory))) // directory is different from default solution directory
+			{
+				DirectoryInfo solutionFileDirectoryInfo = new DirectoryInfo(Path.GetDirectoryName(solutionFile));
+				if (Path.GetFileName(solutionFile).StartsWith(solutionFileDirectoryInfo.Name)) // directory has same name as solution file and therefore was probably created during creation of solution
+				{
+					if (!Directory.EnumerateFileSystemEntries(solutionFileDirectory).Any()) // if directory is not empty
+					{
+						Directory.Delete(solutionFileDirectory);
+					}
+				}
+			}
+		}
 
 		private async Task<ISolutionInfo> loadSolutionInfoAsync(string solutionFile, CancellationToken cancellationToken)
 		{

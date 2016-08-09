@@ -262,6 +262,21 @@ namespace MeshEditor.SolutionManager
 			}
 		}
 
+		public async Task DeleteAsync(CancellationToken cancellationToken, string layerIdOrName, bool deleteAll = false)
+		{
+			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
+
+			if (deleteAll)
+			{
+				await solutionController.DeleteAsync(solutionLocator, cancellationToken); // delete solution itself
+			}
+			else
+			{
+				Solution solution = await solutionController.GetAsync(solutionLocator, cancellationToken);
+				solution = await solutionController.DeleteLayerAsync(solution, findLayer(solution, layerIdOrName), cancellationToken);
+			}
+		}
+
 		#endregion
 
 		#region Private helper methods
