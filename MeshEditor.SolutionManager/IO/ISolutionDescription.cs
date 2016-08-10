@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	public interface ILayerInfo
+	public interface ISolutionDescription : ISolutionInfo
 	{
-		Guid Id { get; }
-		string Name { get; }
-		string FilterType { get; }
-		IReadOnlyList<ILayerInfo> Children { get; }
+		IReadOnlyList<ILayerInfo> Layers { get; }
 	}
 }

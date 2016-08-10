@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.DataVisualizer.Data
 {
 	public class LayerSelectionEventArgs : EventArgs
 	{
-		public Guid? LayerId { get; }
+		public ILayerInfo Layer { get; }
 
-		public LayerSelectionEventArgs(Guid? layerId)
+		public LayerSelectionEventArgs(ILayerInfo layer)
 		{
-			LayerId = layerId;
+			Layer = layer;
 		}
 	}
 }

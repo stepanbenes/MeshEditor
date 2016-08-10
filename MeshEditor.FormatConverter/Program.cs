@@ -162,7 +162,7 @@ namespace MeshEditor.FormatConverter
 
 		private int runListCommand(ListOptions options)
 		{
-			foreach (var layerInfo in solutionHub.EnumerateAllLayers())
+			foreach (var layerInfo in solutionHub.GetSolutionDescription().Layers)
 			{
 				printLayerInfo(layerInfo, depth: 1);
 			}

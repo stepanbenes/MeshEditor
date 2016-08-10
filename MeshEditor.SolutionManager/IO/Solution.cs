@@ -8,7 +8,7 @@ using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class Solution : SolutionInfo
+	class Solution : SolutionInfo, ISolutionDescription
 	{
 		public class Layer : ILayerInfo
 		{
@@ -19,7 +19,7 @@ namespace MeshEditor.SolutionManager.IO
 			public Layer[] Children { get; set; }
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
-			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
+			IReadOnlyList<ILayerInfo> ILayerInfo.Children => Children ?? Array.Empty<ILayerInfo>();
 
 			public override int GetHashCode()
 			{
@@ -36,6 +36,8 @@ namespace MeshEditor.SolutionManager.IO
 		}
 
 		public Layer[] Layers { get; set; }
+
+		IReadOnlyList<ILayerInfo> ISolutionDescription.Layers => Layers;
 
 		public static Solution CreateNewByAddingLayer(Solution solution, Layer layerToAdd, Guid? parentLayerId)
 		{

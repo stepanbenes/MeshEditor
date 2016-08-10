@@ -11,6 +11,7 @@ using MeshEditor.LayerManager.Data;
 using System.Threading;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Services;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -21,6 +22,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		Control contentPanel;
 		SolutionHub solutionHub;
+		ISolutionDescription solutionDescription;
 		MemoryLogger logger;
 		SceneFacade activeScene;
 		bool changingActiveScene;
@@ -111,7 +113,18 @@ namespace MeshEditor.DataVisualizer.UI
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					await updateLayerTreeAsync(operationToken);
+					Debug.Assert(solutionHub != null);
+					Debug.Assert(ActiveScene != null);
+					longOpNotifier.UpdateState(operationToken, "Loading solution");
+					solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationTokenSources[operationToken].Token);
+					var layers = solutionDescription.Layers;
+					layersTreeView.SetLayerTree(layers);
+
+					if (layers.Count > 0) // load first layer
+					{
+						await loadLayerAsync(layers[0], ActiveScene, operationToken);
+						layersTreeView.SetSelectedLayer(layers[0]);
+					}
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -126,22 +139,6 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private async Task updateLayerTreeAsync(LongOpNotifier.Token operationToken)
-		{
-			Debug.Assert(solutionHub != null);
-			Debug.Assert(ActiveScene != null);
-			longOpNotifier.UpdateState(operationToken, "Loading list of layers");
-			var layers = await solutionHub.EnumerateAllLayersAsync(cancellationTokenSources[operationToken].Token);
-			layersTreeView.SetLayerTree(layers);
-
-			if (layers.Any()) // load first layer
-			{
-				Guid layerId = layers.First().Id;
-				await loadLayerAsync(layerId, ActiveScene, operationToken);
-				layersTreeView.SetSelectedLayer(layerId);
-			}
-		}
-
 		private async Task updateDataSelectionInLeftPanelAsync()
 		{
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
@@ -153,7 +150,7 @@ namespace MeshEditor.DataVisualizer.UI
 					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 					try
 					{
-						var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.LayerId, cancellationTokenSources[operationToken].Token);
+						var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.Layer, cancellationTokenSources[operationToken].Token);
 						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 					}
 					catch (OperationCanceledException)
@@ -174,7 +171,7 @@ namespace MeshEditor.DataVisualizer.UI
 				try
 				{
 					changingActiveScene = true;
-					layersTreeView.SetSelectedLayer(layerDataVisualizer.LayerId);
+					layersTreeView.SetSelectedLayer(layerDataVisualizer.Layer);
 				}
 				finally
 				{
@@ -190,28 +187,28 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private async Task<SummaryFile> getSummaryFileForLayerAsync(Guid layerId, CancellationToken cancellationToken)
+		private async Task<SummaryFile> getSummaryFileForLayerAsync(ILayerInfo layer, CancellationToken cancellationToken)
 		{
 			SummaryFile summary;
-			if (!layerSummaryCache.TryGetValue(layerId, out summary))
+			if (!layerSummaryCache.TryGetValue(layer.Id, out summary))
 			{
-				summary = await solutionHub.LoadLayerSummaryAsync(layerId, cancellationToken);
-				layerSummaryCache[layerId] = summary;
+				summary = await solutionHub.LoadLayerSummaryAsync(layer.Id, cancellationToken);
+				layerSummaryCache[layer.Id] = summary;
 			}
 			return summary;
 		}
 
-		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, LongOpNotifier.Token operationToken)
+		private async Task loadLayerAsync(ILayerInfo layer, SceneFacade scene, LongOpNotifier.Token operationToken)
 		{
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
-			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
+			var summary = await getSummaryFileForLayerAsync(layer, cancellationToken);
 
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
-				var dataVisualizer = new LayerDataVisualizer(layerId);
+				var dataVisualizer = new LayerDataVisualizer(solutionDescription, layer);
 
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
 
@@ -261,7 +258,7 @@ namespace MeshEditor.DataVisualizer.UI
 			if (changingActiveScene)
 				return;
 
-			if (e.LayerId.HasValue)
+			if (e.Layer != null)
 			{
 				const string taskName = "Loading layer";
 				try
@@ -269,7 +266,7 @@ namespace MeshEditor.DataVisualizer.UI
 					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 					try
 					{
-						await loadLayerAsync(e.LayerId.Value, ActiveScene, operationToken);
+						await loadLayerAsync(e.Layer, ActiveScene, operationToken);
 					}
 					catch (OperationCanceledException)
 					{ }

@@ -143,15 +143,14 @@ namespace MeshEditor.SolutionManager
 
 		#region Commands (SolutionManager's public interface)
 
-		public IEnumerable<ILayerInfo> EnumerateAllLayers()
+		public ISolutionDescription GetSolutionDescription()
 		{
-			return solutionController.Get(solutionLocator).Layers;
+			return solutionController.Get(solutionLocator);
 		}
 
-		public async Task<IEnumerable<ILayerInfo>> EnumerateAllLayersAsync(CancellationToken cancellationToken)
+		public async Task<ISolutionDescription> GetSolutionDescriptionAsync(CancellationToken cancellationToken)
 		{
-			var solution = await solutionController.GetAsync(solutionLocator, cancellationToken);
-			return solution.Layers;
+			return await solutionController.GetAsync(solutionLocator, cancellationToken);
 		}
 
 		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)

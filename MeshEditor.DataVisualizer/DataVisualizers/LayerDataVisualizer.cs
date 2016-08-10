@@ -13,6 +13,7 @@ using MeshEditor.IO;
 using MeshEditor.DataVisualizer.IO;
 using System.Threading;
 using MeshEditor.CoreInterface;
+using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -20,22 +21,26 @@ namespace MeshEditor.DataVisualizer
 	{
 		#region Fields, constructor
 
+		ISolutionInfo solutionInfo;
 		Dictionary<double, ComponentDataDescription> data;
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
 
 		GeometryDescription currentGeometry;
 
-		public LayerDataVisualizer(Guid layerId)
+		public LayerDataVisualizer(ISolutionInfo solutionInfo, ILayerInfo layer)
 		{
-			LayerId = layerId;
+			Debug.Assert(solutionInfo != null);
+			Debug.Assert(layer != null);
+			this.solutionInfo = solutionInfo;
+			Layer = layer;
 		}
 
 		#endregion
 
 		#region Properties
 
-		public Guid LayerId { get; }
+		public ILayerInfo Layer { get; }
 
 		public DataSelection DataSelection => dataSelection;
 
@@ -66,9 +71,8 @@ namespace MeshEditor.DataVisualizer
 				}
 				else
 				{
-					Debug.Assert(solutionHub != null);
 					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
-					var componentList = await solutionHub.LoadDataAsync(LayerId, newDataSelection.DataIndex.Value, cancellationToken);
+					var componentList = await solutionHub.LoadDataAsync(Layer.Id, newDataSelection.DataIndex.Value, cancellationToken);
 					data = componentList.ToDictionary(d => d.TimeStep);
 				}
 			}
@@ -191,14 +195,14 @@ namespace MeshEditor.DataVisualizer
 		private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, Action<string, int> progressReport)
 		{
 			progressReport?.Invoke("Loading geometry", -1);
-			var geometry = await solutionHub.LoadGeometryAsync(LayerId, newDataSelection.MeshIndex, cancellationToken);
+			var geometry = await solutionHub.LoadGeometryAsync(Layer.Id, newDataSelection.MeshIndex, cancellationToken);
 			AttributeDescription elementPropertiesAttribute = null;
 			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
 			{
-				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
+				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(Layer.Id, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
 			}
-			
-			await scene.ReloadMeshAsync(new LayerMeshFileParser(this.LayerId.ToString(), geometry, elementPropertiesAttribute), cancellationToken, progressReport);
+			var meshFileParser = new LayerMeshFileParser($"{solutionInfo.ProjectName} - {Layer.Name}", geometry, elementPropertiesAttribute);
+			await scene.ReloadMeshAsync(meshFileParser, cancellationToken, progressReport);
 
 			currentGeometry = geometry;
 		}

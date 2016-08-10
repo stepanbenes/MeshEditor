@@ -1376,9 +1376,12 @@ namespace MeshEditor.WinUI
 
 		private void updateCaption()
 		{
-			this.Text = "Mesh Editor"; /**/
-			if (activeControl != null && activeControl.SceneFacade.MeshFilename != null)
-				this.Text += " - " + Path.GetFileName(activeControl.SceneFacade.MeshFilename);
+			string caption = "Mesh Editor"; /**/
+			if (activeControl != null && !string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
+			{
+				caption += " - " + Path.GetFileName(activeControl.SceneFacade.MeshFilename);
+			}
+			this.Text = caption;
 		}
 
 		private void updateStatus()

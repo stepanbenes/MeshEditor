@@ -27,14 +27,14 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public event EventHandler<LayerSelectionEventArgs> LayerSelectionChanged;
 
-		public void SetSelectedLayer(Guid? layerId)
+		public void SetSelectedLayer(ILayerInfo layer)
 		{
 			try
 			{
 				checkingTreeNodes = true;
 				checkAllNodes(treeViewLayers.Nodes, false);
 				TreeNode treeNode;
-				if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out treeNode))
+				if (layer != null && layerIdTreeNodeMap.TryGetValue(layer.Id, out treeNode))
 				{
 					treeNode.Checked = true;
 				}
@@ -76,7 +76,7 @@ namespace MeshEditor.DataVisualizer.UI
 				if (e.Node.Checked)
 				{
 					var layerInfo = (ILayerInfo)e.Node.Tag;
-					LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo.Id));
+					LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 				}
 				else
 				{
