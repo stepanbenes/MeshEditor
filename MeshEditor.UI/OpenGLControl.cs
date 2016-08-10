@@ -405,6 +405,7 @@ namespace MeshEditor.WinUI
 			sceneFacade.RefreshNeeded += sceneFacade_RefreshNeeded;
 			sceneFacade.SwapBuffersNeeded += sceneFacade_SwapBuffersNeeded;
 			sceneFacade.InvalidateNeeded += sceneFacade_InvalidateNeeded;
+			sceneFacade.MeshReloaded += sceneFacade_MeshReloaded;
 			//sceneFacade.ShowError += sceneFacade_ShowError;
 			sceneFacade.MeshNeedRefresh += sceneFacade_MeshNeedRefresh;
 			sceneFacade.ActionPerformed += sceneFacade_ActionPerformed;
@@ -419,6 +420,7 @@ namespace MeshEditor.WinUI
 			sceneFacade.RefreshNeeded -= sceneFacade_RefreshNeeded;
 			sceneFacade.SwapBuffersNeeded -= sceneFacade_SwapBuffersNeeded;
 			sceneFacade.InvalidateNeeded -= sceneFacade_InvalidateNeeded;
+			sceneFacade.MeshReloaded -= sceneFacade_MeshReloaded;
 			//sceneFacade.ShowError -= sceneFacade_ShowError;
 			sceneFacade.MeshNeedRefresh -= sceneFacade_MeshNeedRefresh;
 			sceneFacade.ActionPerformed -= sceneFacade_ActionPerformed;
@@ -429,37 +431,38 @@ namespace MeshEditor.WinUI
 
 		void sceneFacade_RenderModeChanged(object sender, EventArgs e)
 		{
-			if (RenderModeChanged != null)
-				RenderModeChanged(this, e);
+			RenderModeChanged?.Invoke(this, e);
 		}
 
 		void sceneFacade_ColorModeChanged(object sender, EventArgs e)
 		{
-			if (ColorModeChanged != null)
-				ColorModeChanged(this, e);
+			ColorModeChanged?.Invoke(this, e);
 		}
 
 		void sceneFacade_ActionPerformed(object sender, EventArgs e)
 		{
-			if (ActionPerformed != null)
-				ActionPerformed(this, e);
+			ActionPerformed?.Invoke(this, e);
 		}
 
 		void sceneFacade_MeshNeedRefresh(object sender, MeshNeedRefreshEventArgs ea)
 		{
-			if (MeshNeedRefresh != null)
-				MeshNeedRefresh(this, ea);
+			MeshNeedRefresh?.Invoke(this, ea);
 		}
 
 		private void sceneFacade_ScreenshotNeeded(object sender, ScreenshotNeededEventArgs e)
 		{
-			if (ScreenshotNeeded != null)
-				ScreenshotNeeded(this, e);
+			ScreenshotNeeded?.Invoke(this, e);
 		}
 
 		void sceneFacade_InvalidateNeeded(object sender, EventArgs e)
 		{
 			this.Invalidate();
+		}
+
+		private void sceneFacade_MeshReloaded(object sender, EventArgs e)
+		{
+			this.Invalidate();
+			IOActionDone?.Invoke(this, e);
 		}
 
 		void sceneFacade_SwapBuffersNeeded(object sender, EventArgs e)
@@ -612,8 +615,7 @@ namespace MeshEditor.WinUI
 
 			this.Cursor = temp;
 
-			if (IOActionDone != null)
-				IOActionDone(this, EventArgs.Empty);
+			IOActionDone?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void setSceneFacade(SceneFacade newSceneFacade)
@@ -721,8 +723,7 @@ namespace MeshEditor.WinUI
 				sceneFacade.PerformAction(AvailableAction.DeleteHiddenItems);
 			}
 
-			if (IOActionDone != null)
-				IOActionDone(this, EventArgs.Empty);
+			IOActionDone?.Invoke(this, EventArgs.Empty);
 		}
 
 		// ----------------------------------------------------------------------

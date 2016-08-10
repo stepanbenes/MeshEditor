@@ -17,10 +17,11 @@ namespace MeshEditor.DataVisualizer.IO
 		GeometryDescription geometry;
 		AttributeDescription elementPropertiesAttribute;
 
-		public LayerMeshFileParser(GeometryDescription geometry, AttributeDescription elementPropertiesAttribute = null)
+		public LayerMeshFileParser(string meshDescription, GeometryDescription geometry, AttributeDescription elementPropertiesAttribute = null)
 		{
 			Debug.Assert(geometry != null);
 			Debug.Assert(elementPropertiesAttribute == null || elementPropertiesAttribute.Location == DataLocationType.Cells);
+			this.Filename = meshDescription;
 			this.geometry = geometry;
 			this.elementPropertiesAttribute = elementPropertiesAttribute;
 		}

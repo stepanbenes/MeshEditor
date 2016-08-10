@@ -78,6 +78,7 @@ namespace MeshEditor.CoreInterface
 		public event EventHandler MakeCurrentNeeded;
 		public event EventHandler RefreshNeeded;
 		public event EventHandler InvalidateNeeded;
+		public event EventHandler MeshReloaded;
 		public event EventHandler SwapBuffersNeeded;
 		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler CutPlaneDefinitionPointsChanged;
@@ -1139,7 +1140,7 @@ namespace MeshEditor.CoreInterface
 				scene.SetDefaultCameraView();
 			}
 
-			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
+			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)

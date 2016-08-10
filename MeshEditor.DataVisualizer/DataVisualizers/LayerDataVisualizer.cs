@@ -198,7 +198,7 @@ namespace MeshEditor.DataVisualizer
 				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(LayerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
 			}
 			
-			await scene.ReloadMeshAsync(new LayerMeshFileParser(geometry, elementPropertiesAttribute), cancellationToken, progressReport);
+			await scene.ReloadMeshAsync(new LayerMeshFileParser(this.LayerId.ToString(), geometry, elementPropertiesAttribute), cancellationToken, progressReport);
 
 			currentGeometry = geometry;
 		}
