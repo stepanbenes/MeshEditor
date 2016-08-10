@@ -95,6 +95,8 @@ namespace MeshEditor.WinUI
 			{
 				if (layoutMode != value)
 				{
+					closeAllScenes();
+
 					Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
 					clearContentView();
 					layoutMode = value;
@@ -464,17 +466,13 @@ namespace MeshEditor.WinUI
 		{
 			if (fileNames.Length == 1 && fileNames[0].EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
 			{
-				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
 				var postprocessView = getCurrentPostprocessView();
 				await postprocessView.LoadLocalSolutionAsync(fileNames[0]);
 			}
 			else
 			{
-				if (LayoutMode == LayoutMode.Postprocessor)
-				{
-					closeSolution();
-				}
+				LayoutMode = LayoutMode.Preprocessor;
 				activeControl.LoadFiles(fileNames);
 			}
 		}
@@ -1624,7 +1622,6 @@ namespace MeshEditor.WinUI
 				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
 				Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
 
-				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
 				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
 			}
@@ -1638,7 +1635,6 @@ namespace MeshEditor.WinUI
 			{
 				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Local || solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Remote);
 
-				closeSolution();
 				LayoutMode = LayoutMode.Postprocessor;
 				var postprocessView = getCurrentPostprocessView();
 
@@ -1658,11 +1654,14 @@ namespace MeshEditor.WinUI
 
 		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			closeSolution();
+			LayoutMode = LayoutMode.Preprocessor;
 		}
 
-		private void closeSolution()
+		private void closeAllScenes()
 		{
+			if (activeControl == null)
+				return;
+
 			// close all open views, leave only one empty
 			while (true)
 			{
@@ -1671,8 +1670,6 @@ namespace MeshEditor.WinUI
 				if (!removeActiveWindow())
 					break;
 			}
-
-			LayoutMode = LayoutMode.Preprocessor;
 
 			updateCaption();
 			updateStatus();
