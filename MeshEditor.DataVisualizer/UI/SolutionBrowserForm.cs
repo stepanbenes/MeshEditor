@@ -17,25 +17,6 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class SolutionBrowserForm : Form
 	{
-		private struct SolutionThumbnail
-		{
-			public SolutionThumbnail(int solutionId, string projectName, string location)
-			{
-				SolutionId = solutionId;
-				ProjectName = projectName;
-				Location = location;
-			}
-
-			public int SolutionId { get; }
-			public string ProjectName { get; }
-			public string Location { get; }
-
-			public override string ToString()
-			{
-				return $"Solution id: {SolutionId}, Project name: {ProjectName}, Location: {Location}";
-			}
-		}
-
 		public enum SolutionLocationType
 		{
 			Undefined,
@@ -62,13 +43,13 @@ namespace MeshEditor.DataVisualizer.UI
 		private async Task initLocalSolutionListAsync(CancellationToken cancellationToken)
 		{
 			string taskName = "Loading local solutions";
+			localSolutionListView.Notification = taskName + "...";
+			
 			var logger = new MemoryLogger();
+			IEnumerable<ISolutionInfo> solutions = Enumerable.Empty<ISolutionInfo>();
 			try
 			{
-				listBoxLocalSolutions.Items.Clear();
-				listBoxLocalSolutions.Items.Add(taskName + "...");
-				IEnumerable<ISolutionInfo> solutions = await SolutionHub.EnumerateAllLocalSolutionsAsync(SolutionHub.GetLocalStorageDefaultDirectory(), cancellationToken, logger);
-				populateSolutionListBox(listBoxLocalSolutions, solutions);
+				solutions = await SolutionHub.EnumerateAllLocalSolutionsAsync(SolutionHub.GetLocalStorageDefaultDirectory(), cancellationToken, logger);
 			}
 			catch (OperationCanceledException)
 			{ }
@@ -76,18 +57,21 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
+			localSolutionListView.SetSolutions(solutions);
+			updateButtonStates();
 		}
 
 		private async Task initRemoteSolutionListAsync(CancellationToken cancellationToken)
 		{
 			string taskName = "Loading remote solutions";
+			
+			remoteSolutionListView.Notification = taskName + "...";
+
 			var logger = new MemoryLogger();
+			IEnumerable<ISolutionInfo> solutions = Enumerable.Empty<ISolutionInfo>();
 			try
 			{
-				listBoxRemoteSolutions.Items.Clear();
-				listBoxRemoteSolutions.Items.Add(taskName + "...");
-				IEnumerable<ISolutionInfo> solutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken, logger);
-				populateSolutionListBox(listBoxRemoteSolutions, solutions);
+				solutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken, logger);
 			}
 			catch (OperationCanceledException)
 			{ }
@@ -95,19 +79,7 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
-		}
-
-		private void populateSolutionListBox(ListBox listBoxSolutions, IEnumerable<ISolutionInfo> solutions)
-		{
-			listBoxSolutions.Items.Clear();
-			foreach (var solution in solutions.Select(s => new SolutionThumbnail(s.Id, s.ProjectName, s.Location)))
-			{
-				listBoxSolutions.Items.Add(solution);
-			}
-			if (listBoxSolutions.Items.Count == 0)
-			{
-				listBoxSolutions.Items.Add("No solutions found");
-			}
+			remoteSolutionListView.SetSolutions(solutions);
 			updateButtonStates();
 		}
 
@@ -115,38 +87,6 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			formClosedCancellationSource.Cancel();
 			base.OnClosed(e);
-		}
-
-		private void listBoxLocalSolutions_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			SolutionThumbnail? selectedSolution = listBoxLocalSolutions.SelectedItem as SolutionThumbnail?;
-			if (selectedSolution.HasValue)
-			{
-				LocalSolutionFileName = selectedSolution?.Location;
-				SolutionLocation = SolutionLocationType.Local;
-			}
-			else
-			{
-				LocalSolutionFileName = null;
-				SolutionLocation = SolutionLocationType.Undefined;
-			}
-			updateButtonStates();
-		}
-
-		private void listBoxRemoteSolutions_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			SolutionThumbnail? selectedSolution = listBoxRemoteSolutions.SelectedItem as SolutionThumbnail?;
-			if (selectedSolution.HasValue)
-			{
-				RemoteSolutionId = selectedSolution?.SolutionId;
-				SolutionLocation = SolutionLocationType.Remote;
-			}
-			else
-			{
-				RemoteSolutionId = null;
-				SolutionLocation = SolutionLocationType.Undefined;
-			}
-			updateButtonStates();
 		}
 
 		private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
@@ -161,14 +101,14 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void buttonOpenRemoteSolutionInBrowser_Click(object sender, EventArgs e)
 		{
-			SolutionThumbnail? selectedSolution = listBoxRemoteSolutions.SelectedItem as SolutionThumbnail?;
-			if (selectedSolution.HasValue)
+			ISolutionInfo selectedSolution = remoteSolutionListView.SelectedSolution;
+			if (selectedSolution != null)
 			{
 				try
 				{
-					var location = new Uri(selectedSolution.Value.Location);
+					var location = new Uri(selectedSolution.Location);
 					UriBuilder uriBuilder = new UriBuilder(location);
-					uriBuilder.Path = $"/postprocess/{selectedSolution.Value.SolutionId}";
+					uriBuilder.Path = $"/postprocess/{selectedSolution.Id}";
 					Process.Start(uriBuilder.Uri.ToString());
 				}
 				catch (Exception ex)
@@ -178,31 +118,15 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private void listBoxLocalSolutions_DoubleClick(object sender, EventArgs e)
-		{
-			if (listBoxLocalSolutions.SelectedItem is SolutionThumbnail)
-			{
-				DialogResult = DialogResult.OK; // close dialog
-			}
-		}
-
-		private void listBoxRemoteSolutions_DoubleClick(object sender, EventArgs e)
-		{
-			if (listBoxRemoteSolutions.SelectedItem is SolutionThumbnail)
-			{
-				DialogResult = DialogResult.OK; // close dialog
-			}
-		}
-
 		private void updateButtonStates()
 		{
 			if (tabControl.SelectedTab == tabPageLocalSolutions)
 			{
-				buttonOk.Enabled = buttonDeleteLocalSolution.Enabled = (listBoxLocalSolutions.SelectedItem is SolutionThumbnail);
+				buttonOk.Enabled = buttonDeleteLocalSolution.Enabled = localSolutionListView.Enabled && localSolutionListView.SelectedSolution != null;
 			}
 			else if (tabControl.SelectedTab == tabPageRemoteSolutions)
 			{
-				buttonOk.Enabled = buttonDeleteRemoteSolution.Enabled = buttonRemoteSolutionOpenInBrowser.Enabled = (listBoxRemoteSolutions.SelectedItem is SolutionThumbnail);
+				buttonOk.Enabled = buttonDeleteRemoteSolution.Enabled = buttonRemoteSolutionOpenInBrowser.Enabled = remoteSolutionListView.Enabled && remoteSolutionListView.SelectedSolution != null;
 			}
 			else
 			{
@@ -212,21 +136,20 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async void buttonDeleteLocalSolution_Click(object sender, EventArgs e)
 		{
-			SolutionThumbnail? selectedSolution = listBoxLocalSolutions.SelectedItem as SolutionThumbnail?;
-			Debug.Assert(selectedSolution.HasValue);
-			if (selectedSolution.HasValue)
+			ISolutionInfo selectedSolution = localSolutionListView.SelectedSolution;
+			Debug.Assert(selectedSolution != null);
+			if (selectedSolution != null)
 			{
 				string buttonText = buttonDeleteLocalSolution.Text;
 				buttonDeleteLocalSolution.Enabled = false;
 				buttonDeleteLocalSolution.Text = "Deleting...";
-				listBoxLocalSolutions.SelectedItem = null;
-				listBoxLocalSolutions.Enabled = false;
+				localSolutionListView.Enabled = false;
 				try
 				{
 					var logger = new MemoryLogger();
 					try
 					{
-						var solutionHub = SolutionHub.CreateLocal(selectedSolution.Value.Location, logger);
+						var solutionHub = SolutionHub.CreateLocal(selectedSolution.Location, logger);
 						await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
 					}
 					catch (Exception ex)
@@ -239,7 +162,7 @@ namespace MeshEditor.DataVisualizer.UI
 				finally
 				{
 					buttonDeleteLocalSolution.Text = buttonText;
-					listBoxLocalSolutions.Enabled = true;
+					localSolutionListView.Enabled = true;
 					updateButtonStates();
 				}
 			}
@@ -247,21 +170,20 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async void buttonDeleteRemoteSolution_Click(object sender, EventArgs e)
 		{
-			SolutionThumbnail? selectedSolution = listBoxRemoteSolutions.SelectedItem as SolutionThumbnail?;
-			Debug.Assert(selectedSolution.HasValue);
-			if (selectedSolution.HasValue)
+			ISolutionInfo selectedSolution = remoteSolutionListView.SelectedSolution;
+			Debug.Assert(selectedSolution != null);
+			if (selectedSolution != null)
 			{
 				string buttonText = buttonDeleteRemoteSolution.Text;
 				buttonDeleteRemoteSolution.Enabled = false;
 				buttonDeleteRemoteSolution.Text = "Deleting...";
-				listBoxRemoteSolutions.SelectedItem = null;
-				listBoxRemoteSolutions.Enabled = false;
+				remoteSolutionListView.Enabled = false;
 				try
 				{
 					var logger = new MemoryLogger();
 					try
 					{
-						var solutionHub = SolutionHub.CreateRemote(selectedSolution.Value.SolutionId, logger);
+						var solutionHub = SolutionHub.CreateRemote(selectedSolution.Id, logger);
 						await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
 					}
 					catch (Exception ex)
@@ -274,7 +196,7 @@ namespace MeshEditor.DataVisualizer.UI
 				finally
 				{
 					buttonDeleteRemoteSolution.Text = buttonText;
-					listBoxRemoteSolutions.Enabled = true;
+					remoteSolutionListView.Enabled = true;
 					updateButtonStates();
 				}
 			}
@@ -291,6 +213,54 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				LocalSolutionFileName = dialog.FileName;
 				SolutionLocation = SolutionLocationType.Local;
+				DialogResult = DialogResult.OK; // close dialog
+			}
+		}
+
+		private void localSolutionListView_SelectedSolutionChanged(object sender, EventArgs e)
+		{
+			ISolutionInfo selectedSolution = localSolutionListView.SelectedSolution;
+			if (selectedSolution != null)
+			{
+				LocalSolutionFileName = selectedSolution.Location;
+				SolutionLocation = SolutionLocationType.Local;
+			}
+			else
+			{
+				LocalSolutionFileName = null;
+				SolutionLocation = SolutionLocationType.Undefined;
+			}
+			updateButtonStates();
+		}
+
+		private void remoteSolutionListView_SelectedSolutionChanged(object sender, EventArgs e)
+		{
+			ISolutionInfo selectedSolution = remoteSolutionListView.SelectedSolution;
+			if (selectedSolution != null)
+			{
+				RemoteSolutionId = selectedSolution.Id;
+				SolutionLocation = SolutionLocationType.Remote;
+			}
+			else
+			{
+				RemoteSolutionId = null;
+				SolutionLocation = SolutionLocationType.Undefined;
+			}
+			updateButtonStates();
+		}
+
+		private void localSolutionListView_SolutionListDoubleClick(object sender, EventArgs e)
+		{
+			if (localSolutionListView.SelectedSolution != null)
+			{
+				DialogResult = DialogResult.OK; // close dialog
+			}
+		}
+
+		private void remoteSolutionListView_SolutionListDoubleClick(object sender, EventArgs e)
+		{
+			if (remoteSolutionListView.SelectedSolution != null)
+			{
 				DialogResult = DialogResult.OK; // close dialog
 			}
 		}

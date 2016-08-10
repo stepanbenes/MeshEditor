@@ -144,6 +144,12 @@
     <Compile Include="UI\SolutionBrowserForm.Designer.cs">
       <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\SolutionListView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\SolutionListView.Designer.cs">
+      <DependentUpon>SolutionListView.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\VisualizerSettingsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -178,6 +184,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\SolutionBrowserForm.resx">
       <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\SolutionListView.resx">
+      <DependentUpon>SolutionListView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\VisualizerSettingsControl.resx">
       <DependentUpon>VisualizerSettingsControl.cs</DependentUpon>
