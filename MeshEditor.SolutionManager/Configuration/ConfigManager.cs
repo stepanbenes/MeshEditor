@@ -10,21 +10,30 @@ using MeshEditor.LayerManager.Serialization;
 
 namespace MeshEditor.SolutionManager.Configuration
 {
-	class ConfigLoader
+	class ConfigManager
 	{
 		string defaultConfigFileDirectory;
 
-		public ConfigLoader(string defaultConfigFileDirectory = null)
+		public ConfigManager(string defaultConfigFileDirectory = null)
 		{
 			this.defaultConfigFileDirectory = defaultConfigFileDirectory;
 		}
 
 		public Config ReadConfiguration(string configFile = null)
 		{
-			using (var stream = getConfigFileStream(configFile))
+			using (var stream = getConfigFileStreamForRead(configFile))
 			{
 				ISerializationService serializer = new JsonSerializationService();
 				return serializer.Deserialize<Config>(stream);
+			}
+		}
+
+		public void WriteConfiguration(Config config, string configFile = null)
+		{
+			using (var stream = getConfigFileStreamForWrite(configFile))
+			{
+				ISerializationService serializer = new JsonSerializationService();
+				serializer.Serialize(config, stream);
 			}
 		}
 
@@ -32,7 +41,7 @@ namespace MeshEditor.SolutionManager.Configuration
 		{
 			try
 			{
-				using (var stream = getConfigFileStream(configFile))
+				using (var stream = getConfigFileStreamForRead(configFile))
 				{
 					ISerializationService serializer = new JsonSerializationService();
 					result = serializer.Deserialize<Config>(stream);
@@ -56,7 +65,19 @@ namespace MeshEditor.SolutionManager.Configuration
 			}; 
 		}
 
-		private Stream getConfigFileStream(string configFile)
+		private Stream getConfigFileStreamForRead(string configFile)
+		{
+			string configFileAbsolutePath = buildConfigFileAbsolutePath(configFile);
+			return new FileStream(configFileAbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+		}
+
+		private Stream getConfigFileStreamForWrite(string configFile)
+		{
+			string configFileAbsolutePath = buildConfigFileAbsolutePath(configFile);
+			return new FileStream(configFileAbsolutePath, FileMode.Create, FileAccess.Write, FileShare.None);
+		}
+
+		private string buildConfigFileAbsolutePath(string configFile)
 		{
 			string configFileAbsolutePath;
 			if (configFile == null)
@@ -67,8 +88,7 @@ namespace MeshEditor.SolutionManager.Configuration
 			{
 				configFileAbsolutePath = (Path.IsPathRooted(configFile)) ? configFile : Path.Combine(defaultConfigFileDirectory ?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFile);
 			}
-
-			return new FileStream(configFileAbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+			return configFileAbsolutePath;
 		}
 	}
 }

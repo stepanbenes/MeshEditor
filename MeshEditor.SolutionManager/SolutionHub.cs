@@ -27,14 +27,26 @@ namespace MeshEditor.SolutionManager
 
 		static SolutionHub()
 		{
-			var configLoader = new ConfigLoader();
-			if (!configLoader.TryReadConfiguration(out config))
-				config = configLoader.GetDefaultConfiguration();
+			var configManager = new ConfigManager();
+			if (!configManager.TryReadConfiguration(out config))
+				config = configManager.GetDefaultConfiguration();
 		}
 
 		#endregion
 
 		#region Public static methods
+
+		public static string GetLocalStorageDefaultDirectory()
+		{
+			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+		}
+
+		public static void SetLocalStorageDefaultDirectory(string directoryPath)
+		{
+			config.LocalStorage.Directory = directoryPath;
+			var configManager = new ConfigManager();
+			configManager.WriteConfiguration(config);
+		}
 
 		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)
 		{
@@ -81,11 +93,6 @@ namespace MeshEditor.SolutionManager
 				layerDestinationStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
 				logger: logger
 			);
-		}
-
-		public static string GetLocalStorageDefaultDirectory()
-		{
-			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, ILogger logger = null)

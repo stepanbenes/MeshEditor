@@ -93,7 +93,7 @@
   <ItemGroup>
     <Compile Include="AzureStorage\AzureBlobStorageService.cs" />
     <Compile Include="Configuration\Config.cs" />
-    <Compile Include="Configuration\ConfigLoader.cs" />
+    <Compile Include="Configuration\ConfigManager.cs" />
     <Compile Include="Configuration\ConfigParameters.cs" />
     <Compile Include="IO\ILayerInfo.cs" />
     <Compile Include="IO\SolutionInfo.cs" />

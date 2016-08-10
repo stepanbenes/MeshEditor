@@ -45,7 +45,7 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			string taskName = "Loading local solutions";
 			localSolutionListView.Notification = taskName + "...";
-			
+
 			var logger = new MemoryLogger();
 			IEnumerable<ISolutionInfo> solutions = Enumerable.Empty<ISolutionInfo>();
 			try
@@ -65,7 +65,7 @@ namespace MeshEditor.DataVisualizer.UI
 		private async Task initRemoteSolutionListAsync(CancellationToken cancellationToken)
 		{
 			string taskName = "Loading remote solutions";
-			
+
 			remoteSolutionListView.Notification = taskName + "...";
 
 			var logger = new MemoryLogger();
@@ -145,20 +145,15 @@ namespace MeshEditor.DataVisualizer.UI
 				buttonDeleteLocalSolution.Enabled = false;
 				buttonDeleteLocalSolution.Text = "Deleting...";
 				localSolutionListView.Enabled = false;
+				var logger = new MemoryLogger();
 				try
 				{
-					var logger = new MemoryLogger();
-					try
-					{
-						var solutionHub = SolutionHub.CreateLocal(selectedSolution.Location, logger);
-						await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
-					}
-					catch (Exception ex)
-					{
-						new ExceptionReportForm("Deleting local solution", ex, logger).ShowDialog();
-					}
-
-					await initLocalSolutionListAsync(formClosedCancellationSource.Token);
+					var solutionHub = SolutionHub.CreateLocal(selectedSolution.Location, logger);
+					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
+				}
+				catch (Exception ex)
+				{
+					new ExceptionReportForm("Deleting local solution", ex, logger).ShowDialog();
 				}
 				finally
 				{
@@ -166,6 +161,8 @@ namespace MeshEditor.DataVisualizer.UI
 					localSolutionListView.Enabled = true;
 					updateButtonStates();
 				}
+
+				await initLocalSolutionListAsync(formClosedCancellationSource.Token);
 			}
 		}
 
@@ -179,20 +176,15 @@ namespace MeshEditor.DataVisualizer.UI
 				buttonDeleteRemoteSolution.Enabled = false;
 				buttonDeleteRemoteSolution.Text = "Deleting...";
 				remoteSolutionListView.Enabled = false;
+				var logger = new MemoryLogger();
 				try
 				{
-					var logger = new MemoryLogger();
-					try
-					{
-						var solutionHub = SolutionHub.CreateRemote(selectedSolution.Id, logger);
-						await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
-					}
-					catch (Exception ex)
-					{
-						new ExceptionReportForm("Deleting remote solution", ex, logger).ShowDialog();
-					}
-
-					await initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+					var solutionHub = SolutionHub.CreateRemote(selectedSolution.Id, logger);
+					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
+				}
+				catch (Exception ex)
+				{
+					new ExceptionReportForm("Deleting remote solution", ex, logger).ShowDialog();
 				}
 				finally
 				{
@@ -200,21 +192,8 @@ namespace MeshEditor.DataVisualizer.UI
 					remoteSolutionListView.Enabled = true;
 					updateButtonStates();
 				}
-			}
-		}
 
-		private void buttonBrowseLocalSolutions_Click(object sender, EventArgs e)
-		{
-			OpenFileDialog dialog = new OpenFileDialog();
-			dialog.Filter = $"Solution files (*{SceneFacade.SolutionFileExtension})|*{SceneFacade.SolutionFileExtension}|All files (*.*)|*.*";
-			dialog.FilterIndex = 0;
-			dialog.AutoUpgradeEnabled = true;
-			//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
-			if (dialog.ShowDialog() == DialogResult.OK)
-			{
-				LocalSolutionFileName = dialog.FileName;
-				SolutionLocation = SolutionLocationType.Local;
-				DialogResult = DialogResult.OK; // close dialog
+				await initRemoteSolutionListAsync(formClosedCancellationSource.Token);
 			}
 		}
 
@@ -263,6 +242,32 @@ namespace MeshEditor.DataVisualizer.UI
 			if (remoteSolutionListView.SelectedSolution != null)
 			{
 				DialogResult = DialogResult.OK; // close dialog
+			}
+		}
+
+		//private void buttonBrowseLocalSolutions_Click(object sender, EventArgs e)
+		//{
+		//	OpenFileDialog dialog = new OpenFileDialog();
+		//	dialog.Filter = $"Solution files (*{SceneFacade.SolutionFileExtension})|*{SceneFacade.SolutionFileExtension}|All files (*.*)|*.*";
+		//	dialog.FilterIndex = 0;
+		//	dialog.AutoUpgradeEnabled = true;
+		//	//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
+		//	if (dialog.ShowDialog() == DialogResult.OK)
+		//	{
+		//		LocalSolutionFileName = dialog.FileName;
+		//		SolutionLocation = SolutionLocationType.Local;
+		//		DialogResult = DialogResult.OK; // close dialog
+		//	}
+		//}
+
+		private async void buttonChangeDefaultSolutionDirectory_Click(object sender, EventArgs e)
+		{
+			FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+			folderBrowserDialog.SelectedPath = SolutionHub.GetLocalStorageDefaultDirectory().Replace('/', '\\');
+			if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+			{
+				SolutionHub.SetLocalStorageDefaultDirectory(folderBrowserDialog.SelectedPath);
+				await initLocalSolutionListAsync(formClosedCancellationSource.Token);
 			}
 		}
 	}
