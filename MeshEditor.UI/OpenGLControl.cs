@@ -737,6 +737,11 @@ namespace MeshEditor.WinUI
 			setSceneFacade(SceneFacade.GetEmptyScene());
 		}
 
+		public void SetMultiScene()
+		{
+			setSceneFacade(SceneFacade.GetEmptyMultiScene());
+		}
+
 		public static void ShowInternalStateInfo()
 		{
 			float megaBytes = ((float)MemoryMeter.GetCurrentMemoryConsumption()) / 1048576f;

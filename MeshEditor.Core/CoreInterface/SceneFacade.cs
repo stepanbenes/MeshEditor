@@ -91,7 +91,7 @@ namespace MeshEditor.CoreInterface
 
 		#region Private Fields
 
-		private Scene scene;
+		private IScene scene;
 
 		private Point prevMouseLocation;
 		private Point mouseDownLocation;
@@ -124,19 +124,10 @@ namespace MeshEditor.CoreInterface
 
 		#region Private Constructors
 
-		private SceneFacade()
-			: this(null)
-		{ }
-
-		/// <summary>
-		/// Parameterless constructor, creates own object Scene
-		/// </summary>
-		private SceneFacade(SceneFacade sceneToCopy)
+		private SceneFacade(IScene scene)
 		{
-			if (sceneToCopy != null)
-				this.scene = sceneToCopy.scene.Copy();
-			else
-				this.scene = new Scene();
+			Debug.Assert(scene != null);
+			this.scene = scene;
 
 			this.controlDown = this.shiftDown = false;
 			this.clickCount = 0;
@@ -220,7 +211,7 @@ namespace MeshEditor.CoreInterface
 
 		public int CutPlaneDefinitionPointsCount
 		{
-			get { return scene.CurPlaneDefinitionNodes.Count; }
+			get { return scene.CutPlaneDefinitionNodes.Count; }
 		}
 
 		public List<CutPlane> CutPlanes
@@ -265,12 +256,17 @@ namespace MeshEditor.CoreInterface
 
 		public static SceneFacade GetEmptyScene()
 		{
-			return new SceneFacade();
+			return new SceneFacade(new Scene());
+		}
+
+		public static SceneFacade GetEmptyMultiScene()
+		{
+			return new SceneFacade(new MultiScene());
 		}
 
 		public static SceneFacade GetCopyOf(SceneFacade sceneToCopy)
 		{
-			return new SceneFacade(sceneToCopy);
+			return new SceneFacade(sceneToCopy.scene.Copy());
 		}
 
 		#endregion

@@ -76,7 +76,7 @@ namespace MeshEditor.WinUI
 			// load window state settings
 			loadAppSettings();
 
-			LayoutMode = LayoutMode.Preprocessor;
+			setPreprocessorLayoutMode();
 
 			initializeMainOpenGlControl(centralPanel.Controls.Cast<ContentViewControl>().Single().Content);
 
@@ -88,45 +88,9 @@ namespace MeshEditor.WinUI
 
 		#region Properties
 
-		public LayoutMode LayoutMode
-		{
-			get { return layoutMode; }
-			set
-			{
-				if (layoutMode != value)
-				{
-					closeAllScenes();
+		public LayoutMode LayoutMode => layoutMode;
 
-					Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
-					clearContentView();
-					layoutMode = value;
-					switch (layoutMode)
-					{
-						case LayoutMode.Preprocessor:
-							{
-								var preprocessView = new PreprocessViewControl { Content = content, Dock = DockStyle.Fill };
-								centralPanel.Controls.Add(preprocessView);
-							}
-							break;
-						case LayoutMode.Postprocessor:
-							{
-								var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = content, Dock = DockStyle.Fill };
-								centralPanel.Controls.Add(postprocessView);
-								postprocessView.SplitterDistance = 200;
-								postprocessView.ActiveScene = activeControl.SceneFacade;
-							}
-							break;
-						default:
-							throw new NotSupportedException();
-					}
-				}
-			}
-		}
-
-		public LongOpNotifier LongOpNotifier
-		{
-			get { return longOpNotifier; }
-		}
+		public LongOpNotifier LongOpNotifier => longOpNotifier;
 
 		#endregion
 
@@ -466,13 +430,13 @@ namespace MeshEditor.WinUI
 		{
 			if (fileNames.Length == 1 && fileNames[0].EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
 			{
-				LayoutMode = LayoutMode.Postprocessor;
+				setPostprocessorLayoutMode();
 				var postprocessView = getCurrentPostprocessView();
 				await postprocessView.LoadLocalSolutionAsync(fileNames[0]);
 			}
 			else
 			{
-				LayoutMode = LayoutMode.Preprocessor;
+				setPreprocessorLayoutMode();
 				activeControl.LoadFiles(fileNames);
 			}
 		}
@@ -1622,7 +1586,7 @@ namespace MeshEditor.WinUI
 				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
 				Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
 
-				LayoutMode = LayoutMode.Postprocessor;
+				setPostprocessorLayoutMode();
 				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
 			}
 		}
@@ -1635,7 +1599,7 @@ namespace MeshEditor.WinUI
 			{
 				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Local || solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Remote);
 
-				LayoutMode = LayoutMode.Postprocessor;
+				setPostprocessorLayoutMode();
 				var postprocessView = getCurrentPostprocessView();
 
 				switch (solutionBrowserForm.SolutionLocation)
@@ -1654,7 +1618,7 @@ namespace MeshEditor.WinUI
 
 		private void closeSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			LayoutMode = LayoutMode.Preprocessor;
+			setPreprocessorLayoutMode();
 		}
 
 		private void closeAllScenes()
@@ -1675,6 +1639,31 @@ namespace MeshEditor.WinUI
 			updateStatus();
 			updateColorModeButtons();
 			updateRenderModeButtons();
+		}
+
+		private void setPreprocessorLayoutMode()
+		{
+			if (LayoutMode == LayoutMode.Postprocessor)
+				closeAllScenes();
+			Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
+			clearContentView();
+			layoutMode = LayoutMode.Preprocessor;
+			var preprocessView = new PreprocessViewControl { Content = content, Dock = DockStyle.Fill };
+			centralPanel.Controls.Add(preprocessView);
+		}
+
+		private void setPostprocessorLayoutMode()
+		{
+			closeAllScenes();
+			Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
+			clearContentView();
+			layoutMode = LayoutMode.Postprocessor;
+			activeControl.SetMultiScene();
+			var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = content, Dock = DockStyle.Fill };
+			centralPanel.Controls.Add(postprocessView);
+			postprocessView.SplitterDistance = 200;
+			postprocessView.ActiveScene = activeControl.SceneFacade;
+
 		}
 
 		#endregion

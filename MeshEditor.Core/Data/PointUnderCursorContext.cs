@@ -44,7 +44,7 @@ namespace MeshEditor.Data
 
 		#region Public methods
 
-		public void Compute(Scene scene, Point pointLocation, bool eliminateBackgroundHit)
+		public void Compute(IScene scene, Point pointLocation, bool eliminateBackgroundHit)
 		{
 			Vector3 meshCenter = Vector3.Zero;
 			float meshRadius = Scene.RADIUS_OF_NORMALIZED_MESH;

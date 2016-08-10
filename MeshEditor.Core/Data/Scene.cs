@@ -19,7 +19,7 @@ namespace MeshEditor.Data
 	/// scena reprezentuje pohled na sit konecnych prvku. obsahuje odkaz na objekt typu Mesh.
 	/// jedna sit muze byt sdilena z vice objektu typu Scene.
 	/// </summary>
-	public class Scene : IDisposable
+	public class Scene : IScene, IDisposable
 	{
 
 		#region Instance fields & constructor
@@ -49,6 +49,7 @@ namespace MeshEditor.Data
 		CutInfo lastUsedCutInfo;
 
 		private Element3D tempElement3DAddedToSurfaceRepresentation;
+		private Node[] tempNodesAddedToSurfaceRepresentation;
 
 		public Scene()
 		{
@@ -84,7 +85,14 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Static fields & constructor
+		#region Static members
+
+		/// <summary>
+		/// delegat odkazujici na funkci, ktera vezme hranu a vrati mnozinu s ni sousedicich hran
+		/// </summary>
+		private delegate IEnumerable<WingedEdge> NeighborSelection(WingedEdge edge);
+
+		// -------------------------------------------
 
 		public static readonly double FOVY_PARAM;
 		public static readonly double Z_NEAR_PARAM;
@@ -219,6 +227,42 @@ namespace MeshEditor.Data
 			MeshShadingModel = ShadingModel.Smooth;
 		}
 
+		public static void ExtractMatrices(out int[] viewport, out double[] modelview, out double[] projection)
+		{
+			viewport = new int[4];
+			modelview = new double[16]; // mptm Model matrix
+			projection = new double[16];    // ptm Projection matrix
+
+			GL.GetInteger(GetPName.Viewport, viewport);
+			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
+			GL.GetDouble(GetPName.ProjectionMatrix, projection);
+		}
+
+		public static void ExtractViewport(out int[] viewport)
+		{
+			viewport = new int[4];
+			GL.GetInteger(GetPName.Viewport, viewport);
+		}
+
+		public static Vector3 ProjectWorldCoordToWindowCoords(Vector3 point)
+		{
+			int[] viewport;
+			double[] modelview;
+			double[] projection;
+			ExtractMatrices(out viewport, out modelview, out projection);
+
+			Vector3 result;
+			Utils.GluProject(point, modelview, projection, viewport, out result);
+			return result;
+		}
+
+		public static float GetPixelDepth(int x, int y, int[] viewport)
+		{
+			float[] depth = new float[1];
+			GL.ReadPixels(x - viewport[0], viewport[3] - y - viewport[1], 1, 1, PixelFormat.DepthComponent, PixelType.Float, depth);
+			return depth[0];
+		}
+
 		public static ShadingModel MeshShadingModel
 		{
 			get { return meshShadingModel; }
@@ -308,7 +352,7 @@ namespace MeshEditor.Data
 			get { return cutPlanes; }
 		}
 
-		public List<Node> CurPlaneDefinitionNodes
+		public List<Node> CutPlaneDefinitionNodes
 		{
 			get { return cutPlaneDefinitionNodes; }
 		}
@@ -356,7 +400,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Misc public methods
+		#region Misc - public methods
 
 		public void SetPropertyOfSelectedItems(Property property)
 		{
@@ -384,6 +428,118 @@ namespace MeshEditor.Data
 				}
 			}
 		}
+
+		public void AddPropertyToSelectedNodes(Property property)
+		{
+			if (mesh == null)
+				return;
+			setUnsavedChangesFlag();
+			// ----------------------------------------------------
+			mesh.Statistics.AddProperty(property, EntityType.Vertex);
+			foreach (ISelectable item in mesh.SelectedItems)
+			{
+				Node n = item as Node;
+				if (n != null)
+					n.Property = property;
+			}
+		}
+
+		public void RemovePropertyFromSelectedNodes(Property property)
+		{
+			if (mesh == null)
+				return;
+			setUnsavedChangesFlag();
+			// --------------------------------------------------------
+			foreach (ISelectable item in mesh.SelectedItems)
+			{
+				Node n = item as Node;
+				if (n != null)
+					n.RemoveVertexProperty(property);
+			}
+		}
+
+		public SortedDictionary<Property, bool> GetElementPropertiesSorted()
+		{
+			if (mesh == null)
+				return null;
+			SortedDictionary<Property, bool> allProperties = new SortedDictionary<Property, bool>();
+			foreach (Element e in mesh.Elements)
+			{
+				if (!mesh.HiddenElements.Contains(e))
+					allProperties[e.Property] = true;
+			}
+			foreach (Element e in mesh.HiddenElements)
+			{
+				if (!allProperties.ContainsKey(e.Property))
+					allProperties[e.Property] = false;
+			}
+			return allProperties;
+		}
+
+		public IScene Copy()
+		{
+			Scene copy = new Scene();
+			copy.camera = new Camera(this.camera);  // naklonuju kameru
+
+			copy.mesh = this.mesh;              // zkopiruju jen odkaz na mesh
+			if (this.mesh != null)
+				this.mesh.ReferenceCount++;
+
+			//if (this.mesh == null)
+			copy.renderMode = DefaultRenderMode;
+			//else
+			//	copy.renderMode = this.renderMode;
+			copy.drawAxesFlag = this.drawAxesFlag;
+			copy.drawAxisArrowsFlag = this.drawAxisArrowsFlag;
+			// cut planes kopirovat nebudu
+			return copy;
+		}
+
+		public void RecreateBuffers()
+		{
+			if (mesh != null)
+				mesh.RecreateBuffers();
+		}
+
+		public void SetDefaultCameraView()
+		{
+			if (mesh == null)
+			{
+				camera.SetView(CameraView.Iso);
+				return;
+			}
+
+			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
+			const float negligibleRelativeSize = 0.1f;
+
+			float smallestRelativeDimension = Math.Min(relativeDimensions.X, Math.Min(relativeDimensions.Y, relativeDimensions.Z));
+			if (smallestRelativeDimension < negligibleRelativeSize)
+			{
+				if (relativeDimensions.X < relativeDimensions.Y && relativeDimensions.X < relativeDimensions.Z) // X is smallest
+					camera.SetView(CameraView.Right);
+				else if (relativeDimensions.Y < relativeDimensions.X && relativeDimensions.Y < relativeDimensions.Z) // Y is smallest
+					camera.SetView(CameraView.Top);
+				else // Z is smallest
+					camera.SetView(CameraView.Front);
+			}
+			else
+				camera.SetView(CameraView.Iso);
+		}
+
+		public void Dispose()
+		{
+			if (this.mesh != null)
+			{
+				this.mesh.ReferenceCount--;
+				if (this.mesh.ReferenceCount <= 0)
+					this.mesh.Dispose();
+				this.mesh = null;
+			}
+		}
+
+		#endregion
+
+		#region Misc - private methods
 
 		private void collectAdjacentNodesProperties(ISelectable item, Property property, Dictionary<Node, HashSet<Property>> nodesEdgeProperties, Dictionary<Node, HashSet<Property>> nodesSurfaceProperties, Dictionary<Node, HashSet<Property>> nodesRegionProperties, out EntityType entityType)
 		{
@@ -512,148 +668,9 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void AddPropertyToSelectedNodes(Property property)
-		{
-			if (mesh == null)
-				return;
-			setUnsavedChangesFlag();
-			// ----------------------------------------------------
-			mesh.Statistics.AddProperty(property, EntityType.Vertex);
-			foreach (ISelectable item in mesh.SelectedItems)
-			{
-				Node n = item as Node;
-				if (n != null)
-					n.Property = property;
-			}
-		}
-
-		public void RemovePropertyFromSelectedNodes(Property property)
-		{
-			if (mesh == null)
-				return;
-			setUnsavedChangesFlag();
-			// --------------------------------------------------------
-			foreach (ISelectable item in mesh.SelectedItems)
-			{
-				Node n = item as Node;
-				if (n != null)
-					n.RemoveVertexProperty(property);
-			}
-		}
-
-		public SortedDictionary<Property, bool> GetElementPropertiesSorted()
-		{
-			if (mesh == null)
-				return null;
-			SortedDictionary<Property, bool> allProperties = new SortedDictionary<Property, bool>();
-			foreach (Element e in mesh.Elements)
-			{
-				if (!mesh.HiddenElements.Contains(e))
-					allProperties[e.Property] = true;
-			}
-			foreach (Element e in mesh.HiddenElements)
-			{
-				if (!allProperties.ContainsKey(e.Property))
-					allProperties[e.Property] = false;
-			}
-			return allProperties;
-		}
-
-		public Scene Copy()
-		{
-			Scene copy = new Scene();
-			copy.camera = new Camera(this.camera);  // naklonuju kameru
-
-			copy.mesh = this.mesh;              // zkopiruju jen odkaz na mesh
-			if (this.mesh != null)
-				this.mesh.ReferenceCount++;
-
-			//if (this.mesh == null)
-			copy.renderMode = DefaultRenderMode;
-			//else
-			//	copy.renderMode = this.renderMode;
-			copy.drawAxesFlag = this.drawAxesFlag;
-			copy.drawAxisArrowsFlag = this.drawAxisArrowsFlag;
-			// cut planes kopirovat nebudu
-			return copy;
-		}
-
-		public void RecreateBuffers()
-		{
-			if (mesh != null)
-				mesh.RecreateBuffers();
-		}
-
-		public static void ExtractMatrices(out int[] viewport, out double[] modelview, out double[] projection)
-		{
-			viewport = new int[4];
-			modelview = new double[16]; // mptm Model matrix
-			projection = new double[16];    // ptm Projection matrix
-
-			GL.GetInteger(GetPName.Viewport, viewport);
-			GL.GetDouble(GetPName.ModelviewMatrix, modelview);
-			GL.GetDouble(GetPName.ProjectionMatrix, projection);
-		}
-
-		public static void ExtractViewport(out int[] viewport)
-		{
-			viewport = new int[4];
-			GL.GetInteger(GetPName.Viewport, viewport);
-		}
-
-		public static Vector3 ProjectWorldCoordToWindowCoords(Vector3 point)
-		{
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			ExtractMatrices(out viewport, out modelview, out projection);
-
-			Vector3 result;
-			Utils.GluProject(point, modelview, projection, viewport, out result);
-			return result;
-		}
-
-		public void SetDefaultCameraView()
-		{
-			if (mesh == null)
-			{
-				camera.SetView(CameraView.Iso);
-				return;
-			}
-
-			Vector3 relativeDimensions = (mesh.UpperBound - mesh.LowerBound) / (mesh.Radius * 2f);
-			const float negligibleRelativeSize = 0.1f;
-
-			float smallestRelativeDimension = Math.Min(relativeDimensions.X, Math.Min(relativeDimensions.Y, relativeDimensions.Z));
-			if (smallestRelativeDimension < negligibleRelativeSize)
-			{
-				if (relativeDimensions.X < relativeDimensions.Y && relativeDimensions.X < relativeDimensions.Z) // X is smallest
-					camera.SetView(CameraView.Right);
-				else if (relativeDimensions.Y < relativeDimensions.X && relativeDimensions.Y < relativeDimensions.Z) // Y is smallest
-					camera.SetView(CameraView.Top);
-				else // Z is smallest
-					camera.SetView(CameraView.Front);
-			}
-			else
-				camera.SetView(CameraView.Iso);
-		}
-
-		public void Dispose()
-		{
-			if (this.mesh != null)
-			{
-				this.mesh.ReferenceCount--;
-				if (this.mesh.ReferenceCount <= 0)
-					this.mesh.Dispose();
-				this.mesh = null;
-			}
-		}
-
 		#endregion
 
-		#region Signal
-
-		private Node[] tempNodesAddedToSurfaceRepresentation;
+		#region Signal - private methods
 
 		private void setNodeSignal(int[] nodeSignalToSet)
 		{
@@ -776,7 +793,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Drawing
+		#region Drawing - public methods
 
 		public void Draw(bool optimizeForMoving, bool optimizeForSelecting)
 		{
@@ -803,6 +820,10 @@ namespace MeshEditor.Data
 			if (drawAxisArrowsFlag)
 				drawAxisArrows();
 		}
+
+		#endregion
+
+		#region Drawing  - private methods
 
 		private void drawPlaneDefinitionPoints()
 		{
@@ -979,9 +1000,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Selection
-
-		#region Public methods
+		#region Selection - public methods
 
 		public string GetSelectedItemsDescription()
 		{
@@ -1248,7 +1267,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region Private methods
+		#region Selection - private methods
 
 		private void unselectAllItems()
 		{
@@ -1607,11 +1626,6 @@ namespace MeshEditor.Data
 
 			return Utils.GetAngleInDegreesBetweenUnitVectors(firstUnitVector, -secondUnitVector); // invert second vector because the more open angle the better
 		}
-
-		/// <summary>
-		/// delegat odkazujici na funkci, ktera vezme hranu a vrati mnozinu s ni sousedicich hran
-		/// </summary>
-		private delegate IEnumerable<WingedEdge> NeighborSelection(WingedEdge edge);
 
 		private HashSet<WingedEdge> getHardBorderEdges(WingedEdge edgeHit, Element2D faceHit, SelectMode mode)
 		{
@@ -1989,13 +2003,6 @@ namespace MeshEditor.Data
 			return itemType;
 		}
 
-		public static float GetPixelDepth(int x, int y, int[] viewport)
-		{
-			float[] depth = new float[1];
-			GL.ReadPixels(x - viewport[0], viewport[3] - y - viewport[1], 1, 1, PixelFormat.DepthComponent, PixelType.Float, depth);
-			return depth[0];
-		}
-
 		private void updateColorBuffers(HashSet<ISelectable> oldSelection, HashSet<ISelectable> newSelection)
 		{
 			int changedFacesCount = 0;
@@ -2320,9 +2327,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#endregion
-
-		#region Cutting
+		#region Cutting - public methods
 
 		public void PutNextPlaneDefinitionPoint(int x, int y)
 		{
@@ -2466,7 +2471,7 @@ namespace MeshEditor.Data
 
 		#endregion
 
-		#region History
+		#region History - private methods
 
 		private void saveStateBeforeSelect()
 		{
