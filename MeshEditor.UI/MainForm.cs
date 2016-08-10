@@ -425,7 +425,7 @@ namespace MeshEditor.WinUI
 			listOfSelectedItemsToolStripMenuItem.Enabled = showHideElementsToolStripMenuItem.Enabled = cutsToolStripMenuItem.Enabled = meshInfoToolStripMenuItem.Enabled = containsMesh;
 		}
 
-		private void openToolStripMenuItem_Click(object sender, EventArgs e)
+		private async void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			// zeptat se nejdriv na ulozeni otevrene site
 			if (activeControl.SceneFacade.ContainsMesh)
@@ -455,7 +455,22 @@ namespace MeshEditor.WinUI
 					this.cutEditorForm = null;
 				}
 				// ---------------------------------------------
-				activeControl.LoadFiles(openFileDialog.FileNames);
+
+				if (openFileDialog.FileNames.Length == 1 && openFileDialog.FileName.EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
+				{
+					closeSolution();
+					LayoutMode = LayoutMode.Postprocessor;
+					var postprocessView = getCurrentPostprocessView();
+					await postprocessView.LoadLocalSolutionAsync(openFileDialog.FileName);
+				}
+				else
+				{
+					if (LayoutMode == LayoutMode.Postprocessor)
+					{
+						closeSolution();
+					}
+					activeControl.LoadFiles(openFileDialog.FileNames);
+				}
 			}
 		}
 

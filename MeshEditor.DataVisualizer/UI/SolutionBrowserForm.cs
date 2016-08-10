@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MeshEditor.CoreInterface;
 using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
@@ -205,7 +206,7 @@ namespace MeshEditor.DataVisualizer.UI
 		private void buttonBrowseLocalSolutions_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dialog = new OpenFileDialog();
-			dialog.Filter = "Solution files (*.solution.json)|*.solution.json|All files (*.*)|*.*";
+			dialog.Filter = $"Solution files (*{SceneFacade.SolutionFileExtension})|*{SceneFacade.SolutionFileExtension}|All files (*.*)|*.*";
 			dialog.FilterIndex = 0;
 			dialog.AutoUpgradeEnabled = true;
 			//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
