@@ -62,7 +62,12 @@ namespace MeshEditor.DataVisualizer.UI
 
 				foreach (var solution in group)
 				{
-					listView.Items.Add(new ListViewItem(new[] { solution.ProjectName, solution.Id.ToString(), solution.Location }, listViewGroup) { Tag = solution });
+					var listViewItem = new ListViewItem(new[] { solution.ProjectName, solution.Id.ToString(), solution.Location }, listViewGroup)
+					{
+						Tag = solution,
+						ToolTipText = $"Project name: {solution.ProjectName}, Solution Id: {solution.Id}"
+					};
+					listView.Items.Add(listViewItem);
 				}
 			}
 
