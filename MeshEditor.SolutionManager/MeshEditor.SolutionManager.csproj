@@ -96,7 +96,7 @@
     <Compile Include="Configuration\ConfigLoader.cs" />
     <Compile Include="Configuration\ConfigParameters.cs" />
     <Compile Include="IO\ILayerInfo.cs" />
-    <Compile Include="IO\SolutionBase.cs" />
+    <Compile Include="IO\SolutionInfo.cs" />
     <Compile Include="IO\ISolutionInfo.cs" />
     <Compile Include="IO\ISolutionController.cs" />
     <Compile Include="IO\LocalSolutionController.cs" />

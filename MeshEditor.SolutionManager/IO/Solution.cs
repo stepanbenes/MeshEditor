@@ -8,7 +8,7 @@ using MeshEditor.LayerManager.Common;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class Solution : SolutionBase
+	class Solution : SolutionInfo
 	{
 		public class Layer : ILayerInfo
 		{

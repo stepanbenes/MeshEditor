@@ -7,10 +7,12 @@ using Newtonsoft.Json;
 
 namespace MeshEditor.SolutionManager.IO
 {
-	class SolutionBase : ISolutionInfo
+	class SolutionInfo : ISolutionInfo
 	{
 		public int Id { get; set; }
+
 		public string ProjectName { get; set; }
+
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string Location { get; set; }
 	}

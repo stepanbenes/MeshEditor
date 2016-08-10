@@ -82,7 +82,7 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				using (Stream stream = localStorage.Load(solutionFile))
 				{
-					var solution = serializer.Deserialize<SolutionBase>(stream);
+					var solution = serializer.Deserialize<SolutionInfo>(stream);
 					solution.Location = solutionFile;
 					yield return solution;
 				}

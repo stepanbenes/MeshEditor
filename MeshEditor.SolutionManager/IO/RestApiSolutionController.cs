@@ -71,14 +71,14 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			RestRequest request = createGetAllRequest();
 			var response = executeRequest(request);
-			return parseResponse<IEnumerable<SolutionBase>>(response);
+			return parseResponse<IEnumerable<SolutionInfo>>(response);
 		}
 
 		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
 		{
 			RestRequest request = createGetAllRequest();
 			var response = await executeRequestAsync(request, cancellationToken);
-			return parseResponse<IEnumerable<SolutionBase>>(response);
+			return parseResponse<IEnumerable<SolutionInfo>>(response);
 		}
 
 		public Solution Get(object solutionLocator)
