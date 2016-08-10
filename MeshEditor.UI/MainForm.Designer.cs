@@ -182,8 +182,6 @@
 			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.centralPanel = new System.Windows.Forms.Panel();
-			this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -1599,8 +1597,6 @@
 		private System.Windows.Forms.Panel centralPanel;
 		private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-		private System.Windows.Forms.OpenFileDialog openFileDialog;
-		private System.Windows.Forms.SaveFileDialog saveFileDialog;
 		private System.Windows.Forms.ToolStripStatusLabel statusLabel;
 		private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;

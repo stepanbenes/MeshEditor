@@ -21,7 +21,9 @@ namespace MeshEditor.DataVisualizer
 	{
 		#region Fields, constructor
 
-		ISolutionInfo solutionInfo;
+		readonly ISolutionInfo solutionInfo;
+		readonly string solutionDescriptionText;
+
 		Dictionary<double, ComponentDataDescription> data;
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
@@ -33,6 +35,8 @@ namespace MeshEditor.DataVisualizer
 			Debug.Assert(solutionInfo != null);
 			Debug.Assert(layer != null);
 			this.solutionInfo = solutionInfo;
+			//this.solutionDescriptionText = $"{solutionInfo.ProjectName} - {Layer.Name}";
+			this.solutionDescriptionText = (string.IsNullOrEmpty(solutionInfo.Location) || solutionInfo.Location.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) ? (solutionInfo.ProjectName + " (remote solution)").Trim() : solutionInfo.Location;
 			Layer = layer;
 		}
 
@@ -201,7 +205,8 @@ namespace MeshEditor.DataVisualizer
 			{
 				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(Layer.Id, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
 			}
-			var meshFileParser = new LayerMeshFileParser($"{solutionInfo.ProjectName} - {Layer.Name}", geometry, elementPropertiesAttribute);
+
+			var meshFileParser = new LayerMeshFileParser(solutionDescriptionText, geometry, elementPropertiesAttribute);
 			await scene.ReloadMeshAsync(meshFileParser, cancellationToken, progressReport);
 
 			currentGeometry = geometry;

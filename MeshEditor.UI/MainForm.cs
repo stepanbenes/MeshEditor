@@ -130,17 +130,17 @@ namespace MeshEditor.WinUI
 
 		#region Overrides
 
-		protected override void OnShown(EventArgs e)
+		protected override async void OnShown(EventArgs e)
 		{
 			base.OnShown(e);
 
 			if (arguments != null && arguments.Length > 0) // load file in command file arguments
 			{
-				activeControl.LoadFiles(arguments[0]);
+				await openFiles(arguments[0]);
 			}
 			else if (File.Exists(Properties.Settings.Default.LastLoadedMesh)) // load last loaded file (if exists)
 			{
-				activeControl.LoadFiles(Properties.Settings.Default.LastLoadedMesh);
+				await openFiles(Properties.Settings.Default.LastLoadedMesh);
 			}
 		}
 
@@ -439,6 +439,7 @@ namespace MeshEditor.WinUI
 			}
 			// ---------------------------------------------
 
+			OpenFileDialog openFileDialog = new OpenFileDialog();
 			openFileDialog.Filter = SceneFacade.InputFileFormatFilter;
 			openFileDialog.Multiselect = true;
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -455,22 +456,26 @@ namespace MeshEditor.WinUI
 					this.cutEditorForm = null;
 				}
 				// ---------------------------------------------
+				await openFiles(openFileDialog.FileNames);
+			}
+		}
 
-				if (openFileDialog.FileNames.Length == 1 && openFileDialog.FileName.EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
+		private async Task openFiles(params string[] fileNames)
+		{
+			if (fileNames.Length == 1 && fileNames[0].EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
+			{
+				closeSolution();
+				LayoutMode = LayoutMode.Postprocessor;
+				var postprocessView = getCurrentPostprocessView();
+				await postprocessView.LoadLocalSolutionAsync(fileNames[0]);
+			}
+			else
+			{
+				if (LayoutMode == LayoutMode.Postprocessor)
 				{
 					closeSolution();
-					LayoutMode = LayoutMode.Postprocessor;
-					var postprocessView = getCurrentPostprocessView();
-					await postprocessView.LoadLocalSolutionAsync(openFileDialog.FileName);
 				}
-				else
-				{
-					if (LayoutMode == LayoutMode.Postprocessor)
-					{
-						closeSolution();
-					}
-					activeControl.LoadFiles(openFileDialog.FileNames);
-				}
+				activeControl.LoadFiles(fileNames);
 			}
 		}
 
@@ -488,6 +493,7 @@ namespace MeshEditor.WinUI
 			if (withoutHiddenResult == DialogResult.Cancel)
 				return false;
 			bool saveWithoutHiddenElements = withoutHiddenResult == DialogResult.Yes;
+			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			saveFileDialog.FileName = Path.GetFileNameWithoutExtension(control.SceneFacade.MeshFilename);
 			saveFileDialog.Filter = SceneFacade.OutputFileFormatFilter;
 			DialogResult saveDialogResult = saveFileDialog.ShowDialog();
