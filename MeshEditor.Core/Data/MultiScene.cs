@@ -36,6 +36,11 @@ namespace MeshEditor.Data
 			currentScene.Dispose();
 		}
 
+		public void SetMesh(Mesh newMesh)
+		{
+			currentScene.SetMesh(newMesh);
+		}
+
 		#endregion
 
 		#region Properties
@@ -298,11 +303,6 @@ namespace MeshEditor.Data
 		public void SetDefaultCameraView()
 		{
 			currentScene.SetDefaultCameraView();
-		}
-
-		public void SetMesh(Mesh newMesh)
-		{
-			currentScene.SetMesh(newMesh);
 		}
 
 		public void SetPropertyOfSelectedItems(Property property)

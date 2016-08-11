@@ -115,7 +115,7 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					Debug.Assert(solutionHub != null);
 					Debug.Assert(ActiveScene != null);
-					longOpNotifier.UpdateState(operationToken, "Loading solution");
+					longOpNotifier.UpdateState(operationToken, "Loading layer tree");
 					solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationTokenSources[operationToken].Token);
 					var layers = solutionDescription.Layers;
 					layersTreeView.SetLayerTree(layers);
@@ -283,9 +283,8 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 			else
 			{
-				// TODO: clear scene
-				// !! do not allow to hide all layers for now
-				//throw new NotImplementedException();
+				ActiveScene.RemoveMesh();
+				dataSelectionControl.UpdateDataSource(null, null);
 			}
 		}
 

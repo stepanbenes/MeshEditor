@@ -1139,6 +1139,12 @@ namespace MeshEditor.CoreInterface
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 
+		public void RemoveMesh()
+		{
+			scene.SetMesh(null);
+			MeshReloaded?.Invoke(this, EventArgs.Empty);
+		}
+
 		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
 		{
 			Debug.Assert(filenames != null && filenames.Length > 0);
