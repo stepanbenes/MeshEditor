@@ -56,7 +56,7 @@ namespace MeshEditor.Data
 			// -----------------------------------------------------------------------------------------------------------
 			if (scene.Mesh != null)
 			{
-				scene.Mesh.DrawFacesToDepthBuffer();
+				scene.Mesh.DrawFacesToDepthBuffer(faceDrawer: scene.Mesh.DrawFacesOnly);
 			}
 
 			computePixelDepthAndPointUnderCursor(pointLocation.X, pointLocation.Y);

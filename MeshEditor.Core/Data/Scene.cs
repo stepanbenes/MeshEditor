@@ -398,6 +398,10 @@ namespace MeshEditor.Data
 			get { return lastUsedCutInfo; }
 		}
 
+		public Vector3? PositionOffset => mesh?.PositionOffset;
+
+		public float? ResizeFactor => mesh?.ResizeFactor;
+
 		#endregion
 
 		#region Misc - public methods
@@ -524,6 +528,27 @@ namespace MeshEditor.Data
 			}
 			else
 				camera.SetView(CameraView.Iso);
+		}
+
+		public void ComputeVisibleNodes(Size clientWindow)
+		{
+			if (mesh == null)
+				return;
+
+			bool findVisibleFaces = ((RenderMode & RenderMode.Faces) != 0) && DrawElementNumbers;
+			bool beamsRendered = mesh.BeamCount > 0 && DrawBeams;
+			bool findVisibleNodes = findVisibleFaces || ((RenderMode & RenderMode.Points) != 0) || beamsRendered;
+
+			if (findVisibleNodes)
+			{
+				bool xRay = (RenderMode == RenderMode.None && beamsRendered) || RenderMode == RenderMode.Points;
+				mesh.CreateVisibleNodesList(new Rectangle(Point.Empty, clientWindow), Camera, xRay, faceDrawer: mesh.DrawFacesOnly);
+			}
+
+			if (findVisibleFaces)
+			{
+				mesh.CreateVisibleFacesList(new Rectangle(Point.Empty, clientWindow), Camera, faceDrawer: mesh.DrawFacesOnly);
+			}
 		}
 
 		public void Dispose()
@@ -800,15 +825,11 @@ namespace MeshEditor.Data
 			if (mesh != null)
 			{
 				mesh.DrawContent(this.renderMode, this.camera, optimizeForMoving, optimizeForSelecting, drawNodeNumbersFlag, drawElementNumbersFlag, this.drawBeamsFlag, this.drawBeamNumbersFlag);
-
-				// if cutPlanes.Count != 0 then draw cut planes
-				//foreach (CutPlane plane in cutPlanes)
-				//	mesh.DrawCutPlane(plane, renderMode);
 			}
 
 			// vykresli osy
 			if (drawAxesFlag)
-				drawAxes();
+				drawAxes((PositionOffset ?? Vector3.Zero) * -(ResizeFactor ?? 1f));
 
 			if (this.cutPlaneDefinitionNodes.Count > 0)
 				drawPlaneDefinitionPoints();
@@ -816,6 +837,15 @@ namespace MeshEditor.Data
 			// draw cut planes
 			if (this.cutPlanes.Count > 0)
 				drawCutPlanes();
+
+			if (drawAxisArrowsFlag)
+				drawAxisArrows();
+		}
+
+		public void DrawWithoutMesh(Vector3 positionOffset, float resizeFactor)
+		{
+			if (drawAxesFlag)
+				drawAxes(positionOffset * -resizeFactor);
 
 			if (drawAxisArrowsFlag)
 				drawAxisArrows();
@@ -851,7 +881,7 @@ namespace MeshEditor.Data
 			GL.Enable(EnableCap.Lighting);
 		}
 
-		private void drawAxes()
+		private static void drawAxes(Vector3 origin)
 		{
 			if (LineSmooth)
 			{
@@ -862,44 +892,40 @@ namespace MeshEditor.Data
 			GL.LineWidth(1.0f);
 			GL.Disable(EnableCap.Lighting);
 
-			if (mesh != null)
 			{
 				GL.PushMatrix();
-				GL.Translate(-mesh.PositionOffset * mesh.ResizeFactor);
-			}
+				GL.Translate(origin);
 
-			// kladne osy
-			GL.Begin(BeginMode.Lines);
-			GL.Color3(1.0, 0, 0);       // X
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(AxisLength, 0, 0);
-			GL.Color3(0, 1.0, 0);       // Y
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(0, AxisLength, 0);
-			GL.Color3(0, 0, 1.0);       // Z
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(0, 0, AxisLength);
-			GL.End();
+				// kladne osy
+				GL.Begin(BeginMode.Lines);
+				GL.Color3(1.0, 0, 0);       // X
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(AxisLength, 0, 0);
+				GL.Color3(0, 1.0, 0);       // Y
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(0, AxisLength, 0);
+				GL.Color3(0, 0, 1.0);       // Z
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(0, 0, AxisLength);
+				GL.End();
 
-			//GL.LineWidth(0.4f);
+				//GL.LineWidth(0.4f);
 
-			GL.Enable(EnableCap.LineStipple);
-			GL.LineStipple(2, 52428);
-			// zaporne osy
-			GL.Begin(BeginMode.Lines);
-			GL.Color3(1.0, 0, 0);       // X
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(-AxisLength, 0, 0);
-			GL.Color3(0, 1.0, 0);       // Y
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(0, -AxisLength, 0);
-			GL.Color3(0, 0, 1.0);       // Z
-			GL.Vertex3(0, 0, 0);
-			GL.Vertex3(0, 0, -AxisLength);
-			GL.End();
+				GL.Enable(EnableCap.LineStipple);
+				GL.LineStipple(2, 52428);
+				// zaporne osy
+				GL.Begin(BeginMode.Lines);
+				GL.Color3(1.0, 0, 0);       // X
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(-AxisLength, 0, 0);
+				GL.Color3(0, 1.0, 0);       // Y
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(0, -AxisLength, 0);
+				GL.Color3(0, 0, 1.0);       // Z
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(0, 0, -AxisLength);
+				GL.End();
 
-			if (mesh != null)
-			{
 				GL.PopMatrix();
 			}
 
@@ -913,7 +939,7 @@ namespace MeshEditor.Data
 			}
 		}
 
-		private void drawAxisArrows()
+		public void drawAxisArrows()
 		{
 			const float arrowLength = 60f;
 			const float distanceFromWindowLeftBorder = 62f;
@@ -1363,7 +1389,7 @@ namespace MeshEditor.Data
 			{
 				return;
 			}
-			
+
 			foreach (var selectedItem in mesh.SelectedItems)
 			{
 				Node node = selectedItem as Node;
@@ -1791,11 +1817,11 @@ namespace MeshEditor.Data
 			if (itemType == ItemTypeToSelect.Node)
 			{
 				area = new Rectangle(x - NODE_SELECTION_TOLERANCE_DISTANCE, y - NODE_SELECTION_TOLERANCE_DISTANCE, NODE_SELECTION_TOLERANCE_DISTANCE << 1, NODE_SELECTION_TOLERANCE_DISTANCE << 1);
-				visibleNodesProjected = mesh.FindVisibleNodesProjectedPositions(area, this.camera);
+				visibleNodesProjected = mesh.FindVisibleNodesProjectedPositions(area, this.camera, faceDrawer: mesh.DrawFacesOnly);
 			}
 			else if (itemType != ItemTypeToSelect.Beam)
 			{
-				mesh.DrawFacesToDepthBuffer(); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
+				mesh.DrawFacesToDepthBuffer(faceDrawer: mesh.DrawFacesOnly); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
 			}
 
 			{
@@ -2107,7 +2133,7 @@ namespace MeshEditor.Data
 		{
 			// --------------------------------------
 			bool xRay = ((itemType == ItemTypeToSelect.Beam || itemType == ItemTypeToSelect.Node) && (renderMode & RenderMode.Faces) == 0) ? true : Scene.XRayVision;
-			HashSet<Node> visibleNodes = mesh.FindVisibleNodes(selectionArea, this.camera, xRay, false);
+			HashSet<Node> visibleNodes = mesh.FindVisibleNodes(selectionArea, this.camera, xRay, computeNodeDensity: false, faceDrawer: mesh.DrawFacesOnly);
 			// --------------------------------------
 			HashSet<ISelectable> result = new HashSet<ISelectable>();
 			// --------------------------------------

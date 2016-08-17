@@ -4,6 +4,7 @@ using System.Text;
 using MeshEditor.Data;
 using MeshEditor.IO;
 using MeshEditor.CoreInterface;
+using OpenTK;
 
 namespace MeshEditor.IO
 {
@@ -21,7 +22,7 @@ namespace MeshEditor.IO
 	/// </summary>
 	public interface IMeshCreator : IProgressNotifier
 	{
-		Mesh CreateMesh(IMeshFileParser meshFileParser, YesNoQuestion cancelled);
+		Mesh CreateMesh(IMeshFileParser meshFileParser, YesNoQuestion cancelled, Vector3? defaultPositionOffset = null, float? defaultResizeFactor = null);
 	}
 
 	/// <summary>

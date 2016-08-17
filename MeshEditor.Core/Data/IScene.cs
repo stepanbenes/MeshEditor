@@ -52,6 +52,10 @@ namespace MeshEditor.Data
 
 		CutInfo LastUsedCutInfo { get; }
 
+		Vector3? PositionOffset { get; }
+
+		float? ResizeFactor { get; }
+
 		#endregion
 
 		#region Misc - public methods
@@ -69,6 +73,8 @@ namespace MeshEditor.Data
 		void RecreateBuffers();
 
 		void SetDefaultCameraView();
+
+		void ComputeVisibleNodes(Size clientWindow);
 
 		#endregion
 

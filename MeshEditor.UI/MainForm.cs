@@ -1658,7 +1658,7 @@ namespace MeshEditor.WinUI
 			Control content = centralPanel.Controls.Cast<ContentViewControl>().SingleOrDefault()?.Content ?? new Panel { Dock = DockStyle.Fill };
 			clearContentView();
 			layoutMode = LayoutMode.Postprocessor;
-			activeControl.SetMultiScene();
+			activeControl.SetMultiLayerScene();
 			var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = content, Dock = DockStyle.Fill };
 			centralPanel.Controls.Add(postprocessView);
 			postprocessView.SplitterDistance = 200;

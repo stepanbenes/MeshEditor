@@ -98,11 +98,11 @@ namespace MeshEditor.Graphics
 			updateViewVectors();
 		}
 
-		public void ZoomToFit()
+		public void ZoomToFit(Vector3 centerOfRotation, float radius)
 		{
 			Vector3 dir = GetDirection();
-			center = Vector3.Zero; // posunu se abych koukal do stredu
-			eye = dir * -Scene.DefaultCameraDistance; // vzdalim se na defaultni vzdalenost
+			center = centerOfRotation; // posunu se abych koukal do stredu
+			eye = centerOfRotation - dir * (radius * Scene.DefaultCameraDistance); // vzdalim se na defaultni vzdalenost
 			// up zustane stejny
 		}
 

@@ -40,6 +40,8 @@ namespace MeshEditor.DataVisualizer.UI
 			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
 
 			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
+			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
+			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
 		}
@@ -120,11 +122,12 @@ namespace MeshEditor.DataVisualizer.UI
 					var layers = solutionDescription.Layers;
 					layersTreeView.SetLayerTree(layers);
 
-					if (layers.Count > 0) // load first layer
-					{
-						await loadLayerAsync(layers[0], ActiveScene, operationToken);
-						layersTreeView.SetSelectedLayer(layers[0]);
-					}
+					//if (layers.Count > 0) // load first layer
+					//{
+					//	ActiveScene.SetCurrentLayer(layers[0].Id);
+					//	layersTreeView.SetSelectedLayer(layers[0]);
+					//	await loadLayerAsync(layers[0], ActiveScene, operationToken);
+					//}
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -252,40 +255,60 @@ namespace MeshEditor.DataVisualizer.UI
 			mainSplitContainer.Panel1.Enabled = true;
 		}
 
-		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
+		private void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
 
-			if (e.Layer != null)
+			ActiveScene.SetCurrentLayer(e.Layer?.Id);
+			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+			if (layerDataVisualizer != null)
 			{
-				const string taskName = "Loading layer";
+				visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
+			}
+		}
+
+		private async void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+			if (changingActiveScene)
+				return;
+
+			Debug.Assert(e.Layer != null);
+
+			const string taskName = "Loading layer";
+			try
+			{
+				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
-					try
-					{
-						await loadLayerAsync(e.Layer, ActiveScene, operationToken);
-					}
-					catch (OperationCanceledException)
-					{ }
-					finally
-					{
-						endLongOperation(operationToken);
-						await updateDataSelectionInLeftPanelAsync();
-					}
+					await loadLayerAsync(e.Layer, ActiveScene, operationToken);
 				}
-				catch (Exception ex)
+				catch (OperationCanceledException)
+				{ }
+				finally
 				{
-					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+					endLongOperation(operationToken);
+					await updateDataSelectionInLeftPanelAsync();
 				}
 			}
-			else
+			catch (Exception ex)
 			{
-				ActiveScene.RemoveMesh();
-				dataSelectionControl.UpdateDataSource(null, null);
+				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
+		}
+
+		private void layersTreeView_LayerUnchecked(object sender, LayerSelectionEventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+			if (changingActiveScene)
+				return;
+
+			Debug.Assert(e.Layer != null);
+
+			ActiveScene.RemoveMesh();
+			dataSelectionControl.UpdateDataSource(null, null);
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)

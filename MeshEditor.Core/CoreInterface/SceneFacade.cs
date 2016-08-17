@@ -37,7 +37,7 @@ namespace MeshEditor.CoreInterface
 		public static readonly int CLICK_DISTANCE_TOLERANCE; // pixels
 		public static readonly int CAMERA_CHANGED_NOTIFY_INTERVAL; // ms
 		public static readonly int MAX_INTERVAL_BETWEEN_CLICKS; // ms
-		
+
 		public static Color SELECTION_RECTANGLE_COLOR;
 		public static Color ZOOM_RECTANGLE_COLOR;
 		public static Color SCREENSHOT_RECTANGLE_COLOR;
@@ -56,7 +56,7 @@ namespace MeshEditor.CoreInterface
 
 			CAMERA_CHANGED_NOTIFY_INTERVAL = 1000; // ms
 			MAX_INTERVAL_BETWEEN_CLICKS = 400; // ms
-			
+
 			SELECTION_RECTANGLE_COLOR = Color.FromArgb(50, Color.Blue);
 			ZOOM_RECTANGLE_COLOR = Color.FromArgb(50, Color.Green);
 			SCREENSHOT_RECTANGLE_COLOR = Color.FromArgb(50, Color.Yellow);
@@ -218,7 +218,7 @@ namespace MeshEditor.CoreInterface
 		{
 			get { return scene.CutPlanes; }
 		}
-		
+
 		#endregion
 
 		#region Public Static Properties
@@ -259,9 +259,9 @@ namespace MeshEditor.CoreInterface
 			return new SceneFacade(new Scene());
 		}
 
-		public static SceneFacade GetEmptyMultiScene()
+		public static SceneFacade GetEmptyMultiLayerScene()
 		{
-			return new SceneFacade(new MultiScene());
+			return new SceneFacade(new MultiLayerScene());
 		}
 
 		public static SceneFacade GetCopyOf(SceneFacade sceneToCopy)
@@ -428,7 +428,7 @@ namespace MeshEditor.CoreInterface
 		{
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
-			
+
 			if (clickTimerFlag)
 			{
 				processPointSelection();
@@ -448,10 +448,10 @@ namespace MeshEditor.CoreInterface
 				GL.ClearColor(Scene.NonActiveBackColor);
 
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); // vymazat buffery
-			
+
 			GL.MatrixMode(MatrixMode.Modelview);
 			GL.LoadIdentity();
-			
+
 			scene.Camera.LookAt(); // natoc kameru
 
 			scene.Draw(!isActive || cameraChangedTimer.Enabled, !isActive || drawSelectionRectangleFlag); // vykresli scenu, pokud s ni zrovna hejbu, tak ji vykresli rychleji (zjednodusene)
@@ -665,7 +665,7 @@ namespace MeshEditor.CoreInterface
 					computeVisibleNodes();
 					break;
 				case AvailableAction.ZoomToFit:
-					scene.Camera.ZoomToFit();
+					scene.Camera.ZoomToFit(scene.Mesh?.CenterOfRotation ?? Vector3.Zero, scene.Mesh?.Radius ?? 1f);
 					needToComputeVisibleNodesFlag = true;
 					break;
 				case AvailableAction.RecreateBuffers:
@@ -783,7 +783,7 @@ namespace MeshEditor.CoreInterface
 					if (scene.Mesh != null)
 						return scene.Mesh.EdgeCount;
 					return null;
-				
+
 				case AvailableValue.BeamCount:
 					if (scene.Mesh != null)
 						return scene.Mesh.BeamCount;
@@ -818,7 +818,7 @@ namespace MeshEditor.CoreInterface
 				case AvailableValue.RenderMode:
 					return scene.RenderMode;
 				case AvailableValue.ColorMode:
-					if(scene.Mesh != null)
+					if (scene.Mesh != null)
 						return scene.Mesh.ColorMode;
 					return null;
 				case AvailableValue.DrawQuadraticNodes:
@@ -878,7 +878,7 @@ namespace MeshEditor.CoreInterface
 					break;
 				case AvailableValue.DrawNodeNumbers:
 					scene.DrawNodeNumbers = (bool)value;
-					if(scene.DrawNodeNumbers)
+					if (scene.DrawNodeNumbers)
 						computeVisibleNodes();
 					break;
 				case AvailableValue.DrawElementNumbers:
@@ -983,8 +983,7 @@ namespace MeshEditor.CoreInterface
 			}
 			else if (button == MouseButton.Middle)
 			{
-				//scene.Camera.Reset();
-				scene.Camera.ZoomToFit();
+				scene.Camera.ZoomToFit(scene.Mesh?.CenterOfRotation ?? Vector3.Zero, scene.Mesh?.Radius ?? 1f);
 				needToComputeVisibleNodesFlag = true;
 				if (InvalidateNeeded != null)
 					InvalidateNeeded(this, EventArgs.Empty);
@@ -996,13 +995,13 @@ namespace MeshEditor.CoreInterface
 			if (location == prevMouseLocation) // pokud jsem se nepohnul, tak nedelam nic
 				return;
 			mouseDownCount = 0;
-			
+
 			if (!mouseDownFlag) // stisk mysi nebyl v tomto okne, nedelam nic
 			{
 				prevMouseLocation = location;
 				return;
 			}
-							
+
 			if (button == MouseButton.Left)
 			{
 				int dX = location.X - prevMouseLocation.X;
@@ -1013,7 +1012,7 @@ namespace MeshEditor.CoreInterface
 					case EditorMode.SelectEdges:
 					case EditorMode.SelectNodes:
 					case EditorMode.SelectElements:
-                    case EditorMode.SelectBeams:
+					case EditorMode.SelectBeams:
 					case EditorMode.ZoomWindow:
 					case EditorMode.ScreenshotWindow:
 						// draw selection rectangle
@@ -1043,7 +1042,7 @@ namespace MeshEditor.CoreInterface
 		{
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
-			
+
 			pointUnderCursorContext.Compute(scene, mouseLocation, false);
 			Vector3 direction = pointUnderCursorContext.PointUnderCursor - scene.Camera.Eye;
 			float distance = direction.Length;
@@ -1056,15 +1055,15 @@ namespace MeshEditor.CoreInterface
 
 			//if (useNonLinearZoom) // pokud je pod kurzorem sit, tak pouzit NElinearni zoom
 			//{
-				// !! do not stop in front of mesh, walk through
-				// zarazit se, pokud jsem moc blizko objektu
-				//if (delta > 0 && (distance - distance * Scene.WHEEL_ZOOM_FACTOR) < (Scene.Z_NEAR_PARAM * Scene.CLOSEST_ZOOM_MULTIPLE_OF_NEAR_PARAM))
-				//	return;
+			// !! do not stop in front of mesh, walk through
+			// zarazit se, pokud jsem moc blizko objektu
+			//if (delta > 0 && (distance - distance * Scene.WHEEL_ZOOM_FACTOR) < (Scene.Z_NEAR_PARAM * Scene.CLOSEST_ZOOM_MULTIPLE_OF_NEAR_PARAM))
+			//	return;
 
-				move = direction * Scene.WHEEL_ZOOM_FACTOR;
-				float length = move.Length;
-				if (length > Scene.MAX_ZOOM_DISTANCE)
-					move *= Scene.MAX_ZOOM_DISTANCE / length;
+			move = direction * Scene.WHEEL_ZOOM_FACTOR;
+			float length = move.Length;
+			if (length > Scene.MAX_ZOOM_DISTANCE)
+				move *= Scene.MAX_ZOOM_DISTANCE / length;
 			//}
 			//else // pokud pod kurzorem neni sit, ale volny prostor, tak pouzit linearni zoom
 			//{
@@ -1078,7 +1077,7 @@ namespace MeshEditor.CoreInterface
 			cameraChangedDirection = true;
 
 			cameraChangedTimer.Start();
-			
+
 			if (RefreshNeeded != null)
 				RefreshNeeded(this, EventArgs.Empty);
 		}
@@ -1102,46 +1101,46 @@ namespace MeshEditor.CoreInterface
 
 		public async Task ReloadMeshAsync(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, Action<string, int> progressReport)
 		{
-			bool isFirstMesh = !ContainsMesh;
-			
+			IMeshCreator meshCreator = new MeshConstructor();
+			if (progressReport != null)
 			{
-				IMeshCreator meshCreator = new MeshConstructor();
-				if (progressReport != null)
-				{
-					meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
-				}
+				meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
+			}
 
-				Mesh result;
-				using (parser)
-				{
-					result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested));
-				}
+			Mesh result;
+			using (parser)
+			{
+				result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: scene.PositionOffset, defaultResizeFactor: scene.ResizeFactor));
+			}
 
-				PropertyColorsMode? oldColorMode = scene.Mesh?.ColorMode;
+			PropertyColorsMode? oldColorMode = scene.Mesh?.ColorMode;
 
-				scene.SetMesh(result);
+			scene.SetMesh(result);
 
-				if (scene.Mesh != null && oldColorMode.HasValue)
-				{
-					scene.Mesh.ColorMode = oldColorMode.Value;
-				}
+			if (scene.Mesh != null && oldColorMode.HasValue)
+			{
+				scene.Mesh.ColorMode = oldColorMode.Value;
 			}
 
 			createBuffers();
 
 			needToComputeVisibleNodesFlag = true;
-
-			if (isFirstMesh)
-			{
-				scene.SetDefaultCameraView();
-			}
-
+			
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void RemoveMesh()
 		{
 			scene.SetMesh(null);
+			MeshReloaded?.Invoke(this, EventArgs.Empty);
+		}
+
+		public void SetCurrentLayer(Guid? currentLayerId)
+		{
+			Debug.Assert(scene is MultiLayerScene);
+			var multiLayerScene = (MultiLayerScene)scene;
+			multiLayerScene.SelectedLayer = currentLayerId;
+
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 
@@ -1184,10 +1183,10 @@ namespace MeshEditor.CoreInterface
 
 		public void SaveMeshToFile(string filename, bool saveWithoutCuttedElements, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)
 		{
-//#if !DEBUG
-//            try
-//            {
-//#endif
+			//#if !DEBUG
+			//            try
+			//            {
+			//#endif
 			if (scene.Mesh != null)
 			{
 				IMeshSaver meshSaver = MeshSaverFactory.Create(filename);
@@ -1227,7 +1226,7 @@ namespace MeshEditor.CoreInterface
 
 			SetValue(AvailableValue.RenderMode, mode);
 		}
-		
+
 		public bool CheckOpenGLVersion()
 		{
 			int major, minor;
@@ -1249,7 +1248,7 @@ namespace MeshEditor.CoreInterface
 				case EditorMode.SelectElements:
 				case EditorMode.SelectBeams:
 					this.selectOperationType = getSelectOperationType();
-//					clickTimer.Start(); // spustit timer, po jeho uplynuti se provede akce
+					//					clickTimer.Start(); // spustit timer, po jeho uplynuti se provede akce
 					break;
 				case EditorMode.PickCuttingPlanePoint:
 					if (scene.Mesh != null)
@@ -1325,9 +1324,9 @@ namespace MeshEditor.CoreInterface
 				case EditorMode.SelectElements:
 					pointSelection(ItemTypeToSelect.Element);
 					break;
-                case EditorMode.SelectBeams:
-                    pointSelection(ItemTypeToSelect.Beam);
-                    break;
+				case EditorMode.SelectBeams:
+					pointSelection(ItemTypeToSelect.Beam);
+					break;
 			}
 		}
 
@@ -1354,9 +1353,9 @@ namespace MeshEditor.CoreInterface
 				case EditorMode.SelectElements:
 					rectangleSelection(ItemTypeToSelect.Element);
 					break;
-                case EditorMode.SelectBeams:
-                    rectangleSelection(ItemTypeToSelect.Beam);
-                    break;
+				case EditorMode.SelectBeams:
+					rectangleSelection(ItemTypeToSelect.Beam);
+					break;
 				case EditorMode.ZoomWindow:
 					zoomWindow();
 					break;
@@ -1429,23 +1428,7 @@ namespace MeshEditor.CoreInterface
 		{
 			cameraChangedTimer.Enabled = false;
 
-			if(scene.Mesh == null)
-				return;
-		
-			bool findVisibleFaces = ((scene.RenderMode & RenderMode.Faces) != 0) && scene.DrawElementNumbers;
-			bool beamsRendered = scene.Mesh.BeamCount > 0 && scene.DrawBeams;
-			bool findVisibleNodes = findVisibleFaces || ((scene.RenderMode & RenderMode.Points) != 0) || beamsRendered;
-
-			if (findVisibleNodes)
-			{
-				bool xRay = (scene.RenderMode == RenderMode.None && beamsRendered) || scene.RenderMode == RenderMode.Points;
-				scene.Mesh.CreateVisibleNodesList(new Rectangle(Point.Empty, clientWindowSize), scene.Camera, xRay);
-			}
-
-			if (findVisibleFaces)
-			{
-				scene.Mesh.CreateVisibleFacesList(new Rectangle(Point.Empty, clientWindowSize), scene.Camera);
-			}
+			scene.ComputeVisibleNodes(clientWindowSize);
 		}
 
 		public void MakeToComputeVisibleNodes()
@@ -1538,7 +1521,7 @@ namespace MeshEditor.CoreInterface
 			Point leftBottom = new Point(area.Left, area.Bottom);
 			Point rightBottom = new Point(area.Right, area.Bottom);
 			Point center = new Point(area.X + area.Width / 2, area.Y + area.Height / 2);
-			
+
 			Camera cam = scene.Camera;
 			Vector3 dir = cam.GetDirection();
 
@@ -1546,7 +1529,7 @@ namespace MeshEditor.CoreInterface
 
 			Vector3 pointUnderCenter = pointUnderCursorContext.PointUnderCursor;
 			float distanceOfCenter = (pointUnderCursorContext.PointUnderCursor - cam.Eye).Length; //Vector3.Dot(pointUnderCursor - cam.Eye, dir);
-			
+
 			//Vector3 closestPointInArea = pointUnderCenter;
 			float distanceOfClosestPoint = (pointUnderCursorContext.MouseDownBackgroundHit) ? float.MaxValue : distanceOfCenter;
 

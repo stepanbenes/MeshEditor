@@ -62,7 +62,7 @@ namespace MeshEditor.Construction
 		/// </summary>
 		/// <param name="meshFileParser">object that iterates through nodes and elements in file and returns them</param>
 		/// <returns>new mesh</returns>
-		public Mesh CreateMesh(IMeshFileParser meshFileParser, YesNoQuestion cancelled)
+		public Mesh CreateMesh(IMeshFileParser meshFileParser, YesNoQuestion cancelled, Vector3? defaultPositionOffset = null, float? defaultResizeFactor = null)
 		{
 			MeshIOEventArgs ioea = new MeshIOEventArgs(percentDone: 0, taskName: null, operationName: "Constructing mesh");
 			Mesh mesh = null;
@@ -82,32 +82,32 @@ namespace MeshEditor.Construction
 				}
 				// ====================================================================================
 
-					// nacti uzly
-					int processedNodes = 0;
-					foreach (Node n in meshFileParser.ReadNodes())
+				// nacti uzly
+				int processedNodes = 0;
+				foreach (Node n in meshFileParser.ReadNodes())
+				{
+					processNode(n, statistics);
+
+					UpdateBounds(n.Position, ref lowerBound, ref upperBound);
+					processedNodes++;
+
+					if (Step != null) // informuj o postupu
 					{
-						processNode(n, statistics);
-
-						updateBounds(n.Position, ref lowerBound, ref upperBound);
-						processedNodes++;
-
-						if (Step != null) // informuj o postupu
+						int percent = (int)((float)processedNodes / (float)meshFileParser.NodeCount * NODE_WORK_RATIO * 100f);
+						if (percent != ioea.PercentDone)
 						{
-							int percent = (int)((float)processedNodes / (float)meshFileParser.NodeCount * NODE_WORK_RATIO * 100f);
-							if (percent != ioea.PercentDone)
-							{
-								if (cancelled != null && cancelled())
-									return null;
-								ioea.PercentDone = percent;
-								Step(this, ioea);
-							}
+							if (cancelled != null && cancelled())
+								return null;
+							ioea.PercentDone = percent;
+							Step(this, ioea);
 						}
 					}
-				
+				}
+
 
 				Vector3 meshPositionOffset;
 				float meshResizeFactor;
-				normalizeMesh(ref lowerBound, ref upperBound, out meshPositionOffset, out meshResizeFactor);
+				normalizeMesh(nodes.Values, ref lowerBound, ref upperBound, out meshPositionOffset, out meshResizeFactor, defaultPositionOffset, defaultResizeFactor);
 
 				bool loadedFromSifelFileFormat = meshFileParser is SifelFileFormatParser;
 
@@ -425,7 +425,28 @@ namespace MeshEditor.Construction
 			}
 		}
 
-		private static void updateBounds(Vector3 point, ref Vector3 lowerBound, ref Vector3 upperBound)
+		/// <summary>
+		/// Normalizes positions of nodes in mesh. Translates center of nodes to the origin and normalizes their distance from origin.
+		/// </summary>
+		/// <param name="lowerBound">lower bound of node positions</param>
+		/// <param name="upperBound">upper bound of node positions</param>
+		private static void normalizeMesh(IEnumerable<Node> nodes, ref Vector3 lowerBound, ref Vector3 upperBound, out Vector3 offset, out float factor, Vector3? defaultOffset, float? defaultFactor)
+		{
+			float length = (upperBound - lowerBound).Length;
+
+			offset = defaultOffset ?? Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound);
+			factor = defaultFactor ?? ((length > 0f) ? (2f * Scene.RADIUS_OF_NORMALIZED_MESH) / length : 1f);
+
+			foreach (Node n in nodes) // prepocitam pozici kazdeho uzlu
+			{
+				n.Position = (n.Position - offset) * factor;
+			}
+
+			lowerBound = (lowerBound - offset) * factor; // jeste prepocitam meze
+			upperBound = (upperBound - offset) * factor;
+		}
+
+		public static void UpdateBounds(Vector3 point, ref Vector3 lowerBound, ref Vector3 upperBound)
 		{
 			if (point.X < lowerBound.X) // X
 				lowerBound.X = point.X;
@@ -439,22 +460,6 @@ namespace MeshEditor.Construction
 				lowerBound.Z = point.Z;
 			if (point.Z > upperBound.Z)
 				upperBound.Z = point.Z;
-		}
-
-		/// <summary>
-		/// Normalizes positions of nodes in mesh. Translates center of nodes to the origin and normalizes their distance from origin.
-		/// </summary>
-		/// <param name="lowerBound">lower bound of node positions</param>
-		/// <param name="upperBound">upper bound of node positions</param>
-		private void normalizeMesh(ref Vector3 lowerBound, ref Vector3 upperBound, out Vector3 offset, out float factor)
-		{
-			offset = Utilities.Functions.GetCenterOfLineSegment(ref lowerBound, ref upperBound);
-			float length = (upperBound - lowerBound).Length;
-			factor = (length > 0f) ? (2f * Scene.RADIUS_OF_NORMALIZED_MESH) / length : 1f;
-			foreach (Node n in nodes.Values) // prepocitam pozici kazdeho uzlu
-				n.Position = (n.Position - offset) * factor;
-			lowerBound = (lowerBound - offset) * factor; // jeste prepocitam meze
-			upperBound = (upperBound - offset) * factor;
 		}
 
 		#endregion
@@ -587,7 +592,7 @@ namespace MeshEditor.Construction
 			{
 				throw new MeshConstructingException("There are two nodes with same index.");
 			}
-	
+
 			// add to nodes dictionary
 			nodes.Add(n.ID, n);
 
@@ -890,7 +895,7 @@ namespace MeshEditor.Construction
 			// spocitat meze obalky site (pro vypocet centra a polomeru site)
 			foreach (Node n in mesh.GetNodes(false))
 			{
-				updateBounds(n.Position, ref lowerBound, ref upperBound);
+				UpdateBounds(n.Position, ref lowerBound, ref upperBound);
 				containsAnyPoints = true;
 			}
 
@@ -1081,7 +1086,7 @@ namespace MeshEditor.Construction
 						this.hiddenItemsProperties = new EdgeFacePropertySet();
 
 						var faces = mesh.Faces.Concat(element3D.GenerateAllFaces(this.quadraticNodesCache)).ToList();
-						
+
 						mesh.ClearSurface();
 						Histogram edgeAnglesHistogram = mesh.Statistics.EdgeAnglesHistogram;
 						createSurfaceRepresentation(mesh, faces, ref edgeAnglesHistogram, null, null);

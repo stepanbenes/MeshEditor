@@ -474,6 +474,8 @@ namespace MeshEditor.Data
 			}
 		}
 
+		#region Draw Section
+
 		/// <summary>
 		/// Draws surface representation of mesh, 
 		/// if there are some 1D elements, it draws them too
@@ -650,92 +652,19 @@ namespace MeshEditor.Data
 			// Console.Write("*"); // neprekresluje se sit po kazde akci dvakrat?
 		}
 
-		#region Draw Section
-
-		//private float[] intersectionAngles;
-
-		//public void DrawCutPlane(Cuts.CutPlane cutPlane, RenderMode renderMode)
-		//{
-		//    foreach (Element element in content.Elements)
-		//    {
-		//        List<Vector3> intersections = new List<Vector3>(element.GetAllIntersectionsOfEdgesWithPlane(cutPlane.PointOnPlane, cutPlane.NormalVector));
-		//        if (intersections.Count > 2)
-		//        {
-		//            Vector3 sectionCenter = Vector3.Zero;
-		//            for (int i = 0; i < intersections.Count; i++)
-		//            {
-		//                sectionCenter += intersections[i];
-		//            }
-		//            sectionCenter /= (float)intersections.Count;
-
-		//            //float[] intersectionAngles = new float[intersections.Count];
-		//            Vector3 firstVector = intersections[0] - sectionCenter;
-
-		//            if (firstVector == Vector3.Zero) // all intersections are same, do not cut element - section plane incides only with one point in element
-		//                continue; // TODO: vyresit nulovy vektor nebo blizky nule
-
-		//            firstVector.Normalize();
-		//            intersectionAngles = new float[intersections.Count];
-		//            intersectionAngles[0] = 0f;
-		//            for (int i = 1; i < intersections.Count; i++)
-		//            {
-		//                Vector3 secondVector = intersections[i] - sectionCenter;
-		//                //System.Diagnostics.Debug.Assert(secondVector != Vector3.Zero);
-		//                if (secondVector == Vector3.Zero) // TODO: vyresit nulovy vektor nebo blizky nule
-		//                    continue;
-		//                secondVector.Normalize();
-		//                float intersectionAngle = Utilities.Functions.GetAngleInDegreesBetweenUnitVectors_0_360(firstVector, secondVector, cutPlane.NormalVector);
-		//                intersectionAngles[i] = intersectionAngle;
-		//            }
-
-		//            int[] indices = new int[intersections.Count];
-		//            for (int i = 0; i < indices.Length; i++)
-		//            {
-		//                indices[i] = i;
-		//            }
-
-		//            Array.Sort(indices, compareAngles);
-
-		//            // draw section plane
-
-		//            GL.Normal3(cutPlane.NormalVector);
-		//            GL.Color3(Color.Green);
-		//            GL.Begin(BeginMode.TriangleFan);
-		//            GL.Vertex3(sectionCenter);
-		//            for (int i = 0; i < intersections.Count; i++)
-		//            {
-		//                GL.Vertex3(intersections[indices[i]]);
-		//            }
-		//            GL.Vertex3(intersections[indices[0]]); // last point to close loop
-		//            GL.End();
-
-		//            GL.LineWidth(2.0f);
-		//            GL.Begin(BeginMode.LineLoop);
-		//            GL.Color3(Color.Red);
-		//            for (int i = 0; i < intersections.Count; i++)
-		//            {
-		//                GL.Vertex3(intersections[indices[i]]);
-		//            }
-		//            GL.End();
-		//        }
-		//    }
-		//}
-
-		//private int compareAngles(int index1, int index2)
-		//{
-		//    return intersectionAngles[index1].CompareTo(intersectionAngles[index2]);
-		//}
-
-		#endregion
-
-		/// <summary>
-		/// Draws faces in mesh only
-		/// </summary>
-		public void DrawFacesToDepthBuffer()
+		public void DrawFacesToDepthBuffer(Action faceDrawer)
 		{
+			Debug.Assert(faceDrawer != null);
 			GL.Clear(ClearBufferMask.DepthBufferBit);
+			faceDrawer();
+		}
+
+		public void DrawFacesOnly()
+		{
 			content.DrawFacesOnly();
 		}
+
+		#endregion
 
 		public void UpdateColors()
 		{
@@ -810,7 +739,7 @@ namespace MeshEditor.Data
 			this.buffersAreReady = content.CreateBuffers(colorMode, statistics.SoftBorderLimit, statistics.HardBorderLimit);
 		}
 
-		public void CreateVisibleNodesList(Rectangle window, Camera camera, bool xRayVision)
+		public void CreateVisibleNodesList(Rectangle window, Camera camera, bool xRayVision, Action faceDrawer)
 		{
 			GL.MatrixMode(MatrixMode.Modelview);
 			GL.PushMatrix();
@@ -818,7 +747,7 @@ namespace MeshEditor.Data
 			camera.LookAt(); // nastavit kameru
 			// ---------------------------------------------------
 
-			content.VisibleNodes = FindVisibleNodes(window, camera, xRayVision, true);
+			content.VisibleNodes = FindVisibleNodes(window, camera, xRayVision, true, faceDrawer);
 
 			if (buffersAreReady)
 				content.CreateVisibleNodesBuffer(window);
@@ -827,7 +756,7 @@ namespace MeshEditor.Data
 			GL.PopMatrix();
 		}
 
-		public void CreateVisibleFacesList(Rectangle area, Camera camera)
+		public void CreateVisibleFacesList(Rectangle area, Camera camera, Action faceDrawer)
 		{
 			GL.MatrixMode(MatrixMode.Modelview);
 			GL.PushMatrix();
@@ -889,7 +818,7 @@ namespace MeshEditor.Data
 			// ===================================================================
 			GL.PolygonOffset(1f, 1f); // trochu je posunu, abych pak mohl testovat
 			GL.Enable(EnableCap.PolygonOffsetFill);
-			DrawFacesToDepthBuffer(); // vykreslit do depth bufferu plochy site
+			DrawFacesToDepthBuffer(faceDrawer); // vykreslit do depth bufferu plochy site
 			GL.Disable(EnableCap.PolygonOffsetFill);
 			// -------------------------------------------------------------------
 
@@ -970,16 +899,16 @@ namespace MeshEditor.Data
 			return distance;
 		}
 
-		public HashSet<Node> FindVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity)
+		public HashSet<Node> FindVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, Action faceDrawer)
 		{
 			Dictionary<Node, Vector3> screenProjections;
-			return findVisibleNodes(area, camera, xRayVision, computeNodeDensity, out screenProjections);
+			return findVisibleNodes(area, camera, xRayVision, computeNodeDensity, faceDrawer, out screenProjections);
 		}
 
-		public Dictionary<Node, Vector3> FindVisibleNodesProjectedPositions(Rectangle area, Camera camera)
+		public Dictionary<Node, Vector3> FindVisibleNodesProjectedPositions(Rectangle area, Camera camera, Action faceDrawer)
 		{
 			Dictionary<Node, Vector3> screenProjections, result = new Dictionary<Node, Vector3>();
-			HashSet<Node> visibleNodes = findVisibleNodes(area, camera, false, false, out screenProjections);
+			HashSet<Node> visibleNodes = findVisibleNodes(area, camera, false, false, faceDrawer, out screenProjections);
 			foreach (Node n in visibleNodes)
 				result[n] = screenProjections[n];
 			return result;
@@ -1005,7 +934,7 @@ namespace MeshEditor.Data
 
 		#region Private methods
 
-		private HashSet<Node> findVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, out Dictionary<Node, Vector3> screenProjections)
+		private HashSet<Node> findVisibleNodes(Rectangle area, Camera camera, bool xRayVision, bool computeNodeDensity, Action faceDrawer, out Dictionary<Node, Vector3> screenProjections)
 		{
 			int[] viewport;
 			double[] modelview;
@@ -1062,7 +991,7 @@ namespace MeshEditor.Data
 			// ===================================================================
 			GL.PolygonOffset(1f, 1f); // trochu je posunu, abych pak mohl testovat
 			GL.Enable(EnableCap.PolygonOffsetFill);
-			DrawFacesToDepthBuffer(); // vykreslit do depth bufferu plochy site
+			DrawFacesToDepthBuffer(faceDrawer); // vykreslit do depth bufferu plochy site
 			GL.Disable(EnableCap.PolygonOffsetFill);
 			// -------------------------------------------------------------------
 
