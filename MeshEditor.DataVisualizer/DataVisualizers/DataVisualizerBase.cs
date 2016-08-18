@@ -55,7 +55,7 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		public void DrawItems(PropertyColorsMode propertyColorsMode)
+		public void DrawDecorations(PropertyColorsMode propertyColorsMode)
 		{
 			// DRAW COLOR SCALE LEGEND
 			if (Settings.ShowColorScaleLegend && DisplayColors && (propertyColorsMode & (PropertyColorsMode.Elements | PropertyColorsMode.Faces)) == 0)

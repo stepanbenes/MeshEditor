@@ -40,10 +40,10 @@ namespace MeshEditor.CoreInterface
 		void EndDraw();
 
 		/// <summary>
-		/// Draws additional decorations of data visualizer (e.g. octree structure, ...).
+		/// Draws additional decorations of data visualizer (e.g. color scale legend, vector arrows, ...).
 		/// </summary>
 		/// <param name="propertyColorsMode">Flags indicating which entites are drawn with colors according to their properties.</param>
-		void DrawItems(PropertyColorsMode propertyColorsMode);
+		void DrawDecorations(PropertyColorsMode propertyColorsMode);
 
 		/// <summary>
 		/// Returns color in RGBA32 format that corresponds to data value on specified node.

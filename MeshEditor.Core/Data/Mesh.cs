@@ -646,7 +646,7 @@ namespace MeshEditor.Data
 
 			if (content.DataVisualizer != null)
 			{
-				content.DataVisualizer.DrawItems(colorMode);
+				content.DataVisualizer.DrawDecorations(colorMode);
 			}
 
 			// Console.Write("*"); // neprekresluje se sit po kazde akci dvakrat?
