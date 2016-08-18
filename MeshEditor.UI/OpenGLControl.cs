@@ -737,9 +737,10 @@ namespace MeshEditor.WinUI
 			setSceneFacade(SceneFacade.GetEmptyScene());
 		}
 
-		public void SetMultiLayerScene()
+		public void SetNewScene(SceneFacade newSceneFacade)
 		{
-			setSceneFacade(SceneFacade.GetEmptyMultiLayerScene());
+			Debug.Assert(newSceneFacade != null);
+			setSceneFacade(newSceneFacade);
 		}
 
 		public static void ShowInternalStateInfo()

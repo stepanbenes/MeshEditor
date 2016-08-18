@@ -89,7 +89,7 @@ namespace MeshEditor.CoreInterface
 
 		#endregion
 
-		#region Private Fields
+		#region Fields, constructor
 
 		private IScene scene;
 
@@ -120,11 +120,7 @@ namespace MeshEditor.CoreInterface
 
 		// ----------------------------------------------------
 
-		#endregion
-
-		#region Private Constructors
-
-		private SceneFacade(IScene scene)
+		public SceneFacade(IScene scene)
 		{
 			Debug.Assert(scene != null);
 			this.scene = scene;
@@ -257,11 +253,6 @@ namespace MeshEditor.CoreInterface
 		public static SceneFacade GetEmptyScene()
 		{
 			return new SceneFacade(new Scene());
-		}
-
-		public static SceneFacade GetEmptyMultiLayerScene()
-		{
-			return new SceneFacade(new MultiLayerScene());
 		}
 
 		public static SceneFacade GetCopyOf(SceneFacade sceneToCopy)
@@ -847,12 +838,12 @@ namespace MeshEditor.CoreInterface
 					return scene.LastUsedCutInfo;
 				case AvailableValue.SelectedLayerId:
 					{
-						var multiLayerScene = scene as MultiLayerScene;
+						var multiLayerScene = scene as IMultiLayerScene;
 						return multiLayerScene?.SelectedLayer;
 					}
 				case AvailableValue.VisibleLayersIds:
 					{
-						var multiLayerScene = scene as MultiLayerScene;
+						var multiLayerScene = scene as IMultiLayerScene;
 						return multiLayerScene?.GetVisibleLayers();
 					}
 				default:
@@ -931,7 +922,7 @@ namespace MeshEditor.CoreInterface
 					break;
 				case AvailableValue.SelectedLayerId:
 					{
-						var multiLayerScene = scene as MultiLayerScene;
+						var multiLayerScene = scene as IMultiLayerScene;
 						if (multiLayerScene != null)
 						{
 							multiLayerScene.SelectedLayer = (Guid?)value;
@@ -1128,7 +1119,7 @@ namespace MeshEditor.CoreInterface
 				meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
 			}
 
-			MultiLayerScene multiLayerScene = (MultiLayerScene)scene;
+			IMultiLayerScene multiLayerScene = (IMultiLayerScene)scene;
 			Mesh result;
 			using (parser)
 			{
@@ -1146,7 +1137,7 @@ namespace MeshEditor.CoreInterface
 
 		public void RemoveMeshFromLayer(Guid layerId)
 		{
-			((MultiLayerScene)scene).SetMeshForLayer(layerId, null);
+			((IMultiLayerScene)scene).SetMeshForLayer(layerId, null);
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 

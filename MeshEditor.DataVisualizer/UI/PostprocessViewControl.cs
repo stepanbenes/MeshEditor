@@ -34,6 +34,9 @@ namespace MeshEditor.DataVisualizer.UI
 		public PostprocessViewControl(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
+
+			activeScene = new SceneFacade(new PostprocessScene());
+
 			this.longOpNotifier = longOpNotifier;
 			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
 
