@@ -445,7 +445,7 @@ namespace MeshEditor.CoreInterface
 
 			scene.Camera.LookAt(); // natoc kameru
 
-			scene.Draw(!isActive || cameraChangedTimer.Enabled, !isActive || drawSelectionRectangleFlag); // vykresli scenu, pokud s ni zrovna hejbu, tak ji vykresli rychleji (zjednodusene)
+			scene.Draw(optimizeForMoving: !isActive || cameraChangedTimer.Enabled, optimizeForSelecting: !isActive || drawSelectionRectangleFlag, drawDecorations: true); // vykresli scenu, pokud s ni zrovna hejbu, tak ji vykresli rychleji (zjednodusene)
 
 			if (drawSelectionRectangleFlag)
 				drawSelectionRectangle();
@@ -914,10 +914,13 @@ namespace MeshEditor.CoreInterface
 						scene.Mesh.UnsavedChanges = (bool)value;
 					break;
 				case AvailableValue.DataVisualizer:
-					if (scene.Mesh != null)
 					{
 						IDataVisualizer dataVisualizer = value as IDataVisualizer;
-						scene.Mesh.SetDataVisualizer(dataVisualizer);
+						Debug.Assert(scene.Mesh != null || dataVisualizer == null);
+						if (scene.Mesh != null)
+						{
+							scene.Mesh.SetDataVisualizer(dataVisualizer);
+						}
 					}
 					break;
 				case AvailableValue.SelectedLayerId:

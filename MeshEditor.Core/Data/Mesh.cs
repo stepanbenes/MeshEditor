@@ -644,11 +644,6 @@ namespace MeshEditor.Data
 				GL.Enable(EnableCap.Lighting);
 			}
 
-			if (content.DataVisualizer != null)
-			{
-				content.DataVisualizer.DrawDecorations(colorMode);
-			}
-
 			// Console.Write("*"); // neprekresluje se sit po kazde akci dvakrat?
 		}
 

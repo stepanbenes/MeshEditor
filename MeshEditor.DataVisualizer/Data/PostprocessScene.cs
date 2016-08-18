@@ -60,15 +60,8 @@ namespace MeshEditor.DataVisualizer.Data
 				if (selectedLayer != value)
 				{
 					selectedLayer = value;
-
-					if (selectedLayer.HasValue)
-					{
-						currentScene = getOrCreateSceneFor(selectedLayer.Value);
-					}
-					else
-					{
-						currentScene = emptyScene;
-					}
+					currentScene = (selectedLayer.HasValue) ? getOrCreateSceneFor(selectedLayer.Value) : emptyScene;
+					onCurrentSceneChanged();
 				}
 			}
 		}
@@ -129,15 +122,13 @@ namespace MeshEditor.DataVisualizer.Data
 			return result;
 		}
 
-
-
-		void IScene.Draw(bool optimizeForMoving, bool optimizeForSelecting)
+		void IScene.Draw(bool optimizeForMoving, bool optimizeForSelecting, bool drawDecorations/*ignored*/)
 		{
 			Debug.Assert(emptyScene.Mesh == null);
 
 			foreach (var layerScene in enumerateAllScenesWithMesh()) // TODO: sort layer scenes: write outlines at the end because of blending
 			{
-				layerScene.Draw(optimizeForMoving, optimizeForSelecting);
+				layerScene.Draw(optimizeForMoving, optimizeForSelecting, drawDecorations: layerScene == currentScene);
 			}
 
 			emptyScene.DrawWithoutMesh(origin: (PositionOffset ?? Vector3.Zero) * -(ResizeFactor ?? 1f));
@@ -200,6 +191,18 @@ namespace MeshEditor.DataVisualizer.Data
 				};
 			}
 			return scene;
+		}
+
+		private void onCurrentSceneChanged()
+		{
+			//foreach (var scene in enumerateAllScenesWithMesh())
+			//{
+			//	var dataVisualizerController = scene.Mesh.GetDataVisualizer() as IDataVisualizerController;
+			//	if (dataVisualizerController != null)
+			//	{
+			//		dataVisualizerController.Settings.ShowColorScaleLegend = (scene == currentScene);
+			//	}
+			//}
 		}
 
 		private bool containsAnyMesh() => layerSceneMap.Values.Where(scene => scene.Mesh != null).Any();

@@ -76,7 +76,7 @@ namespace MeshEditor.Data
 
 		#region Drawing - public methods
 
-		void Draw(bool optimizeForMoving, bool optimizeForSelecting);
+		void Draw(bool optimizeForMoving, bool optimizeForSelecting, bool drawDecorations);
 
 		#endregion
 

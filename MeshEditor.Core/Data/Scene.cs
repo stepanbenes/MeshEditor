@@ -816,11 +816,20 @@ namespace MeshEditor.Data
 
 		#region Drawing - public methods
 
-		public void Draw(bool optimizeForMoving, bool optimizeForSelecting)
+		public void Draw(bool optimizeForMoving, bool optimizeForSelecting, bool drawDecorations)
 		{
 			if (mesh != null)
 			{
 				mesh.DrawContent(this.renderMode, this.camera, optimizeForMoving, optimizeForSelecting, drawNodeNumbersFlag, drawElementNumbersFlag, this.drawBeamsFlag, this.drawBeamNumbersFlag);
+
+				if (drawDecorations)
+				{
+					var dataVisualizer = mesh.GetDataVisualizer();
+					if (dataVisualizer != null)
+					{
+						dataVisualizer.DrawDecorations(mesh.ColorMode);
+					}
+				}
 			}
 
 			// vykresli osy
