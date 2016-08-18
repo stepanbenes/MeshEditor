@@ -144,8 +144,10 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async Task updateDataSelectionInLeftPanelAsync()
 		{
+			var selectedLayerId = ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?;
+			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as IReadOnlyCollection<Guid>;
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
-			if (layerDataVisualizer != null)
+			if (selectedLayerId.HasValue && layerDataVisualizer != null)
 			{
 				const string taskName = "Loading layer summary";
 				try
@@ -153,7 +155,7 @@ namespace MeshEditor.DataVisualizer.UI
 					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 					try
 					{
-						var summary = await getSummaryFileForLayerAsync(layerDataVisualizer.Layer, cancellationTokenSources[operationToken].Token);
+						var summary = await getSummaryFileForLayerAsync(selectedLayerId.Value, cancellationTokenSources[operationToken].Token);
 						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 					}
 					catch (OperationCanceledException)
@@ -171,51 +173,54 @@ namespace MeshEditor.DataVisualizer.UI
 					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 				}
 
-				try
-				{
-					changingActiveScene = true;
-					layersTreeView.SetSelectedLayer(layerDataVisualizer.Layer);
-				}
-				finally
-				{
-					changingActiveScene = false;
-				}
 				visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 			}
 			else
 			{
-				layersTreeView.SetSelectedLayer(null);
 				dataSelectionControl.UpdateDataSource(null, null);
 				visualizerSettingsControl.Settings = null;
 			}
+
+			try
+			{
+				changingActiveScene = true;
+				layersTreeView.SetCheckedLayers(visibleLayerIds);
+				layersTreeView.SetSelectedLayer(selectedLayerId);
+			}
+			finally
+			{
+				changingActiveScene = false;
+			}
 		}
 
-		private async Task<SummaryFile> getSummaryFileForLayerAsync(ILayerInfo layer, CancellationToken cancellationToken)
+		private async Task<SummaryFile> getSummaryFileForLayerAsync(Guid layerId, CancellationToken cancellationToken)
 		{
 			SummaryFile summary;
-			if (!layerSummaryCache.TryGetValue(layer.Id, out summary))
+			if (!layerSummaryCache.TryGetValue(layerId, out summary))
 			{
-				summary = await solutionHub.LoadLayerSummaryAsync(layer.Id, cancellationToken);
-				layerSummaryCache[layer.Id] = summary;
+				summary = await solutionHub.LoadLayerSummaryAsync(layerId, cancellationToken);
+				layerSummaryCache[layerId] = summary;
 			}
 			return summary;
 		}
 
-		private async Task loadLayerAsync(ILayerInfo layer, SceneFacade scene, LongOpNotifier.Token operationToken)
+		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, LongOpNotifier.Token operationToken)
 		{
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
-			var summary = await getSummaryFileForLayerAsync(layer, cancellationToken);
+			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
 
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
+				string solutionDescriptionText = (string.IsNullOrEmpty(solutionDescription.Location) || solutionDescription.Location.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) ? (solutionDescription.ProjectName + " (remote solution)").Trim() : solutionDescription.Location;
+				var dataVisualizer = new LayerDataVisualizer(solutionDescriptionText);
+
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
-				var dataVisualizer = new LayerDataVisualizer(solutionDescription, layer);
 
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
 
-				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, progressReport);
+				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(layerId, firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, progressReport);
 
 				scene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
 				scene.PerformAction(AvailableAction.UpdateColorBuffers);
@@ -255,18 +260,14 @@ namespace MeshEditor.DataVisualizer.UI
 			mainSplitContainer.Panel1.Enabled = true;
 		}
 
-		private void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
+		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
 
-			ActiveScene.SetCurrentLayer(e.Layer?.Id);
-			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
-			if (layerDataVisualizer != null)
-			{
-				visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
-			}
+			ActiveScene.SetValue(AvailableValue.SelectedLayerId, e.Layer?.Id);
+			await updateDataSelectionInLeftPanelAsync();
 		}
 
 		private async void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
@@ -276,6 +277,7 @@ namespace MeshEditor.DataVisualizer.UI
 				return;
 
 			Debug.Assert(e.Layer != null);
+			Debug.Assert((ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?) == e.Layer.Id);
 
 			const string taskName = "Loading layer";
 			try
@@ -283,7 +285,7 @@ namespace MeshEditor.DataVisualizer.UI
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					await loadLayerAsync(e.Layer, ActiveScene, operationToken);
+					await loadLayerAsync(e.Layer.Id, ActiveScene, operationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -307,7 +309,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 			Debug.Assert(e.Layer != null);
 
-			ActiveScene.RemoveMesh();
+			ActiveScene.RemoveMeshFromLayer(e.Layer.Id);
 			dataSelectionControl.UpdateDataSource(null, null);
 		}
 

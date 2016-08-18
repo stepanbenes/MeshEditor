@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.DataVisualizer.Data;
+using System.Diagnostics;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -29,16 +30,32 @@ namespace MeshEditor.DataVisualizer.UI
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
 
-		public void SetSelectedLayer(ILayerInfo layer)
+		public void SetSelectedLayer(Guid? layerId)
+		{
+			//checkAllNodes(treeViewLayers.Nodes, false);
+			TreeNode treeNode;
+			if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out treeNode))
+			{
+				treeViewLayers.SelectedNode = treeNode;
+			}
+			else
+			{
+				treeViewLayers.SelectedNode = null;
+			}
+		}
+
+		public void SetCheckedLayers(IReadOnlyCollection<Guid> layerIds)
 		{
 			try
 			{
 				checkingTreeNodes = true;
-				//checkAllNodes(treeViewLayers.Nodes, false);
-				TreeNode treeNode;
-				if (layer != null && layerIdTreeNodeMap.TryGetValue(layer.Id, out treeNode))
+
+				checkAllNodes(treeViewLayers.Nodes, isChecked: false); // uncheck all
+
+				foreach (Guid layerId in layerIds)
 				{
-					treeNode.Checked = true;
+					Debug.Assert(layerIdTreeNodeMap.ContainsKey(layerId));
+					layerIdTreeNodeMap[layerId].Checked = true;
 				}
 			}
 			finally
@@ -62,6 +79,7 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			var layerInfo = (ILayerInfo)e.Node.Tag;
 			LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+
 			// TODO: update context commands
 		}
 
@@ -70,27 +88,15 @@ namespace MeshEditor.DataVisualizer.UI
 			if (checkingTreeNodes)
 				return;
 
-			treeViewLayers.SelectedNode = e.Node; // immediately select checked/unchecked node
-
-			try
+			var layerInfo = (ILayerInfo)e.Node.Tag;
+			if (e.Node.Checked)
 			{
-				checkingTreeNodes = true;
-				bool isChecked = e.Node.Checked;
-				//checkAllNodes(treeViewLayers.Nodes, false);
-				e.Node.Checked = isChecked;
-				var layerInfo = (ILayerInfo)e.Node.Tag;
-				if (e.Node.Checked)
-				{
-					LayerChecked?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
-				}
-				else
-				{
-					LayerUnchecked?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
-				}
+				treeViewLayers.SelectedNode = e.Node; // select before checking
+				LayerChecked?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 			}
-			finally
+			else
 			{
-				checkingTreeNodes = false;
+				LayerUnchecked?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 			}
 		}
 

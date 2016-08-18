@@ -735,7 +735,7 @@ namespace MeshEditor.CoreInterface
 					}
 					break;
 				default:
-					return;
+					throw new NotSupportedException();
 			}
 
 			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
@@ -845,8 +845,18 @@ namespace MeshEditor.CoreInterface
 					return Vector3.Zero;
 				case AvailableValue.LastUsedCutInfo:
 					return scene.LastUsedCutInfo;
+				case AvailableValue.SelectedLayerId:
+					{
+						var multiLayerScene = scene as MultiLayerScene;
+						return multiLayerScene?.SelectedLayer;
+					}
+				case AvailableValue.VisibleLayersIds:
+					{
+						var multiLayerScene = scene as MultiLayerScene;
+						return multiLayerScene?.GetVisibleLayers();
+					}
 				default:
-					return null;
+					throw new NotSupportedException();
 			}
 		}
 
@@ -919,6 +929,18 @@ namespace MeshEditor.CoreInterface
 						scene.Mesh.SetDataVisualizer(dataVisualizer);
 					}
 					break;
+				case AvailableValue.SelectedLayerId:
+					{
+						var multiLayerScene = scene as MultiLayerScene;
+						if (multiLayerScene != null)
+						{
+							multiLayerScene.SelectedLayer = (Guid?)value;
+							MeshReloaded?.Invoke(this, EventArgs.Empty);
+						}
+					}
+					break;
+				default:
+					throw new NotSupportedException();
 			}
 
 			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
@@ -1087,7 +1109,6 @@ namespace MeshEditor.CoreInterface
 			if (MakeCurrentNeeded != null)
 				MakeCurrentNeeded(this, EventArgs.Empty);
 
-			//scene.Camera.Reset();
 			scene.SetDefaultCameraView();
 
 			createBuffers();
@@ -1099,7 +1120,7 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public async Task ReloadMeshAsync(IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, Action<string, int> progressReport)
+		public async Task ReloadMeshInLayerAsync(Guid layerId, IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, Action<string, int> progressReport)
 		{
 			IMeshCreator meshCreator = new MeshConstructor();
 			if (progressReport != null)
@@ -1107,20 +1128,14 @@ namespace MeshEditor.CoreInterface
 				meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
 			}
 
+			MultiLayerScene multiLayerScene = (MultiLayerScene)scene;
 			Mesh result;
 			using (parser)
 			{
-				result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: scene.PositionOffset, defaultResizeFactor: scene.ResizeFactor));
+				result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: multiLayerScene.PositionOffset, defaultResizeFactor: multiLayerScene.ResizeFactor));
 			}
 
-			PropertyColorsMode? oldColorMode = scene.Mesh?.ColorMode;
-
-			scene.SetMesh(result);
-
-			if (scene.Mesh != null && oldColorMode.HasValue)
-			{
-				scene.Mesh.ColorMode = oldColorMode.Value;
-			}
+			multiLayerScene.SetMeshForLayer(layerId, result);
 
 			createBuffers();
 
@@ -1129,18 +1144,9 @@ namespace MeshEditor.CoreInterface
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 
-		public void RemoveMesh()
+		public void RemoveMeshFromLayer(Guid layerId)
 		{
-			scene.SetMesh(null);
-			MeshReloaded?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void SetCurrentLayer(Guid? currentLayerId)
-		{
-			Debug.Assert(scene is MultiLayerScene);
-			var multiLayerScene = (MultiLayerScene)scene;
-			multiLayerScene.SelectedLayer = currentLayerId;
-
+			((MultiLayerScene)scene).SetMeshForLayer(layerId, null);
 			MeshReloaded?.Invoke(this, EventArgs.Empty);
 		}
 

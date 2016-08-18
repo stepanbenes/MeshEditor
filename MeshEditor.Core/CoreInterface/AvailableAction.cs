@@ -44,6 +44,6 @@ namespace MeshEditor.CoreInterface
 		ClearSignalElement,
 		UpdateNodeCoordinates,
 		Redraw,
-		UpdateElementsCutByValueLimit
+		UpdateElementsCutByValueLimit,
 	}
 }

@@ -330,15 +330,15 @@ namespace MeshEditor.Data
 		{
 			if (newMesh != this.mesh)
 			{
+				if (this.mesh != null)
+				{
+					this.mesh.ReferenceCount--;
+					if (this.mesh.ReferenceCount <= 0)
+						this.mesh.Dispose();
+				}
 				if (newMesh != null)
 				{
 					newMesh.ReferenceCount++;
-					if (this.mesh != null)
-					{
-						this.mesh.ReferenceCount--;
-						if (this.mesh.ReferenceCount <= 0)
-							this.mesh.Dispose();
-					}
 				}
 
 				initializeMeshDependentFields();
@@ -397,10 +397,6 @@ namespace MeshEditor.Data
 		{
 			get { return lastUsedCutInfo; }
 		}
-
-		public Vector3? PositionOffset => mesh?.PositionOffset;
-
-		public float? ResizeFactor => mesh?.ResizeFactor;
 
 		#endregion
 
@@ -829,7 +825,7 @@ namespace MeshEditor.Data
 
 			// vykresli osy
 			if (drawAxesFlag)
-				drawAxes((PositionOffset ?? Vector3.Zero) * -(ResizeFactor ?? 1f));
+				drawAxes(origin: (mesh != null) ? (mesh.PositionOffset * -mesh.ResizeFactor) : Vector3.Zero);
 
 			if (this.cutPlaneDefinitionNodes.Count > 0)
 				drawPlaneDefinitionPoints();
@@ -842,10 +838,10 @@ namespace MeshEditor.Data
 				drawAxisArrows();
 		}
 
-		public void DrawWithoutMesh(Vector3 positionOffset, float resizeFactor)
+		public void DrawWithoutMesh(Vector3 origin)
 		{
 			if (drawAxesFlag)
-				drawAxes(positionOffset * -resizeFactor);
+				drawAxes(origin);
 
 			if (drawAxisArrowsFlag)
 				drawAxisArrows();

@@ -53,7 +53,7 @@ namespace MeshEditor.DataVisualizer.UI
 			int meshIndex = selectedTimeStepComboBoxItem.Value.MeshIndex;
 			int? elementPropertyAttributeIndex = layerSummary.Meshes.Single(m => m.Index == meshIndex).Attributes?.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 
-			return new DataSelection(selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, dataIndex, meshIndex, elementPropertyAttributeIndex);
+			return new DataSelection(layerSummary.Id, selectedFieldComboBoxItem.Key, selectedComponentComboBoxItem.Key, selectedTimeStepComboBoxItem.Key, dataIndex, meshIndex, elementPropertyAttributeIndex);
 		}
 
 		//public void UpdateDataSelection(DataSelection dataSelection)

@@ -44,10 +44,12 @@ namespace MeshEditor.Data
 
 			foreach (var pair in layerSceneMap)
 			{
-				result.layerSceneMap.Add(pair.Key, (Scene)pair.Value.Copy());
+				var sceneCopy = (Scene)pair.Value.Copy();
+				sceneCopy.Camera = result.emptyScene.Camera;
+				result.layerSceneMap.Add(pair.Key, sceneCopy);
 			}
 
-			// TODO: set currentScene
+			result.SelectedLayer = this.SelectedLayer;
 
 			return result;
 		}
@@ -75,16 +77,7 @@ namespace MeshEditor.Data
 
 					if (selectedLayer.HasValue)
 					{
-						if (!layerSceneMap.TryGetValue(selectedLayer.Value, out currentScene))
-						{
-							var newScene = new Scene()
-							{
-								Camera = emptyScene.Camera,
-								DrawAxes = false,
-								DrawAxisArrows = false
-							};
-							currentScene = layerSceneMap[selectedLayer.Value] = newScene;
-						}
+						currentScene = getOrCreateSceneFor(selectedLayer.Value);
 					}
 					else
 					{
@@ -94,32 +87,63 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public void SetMesh(Mesh newMesh)
+		public IReadOnlyCollection<Guid> GetVisibleLayers() => (from pair in layerSceneMap
+																where pair.Value.Mesh != null
+																select pair.Key).ToArray();
+
+		private Scene getOrCreateSceneFor(Guid layerId)
 		{
-			Debug.Assert(currentScene != emptyScene);
+			Scene scene;
+			if (!layerSceneMap.TryGetValue(layerId, out scene))
+			{
+				scene = layerSceneMap[layerId] = new Scene()
+				{
+					Camera = emptyScene.Camera,
+					DrawAxes = false,
+					DrawAxisArrows = false
+				};
+			}
+			return scene;
+		}
+
+		public void SetMeshForLayer(Guid layerId, Mesh newMesh)
+		{
 			bool isFirstMesh = newMesh != null && !containsAnyMesh();
 
-			currentScene.SetMesh(newMesh);
+			Scene scene = getOrCreateSceneFor(layerId);
+
+			scene.SetMesh(newMesh);
 
 			if (isFirstMesh)
 			{
-				currentScene.SetDefaultCameraView();
+				scene.SetDefaultCameraView();
 			}
 
-			PositionOffset = PositionOffset ?? newMesh?.PositionOffset;
-			ResizeFactor = ResizeFactor ?? newMesh?.ResizeFactor;
+			if (newMesh != null)
+			{
+				PositionOffset = newMesh.PositionOffset;
+				ResizeFactor = newMesh.ResizeFactor;
+			}
+			else
+			{
+				if (!containsAnyMesh())
+				{
+					PositionOffset = null;
+					ResizeFactor = null;
+				}
+			}
 		}
 
 		public void Draw(bool optimizeForMoving, bool optimizeForSelecting)
 		{
 			Debug.Assert(emptyScene.Mesh == null);
-			
+
 			foreach (var layerScene in enumerateAllScenesWithMesh()) // TODO: sort layer scenes: write outlines at the end because of blending
 			{
 				layerScene.Draw(optimizeForMoving, optimizeForSelecting);
 			}
 
-			emptyScene.DrawWithoutMesh(PositionOffset ?? Vector3.Zero, ResizeFactor ?? 1f);
+			emptyScene.DrawWithoutMesh(origin: (PositionOffset ?? Vector3.Zero) * -(ResizeFactor ?? 1f));
 		}
 
 		public void ComputeVisibleNodes(Size clientWindow)
@@ -465,6 +489,11 @@ namespace MeshEditor.Data
 		public void UpdateLastUsedCut()
 		{
 			currentScene.UpdateLastUsedCut();
+		}
+
+		public void SetMesh(Mesh newMesh)
+		{
+			throw new NotSupportedException("Use MultiLayerScene.SetMeshForLayer method instead.");
 		}
 	}
 }

@@ -52,10 +52,6 @@ namespace MeshEditor.Data
 
 		CutInfo LastUsedCutInfo { get; }
 
-		Vector3? PositionOffset { get; }
-
-		float? ResizeFactor { get; }
-
 		#endregion
 
 		#region Misc - public methods

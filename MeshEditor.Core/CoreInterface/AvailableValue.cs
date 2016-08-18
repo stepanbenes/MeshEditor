@@ -39,6 +39,8 @@ namespace MeshEditor.CoreInterface
 		ElementSignalIsSet, // bool
 		DataVisualizer, // MeshEditor.CoreInterface.IDataVisualizer
 		MeshDimensions, // OpenTK.Vector3
-		LastUsedCutInfo // Cuts.CutInfo
+		LastUsedCutInfo, // Cuts.CutInfo
+		SelectedLayerId, // Guid?
+		VisibleLayersIds, // IReadOnlyCollection<Guid>
 	}
 }
