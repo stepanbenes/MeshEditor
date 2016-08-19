@@ -1650,6 +1650,7 @@ namespace MeshEditor.WinUI
 			layoutMode = LayoutMode.Preprocessor;
 			var preprocessView = new PreprocessViewControl { Content = content, Dock = DockStyle.Fill };
 			centralPanel.Controls.Add(preprocessView);
+			activeControl?.Focus();
 		}
 
 		private void setPostprocessorLayoutMode()
@@ -1662,7 +1663,7 @@ namespace MeshEditor.WinUI
 			centralPanel.Controls.Add(postprocessView);
 			postprocessView.SplitterDistance = 200;
 			activeControl.SetNewScene(postprocessView.ActiveScene);
-
+			activeControl.Focus();
 		}
 
 		#endregion
