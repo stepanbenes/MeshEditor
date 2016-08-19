@@ -623,6 +623,7 @@ namespace MeshEditor.CoreInterface
 						computeVisibleNodes();
 						thisMeshNeedRefreshInOtherWindows = true;
 					}
+					MeshReloaded?.Invoke(this, EventArgs.Empty);
 					break;
 				case AvailableAction.Redraw:
 					thisMeshNeedRefreshInOtherWindows = true;
@@ -729,13 +730,12 @@ namespace MeshEditor.CoreInterface
 					throw new NotSupportedException();
 			}
 
-			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
-			else if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
+			if (thisMeshNeedRefreshInOtherWindows && scene.Mesh != null)
+				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+			else
+				RefreshNeeded?.Invoke(this, EventArgs.Empty);
 
-			if (ActionPerformed != null)
-				ActionPerformed(this, EventArgs.Empty);
+			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 
 		public object GetValue(AvailableValue valueName)
@@ -1114,34 +1114,9 @@ namespace MeshEditor.CoreInterface
 				EditorModeChanged(null, EventArgs.Empty);
 		}
 
-		public async Task ReloadMeshInLayerAsync(Guid layerId, IMeshFileParser parser, System.Threading.CancellationToken cancellationToken, Action<string, int> progressReport)
+		public IScene GetUnderlyingSceneObject()
 		{
-			IMeshCreator meshCreator = new MeshConstructor();
-			if (progressReport != null)
-			{
-				meshCreator.Step += (s, e) => progressReport(e.OperationName, e.PercentDone);
-			}
-
-			IMultiLayerScene multiLayerScene = (IMultiLayerScene)scene;
-			Mesh result;
-			using (parser)
-			{
-				result = await Task.Run(() => meshCreator.CreateMesh(parser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: multiLayerScene.PositionOffset, defaultResizeFactor: multiLayerScene.ResizeFactor));
-			}
-
-			multiLayerScene.SetMeshForLayer(layerId, result);
-
-			createBuffers();
-
-			needToComputeVisibleNodesFlag = true;
-			
-			MeshReloaded?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void RemoveMeshFromLayer(Guid layerId)
-		{
-			((IMultiLayerScene)scene).SetMeshForLayer(layerId, null);
-			MeshReloaded?.Invoke(this, EventArgs.Empty);
+			return scene;
 		}
 
 		public void LoadMeshFromFiles(string[] filenames, MeshIOEventHandler progressNotifier, YesNoQuestion cancelled)

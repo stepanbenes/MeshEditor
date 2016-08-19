@@ -22,6 +22,7 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			InitializeComponent();
 			treeViewLayers.AfterSelect += treeViewLayers_AfterSelect;
+			treeViewLayers.BeforeCheck += treeViewLayers_BeforeCheck;
 			treeViewLayers.AfterCheck += treeViewLayers_AfterCheck;
 			layerIdTreeNodeMap = new Dictionary<Guid, TreeNode>();
 		}
@@ -29,6 +30,8 @@ namespace MeshEditor.DataVisualizer.UI
 		public event EventHandler<LayerSelectionEventArgs> LayerSelectionChanged;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
+
+		public ILayerInfo GetSelectedLayer() => treeViewLayers.SelectedNode?.Tag as ILayerInfo;
 
 		public void SetSelectedLayer(Guid? layerId)
 		{
@@ -83,6 +86,12 @@ namespace MeshEditor.DataVisualizer.UI
 			// TODO: update context commands
 		}
 
+		private void treeViewLayers_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+		{
+			if (!e.Node.IsSelected) // it must be selected before checking/unchecking
+				e.Cancel = true;
+		}
+
 		private void treeViewLayers_AfterCheck(object sender, TreeViewEventArgs e)
 		{
 			if (checkingTreeNodes)
@@ -91,7 +100,6 @@ namespace MeshEditor.DataVisualizer.UI
 			var layerInfo = (ILayerInfo)e.Node.Tag;
 			if (e.Node.Checked)
 			{
-				treeViewLayers.SelectedNode = e.Node; // select before checking
 				LayerChecked?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 			}
 			else

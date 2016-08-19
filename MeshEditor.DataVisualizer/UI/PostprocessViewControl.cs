@@ -12,6 +12,7 @@ using System.Threading;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.Data;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -127,9 +128,10 @@ namespace MeshEditor.DataVisualizer.UI
 
 					//if (layers.Count > 0) // load first layer
 					//{
-					//	ActiveScene.SetCurrentLayer(layers[0].Id);
-					//	layersTreeView.SetSelectedLayer(layers[0]);
-					//	await loadLayerAsync(layers[0], ActiveScene, operationToken);
+					//	//((IMultiLayerScene)ActiveScene.GetUnderlyingSceneObject()).SelectedLayer = layers[0].Id;
+					//	ActiveScene.SetValue(AvailableValue.SelectedLayerId, layers[0].Id);
+					//	layersTreeView.SetSelectedLayer(layers[0].Id);
+					//	await loadLayerAsync(layers[0].Id, operationToken);
 					//}
 				}
 				catch (OperationCanceledException)
@@ -207,30 +209,40 @@ namespace MeshEditor.DataVisualizer.UI
 			return summary;
 		}
 
-		private async Task loadLayerAsync(Guid layerId, SceneFacade scene, LongOpNotifier.Token operationToken)
+		private async Task loadLayerAsync(ILayerInfo layerInfo, LongOpNotifier.Token operationToken)
 		{
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
-			var summary = await getSummaryFileForLayerAsync(layerId, cancellationToken);
+			var summary = await getSummaryFileForLayerAsync(layerInfo.Id, cancellationToken);
 
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
-				string solutionDescriptionText = (string.IsNullOrEmpty(solutionDescription.Location) || solutionDescription.Location.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) ? (solutionDescription.ProjectName + " (remote solution)").Trim() : solutionDescription.Location;
-				var dataVisualizer = new LayerDataVisualizer(solutionDescriptionText);
-
+				var originalScene = ActiveScene;
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
-
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
+				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, new DataSelection(layerInfo.Id, firstMesh.Index, elementPropertyAttributeIndex), getSolutionDescription(), progressReport, cancellationToken);
 
-				await dataVisualizer.UpdateDataSelectionAsync(solutionHub, new DataSelection(layerId, firstMesh.Index, elementPropertyAttributeIndex), cancellationToken, ActiveScene, progressReport);
+				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
+				originalScene.PerformAction(AvailableAction.Refresh);
 
-				scene.SetValue(AvailableValue.DataVisualizer, dataVisualizer);
-				scene.PerformAction(AvailableAction.UpdateColorBuffers);
-				visualizerSettingsControl.Settings = dataVisualizer.Settings;
+				visualizerSettingsControl.Settings = dataVisualizerController?.Settings;
 			}
 
 			dataSelectionControl.UpdateDataSource(summary, null);
+		}
+
+		private string getSolutionDescription()
+		{
+			if (string.IsNullOrEmpty(solutionDescription.Location) ||
+				solutionDescription.Location.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
+			{
+				return (solutionDescription.ProjectName + " (remote solution)").Trim();
+			}
+			else
+			{
+				return solutionDescription.Location;
+			}
 		}
 
 		private LongOpNotifier.Token beginLongOperation(string taskName)
@@ -288,7 +300,7 @@ namespace MeshEditor.DataVisualizer.UI
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					await loadLayerAsync(e.Layer.Id, ActiveScene, operationToken);
+					await loadLayerAsync(e.Layer, operationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -312,19 +324,19 @@ namespace MeshEditor.DataVisualizer.UI
 
 			Debug.Assert(e.Layer != null);
 
-			ActiveScene.RemoveMeshFromLayer(e.Layer.Id);
+			((IMultiLayerScene)ActiveScene.GetUnderlyingSceneObject()).SetMeshForLayer(e.Layer.Id, null);
+
+			// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
+			ActiveScene.PerformAction(AvailableAction.Refresh);
+
 			dataSelectionControl.UpdateDataSource(null, null);
+			visualizerSettingsControl.Settings = null;
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
-				return;
-
-			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
-			Debug.Assert(layerDataVisualizer != null);
-			if (layerDataVisualizer == null)
 				return;
 
 			const string taskName = "Updating data selection";
@@ -335,9 +347,10 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					var originalScene = ActiveScene;
 					Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-					await layerDataVisualizer.UpdateDataSelectionAsync(solutionHub, e.DataSelection, cancellationTokenSources[operationToken].Token, originalScene, progressReport);
-					// update colors
-					originalScene.PerformAction(AvailableAction.UpdateColorBuffers);
+					await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, e.DataSelection, getSolutionDescription(), progressReport, cancellationTokenSources[operationToken].Token);
+
+					// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
+					originalScene.PerformAction(AvailableAction.Refresh);
 				}
 				catch (OperationCanceledException)
 				{ }
