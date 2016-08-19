@@ -22,23 +22,27 @@ namespace MeshEditor.DataVisualizer.Data
 	{
 		#region Fields, constructors, dispose
 
-		private Guid? selectedLayer;
-		private Scene currentScene;
 		private readonly Scene emptyScene;
 		private readonly Dictionary<Guid, Scene> layerSceneMap;
+		private readonly HashSet<Guid> visibleLayers;
+
+		private Guid? selectedLayer;
+		private Scene currentScene;
+		
 		private Vector3? positionOffset;
 		private float? resizeFactor;
 
 		public PostprocessScene()
-			: this(new Scene() /*dummy scene*/)
+			: this(new Scene() /*empty scene*/)
 		{ }
 
-		private PostprocessScene(Scene scene)
+		private PostprocessScene(Scene emptyScene)
 		{
-			Debug.Assert(scene != null);
-			emptyScene = scene;
-			currentScene = emptyScene;
+			Debug.Assert(emptyScene != null);
+			this.emptyScene = emptyScene;
+			currentScene = this.emptyScene;
 			layerSceneMap = new Dictionary<Guid, Scene>();
+			visibleLayers = new HashSet<Guid>();
 		}
 
 		public void Dispose()
@@ -114,9 +118,7 @@ namespace MeshEditor.DataVisualizer.Data
 			}
 		}
 
-		IReadOnlyCollection<Guid> IMultiLayerScene.GetVisibleLayers() => (from pair in layerSceneMap
-																		  where pair.Value.Mesh != null
-																		  select pair.Key).ToArray();
+		ICollection<Guid> IMultiLayerScene.GetVisibleLayers() => visibleLayers;
 
 		#endregion
 
@@ -130,6 +132,7 @@ namespace MeshEditor.DataVisualizer.Data
 				resizeFactor = resizeFactor,
 			};
 
+			// copy layerSceneMap
 			foreach (var pair in layerSceneMap)
 			{
 				var sceneCopy = (Scene)pair.Value.Copy();
@@ -137,6 +140,13 @@ namespace MeshEditor.DataVisualizer.Data
 				result.layerSceneMap.Add(pair.Key, sceneCopy);
 			}
 
+			// copy visibleLayers
+			foreach (var visibleLayer in visibleLayers)
+			{
+				result.visibleLayers.Add(visibleLayer);
+			}
+
+			// set selectedLayer and currentScene
 			result.setSelectedLayer(this.selectedLayer);
 
 			return result;

@@ -41,6 +41,6 @@ namespace MeshEditor.CoreInterface
 		MeshDimensions, // OpenTK.Vector3
 		LastUsedCutInfo, // Cuts.CutInfo
 		SelectedLayerId, // Guid?
-		VisibleLayersIds, // IReadOnlyCollection<Guid>
+		VisibleLayersIds, // ICollection<Guid>
 	}
 }

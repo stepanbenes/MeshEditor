@@ -21,17 +21,21 @@ namespace MeshEditor.DataVisualizer.UI
 		public LayersTreeViewControl()
 		{
 			InitializeComponent();
+			treeViewLayers.BeforeSelect += treeViewLayers_BeforeSelect;
 			treeViewLayers.AfterSelect += treeViewLayers_AfterSelect;
 			treeViewLayers.BeforeCheck += treeViewLayers_BeforeCheck;
 			treeViewLayers.AfterCheck += treeViewLayers_AfterCheck;
 			layerIdTreeNodeMap = new Dictionary<Guid, TreeNode>();
 		}
 
-		public event EventHandler<LayerSelectionEventArgs> LayerSelectionChanged;
+		public event EventHandler<LayerSelectionEventArgs> LayerUnselected;
+		public event EventHandler<LayerSelectionEventArgs> LayerSelected;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
 
 		public ILayerInfo GetSelectedLayer() => treeViewLayers.SelectedNode?.Tag as ILayerInfo;
+		public bool IsLayerSelected(Guid layerId) => layerIdTreeNodeMap.ContainsKey(layerId) && layerIdTreeNodeMap[layerId].IsSelected;
+		public bool IsLayerChecked(Guid layerId) => layerIdTreeNodeMap.ContainsKey(layerId) && layerIdTreeNodeMap[layerId].Checked;
 
 		public void SetSelectedLayer(Guid? layerId)
 		{
@@ -47,7 +51,7 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		public void SetCheckedLayers(IReadOnlyCollection<Guid> layerIds)
+		public void SetCheckedLayers(IEnumerable<Guid> layerIds)
 		{
 			try
 			{
@@ -78,16 +82,27 @@ namespace MeshEditor.DataVisualizer.UI
 			treeViewLayers.ExpandAll();
 		}
 
+		private void treeViewLayers_BeforeSelect(object sender, TreeViewCancelEventArgs e)
+		{
+			if (treeViewLayers.SelectedNode != null && treeViewLayers.SelectedNode != e.Node)
+			{
+				LayerUnselected?.Invoke(this, new LayerSelectionEventArgs((ILayerInfo)treeViewLayers.SelectedNode.Tag));
+			}
+		}
+
 		private void treeViewLayers_AfterSelect(object sender, TreeViewEventArgs e)
 		{
 			var layerInfo = (ILayerInfo)e.Node.Tag;
-			LayerSelectionChanged?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+			LayerSelected?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 
 			// TODO: update context commands
 		}
 
 		private void treeViewLayers_BeforeCheck(object sender, TreeViewCancelEventArgs e)
 		{
+			if (checkingTreeNodes)
+				return;
+
 			if (!e.Node.IsSelected) // it must be selected before checking/unchecking
 				e.Cancel = true;
 		}

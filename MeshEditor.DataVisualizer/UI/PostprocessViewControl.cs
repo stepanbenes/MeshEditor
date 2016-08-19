@@ -43,7 +43,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
 
-			layersTreeView.LayerSelectionChanged += layersTreeView_LayerSelectionChanged;
+			layersTreeView.LayerUnselected += layersTreeView_LayerUnselected;
+			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
 			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
@@ -150,7 +151,7 @@ namespace MeshEditor.DataVisualizer.UI
 		private async Task updateDataSelectionInLeftPanelAsync()
 		{
 			var selectedLayerId = ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?;
-			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as IReadOnlyCollection<Guid>;
+			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
 			var layerDataVisualizer = ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
 			if (selectedLayerId.HasValue && layerDataVisualizer != null)
 			{
@@ -160,7 +161,10 @@ namespace MeshEditor.DataVisualizer.UI
 					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 					try
 					{
+						var originalScene = ActiveScene;
 						var summary = await getSummaryFileForLayerAsync(selectedLayerId.Value, cancellationTokenSources[operationToken].Token);
+						if (ActiveScene != originalScene) // active scene changed during operation
+							return;
 						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 					}
 					catch (OperationCanceledException)
@@ -207,6 +211,29 @@ namespace MeshEditor.DataVisualizer.UI
 				layerSummaryCache[layerId] = summary;
 			}
 			return summary;
+		}
+
+		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo)
+		{
+			const string taskName = "Loading layer";
+			try
+			{
+				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				try
+				{
+					await loadLayerAsync(layerInfo, operationToken);
+				}
+				catch (OperationCanceledException)
+				{ }
+				finally
+				{
+					endLongOperation(operationToken);
+				}
+			}
+			catch (Exception ex)
+			{
+				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+			}
 		}
 
 		private async Task loadLayerAsync(ILayerInfo layerInfo, LongOpNotifier.Token operationToken)
@@ -274,44 +301,46 @@ namespace MeshEditor.DataVisualizer.UI
 			//mainSplitContainer.Panel1.Enabled = true;
 		}
 
-		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
+		private void layersTreeView_LayerUnselected(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
 
-			ActiveScene.SetValue(AvailableValue.SelectedLayerId, e.Layer?.Id);
-			await updateDataSelectionInLeftPanelAsync();
+			if (!layersTreeView.IsLayerChecked(e.Layer.Id))
+			{
+				((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
+			}
 		}
 
-		private async void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
+		private async void layersTreeView_LayerSelected(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
 
+			ActiveScene.SetValue(AvailableValue.SelectedLayerId, e.Layer.Id);
+			await updateDataSelectionInLeftPanelAsync();
+
+			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			if (!visibleLayerIds.Contains(e.Layer.Id))
+			{
+				await loadLayerWithErrorHandlingAsync(e.Layer);
+			}
+		}
+
+		private void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
+		{
+			Debug.Assert(ActiveScene != null);
+			if (changingActiveScene)
+				return;
 			Debug.Assert(e.Layer != null);
 			Debug.Assert((ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?) == e.Layer.Id);
 
-			const string taskName = "Loading layer";
-			try
-			{
-				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
-				try
-				{
-					await loadLayerAsync(e.Layer, operationToken);
-				}
-				catch (OperationCanceledException)
-				{ }
-				finally
-				{
-					endLongOperation(operationToken);
-				}
-			}
-			catch (Exception ex)
-			{
-				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
-			}
+			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			Debug.Assert(!visibleLayerIds.Contains(e.Layer.Id));
+			visibleLayerIds.Add(e.Layer.Id);
+			Debug.Assert(visibleLayerIds.Contains(e.Layer.Id));
 		}
 
 		private void layersTreeView_LayerUnchecked(object sender, LayerSelectionEventArgs e)
@@ -319,16 +348,19 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
-
 			Debug.Assert(e.Layer != null);
+			Debug.Assert((ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?) == e.Layer.Id);
 
-			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
+			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			Debug.Assert(visibleLayerIds.Contains(e.Layer.Id));
+			visibleLayerIds.Remove(e.Layer.Id);
+			Debug.Assert(!visibleLayerIds.Contains(e.Layer.Id));
 
-			// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
-			ActiveScene.PerformAction(AvailableAction.Refresh);
-
-			dataSelectionControl.UpdateDataSource(null, null);
-			visualizerSettingsControl.Settings = null;
+			//((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
+			//// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
+			//ActiveScene.PerformAction(AvailableAction.Refresh);
+			//dataSelectionControl.UpdateDataSource(null, null);
+			//visualizerSettingsControl.Settings = null;
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
