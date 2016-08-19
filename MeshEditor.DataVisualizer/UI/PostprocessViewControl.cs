@@ -247,8 +247,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private LongOpNotifier.Token beginLongOperation(string taskName)
 		{
-			mainSplitContainer.Panel1.Enabled = false;
-			//cancelOperation(); // cancel ongoing operation
+			//mainSplitContainer.Panel1.Enabled = false;
 			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true);
 			cancellationTokenSources[operationToken] = new CancellationTokenSource();
 			return operationToken;
@@ -272,7 +271,7 @@ namespace MeshEditor.DataVisualizer.UI
 				cts.Dispose();
 				cancellationTokenSources.Remove(operationToken);
 			}
-			mainSplitContainer.Panel1.Enabled = true;
+			//mainSplitContainer.Panel1.Enabled = true;
 		}
 
 		private async void layersTreeView_LayerSelectionChanged(object sender, LayerSelectionEventArgs e)
@@ -307,7 +306,6 @@ namespace MeshEditor.DataVisualizer.UI
 				finally
 				{
 					endLongOperation(operationToken);
-					await updateDataSelectionInLeftPanelAsync();
 				}
 			}
 			catch (Exception ex)
@@ -324,7 +322,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 			Debug.Assert(e.Layer != null);
 
-			((IMultiLayerScene)ActiveScene.GetUnderlyingSceneObject()).SetMeshForLayer(e.Layer.Id, null);
+			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
 
 			// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
 			ActiveScene.PerformAction(AvailableAction.Refresh);
@@ -357,7 +355,6 @@ namespace MeshEditor.DataVisualizer.UI
 				finally
 				{
 					endLongOperation(operationToken);
-					await updateDataSelectionInLeftPanelAsync();
 				}
 			}
 			catch (Exception ex)

@@ -16,7 +16,5 @@ namespace MeshEditor.Data
 		Guid? SelectedLayer { get; set; }
 
 		IReadOnlyCollection<Guid> GetVisibleLayers();
-
-		void SetMeshForLayer(Guid layerId, Mesh newMesh);
 	}
 }

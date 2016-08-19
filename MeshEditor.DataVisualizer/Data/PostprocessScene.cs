@@ -57,43 +57,43 @@ namespace MeshEditor.DataVisualizer.Data
 
 		#region Postprocess members
 
+		public void RemoveMeshFromLayer(Guid layerId)
+		{
+			IScene scene = getOrCreateSceneFor(layerId);
+			setMeshForLayer(scene, null);
+		}
+
 		public async Task<IDataVisualizerController> UpdateLayerAsync(SolutionHub solutionHub, DataSelection newDataSelection, string layerDescription, Action<string, int> progressReport, CancellationToken cancellationToken)
 		{
-			var dataVisualizer = currentScene.Mesh?.GetDataVisualizer() as LayerDataVisualizer;
+			Debug.Assert(newDataSelection != null);
+			IScene scene = getOrCreateSceneFor(newDataSelection.LayerId);
+			var dataVisualizer = scene.Mesh?.GetDataVisualizer() as LayerDataVisualizer;
 
-			if (newDataSelection == null)
+			if (dataVisualizer == null || newDataSelection.MeshIndex != dataVisualizer.DataSelection?.MeshIndex)
 			{
-				dataVisualizer = null;
-				((IScene)this).Mesh.SetDataVisualizer(dataVisualizer);
+				var geometry = await reloadMeshAsync(scene, solutionHub, newDataSelection, layerDescription, progressReport, cancellationToken);
+				Debug.Assert(scene.Mesh != null);
+				dataVisualizer = new LayerDataVisualizer(geometry);
+				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
-			else
+
+			Dictionary<double, ComponentDataDescription> dataComponentTimeStepMap = null;
+
+			if (dataVisualizer.DataSelection?.DataIndex != newDataSelection.DataIndex)
 			{
-				if (dataVisualizer == null || newDataSelection.MeshIndex != dataVisualizer.DataSelection?.MeshIndex)
+				if (!newDataSelection.DataIndex.HasValue)
 				{
-					var geometry = await reloadMeshAsync(solutionHub, newDataSelection, layerDescription, progressReport, cancellationToken);
-					Debug.Assert(currentScene.Mesh != null);
-					dataVisualizer = new LayerDataVisualizer(geometry);
-					((IScene)this).Mesh.SetDataVisualizer(dataVisualizer);
+					dataComponentTimeStepMap = new Dictionary<double, ComponentDataDescription>();
 				}
-
-				Dictionary<double, ComponentDataDescription> dataComponentTimeStepMap = null;
-
-				if (dataVisualizer.DataSelection?.DataIndex != newDataSelection.DataIndex)
+				else
 				{
-					if (!newDataSelection.DataIndex.HasValue)
-					{
-						dataComponentTimeStepMap = new Dictionary<double, ComponentDataDescription>();
-					}
-					else
-					{
-						progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
-						var componentList = await solutionHub.LoadDataAsync(newDataSelection.LayerId, newDataSelection.DataIndex.Value, cancellationToken);
-						dataComponentTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
-					}
+					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
+					var componentList = await solutionHub.LoadDataAsync(newDataSelection.LayerId, newDataSelection.DataIndex.Value, cancellationToken);
+					dataComponentTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
 				}
-
-				dataVisualizer.UpdateDataSelection(newDataSelection, dataComponentTimeStepMap);
 			}
+
+			dataVisualizer.UpdateDataSelection(newDataSelection, dataComponentTimeStepMap);
 
 			return dataVisualizer;
 		}
@@ -117,34 +117,6 @@ namespace MeshEditor.DataVisualizer.Data
 		IReadOnlyCollection<Guid> IMultiLayerScene.GetVisibleLayers() => (from pair in layerSceneMap
 																		  where pair.Value.Mesh != null
 																		  select pair.Key).ToArray();
-
-		void IMultiLayerScene.SetMeshForLayer(Guid layerId, Mesh newMesh)
-		{
-			bool isFirstMesh = newMesh != null && !containsAnyMesh();
-
-			Scene scene = getOrCreateSceneFor(layerId);
-
-			scene.SetMesh(newMesh);
-
-			if (isFirstMesh)
-			{
-				scene.SetDefaultCameraView();
-			}
-
-			if (newMesh != null)
-			{
-				positionOffset = newMesh.PositionOffset;
-				resizeFactor = newMesh.ResizeFactor;
-			}
-			else
-			{
-				if (!containsAnyMesh())
-				{
-					positionOffset = null;
-					resizeFactor = null;
-				}
-			}
-		}
 
 		#endregion
 
@@ -226,7 +198,7 @@ namespace MeshEditor.DataVisualizer.Data
 
 		#region Private methods
 
-		private async Task<GeometryDescription> reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, string layerDescription, Action<string, int> progressReport, CancellationToken cancellationToken)
+		private async Task<GeometryDescription> reloadMeshAsync(IScene scene, SolutionHub solutionHub, DataSelection newDataSelection, string layerDescription, Action<string, int> progressReport, CancellationToken cancellationToken)
 		{
 			progressReport?.Invoke("Loading geometry", -1);
 			var geometry = await solutionHub.LoadGeometryAsync(newDataSelection.LayerId, newDataSelection.MeshIndex, cancellationToken);
@@ -247,13 +219,42 @@ namespace MeshEditor.DataVisualizer.Data
 				using (var meshFileParser = new LayerMeshFileParser(layerDescription, geometry, elementPropertiesAttribute))
 				{
 					createdMesh = await Task.Run(() => meshCreator.CreateMesh(meshFileParser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: positionOffset, defaultResizeFactor: resizeFactor));
+					cancellationToken.ThrowIfCancellationRequested();
 				}
 
-				((IMultiLayerScene)this).SetMeshForLayer(newDataSelection.LayerId, createdMesh);
-				((IScene)this).Mesh?.CreateBuffers();
+				Debug.Assert(createdMesh != null);
+
+				setMeshForLayer(scene, createdMesh);
+				createdMesh?.CreateBuffers();
 			}
 
 			return geometry;
+		}
+
+		private void setMeshForLayer(IScene scene, Mesh newMesh)
+		{
+			bool isFirstMesh = newMesh != null && !containsAnyMesh();
+
+			scene.SetMesh(newMesh);
+
+			if (isFirstMesh)
+			{
+				scene.SetDefaultCameraView();
+			}
+
+			if (newMesh != null)
+			{
+				positionOffset = newMesh.PositionOffset;
+				resizeFactor = newMesh.ResizeFactor;
+			}
+			else
+			{
+				if (!containsAnyMesh())
+				{
+					positionOffset = null;
+					resizeFactor = null;
+				}
+			}
 		}
 
 		private void setSelectedLayer(Guid? value)
