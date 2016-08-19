@@ -86,12 +86,18 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			if (treeViewLayers.SelectedNode != null && treeViewLayers.SelectedNode != e.Node)
 			{
+				treeViewLayers.SelectedNode.BackColor = treeViewLayers.BackColor; // manually set color of previous selected node to unselected
+				treeViewLayers.SelectedNode.ForeColor = treeViewLayers.ForeColor;
+
 				LayerUnselected?.Invoke(this, new LayerSelectionEventArgs((ILayerInfo)treeViewLayers.SelectedNode.Tag));
 			}
 		}
 
 		private void treeViewLayers_AfterSelect(object sender, TreeViewEventArgs e)
 		{
+			e.Node.BackColor = SystemColors.Highlight; // manually highlight selected node
+			e.Node.ForeColor = Color.White;
+
 			var layerInfo = (ILayerInfo)e.Node.Tag;
 			LayerSelected?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 
