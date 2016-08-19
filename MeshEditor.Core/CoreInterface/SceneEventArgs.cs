@@ -11,31 +11,23 @@ namespace MeshEditor.CoreInterface
 	/// </summary>
 	public class MeshNeedRefreshEventArgs : EventArgs
 	{
-		private string meshToRefresh;
+		public string MeshToRefresh { get; }
+		public bool SkipSender { get; }
 
-		public string MeshToRefresh
+		public MeshNeedRefreshEventArgs(string meshToRefresh, bool skipSender = false)
 		{
-			get { return meshToRefresh; }
-		}
-
-		public MeshNeedRefreshEventArgs(string meshToRefresh)
-		{
-			this.meshToRefresh = meshToRefresh;
+			MeshToRefresh = meshToRefresh;
+			SkipSender = skipSender;
 		}
 	}
 
 	public class ScreenshotNeededEventArgs : EventArgs
 	{
-		private Rectangle screenshotWindow;
-
-		public Rectangle ScreenshotWindow
-		{
-			get	{ return screenshotWindow; }
-		}
+		public Rectangle ScreenshotWindow { get; }
 
 		public ScreenshotNeededEventArgs(Rectangle screenshotWindow)
 		{
-			this.screenshotWindow = screenshotWindow;
+			ScreenshotWindow = screenshotWindow;
 		}
 	}
 }

@@ -937,10 +937,10 @@ namespace MeshEditor.CoreInterface
 					throw new NotSupportedException();
 			}
 
-			if (thisMeshNeedRefreshInOtherWindows && MeshNeedRefresh != null && scene.Mesh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
-			else if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
+			if (thisMeshNeedRefreshInOtherWindows && scene.Mesh != null)
+				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+			else
+				RefreshNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void MouseDownHandler(Point location)
@@ -1358,7 +1358,7 @@ namespace MeshEditor.CoreInterface
 			SelectMode selectMode = (SelectMode)numberOfClicks;
 			scene.SelectItems(new Rectangle(this.mouseUpLocation, Size.Empty), selectMode, this.selectOperationType, false, itemType);
 			if (MeshNeedRefresh != null) // updatovat ostatni okna s touto meshi
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.Filename));
+				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.Filename, skipSender: true));
 			if (ActionPerformed != null)
 				ActionPerformed(this, EventArgs.Empty);
 		}

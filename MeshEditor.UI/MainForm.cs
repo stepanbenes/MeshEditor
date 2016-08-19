@@ -378,6 +378,8 @@ namespace MeshEditor.WinUI
 		{
 			foreach (OpenGLControl c in openGLControls)
 			{
+				if (ea.SkipSender && ReferenceEquals(sender, c))
+					continue;
 				if (string.IsNullOrEmpty(ea.MeshToRefresh) || c.SceneFacade.MeshFilename == ea.MeshToRefresh)
 					c.Invalidate();
 			}
