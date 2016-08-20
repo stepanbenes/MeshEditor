@@ -50,7 +50,7 @@ namespace MeshEditor.DataVisualizer.UI
 			IEnumerable<ISolutionInfo> solutions = Enumerable.Empty<ISolutionInfo>();
 			try
 			{
-				solutions = await SolutionHub.EnumerateAllLocalSolutionsAsync(SolutionHub.GetLocalStorageDefaultDirectory(), cancellationToken, logger);
+				solutions = await SolutionHub.EnumerateAllLocalSolutionsAsync(SolutionHub.GetLocalStorageDefaultDirectory(), true, cancellationToken, logger);
 			}
 			catch (OperationCanceledException)
 			{ }

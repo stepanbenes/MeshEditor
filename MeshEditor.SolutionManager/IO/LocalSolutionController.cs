@@ -17,9 +17,9 @@ namespace MeshEditor.SolutionManager.IO
 	{
 		private static readonly string SolutionFileSuffix = ".solution";
 
-		IStorageService localStorage;
-		ISerializationService serializer;
-		string solutionDirectory;
+		readonly IStorageService localStorage;
+		readonly ISerializationService serializer;
+		readonly string solutionDirectory;
 
 		public LocalSolutionController(string solutionDirectory)
 		{
@@ -76,9 +76,11 @@ namespace MeshEditor.SolutionManager.IO
 			return solution;
 		}
 
-		public IEnumerable<ISolutionInfo> GetAll()
+		IEnumerable<ISolutionInfo> ISolutionController.GetAll() => GetAll(includeSubDirectories: true);
+
+		public IEnumerable<ISolutionInfo> GetAll(bool includeSubDirectories)
 		{
-			foreach (string solutionFile in getAllSolutionFiles())
+			foreach (string solutionFile in getAllSolutionFiles(includeSubDirectories))
 			{
 				using (Stream stream = localStorage.Load(solutionFile))
 				{
@@ -89,9 +91,11 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
+		Task<IEnumerable<ISolutionInfo>> ISolutionController.GetAllAsync(CancellationToken cancellationToken) => GetAllAsync(includeSubDirectories: true, cancellationToken: cancellationToken);
+
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(bool includeSubDirectories, CancellationToken cancellationToken)
 		{
-			return await Task.WhenAll(from solutionFile in getAllSolutionFiles()
+			return await Task.WhenAll(from solutionFile in getAllSolutionFiles(includeSubDirectories)
 									  select loadSolutionInfoAsync(solutionFile, cancellationToken));
 		}
 
@@ -198,7 +202,7 @@ namespace MeshEditor.SolutionManager.IO
 				DirectoryInfo solutionFileDirectoryInfo = new DirectoryInfo(Path.GetDirectoryName(solutionFile));
 				if (Path.GetFileName(solutionFile).StartsWith(solutionFileDirectoryInfo.Name)) // directory has same name as solution file and therefore was probably created during creation of solution
 				{
-					if (!Directory.EnumerateFileSystemEntries(solutionFileDirectory).Any()) // if directory is not empty
+					if (!Directory.EnumerateFileSystemEntries(solutionFileDirectory).Any()) // if directory is empty
 					{
 						Directory.Delete(solutionFileDirectory);
 					}
@@ -216,10 +220,10 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		private IEnumerable<string> getAllSolutionFiles()
+		private IEnumerable<string> getAllSolutionFiles(bool includeSubDirectories)
 		{
 			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
-			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, SearchOption.AllDirectories);
+			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 		}
 
 		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
