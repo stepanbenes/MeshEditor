@@ -1663,7 +1663,6 @@ namespace MeshEditor.WinUI
 			layoutMode = LayoutMode.Postprocessor;
 			var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = content, Dock = DockStyle.Fill };
 			centralPanel.Controls.Add(postprocessView);
-			postprocessView.SplitterDistance = 200;
 			activeControl.SetNewScene(postprocessView.ActiveScene);
 			activeControl.Focus();
 		}

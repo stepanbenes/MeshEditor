@@ -31,13 +31,16 @@
 			// 
 			// mainSplitContainer
 			// 
+			this.mainSplitContainer.BackColor = System.Drawing.SystemColors.ControlDarkDark;
 			this.mainSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.mainSplitContainer.Location = new System.Drawing.Point(0, 0);
 			this.mainSplitContainer.Name = "mainSplitContainer";
 			// 
 			// mainSplitContainer.Panel1
 			// 
+			this.mainSplitContainer.Panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(130)))), ((int)(((byte)(124)))), ((int)(((byte)(122)))));
 			this.mainSplitContainer.Panel1.Controls.Add(this.leftSplitContainer);
+			this.mainSplitContainer.Panel1.ForeColor = System.Drawing.Color.White;
 			this.mainSplitContainer.Size = new System.Drawing.Size(1090, 861);
 			this.mainSplitContainer.SplitterDistance = 363;
 			this.mainSplitContainer.TabIndex = 0;
@@ -58,33 +61,37 @@
 			this.leftSplitContainer.Panel2.Controls.Add(this.visualizerSettingsControl);
 			this.leftSplitContainer.Panel2.Controls.Add(this.dataSelectionControl);
 			this.leftSplitContainer.Size = new System.Drawing.Size(363, 861);
-			this.leftSplitContainer.SplitterDistance = 430;
+			this.leftSplitContainer.SplitterDistance = 198;
 			this.leftSplitContainer.TabIndex = 3;
 			// 
 			// layersTreeView
 			// 
-			this.layersTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.layersTreeView.Location = new System.Drawing.Point(0, 0);
+			this.layersTreeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.layersTreeView.Location = new System.Drawing.Point(3, 3);
 			this.layersTreeView.Name = "layersTreeView";
-			this.layersTreeView.Size = new System.Drawing.Size(363, 430);
+			this.layersTreeView.Size = new System.Drawing.Size(357, 192);
 			this.layersTreeView.TabIndex = 1;
 			// 
 			// visualizerSettingsControl
 			// 
-			this.visualizerSettingsControl.Dock = System.Windows.Forms.DockStyle.Top;
+			this.visualizerSettingsControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.visualizerSettingsControl.Enabled = false;
-			this.visualizerSettingsControl.Location = new System.Drawing.Point(0, 134);
+			this.visualizerSettingsControl.Location = new System.Drawing.Point(3, 159);
 			this.visualizerSettingsControl.Name = "visualizerSettingsControl";
 			this.visualizerSettingsControl.Settings = null;
-			this.visualizerSettingsControl.Size = new System.Drawing.Size(363, 128);
+			this.visualizerSettingsControl.Size = new System.Drawing.Size(357, 128);
 			this.visualizerSettingsControl.TabIndex = 1;
 			// 
 			// dataSelectionControl
 			// 
-			this.dataSelectionControl.Dock = System.Windows.Forms.DockStyle.Top;
-			this.dataSelectionControl.Location = new System.Drawing.Point(0, 0);
+			this.dataSelectionControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.dataSelectionControl.Location = new System.Drawing.Point(3, 3);
 			this.dataSelectionControl.Name = "dataSelectionControl";
-			this.dataSelectionControl.Size = new System.Drawing.Size(363, 134);
+			this.dataSelectionControl.Size = new System.Drawing.Size(357, 150);
 			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl

@@ -42,6 +42,7 @@ namespace MeshEditor.DataVisualizer.UI
 			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
 
 			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
+			mainSplitContainer.SplitterDistance = 220;
 
 			layersTreeView.LayerUnselected += layersTreeView_LayerUnselected;
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
@@ -69,12 +70,6 @@ namespace MeshEditor.DataVisualizer.UI
 						mainSplitContainer.Panel2.Controls.Add(contentPanel);
 				}
 			}
-		}
-
-		public int SplitterDistance
-		{
-			get { return mainSplitContainer.SplitterDistance; }
-			set { mainSplitContainer.SplitterDistance = value; }
 		}
 
 		public SceneFacade ActiveScene

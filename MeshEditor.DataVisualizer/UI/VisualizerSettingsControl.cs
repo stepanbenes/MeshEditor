@@ -75,7 +75,7 @@ namespace MeshEditor.DataVisualizer.UI
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		private void buttonEditColorScale_Click(object sender, EventArgs e)
+		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			EditColorScaleForm editColorScaleForm = new EditColorScaleForm
 			{
