@@ -7,6 +7,7 @@ namespace MeshEditor.Construction
 	/// <summary>
 	/// vyjimka, ktera muze nastat pri konstrukci site
 	/// </summary>
+	[Serializable]
 	public class MeshConstructingException : Exception
 	{
 		public MeshConstructingException() { }

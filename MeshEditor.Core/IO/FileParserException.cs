@@ -5,6 +5,7 @@ namespace MeshEditor.IO
 	/// <summary>
 	/// Indicates error that can happen while reading input file (either mesh or results).
 	/// </summary>
+	[Serializable]
 	public class FileParserException : Exception
 	{
 

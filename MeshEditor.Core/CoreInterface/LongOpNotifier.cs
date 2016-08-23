@@ -48,6 +48,9 @@ namespace MeshEditor.CoreInterface
 					return false;
 				return this.LongOpId == ((Token)obj).LongOpId;
 			}
+
+			public static bool operator ==(Token a, Token b) => a.Equals(b);
+			public static bool operator !=(Token a, Token b) => !a.Equals(b);
 		}
 
 		public struct State

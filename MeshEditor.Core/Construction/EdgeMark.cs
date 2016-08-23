@@ -58,9 +58,9 @@ namespace MeshEditor.Construction
 			}
 		}
 
-		public override string ToString()
-		{
-			return Node1ID.ToString() + " " + Node2ID;
-		}
+		public static bool operator ==(EdgeMark a, EdgeMark b) => a.Equals(b);
+		public static bool operator !=(EdgeMark a, EdgeMark b) => !a.Equals(b);
+
+		public override string ToString() => Node1ID.ToString() + " " + Node2ID;
 	}
 }

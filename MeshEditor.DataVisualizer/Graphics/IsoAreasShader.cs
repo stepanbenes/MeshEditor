@@ -309,7 +309,7 @@ void main()
 
 		#region Properties
 
-		public bool IsReady { get; private set; }
+		public bool IsReady { get; }
 
 		public bool LightingEnabled
 		{

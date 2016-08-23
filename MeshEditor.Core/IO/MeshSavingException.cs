@@ -5,6 +5,7 @@ namespace MeshEditor.IO
 	/// <summary>
 	/// vyjimka, ktera nastane pri ukladani site do souboru
 	/// </summary>
+	[Serializable]
 	public class MeshSavingException : Exception
 	{
 		private int lineNumber;

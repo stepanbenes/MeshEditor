@@ -133,15 +133,9 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		public override double GetMaximumDataValue()
-		{
-			return currentDataComponent?.Values.Max(ignore: double.NaN) ?? double.NaN;
-		}
+		public override double GetMaximumDataValue() => currentDataComponent?.Values.Max(ignore: double.NaN) ?? double.NaN;
 
-		public override double GetMinimumDataValue()
-		{
-			return currentDataComponent?.Values.Min(ignore: double.NaN) ?? double.NaN;
-		}
+		public override double GetMinimumDataValue() => currentDataComponent?.Values.Min(ignore: double.NaN) ?? double.NaN;
 
 		#endregion
 

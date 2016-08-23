@@ -76,10 +76,11 @@ namespace MeshEditor.Cuts
 			}
 		}
 
-		public override string ToString()
-		{
-			return string.Format("Node1ID: {0} Node2ID: {1} T: {3:G3}", node1.ID, node2.ID, t);
-		}
+		public static bool operator ==(EdgeIntersection a, EdgeIntersection b) => a.Equals(b);
+
+		public static bool operator !=(EdgeIntersection a, EdgeIntersection b) => !a.Equals(b);
+
+		public override string ToString() => string.Format("Node1ID: {0} Node2ID: {1} T: {2:G3}", node1.ID, node2.ID, t);
 
 		#endregion
 

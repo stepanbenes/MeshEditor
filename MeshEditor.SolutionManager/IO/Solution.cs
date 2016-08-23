@@ -21,10 +21,7 @@ namespace MeshEditor.SolutionManager.IO
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
 			IReadOnlyList<ILayerInfo> ILayerInfo.Children => Children ?? Array.Empty<ILayerInfo>();
 
-			public override int GetHashCode()
-			{
-				return Id.GetHashCode();
-			}
+			public override int GetHashCode() => Id.GetHashCode();
 
 			public override bool Equals(object obj)
 			{
