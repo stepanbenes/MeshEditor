@@ -167,6 +167,8 @@ namespace MeshEditor.CoreInterface
 
 		#region Public Properties
 
+		public int? MeshIdentifier => scene.Mesh?.GetHashCode();
+
 		public string MeshFilename
 		{
 			get { return (scene.Mesh == null) ? null : scene.Mesh.Filename; }
@@ -731,7 +733,7 @@ namespace MeshEditor.CoreInterface
 			}
 
 			if (thisMeshNeedRefreshInOtherWindows && scene.Mesh != null)
-				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.UniqueIdentifier));
 			else
 				RefreshNeeded?.Invoke(this, EventArgs.Empty);
 
@@ -938,7 +940,7 @@ namespace MeshEditor.CoreInterface
 			}
 
 			if (thisMeshNeedRefreshInOtherWindows && scene.Mesh != null)
-				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
+				MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.UniqueIdentifier));
 			else
 				RefreshNeeded?.Invoke(this, EventArgs.Empty);
 		}
@@ -1229,10 +1231,8 @@ namespace MeshEditor.CoreInterface
 					if (scene.Mesh != null)
 					{
 						scene.PutNextPlaneDefinitionPoint(mouseUpLocation.X, mouseUpLocation.Y);
-						if (MeshNeedRefresh != null)
-							MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(scene.Mesh.Filename));
-						if (CutPlaneDefinitionPointsChanged != null)
-							CutPlaneDefinitionPointsChanged(this, EventArgs.Empty);
+						MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(scene.Mesh.UniqueIdentifier));
+						CutPlaneDefinitionPointsChanged?.Invoke(this, EventArgs.Empty);
 					}
 					break;
 				case EditorMode.ZoomWindow:
@@ -1357,10 +1357,8 @@ namespace MeshEditor.CoreInterface
 			int numberOfClicks = (this.clickCount <= 4) ? this.clickCount : 4;
 			SelectMode selectMode = (SelectMode)numberOfClicks;
 			scene.SelectItems(new Rectangle(this.mouseUpLocation, Size.Empty), selectMode, this.selectOperationType, false, itemType);
-			if (MeshNeedRefresh != null) // updatovat ostatni okna s touto meshi
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.Filename, skipSender: true));
-			if (ActionPerformed != null)
-				ActionPerformed(this, EventArgs.Empty);
+			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.UniqueIdentifier, skipSender: true)); // updatovat ostatni okna s touto meshi
+			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void rectangleSelection(ItemTypeToSelect itemType)
@@ -1375,11 +1373,8 @@ namespace MeshEditor.CoreInterface
 
 			scene.SelectItems(area, SelectMode.Single, opType, allNodesMustBeInAreaToSelectFace, itemType);
 
-			if (MeshNeedRefresh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.Filename));
-
-			if (ActionPerformed != null)
-				ActionPerformed(this, EventArgs.Empty);
+			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(this.scene.Mesh.UniqueIdentifier));
+			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 
 		private SelectOperationType getSelectOperationType()

@@ -380,7 +380,7 @@ namespace MeshEditor.WinUI
 			{
 				if (ea.SkipSender && ReferenceEquals(sender, c))
 					continue;
-				if (string.IsNullOrEmpty(ea.MeshToRefresh) || c.SceneFacade.MeshFilename == ea.MeshToRefresh)
+				if (ea.MeshIdentifier == c.SceneFacade.MeshIdentifier)
 					c.Invalidate();
 			}
 		}

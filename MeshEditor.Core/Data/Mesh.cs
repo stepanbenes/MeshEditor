@@ -101,6 +101,8 @@ namespace MeshEditor.Data
 
 		#region Public Properties
 
+		public int UniqueIdentifier => GetHashCode();
+
 		public bool UnsavedChanges
 		{
 			get { return unsavedChanges; }

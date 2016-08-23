@@ -11,12 +11,12 @@ namespace MeshEditor.CoreInterface
 	/// </summary>
 	public class MeshNeedRefreshEventArgs : EventArgs
 	{
-		public string MeshToRefresh { get; }
+		public int MeshIdentifier { get; }
 		public bool SkipSender { get; }
 
-		public MeshNeedRefreshEventArgs(string meshToRefresh, bool skipSender = false)
+		public MeshNeedRefreshEventArgs(int meshIdentifier, bool skipSender = false)
 		{
-			MeshToRefresh = meshToRefresh;
+			MeshIdentifier = meshIdentifier;
 			SkipSender = skipSender;
 		}
 	}

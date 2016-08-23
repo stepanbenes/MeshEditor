@@ -789,11 +789,8 @@ namespace MeshEditor.WinUI
 				sceneFacade.SetPropertyOfSelectedItems(new MeshEditor.Data.Property(value));
 			}
 
-			if (MeshNeedRefresh != null)
-				MeshNeedRefresh(this, new MeshNeedRefreshEventArgs(sceneFacade.MeshFilename));
-
-			if (ActionPerformed != null)
-				ActionPerformed(this, EventArgs.Empty);
+			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(sceneFacade.MeshIdentifier.Value));
+			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void SelectItemsWithProperty(string itemsName, bool addToSelection = false)
