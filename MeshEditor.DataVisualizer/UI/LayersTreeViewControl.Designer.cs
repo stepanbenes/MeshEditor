@@ -28,8 +28,15 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.treeViewLayers = new System.Windows.Forms.TreeView();
 			this.labelCaption = new System.Windows.Forms.Label();
+			this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.applyFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+			this.reloadLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.contextMenuStrip.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// treeViewLayers
@@ -42,6 +49,7 @@
 			this.treeViewLayers.Name = "treeViewLayers";
 			this.treeViewLayers.Size = new System.Drawing.Size(144, 131);
 			this.treeViewLayers.TabIndex = 0;
+			this.treeViewLayers.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeViewLayers_MouseUp);
 			// 
 			// labelCaption
 			// 
@@ -53,6 +61,42 @@
 			this.labelCaption.TabIndex = 1;
 			this.labelCaption.Text = "Layers";
 			// 
+			// contextMenuStrip
+			// 
+			this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.applyFilterToolStripMenuItem,
+            this.deleteLayerToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.reloadLayerToolStripMenuItem});
+			this.contextMenuStrip.Name = "contextMenuStrip";
+			this.contextMenuStrip.Size = new System.Drawing.Size(153, 98);
+			// 
+			// applyFilterToolStripMenuItem
+			// 
+			this.applyFilterToolStripMenuItem.Enabled = false;
+			this.applyFilterToolStripMenuItem.Name = "applyFilterToolStripMenuItem";
+			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.applyFilterToolStripMenuItem.Text = "Apply filter...";
+			// 
+			// deleteLayerToolStripMenuItem
+			// 
+			this.deleteLayerToolStripMenuItem.Enabled = false;
+			this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
+			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.deleteLayerToolStripMenuItem.Text = "Delete layer";
+			// 
+			// toolStripSeparator1
+			// 
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+			// 
+			// reloadLayerToolStripMenuItem
+			// 
+			this.reloadLayerToolStripMenuItem.Name = "reloadLayerToolStripMenuItem";
+			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.reloadLayerToolStripMenuItem.Text = "Reload layer";
+			this.reloadLayerToolStripMenuItem.Click += new System.EventHandler(this.reloadLayerToolStripMenuItem_Click);
+			// 
 			// LayersTreeViewControl
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -60,6 +104,7 @@
 			this.Controls.Add(this.labelCaption);
 			this.Controls.Add(this.treeViewLayers);
 			this.Name = "LayersTreeViewControl";
+			this.contextMenuStrip.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -69,5 +114,10 @@
 
 		private System.Windows.Forms.TreeView treeViewLayers;
 		private System.Windows.Forms.Label labelCaption;
+		private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+		private System.Windows.Forms.ToolStripMenuItem applyFilterToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem deleteLayerToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+		private System.Windows.Forms.ToolStripMenuItem reloadLayerToolStripMenuItem;
 	}
 }

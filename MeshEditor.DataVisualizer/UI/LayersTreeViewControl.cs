@@ -32,6 +32,7 @@ namespace MeshEditor.DataVisualizer.UI
 		public event EventHandler<LayerSelectionEventArgs> LayerSelected;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
+		public event EventHandler<LayerSelectionEventArgs> ReloadLayerRequested;
 
 		public ILayerInfo GetSelectedLayer() => treeViewLayers.SelectedNode?.Tag as ILayerInfo;
 		public bool IsLayerSelected(Guid layerId) => layerIdTreeNodeMap.ContainsKey(layerId) && layerIdTreeNodeMap[layerId].IsSelected;
@@ -100,8 +101,6 @@ namespace MeshEditor.DataVisualizer.UI
 
 			var layerInfo = (ILayerInfo)e.Node.Tag;
 			LayerSelected?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
-
-			// TODO: update context commands
 		}
 
 		private void treeViewLayers_BeforeCheck(object sender, TreeViewCancelEventArgs e)
@@ -158,6 +157,30 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				checkChildren(node, isChecked);
 				node.Checked = isChecked;
+			}
+		}
+
+		private void reloadLayerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Debug.Assert(treeViewLayers.SelectedNode != null);
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			ReloadLayerRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+		}
+
+		private void treeViewLayers_MouseUp(object sender, MouseEventArgs e)
+		{
+			// Show menu only if the right mouse button is clicked.
+			if (e.Button == MouseButtons.Right)
+			{
+				// Point where the mouse is clicked.
+				Point p = new Point(e.X, e.Y);
+
+				// Get the node that the user has clicked.
+				TreeNode node = treeViewLayers.GetNodeAt(p);
+				if (node != null && node == treeViewLayers.SelectedNode)
+				{
+					contextMenuStrip.Show(treeViewLayers, p);
+				}
 			}
 		}
 	}

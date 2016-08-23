@@ -47,6 +47,8 @@ namespace MeshEditor.DataVisualizer.UI
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
 			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
+			layersTreeView.ReloadLayerRequested += layersTreeView_ReloadLayerRequested;
+
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
 		}
@@ -141,7 +143,7 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
-			Debug.Assert(e.Layer != null);
+
 			Debug.Assert((ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?) == e.Layer.Id);
 
 			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
@@ -155,13 +157,19 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
-			Debug.Assert(e.Layer != null);
+
 			Debug.Assert((ActiveScene.GetValue(AvailableValue.SelectedLayerId) as Guid?) == e.Layer.Id);
 
 			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
 			Debug.Assert(visibleLayerIds.Contains(e.Layer.Id));
 			visibleLayerIds.Remove(e.Layer.Id);
 			Debug.Assert(!visibleLayerIds.Contains(e.Layer.Id));
+		}
+
+		private async void layersTreeView_ReloadLayerRequested(object sender, LayerSelectionEventArgs e)
+		{
+			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
+			await loadLayerWithErrorHandlingAsync(e.Layer);
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
