@@ -69,6 +69,17 @@ namespace MeshEditor.DataVisualizer.Data
 			setMeshForLayer(scene, null);
 		}
 
+		public void RemoveMeshFromAllUncheckedLayers()
+		{
+			foreach (var layerId in layerSceneMap.Keys)
+			{
+				if (!visibleLayers.Contains(layerId))
+				{
+					RemoveMeshFromLayer(layerId);
+				}
+			}
+		}
+
 		public async Task<IDataVisualizerController> UpdateLayerAsync(SolutionHub solutionHub, Guid layerId, string layerName, DataSelection newDataSelection, Action<string, int> progressReport, CancellationToken cancellationToken)
 		{
 			Debug.Assert(newDataSelection != null);

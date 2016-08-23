@@ -28,7 +28,6 @@ namespace MeshEditor.DataVisualizer.UI
 			layerIdTreeNodeMap = new Dictionary<Guid, TreeNode>();
 		}
 
-		public event EventHandler<LayerSelectionEventArgs> LayerUnselected;
 		public event EventHandler<LayerSelectionEventArgs> LayerSelected;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
@@ -89,8 +88,6 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				treeViewLayers.SelectedNode.BackColor = treeViewLayers.BackColor; // manually set color of previous selected node to unselected
 				treeViewLayers.SelectedNode.ForeColor = treeViewLayers.ForeColor;
-
-				LayerUnselected?.Invoke(this, new LayerSelectionEventArgs((ILayerInfo)treeViewLayers.SelectedNode.Tag));
 			}
 		}
 

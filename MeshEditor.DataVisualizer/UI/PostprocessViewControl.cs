@@ -29,7 +29,7 @@ namespace MeshEditor.DataVisualizer.UI
 		Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
 
 		LongOpNotifier longOpNotifier;
-		Dictionary<LongOpNotifier.Token, CancellationTokenSource> cancellationTokenSources = new Dictionary<LongOpNotifier.Token, CancellationTokenSource>();
+		CancellationTokenSource currentOperationCancellationTokenSource;
 
 		public PostprocessViewControl(LongOpNotifier longOpNotifier)
 		{
@@ -43,7 +43,6 @@ namespace MeshEditor.DataVisualizer.UI
 			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
 			mainSplitContainer.SplitterDistance = 220;
 
-			layersTreeView.LayerUnselected += layersTreeView_LayerUnselected;
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
 			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
@@ -110,31 +109,23 @@ namespace MeshEditor.DataVisualizer.UI
 
 		#region Event handlers
 
-		private void layersTreeView_LayerUnselected(object sender, LayerSelectionEventArgs e)
-		{
-			Debug.Assert(ActiveScene != null);
-			if (changingActiveScene)
-				return;
-
-			if (!layersTreeView.IsLayerChecked(e.Layer.Id))
-			{
-				((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
-			}
-		}
-
 		private async void layersTreeView_LayerSelected(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
 
-			ActiveScene.SetValue(AvailableValue.SelectedLayerId, e.Layer.Id);
+			var targetScene = ActiveScene;
+
+			((PostprocessScene)targetScene.GetUnderlyingSceneObject()).RemoveMeshFromAllUncheckedLayers();
+
+			targetScene.SetValue(AvailableValue.SelectedLayerId, e.Layer.Id);
 			await updateDataSelectionInLeftPanelAsync();
 
-			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			var visibleLayerIds = targetScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
 			if (!visibleLayerIds.Contains(e.Layer.Id))
 			{
-				await loadLayerWithErrorHandlingAsync(e.Layer);
+				await loadLayerWithErrorHandlingAsync(e.Layer, targetScene);
 			}
 		}
 
@@ -168,8 +159,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async void layersTreeView_ReloadLayerRequested(object sender, LayerSelectionEventArgs e)
 		{
-			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromLayer(e.Layer.Id);
-			await loadLayerWithErrorHandlingAsync(e.Layer);
+			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromAllUncheckedLayers();
+			await loadLayerWithErrorHandlingAsync(e.Layer, ActiveScene);
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
@@ -181,21 +172,23 @@ namespace MeshEditor.DataVisualizer.UI
 			const string taskName = "Updating data selection";
 			try
 			{
+				var targetScene = ActiveScene;
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					var originalScene = ActiveScene;
 					Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-					await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, e.LayerId, e.LayerName, e.DataSelection, progressReport, cancellationTokenSources[operationToken].Token);
-
-					// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
-					originalScene.PerformAction(AvailableAction.Refresh);
+					var cancellationToken = currentOperationCancellationTokenSource.Token;
+					await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, e.LayerId, e.LayerName, e.DataSelection, progressReport, cancellationToken);
+					cancellationToken.ThrowIfCancellationRequested();
 				}
 				catch (OperationCanceledException)
 				{ }
 				finally
 				{
 					endLongOperation(operationToken);
+
+					// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
+					targetScene.PerformAction(AvailableAction.Refresh);
 				}
 			}
 			catch (Exception ex)
@@ -216,7 +209,12 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void longOpNotifier_CancellationRequested(LongOpNotifier.Token operationToken)
 		{
-			cancelOperation(operationToken);
+			if (currentOperationCancellationTokenSource != null)
+			{
+				currentOperationCancellationTokenSource.Cancel();
+				currentOperationCancellationTokenSource.Dispose();
+				currentOperationCancellationTokenSource = null;
+			}
 		}
 
 		#endregion
@@ -225,43 +223,46 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async Task loadSolutionWithErrorHandlingAsync()
 		{
+			ISolutionDescription solutionDescription = null;
 			const string taskName = "Loading solution";
 			try
 			{
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					await loadSolutionAsync(operationToken);
+					var cancellationToken = currentOperationCancellationTokenSource.Token;
+					solutionDescription = await loadSolutionAsync(operationToken, cancellationToken);
+					cancellationToken.ThrowIfCancellationRequested();
 				}
-				catch (OperationCanceledException)
-				{ }
 				finally
 				{
 					endLongOperation(operationToken);
 				}
 			}
+			catch (OperationCanceledException)
+			{
+				// probably because of close solution command, do nothing
+			}
 			catch (Exception ex)
 			{
 				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
+
+			if (solutionDescription != null && solutionDescription.Layers.Count > 0) // load first layer
+			{
+				layersTreeView.SetSelectedLayer(solutionDescription.Layers[0].Id);
+			}
 		}
 
-		private async Task loadSolutionAsync(LongOpNotifier.Token operationToken)
+		private async Task<ISolutionDescription> loadSolutionAsync(LongOpNotifier.Token operationToken, CancellationToken cancellationToken)
 		{
 			Debug.Assert(solutionHub != null);
 			longOpNotifier.UpdateState(operationToken, "Loading layer tree");
-			var solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationTokenSources[operationToken].Token);
-			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).ProjectName = solutionDescription.ProjectName;
-			var layers = solutionDescription.Layers;
-			layersTreeView.SetLayerTree(layers);
-
-			if (layers.Count > 0) // load first layer
-			{
-				Debug.Assert(ActiveScene != null);
-				ActiveScene.SetValue(AvailableValue.SelectedLayerId, layers[0].Id);
-				layersTreeView.SetSelectedLayer(layers[0].Id);
-				await loadLayerAsync(layers[0], operationToken);
-			}
+			var postprocessScene = (PostprocessScene)ActiveScene.GetUnderlyingSceneObject();
+			var solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationToken);
+			postprocessScene.ProjectName = solutionDescription.ProjectName;
+			layersTreeView.SetLayerTree(solutionDescription.Layers);
+			return solutionDescription;
 		}
 
 		private async Task<SummaryFile> getSummaryFileForLayerAsync(Guid layerId, CancellationToken cancellationToken)
@@ -275,23 +276,20 @@ namespace MeshEditor.DataVisualizer.UI
 			return summary;
 		}
 
-		private async Task loadLayerAsync(ILayerInfo layerInfo, LongOpNotifier.Token operationToken)
+		private async Task loadLayerAsync(ILayerInfo layerInfo, SceneFacade targetScene, LongOpNotifier.Token operationToken, CancellationToken cancellationToken)
 		{
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
-			CancellationToken cancellationToken = cancellationTokenSources[operationToken].Token;
 			var summary = await getSummaryFileForLayerAsync(layerInfo.Id, cancellationToken);
-
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
-				var originalScene = ActiveScene;
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
 				var dataSelection = new DataSelection(firstMesh.Index, elementPropertyAttributeIndex);
 				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
-				originalScene.PerformAction(AvailableAction.Refresh);
+				targetScene.PerformAction(AvailableAction.Refresh);
 
 				visualizerSettingsControl.Settings = dataVisualizerController?.Settings;
 			}
@@ -299,7 +297,7 @@ namespace MeshEditor.DataVisualizer.UI
 			dataSelectionControl.UpdateDataSource(summary, null);
 		}
 
-		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo)
+		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo, SceneFacade targetScene)
 		{
 			const string taskName = "Loading layer";
 			try
@@ -307,7 +305,8 @@ namespace MeshEditor.DataVisualizer.UI
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 				try
 				{
-					await loadLayerAsync(layerInfo, operationToken);
+					var cancellationToken = currentOperationCancellationTokenSource.Token;
+					await loadLayerAsync(layerInfo, targetScene, operationToken, cancellationToken);
 				}
 				catch (OperationCanceledException)
 				{ }
@@ -339,10 +338,12 @@ namespace MeshEditor.DataVisualizer.UI
 					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
 					try
 					{
-						var originalScene = ActiveScene;
-						var summary = await getSummaryFileForLayerAsync(selectedLayerId.Value, cancellationTokenSources[operationToken].Token);
-						if (ActiveScene != originalScene) // active scene changed during operation
+						var cancellationToken = currentOperationCancellationTokenSource.Token;
+						var targetScene = ActiveScene;
+						var summary = await getSummaryFileForLayerAsync(selectedLayerId.Value, cancellationToken);
+						if (ActiveScene != targetScene) // active scene changed during operation
 							return;
+						cancellationToken.ThrowIfCancellationRequested();
 						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
 					}
 					catch (OperationCanceledException)
@@ -387,28 +388,23 @@ namespace MeshEditor.DataVisualizer.UI
 		private LongOpNotifier.Token beginLongOperation(string taskName)
 		{
 			//mainSplitContainer.Panel1.Enabled = false;
-			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true);
-			cancellationTokenSources[operationToken] = new CancellationTokenSource();
-			return operationToken;
-		}
-
-		private void cancelOperation(LongOpNotifier.Token operationToken)
-		{
-			CancellationTokenSource cts;
-			if (cancellationTokenSources.TryGetValue(operationToken, out cts))
+			if (currentOperationCancellationTokenSource != null)
 			{
-				cts.Cancel();
+				currentOperationCancellationTokenSource.Cancel();
+				currentOperationCancellationTokenSource.Dispose();
 			}
+			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true);
+			currentOperationCancellationTokenSource = new CancellationTokenSource();
+			return operationToken;
 		}
 
 		private void endLongOperation(LongOpNotifier.Token operationToken)
 		{
 			longOpNotifier.End(operationToken);
-			CancellationTokenSource cts;
-			if (cancellationTokenSources.TryGetValue(operationToken, out cts))
+			if (currentOperationCancellationTokenSource != null)
 			{
-				cts.Dispose();
-				cancellationTokenSources.Remove(operationToken);
+				currentOperationCancellationTokenSource.Dispose();
+				currentOperationCancellationTokenSource = null;
 			}
 			//mainSplitContainer.Panel1.Enabled = true;
 		}
@@ -427,8 +423,12 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			if (disposing)
 			{
-				foreach (var token in cancellationTokenSources.Keys)
-					cancelOperation(token);
+				if (currentOperationCancellationTokenSource != null)
+				{
+					currentOperationCancellationTokenSource.Cancel();
+					currentOperationCancellationTokenSource.Dispose();
+					currentOperationCancellationTokenSource = null;
+				}
 
 				if (components != null)
 				{
