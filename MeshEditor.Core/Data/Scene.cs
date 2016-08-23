@@ -273,6 +273,8 @@ namespace MeshEditor.Data
 
 		#region Properties, access
 
+		public string Title => mesh?.Name;
+
 		public Mesh Mesh
 		{
 			get { return mesh; }

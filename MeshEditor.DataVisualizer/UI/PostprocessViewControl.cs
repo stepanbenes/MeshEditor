@@ -23,7 +23,6 @@ namespace MeshEditor.DataVisualizer.UI
 
 		Control contentPanel;
 		SolutionHub solutionHub;
-		ISolutionDescription solutionDescription;
 		MemoryLogger logger;
 		SceneFacade activeScene;
 		bool changingActiveScene;
@@ -179,7 +178,7 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					var originalScene = ActiveScene;
 					Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-					await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, e.DataSelection, buildSolutionTitle(), progressReport, cancellationTokenSources[operationToken].Token);
+					await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, e.LayerId, e.LayerName, e.DataSelection, progressReport, cancellationTokenSources[operationToken].Token);
 
 					// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
 					originalScene.PerformAction(AvailableAction.Refresh);
@@ -243,7 +242,8 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			Debug.Assert(solutionHub != null);
 			longOpNotifier.UpdateState(operationToken, "Loading layer tree");
-			solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationTokenSources[operationToken].Token);
+			var solutionDescription = await solutionHub.GetSolutionDescriptionAsync(cancellationTokenSources[operationToken].Token);
+			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).ProjectName = solutionDescription.ProjectName;
 			var layers = solutionDescription.Layers;
 			layersTreeView.SetLayerTree(layers);
 
@@ -279,7 +279,8 @@ namespace MeshEditor.DataVisualizer.UI
 				var originalScene = ActiveScene;
 				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, new DataSelection(layerInfo.Id, firstMesh.Index, elementPropertyAttributeIndex), buildSolutionTitle(), progressReport, cancellationToken);
+				var dataSelection = new DataSelection(firstMesh.Index, elementPropertyAttributeIndex);
+				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
 				originalScene.PerformAction(AvailableAction.Refresh);
@@ -368,19 +369,6 @@ namespace MeshEditor.DataVisualizer.UI
 			finally
 			{
 				changingActiveScene = false;
-			}
-		}
-
-		private string buildSolutionTitle()
-		{
-			if (string.IsNullOrEmpty(solutionDescription.Location) ||
-				solutionDescription.Location.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
-			{
-				return (solutionDescription.ProjectName + " (remote solution)").Trim();
-			}
-			else
-			{
-				return solutionDescription.Location;
 			}
 		}
 

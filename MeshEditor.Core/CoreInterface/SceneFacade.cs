@@ -167,18 +167,16 @@ namespace MeshEditor.CoreInterface
 
 		#region Public Properties
 
-		public int? MeshIdentifier => scene.Mesh?.GetHashCode();
+		public string Title => scene.Title;
 
-		public string MeshFilename
-		{
-			get { return (scene.Mesh == null) ? null : scene.Mesh.Filename; }
-		}
+		public string MeshName => scene.Mesh?.Name;
 
-		public bool ContainsMesh
-		{
-			get { return scene.Mesh != null; }
-		}
+		public string MeshSourceFileName => scene.Mesh?.SourceFilename;
 
+		public int? MeshUniqueIdentifier => scene.Mesh?.UniqueIdentifier;
+
+		public bool ContainsMesh => scene.Mesh != null;
+		
 		public bool ControlDown
 		{
 			get { return controlDown; }

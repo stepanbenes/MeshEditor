@@ -9,10 +9,14 @@ namespace MeshEditor.DataVisualizer.Data
 {
 	public class DataSelectionEventArgs : EventArgs
 	{
+		public Guid LayerId { get; }
+		public string LayerName { get; }
 		public DataSelection DataSelection { get; }
 
-		public DataSelectionEventArgs(DataSelection dataSelection)
+		public DataSelectionEventArgs(Guid layerId, string layerName, DataSelection dataSelection)
 		{
+			LayerId = layerId;
+			LayerName = layerName;
 			DataSelection = dataSelection;
 		}
 	}

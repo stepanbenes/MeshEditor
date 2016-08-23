@@ -57,9 +57,9 @@ namespace MeshEditor.IO
 			bool completed;
 			try
 			{
-				if (mesh.LoadedFromSifelFileFormat && File.Exists(mesh.Filename))
+				if (mesh.LoadedFromSifelFileFormat && File.Exists(mesh.SourceFilename))
 				{
-					sourceFileParser = new SifelFileFormatParser(mesh.Filename);
+					sourceFileParser = new SifelFileFormatParser(mesh.SourceFilename);
 					completed = saveMesh(mesh, saveWithoutHiddenElements, cancelled, rewriteNodeCoordinatesFromSource: true);
 				}
 				else
@@ -89,7 +89,7 @@ namespace MeshEditor.IO
 			if (completed)
 			{
 				replaceFile(destinationFile, filename);
-				mesh.Filename = filename;
+				mesh.SourceFilename = filename;
 				mesh.LoadedFromSifelFileFormat = true;
 				mesh.UnsavedChanges = false;
 			}
@@ -367,7 +367,7 @@ namespace MeshEditor.IO
 			if (!string.IsNullOrEmpty(mesh.Statistics.PropertyCommandsFile))
 			{
 				string filename = mesh.Statistics.PropertyCommandsFile;
-				if (Utilities.Functions.CheckIfFileIsInSameDirectory(mesh.Statistics.PropertyCommandsFile, Path.GetDirectoryName(mesh.Filename))) // if same directories
+				if (Utilities.Functions.CheckIfFileIsInSameDirectory(mesh.Statistics.PropertyCommandsFile, Path.GetDirectoryName(mesh.SourceFilename))) // if same directories
 					filename = Path.GetFileName(mesh.Statistics.PropertyCommandsFile); // make relative path
 
 				output.Write(SifelFileFormatParser.COMMENT_PATTERN + " ");

@@ -112,7 +112,7 @@ namespace MeshEditor.Construction
 				bool loadedFromSifelFileFormat = meshFileParser is SifelFileFormatParser;
 
 				// vytvor kostru nove meshe
-				mesh = new Mesh(meshFileParser.Filename, loadedFromSifelFileFormat, meshPositionOffset, meshResizeFactor);
+				mesh = new Mesh(meshFileParser.Filename, loadedFromSifelFileFormat, meshPositionOffset, meshResizeFactor, name: (meshFileParser as INameProvider)?.Name ?? Path.GetFileNameWithoutExtension(meshFileParser.Filename));
 
 				this.hiddenItemsProperties = mesh.HiddenItemsProperties;
 				mesh.Statistics = statistics;
@@ -171,7 +171,7 @@ namespace MeshEditor.Construction
 				// load property command file
 				if (!string.IsNullOrEmpty(mesh.Statistics.PropertyCommandsFile))
 				{
-					loadPropertyCommandsFile(mesh.Statistics, Path.GetDirectoryName(mesh.Filename));
+					loadPropertyCommandsFile(mesh.Statistics, Path.GetDirectoryName(mesh.SourceFilename));
 				}
 				// ==================================================================
 

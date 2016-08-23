@@ -61,21 +61,23 @@ namespace MeshEditor.DataVisualizer.Data
 
 		#region Postprocess members
 
+		public string ProjectName { get; set; }
+
 		public void RemoveMeshFromLayer(Guid layerId)
 		{
 			IScene scene = getOrCreateSceneFor(layerId);
 			setMeshForLayer(scene, null);
 		}
 
-		public async Task<IDataVisualizerController> UpdateLayerAsync(SolutionHub solutionHub, DataSelection newDataSelection, string layerDescription, Action<string, int> progressReport, CancellationToken cancellationToken)
+		public async Task<IDataVisualizerController> UpdateLayerAsync(SolutionHub solutionHub, Guid layerId, string layerName, DataSelection newDataSelection, Action<string, int> progressReport, CancellationToken cancellationToken)
 		{
 			Debug.Assert(newDataSelection != null);
-			IScene scene = getOrCreateSceneFor(newDataSelection.LayerId);
+			IScene scene = getOrCreateSceneFor(layerId);
 			var dataVisualizer = scene.Mesh?.GetDataVisualizer() as LayerDataVisualizer;
 
 			if (dataVisualizer == null || newDataSelection.MeshIndex != dataVisualizer.DataSelection?.MeshIndex)
 			{
-				var geometry = await reloadMeshAsync(scene, solutionHub, newDataSelection, layerDescription, progressReport, cancellationToken);
+				var geometry = await reloadMeshAsync(scene, solutionHub, layerId, layerName, newDataSelection, progressReport, cancellationToken);
 				Debug.Assert(scene.Mesh != null);
 				dataVisualizer = new LayerDataVisualizer(geometry);
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
@@ -92,7 +94,7 @@ namespace MeshEditor.DataVisualizer.Data
 				else
 				{
 					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
-					var componentList = await solutionHub.LoadDataAsync(newDataSelection.LayerId, newDataSelection.DataIndex.Value, cancellationToken);
+					var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.DataIndex.Value, cancellationToken);
 					dataComponentTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
 				}
 			}
@@ -130,6 +132,7 @@ namespace MeshEditor.DataVisualizer.Data
 			{
 				positionOffset = positionOffset,
 				resizeFactor = resizeFactor,
+				ProjectName = ProjectName
 			};
 
 			// copy layerSceneMap
@@ -204,18 +207,30 @@ namespace MeshEditor.DataVisualizer.Data
 			set { emptyScene.DrawAxisArrows = value; }
 		}
 
+		string IScene.Title => ProjectName ?? "[Untitled project]"; // ignore layer name
+		//{
+		//	get
+		//	{
+		//		var projectName = ProjectName ?? "[Untitled project]";
+		//		var meshTitle = currentScene.Title;
+		//		if (string.IsNullOrEmpty(meshTitle))
+		//			return projectName;
+		//		return projectName + " - " + meshTitle;
+		//	}
+		//}
+
 		#endregion
 
 		#region Private methods
 
-		private async Task<GeometryDescription> reloadMeshAsync(IScene scene, SolutionHub solutionHub, DataSelection newDataSelection, string layerDescription, Action<string, int> progressReport, CancellationToken cancellationToken)
+		private async Task<GeometryDescription> reloadMeshAsync(IScene scene, SolutionHub solutionHub, Guid layerId, string layerName, DataSelection newDataSelection, Action<string, int> progressReport, CancellationToken cancellationToken)
 		{
 			progressReport?.Invoke("Loading geometry", -1);
-			var geometry = await solutionHub.LoadGeometryAsync(newDataSelection.LayerId, newDataSelection.MeshIndex, cancellationToken);
+			var geometry = await solutionHub.LoadGeometryAsync(layerId, newDataSelection.MeshIndex, cancellationToken);
 			AttributeDescription elementPropertiesAttribute = null;
 			if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
 			{
-				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(newDataSelection.LayerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
+				elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(layerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
 			}
 
 			{
@@ -226,7 +241,7 @@ namespace MeshEditor.DataVisualizer.Data
 				}
 
 				Mesh createdMesh;
-				using (var meshFileParser = new LayerMeshFileParser(layerDescription, geometry, elementPropertiesAttribute))
+				using (var meshFileParser = new LayerMeshFileParser(layerName, geometry, elementPropertiesAttribute))
 				{
 					createdMesh = await Task.Run(() => meshCreator.CreateMesh(meshFileParser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: positionOffset, defaultResizeFactor: resizeFactor));
 					cancellationToken.ThrowIfCancellationRequested();

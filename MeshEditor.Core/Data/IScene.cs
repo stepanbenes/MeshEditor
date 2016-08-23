@@ -18,6 +18,8 @@ namespace MeshEditor.Data
 	{
 		#region Properties, access
 
+		string Title { get; }
+
 		Mesh Mesh { get; }
 
 		Camera Camera { get; set; }

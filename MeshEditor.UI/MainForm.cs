@@ -380,7 +380,7 @@ namespace MeshEditor.WinUI
 			{
 				if (ea.SkipSender && ReferenceEquals(sender, c))
 					continue;
-				if (ea.MeshIdentifier == c.SceneFacade.MeshIdentifier)
+				if (ea.MeshIdentifier == c.SceneFacade.MeshUniqueIdentifier)
 					c.Invalidate();
 			}
 		}
@@ -458,7 +458,7 @@ namespace MeshEditor.WinUI
 				return false;
 			bool saveWithoutHiddenElements = withoutHiddenResult == DialogResult.Yes;
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
-			saveFileDialog.FileName = Path.GetFileNameWithoutExtension(control.SceneFacade.MeshFilename);
+			saveFileDialog.FileName = Utilities.Functions.MakeTextValidFilename(control.SceneFacade.MeshName);
 			saveFileDialog.Filter = SceneFacade.OutputFileFormatFilter;
 			DialogResult saveDialogResult = saveFileDialog.ShowDialog();
 			if (saveDialogResult == DialogResult.Cancel)
@@ -475,8 +475,8 @@ namespace MeshEditor.WinUI
 			bool hasCuttedElements = (bool)control.SceneFacade.GetValue(AvailableValue.MeshHasHiddenElements);
 			if (!hasCuttedElements)
 				return DialogResult.No;
-			string filename = Path.GetFileName(control.SceneFacade.MeshFilename);
-			return MessageBox.Show("Save mesh " + filename + " without hidden elements?" + Environment.NewLine + "(Click \"Yes\" to save mesh as it is or \"No\" to save entire mesh in original form.)", filename + " has some hidden elements", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+			string meshName = control.SceneFacade.MeshName;
+			return MessageBox.Show("Save mesh '" + meshName + "' without hidden elements?" + Environment.NewLine + "(Click \"Yes\" to save mesh as it is or \"No\" to save entire mesh in original form.)", "Mesh has some hidden elements", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
 		}
 
 		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1051,21 +1051,21 @@ namespace MeshEditor.WinUI
 		{
 			string caption = "Save changes?";
 
-			HashSet<string> processedMeshes = new HashSet<string>();
+			HashSet<int> processedMeshes = new HashSet<int>();
 			// ----------------------------------------------------
 			// zajistit, ze se me to nebude ptat na site, ktere jsou jeste otevrene
 			foreach (OpenGLControl c in openGLControls)
 				if (c.SceneFacade.ContainsMesh && !controls.Contains(c))
-					processedMeshes.Add(c.SceneFacade.MeshFilename);
+					processedMeshes.Add(c.SceneFacade.MeshUniqueIdentifier.Value);
 			// ----------------------------------------------------
 			foreach (OpenGLControl control in controls)
 			{
-				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.MeshFilename))
+				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.MeshUniqueIdentifier.Value))
 				{
 					bool unsaved = (bool)control.SceneFacade.GetValue(AvailableValue.UnsavedChangesInMesh);
 					if (unsaved)
 					{
-						string text = "Do you want to save changes to " + Path.GetFileName(control.SceneFacade.MeshFilename) + "?";
+						string text = "Do you want to save changes to '" + control.SceneFacade.MeshName + "'?";
 						DialogResult result = MessageBox.Show(text, caption, canBeCancelled ? MessageBoxButtons.YesNoCancel : MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
 						if (result == DialogResult.Cancel) // zrusit
 						{
@@ -1347,9 +1347,13 @@ namespace MeshEditor.WinUI
 		private void updateCaption()
 		{
 			string caption = "Mesh Editor"; /**/
-			if (activeControl != null && !string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
+			if (activeControl != null)
 			{
-				caption += " - " + Path.GetFileName(activeControl.SceneFacade.MeshFilename);
+				string sceneTitle = activeControl.SceneFacade.Title;
+				if (!string.IsNullOrEmpty(sceneTitle))
+				{
+					caption += " - " + sceneTitle;
+				}
 			}
 			this.Text = caption;
 		}
@@ -1406,7 +1410,7 @@ namespace MeshEditor.WinUI
 			}
 
 			//if (!string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
-			Properties.Settings.Default.LastLoadedMesh = activeControl.SceneFacade.MeshFilename;
+			Properties.Settings.Default.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
 
 			Properties.Settings.Default.Save();
 		}
@@ -1541,7 +1545,7 @@ namespace MeshEditor.WinUI
 				if (control.SceneFacade.ContainsMesh)
 				{
 					//dialog.InitialDirectory = Path.GetDirectoryName(activeControl.SceneFacade.MeshFilename);
-					dialog.FileName = Path.GetFileName(control.SceneFacade.MeshFilename);
+					dialog.FileName = Utilities.Functions.MakeTextValidFilename(control.SceneFacade.MeshName);
 				}
 			}
 			if (dialog.ShowDialog() == DialogResult.OK)

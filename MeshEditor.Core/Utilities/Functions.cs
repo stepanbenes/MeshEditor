@@ -1207,6 +1207,18 @@ namespace MeshEditor.Utilities
 			return Path.GetFileName(filenames[0]); // pick name of first file
 		}
 
+		public static string MakeTextValidFilename(string text)
+		{
+			if (string.IsNullOrEmpty(text))
+				return string.Empty;
+			StringBuilder result = new StringBuilder(text);
+			foreach (char c in Path.GetInvalidFileNameChars())
+			{
+				result.Replace(c, '_');
+			}
+			return result.ToString();
+		}
+
 		#endregion
 
 		#region Assembly Info

@@ -12,21 +12,22 @@ using OpenTK;
 
 namespace MeshEditor.DataVisualizer.IO
 {
-	class LayerMeshFileParser : IMeshFileParser
+	class LayerMeshFileParser : IMeshFileParser, INameProvider
 	{
 		GeometryDescription geometry;
 		AttributeDescription elementPropertiesAttribute;
 
-		public LayerMeshFileParser(string meshFileName, GeometryDescription geometry, AttributeDescription elementPropertiesAttribute = null)
+		public LayerMeshFileParser(string layerName, GeometryDescription geometry, AttributeDescription elementPropertiesAttribute = null)
 		{
 			Debug.Assert(geometry != null);
 			Debug.Assert(elementPropertiesAttribute == null || elementPropertiesAttribute.Location == DataLocationType.Cells);
-			this.Filename = meshFileName;
+			Name = layerName;
 			this.geometry = geometry;
 			this.elementPropertiesAttribute = elementPropertiesAttribute;
 		}
 
-		public string Filename { get; }
+		public string Name { get; }
+		public string Filename => null;
 		public int CurrentLineNumber => 0;
 		public int NodeCount => geometry?.NumberOfPoints ?? 0;
 		public int ElementCount => geometry?.NumberOfCells ?? 0;

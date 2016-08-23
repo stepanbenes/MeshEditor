@@ -789,7 +789,7 @@ namespace MeshEditor.WinUI
 				sceneFacade.SetPropertyOfSelectedItems(new MeshEditor.Data.Property(value));
 			}
 
-			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(sceneFacade.MeshIdentifier.Value));
+			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(sceneFacade.MeshUniqueIdentifier.Value));
 			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 

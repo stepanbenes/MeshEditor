@@ -66,7 +66,7 @@ namespace MeshEditor.IO
 
 		#endregion
 
-		#region IDefaultFileParser Members
+		#region ISifelFileFormatParser Members
 
 		public string Filename
 		{

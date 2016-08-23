@@ -133,4 +133,12 @@ namespace MeshEditor.IO
 		string ReadNextLine();
 
 	}
+
+	/// <summary>
+	/// Describes object that is able to provide name
+	/// </summary>
+	public interface INameProvider
+	{
+		string Name { get; }
+	}
 }

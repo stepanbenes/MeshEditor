@@ -32,14 +32,13 @@ namespace MeshEditor.IO
 		{
 			ioea = new MeshIOEventArgs(0, "Saving mesh", null);
 			generateMaps(mesh, saveWithoutCuttedElements);
-            string meshName = Path.GetFileNameWithoutExtension(mesh.Filename);
 
             Transformation<Vector3> coordinateTransformer = delegate(Vector3 pos)
             {
                 return (pos / mesh.ResizeFactor) + mesh.PositionOffset;
             };
 
-            writeMeshToFile(filename, meshName, coordinateTransformer, cancelled);
+            writeMeshToFile(filename, mesh.Name, coordinateTransformer, cancelled);
 		}
 		
 		public void SaveMesh(IMeshFileParser fileParser, string destination, YesNoQuestion cancelled)

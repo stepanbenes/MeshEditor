@@ -27,7 +27,7 @@ namespace MeshEditor.Data
 
 		#region Fields, Constructor
 
-		private string filename;
+		private string sourceFilename;
 		private bool loadedFromSifelFileFormat;
 		private PropertyColorsMode colorMode;
 		private int referenceCount;
@@ -67,9 +67,11 @@ namespace MeshEditor.Data
 		// ======================================
 
 		// ==========================================
-		public Mesh(string sourceFilename, bool loadedFromSifelFileFormat, Vector3 meshPositionOffset, float meshResizeFactor)
+		public Mesh(string sourceFilename, bool loadedFromSifelFileFormat, Vector3 meshPositionOffset, float meshResizeFactor, string name)
 		{
-			this.filename = sourceFilename;
+			this.sourceFilename = sourceFilename;
+			this.Name = name;
+
 			this.loadedFromSifelFileFormat = loadedFromSifelFileFormat;
 			this.positionOffset = meshPositionOffset;
 			this.resizeFactor = meshResizeFactor;
@@ -102,6 +104,14 @@ namespace MeshEditor.Data
 		#region Public Properties
 
 		public int UniqueIdentifier => GetHashCode();
+
+		public string Name { get; }
+
+		public string SourceFilename
+		{
+			get { return sourceFilename; }
+			set { sourceFilename = value; }
+		}
 
 		public bool UnsavedChanges
 		{
@@ -184,12 +194,6 @@ namespace MeshEditor.Data
         {
             get { return content.Beams; }
         }
-
-		public string Filename
-		{
-			get { return filename; }
-			set { filename = value; }
-		}
 		
 		public MeshStatistics Statistics
 		{
