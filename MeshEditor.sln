@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Core", "MeshEditor.Core\MeshEditor.Core.csproj", "{604E83B3-5C76-47A8-BEB2-529CC28471F0}"
 EndProject
@@ -14,13 +14,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.FormatConverter", "MeshEditor.FormatConverter\MeshEditor.FormatConverter.csproj", "{469F9E5D-1EE2-4219-A9AA-890E2923D26B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.DataVisualizer", "MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj", "{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{351018B4-680A-41CD-8002-DDB6E4C2D95B}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LayerManager", "LayerManager", "{F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}"
 EndProject

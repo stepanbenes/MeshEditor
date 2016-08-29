@@ -14,6 +14,7 @@ using OpenTK;
 using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.DataVisualizer.UI;
+using System.Text;
 
 namespace MeshEditor.WinUI
 {
@@ -858,26 +859,6 @@ namespace MeshEditor.WinUI
 			dialog.ShowDialog();
 		}
 
-		private void readDocumentationToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!File.Exists(this.userGuideFilePath))
-			{
-				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuideFilePath), "File " + Path.GetFileName(this.userGuideFilePath) + " in application directory does not exists.");
-				return;
-			}
-
-			try
-			{
-				Process process = new Process();
-				process.StartInfo = new ProcessStartInfo(this.userGuideFilePath);
-				process.Start();
-			}
-			catch (Exception ex)
-			{
-				OpenGLControl.ShowErrorMessage("Can't open file " + Path.GetFileName(this.userGuideFilePath), ex.Message);
-			}
-		}
-
 		private void closeActiveMeshToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (activeControl.SceneFacade.ContainsMesh)
@@ -1002,9 +983,41 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private async void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				var updateChecker = new UpdateChecker();
+				if (await updateChecker.CheckForUpdates())
+				{
+					StringBuilder questionTextBuilder = new StringBuilder();
+
+					questionTextBuilder.AppendLine("There is a new version of this application.");
+					questionTextBuilder.AppendLine("New version: " + updateChecker.ServerVersion);
+					questionTextBuilder.AppendLine("Current version: " + updateChecker.CurrentVersion);
+					questionTextBuilder.AppendLine();
+					questionTextBuilder.Append("Do you want to download the new version?");
+
+					var dialogResult = MessageBox.Show(questionTextBuilder.ToString(), "New version available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+					if (dialogResult == DialogResult.Yes)
+					{
+						var ignore = Process.Start(updateChecker.PackageFileUri);
+					}
+				}
+				else
+				{
+					MessageBox.Show("You already have the latest version installed.", "No update available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				}
+			}
+			catch (Exception ex)
+			{
+				OpenGLControl.ShowErrorMessage("Can't check for updates", ex.Message);
+			}
+		}
+
 		#endregion
 
-		#region Help methods
+		#region Helper methods
 
 		private PreprocessViewControl getCurrentPreprocessView()
 		{

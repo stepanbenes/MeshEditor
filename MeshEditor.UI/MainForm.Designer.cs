@@ -123,7 +123,6 @@
 			this.signalDataMaximumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.signalDataMinimumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.readDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
 			this.aboutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStrip = new System.Windows.Forms.ToolStrip();
@@ -182,6 +181,7 @@
 			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.centralPanel = new System.Windows.Forms.Panel();
+			this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -983,30 +983,22 @@
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.readDocumentationToolStripMenuItem,
+            this.checkForUpdatesToolStripMenuItem,
             this.toolStripSeparator5,
             this.aboutToolStripMenuItem1});
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
 			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
 			this.aboutToolStripMenuItem.Text = "&HELP";
 			// 
-			// readDocumentationToolStripMenuItem
-			// 
-			this.readDocumentationToolStripMenuItem.Name = "readDocumentationToolStripMenuItem";
-			this.readDocumentationToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-			this.readDocumentationToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-			this.readDocumentationToolStripMenuItem.Text = "&User guide";
-			this.readDocumentationToolStripMenuItem.Click += new System.EventHandler(this.readDocumentationToolStripMenuItem_Click);
-			// 
 			// toolStripSeparator5
 			// 
 			this.toolStripSeparator5.Name = "toolStripSeparator5";
-			this.toolStripSeparator5.Size = new System.Drawing.Size(146, 6);
+			this.toolStripSeparator5.Size = new System.Drawing.Size(167, 6);
 			// 
 			// aboutToolStripMenuItem1
 			// 
 			this.aboutToolStripMenuItem1.Name = "aboutToolStripMenuItem1";
-			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(149, 22);
+			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(170, 22);
 			this.aboutToolStripMenuItem1.Text = "&About";
 			this.aboutToolStripMenuItem1.Click += new System.EventHandler(this.aboutToolStripMenuItem1_Click);
 			// 
@@ -1558,6 +1550,13 @@
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// checkForUpdatesToolStripMenuItem
+			// 
+			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
+			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+			this.checkForUpdatesToolStripMenuItem.Text = "&Check for updates";
+			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1627,7 +1626,6 @@
 		private System.Windows.Forms.ToolStripMenuItem lookAroundToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem panToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem readDocumentationToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
 		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem selectAllToolStripMenuItem;
@@ -1739,6 +1737,7 @@
 		private System.Windows.Forms.ToolStripMenuItem closeSolutionToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator22;
 		private System.Windows.Forms.ToolStripMenuItem importFEMResultsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
 	}
 }
 
