@@ -77,38 +77,26 @@ namespace MeshEditor.LayerManager.Import
 			private static DataLocationType chooseCommonTargetDataLocationFor(IReadOnlyCollection<ParsedField> fields)
 			{
 				Debug.Assert(fields.Count > 0);
+				Debug.Assert(fields.All(f => f.Location.HasValue));
 
-				// QUESTION: Should targetDataLocation be user-controlled?
-				// TODO: implement choosing common target data location if there is collision (can there be collision?)
+				FileDataLocation fileDataLocation = fields.First().Location.Value;
 
-				DataLocationType? commonTargetDataLocation = null;
-				foreach (var field in fields)
+				if (fields.Any(f => f.Location != fileDataLocation))
 				{
-					DataLocationType targetDataLocation;
-					switch (field.Location)
-					{
-						case FileDataLocation.Nodes:
-							targetDataLocation = DataLocationType.Points /*or Cells*/;
-							break;
-						case FileDataLocation.GaussPoints:
-							targetDataLocation = (field.GaussPointsDescription.NumberOfGaussPoints == 1) ? DataLocationType.Cells /*or Points*/ : DataLocationType.CellPoints /*or Points or Cells*/;
-							break;
-						default:
-							throw new NotSupportedException();
-					}
-					if (commonTargetDataLocation.HasValue)
-					{
-						if (commonTargetDataLocation != targetDataLocation)
-						{
-							throw new NotImplementedException();
-						}
-					}
-					else
-					{
-						commonTargetDataLocation = targetDataLocation;
-					}
+					throw new NotSupportedException($"Following data field does not have the same data location type for all sub-mesh: {fields.First().FieldName} (time step: {fields.First().TimeStep}).");
 				}
-				return commonTargetDataLocation.Value;
+
+				switch (fileDataLocation)
+				{
+					case FileDataLocation.Nodes:
+						return DataLocationType.Points;
+					case FileDataLocation.GaussPoints:
+						if (fields.All(f => f.GaussPointsDescription.NumberOfGaussPoints == 1))
+							return DataLocationType.Cells;
+						return DataLocationType.CellPoints;
+					default:
+						throw new NotSupportedException();
+				}
 			}
 
 			/// <summary>

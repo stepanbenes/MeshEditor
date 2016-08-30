@@ -172,7 +172,7 @@ namespace MeshEditor.LayerManager
 					}
 					break;
 				case FilterType.Clip:
-				// TODO: use MeshSliceGenerator
+				// TODO: use MeshSliceCreator
 				case FilterType.IsoSurface:
 				case FilterType.StreamLines:
 					throw new NotImplementedException();

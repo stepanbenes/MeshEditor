@@ -169,7 +169,7 @@ namespace MeshEditor.Data
 			return allUsedProperties.SelectMany(pair => pair.Value).OrderBy(p => p.Value).Distinct();
 		}
 
-		public /*TODO: .NET4.6+ IReadOnlyCollection<Property>*/ ICollection<Property> GetPropertiesOFEntityType(EntityType entityType)
+		public IReadOnlyCollection<Property> GetPropertiesOfEntityType(EntityType entityType)
 		{
 			HashSet<Property> properties;
 			if (!allUsedProperties.TryGetValue(entityType, out properties))
