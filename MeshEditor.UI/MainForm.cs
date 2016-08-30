@@ -83,6 +83,11 @@ namespace MeshEditor.WinUI
 
 			updateCaption();
 			editorModeChanged(null, null);
+
+			if (UpdateChecker.IsUpdateServiceAvailableForThisPlatform)
+			{
+				var fireAndForgetTask = checkForUpdatesAsync(maxVersionToIgnoreString: Properties.Settings.Default.LastCheckedUpdateVersion); // swallow exceptions
+			}
 		}
 
 		#endregion
@@ -983,28 +988,17 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		private void aboutToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+		{
+			checkForUpdatesToolStripMenuItem.Enabled = UpdateChecker.IsUpdateServiceAvailableForThisPlatform;
+		}
+
 		private async void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			try
 			{
-				var updateChecker = new UpdateChecker();
-				if (await updateChecker.CheckForUpdates())
-				{
-					StringBuilder questionTextBuilder = new StringBuilder();
-
-					questionTextBuilder.AppendLine("There is a new version of this application.");
-					questionTextBuilder.AppendLine("New version: " + updateChecker.ServerVersion);
-					questionTextBuilder.AppendLine("Current version: " + updateChecker.CurrentVersion);
-					questionTextBuilder.AppendLine();
-					questionTextBuilder.Append("Do you want to download the new version?");
-
-					var dialogResult = MessageBox.Show(questionTextBuilder.ToString(), "New version available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-					if (dialogResult == DialogResult.Yes)
-					{
-						var ignore = Process.Start(updateChecker.PackageFileUri);
-					}
-				}
-				else
+				bool updateExists = await checkForUpdatesAsync(maxVersionToIgnoreString: null);
+				if (!updateExists)
 				{
 					MessageBox.Show("You already have the latest version installed.", "No update available", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				}
@@ -1018,6 +1012,37 @@ namespace MeshEditor.WinUI
 		#endregion
 
 		#region Helper methods
+
+		private static async Task<bool> checkForUpdatesAsync(string maxVersionToIgnoreString)
+		{
+			var updateChecker = new UpdateChecker();
+
+			bool updateExists = await updateChecker.CheckForUpdates();
+
+			Properties.Settings.Default.LastCheckedUpdateVersion = updateChecker.ServerVersion.ToString();
+
+			if (updateExists)
+			{
+				Version maxVersionToIgnore;
+				if (!Version.TryParse(maxVersionToIgnoreString, out maxVersionToIgnore) && maxVersionToIgnore >= updateChecker.ServerVersion)
+					return false;
+
+				StringBuilder questionTextBuilder = new StringBuilder();
+
+				questionTextBuilder.AppendLine("There is a new version of this application.");
+				questionTextBuilder.AppendLine("New version: " + updateChecker.ServerVersion);
+				questionTextBuilder.AppendLine("Current version: " + updateChecker.CurrentVersion);
+				questionTextBuilder.AppendLine();
+				questionTextBuilder.Append("Do you want to download the new version?");
+
+				var dialogResult = MessageBox.Show(questionTextBuilder.ToString(), "New version available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+				if (dialogResult == DialogResult.Yes)
+				{
+					Process.Start(updateChecker.PackageFileUri); // start web browser with package file uri
+				}
+			}
+			return updateExists;
+		}
 
 		private PreprocessViewControl getCurrentPreprocessView()
 		{

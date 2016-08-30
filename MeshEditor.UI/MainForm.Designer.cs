@@ -123,6 +123,7 @@
 			this.signalDataMaximumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.signalDataMinimumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
 			this.aboutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStrip = new System.Windows.Forms.ToolStrip();
@@ -181,7 +182,6 @@
 			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.centralPanel = new System.Windows.Forms.Panel();
-			this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -989,6 +989,14 @@
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
 			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
 			this.aboutToolStripMenuItem.Text = "&HELP";
+			this.aboutToolStripMenuItem.DropDownOpening += new System.EventHandler(this.aboutToolStripMenuItem_DropDownOpening);
+			// 
+			// checkForUpdatesToolStripMenuItem
+			// 
+			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
+			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+			this.checkForUpdatesToolStripMenuItem.Text = "&Check for updates";
+			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator5
 			// 
@@ -1549,13 +1557,6 @@
 			this.centralPanel.Name = "centralPanel";
 			this.centralPanel.Size = new System.Drawing.Size(1066, 625);
 			this.centralPanel.TabIndex = 5;
-			// 
-			// checkForUpdatesToolStripMenuItem
-			// 
-			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
-			this.checkForUpdatesToolStripMenuItem.Text = "&Check for updates";
-			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 

@@ -94,5 +94,17 @@ namespace MeshEditor.WinUI.Properties {
                 this["LastLoadedMesh"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastCheckedUpdateVersion {
+            get {
+                return ((string)(this["LastCheckedUpdateVersion"]));
+            }
+            set {
+                this["LastCheckedUpdateVersion"] = value;
+            }
+        }
     }
 }
