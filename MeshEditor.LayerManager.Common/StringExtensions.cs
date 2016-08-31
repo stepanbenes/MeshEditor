@@ -41,6 +41,11 @@ namespace MeshEditor.LayerManager.Common
 				.ToArray();
 		}
 
+		public static string[] SplitToLines(this string text, bool removeEmptyLines)
+		{
+			return text.Split(new[] { "\r\n", "\n" }, options: removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
+		}
+
 		public static string RemoveQuotes(this string text)
 		{
 			if (string.IsNullOrEmpty(text))

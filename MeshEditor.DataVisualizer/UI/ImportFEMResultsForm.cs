@@ -61,7 +61,9 @@ namespace MeshEditor.DataVisualizer.UI
 					solutionDirectory = location;
 				}
 				string solutionFileName = createNewSolution(solutionDirectory, analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
-				bool success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
+
+				var success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
+
 				if (success)
 				{
 					SolutionFileName = solutionFileName;
@@ -159,8 +161,8 @@ namespace MeshEditor.DataVisualizer.UI
 			arguments.Append(" --verbose");
 			arguments.Append(" --pressanykey");
 
-			int returnCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
-			return returnCode == 0;
+			var exitCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
+			return exitCode == 0;
 		}
 
 		private void buttonChooseMeshFile_Click(object sender, EventArgs e)
