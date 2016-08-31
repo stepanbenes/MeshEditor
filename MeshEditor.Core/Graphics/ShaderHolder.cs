@@ -17,12 +17,8 @@ namespace MeshEditor.Graphics
 
 		private int activeVertexShaderIndex, activeFragmentShaderIndex;
 
-		static int counter;
-
 		public ShaderHolder()
 		{
-			Console.WriteLine("creating shaderholder, count: " + (++counter));
-
 			vertexShaderId = new List<int>();
 			fragmentShaderId = new List<int>();
 			
@@ -31,10 +27,7 @@ namespace MeshEditor.Graphics
 			activeVertexShaderIndex = activeFragmentShaderIndex = -1;
 		}
 
-		protected int Program
-		{
-			get { return programShaderId; }
-		}
+		protected int Program => programShaderId;
 
 		protected bool LoadShaderStrings(string[] vertexShaderStrings, string[] fragmentShaderStrings)
 		{
@@ -164,8 +157,6 @@ namespace MeshEditor.Graphics
 
 		public void Dispose()
 		{
-			Console.WriteLine("disposing shaderholder, count: " + (--counter));
-
 			// get rid of resources
 			if (programShaderId != -1)
 			{
