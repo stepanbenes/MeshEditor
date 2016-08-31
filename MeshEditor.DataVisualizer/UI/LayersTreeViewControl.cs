@@ -129,12 +129,9 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			var treeNode = new TreeNode(layer.Name) { Tag = layer };
 			layerIdTreeNodeMap[layer.Id] = treeNode; // put in cache
-			if (layer.Children != null)
+			foreach (var child in layer.Children)
 			{
-				foreach (var child in layer.Children)
-				{
-					treeNode.Nodes.Add(createTreeNode(child));
-				}
+				treeNode.Nodes.Add(createTreeNode(child));
 			}
 			return treeNode;
 		}

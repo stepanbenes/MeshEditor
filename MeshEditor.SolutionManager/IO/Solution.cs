@@ -19,7 +19,7 @@ namespace MeshEditor.SolutionManager.IO
 			public Layer[] Children { get; set; }
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
-			IReadOnlyList<ILayerInfo> ILayerInfo.Children => Children ?? Array.Empty<ILayerInfo>();
+			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
 
 			public override int GetHashCode() => Id.GetHashCode();
 

@@ -42,7 +42,7 @@ namespace MeshEditor.SolutionManager.IO
 								 let fileMatchRelativePath = Path.GetFileName(fileMatch)
 								 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray()
 								:
-								Array.Empty<string>();
+								new string[0]; //Array.Empty<string>();
 			int solutionId;
 			string recordName;
 			if (conflicts.Length > 0)

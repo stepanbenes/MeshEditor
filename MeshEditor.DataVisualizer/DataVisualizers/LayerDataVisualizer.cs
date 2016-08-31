@@ -100,7 +100,7 @@ namespace MeshEditor.DataVisualizer
 		public override int[] GetIDsOfNodesWithMaximumDataValue()
 		{
 			if (currentDataComponent == null)
-				return Array.Empty<int>();
+				return new int[0]; //Array.Empty<int>();
 
 			switch (currentDataComponent.Location)
 			{
@@ -118,7 +118,7 @@ namespace MeshEditor.DataVisualizer
 		public override int[] GetIDsOfNodesWithMinimumDataValue()
 		{
 			if (currentDataComponent == null)
-				return Array.Empty<int>();
+				return new int[0]; //Array.Empty<int>();
 
 			switch (currentDataComponent.Location)
 			{
