@@ -39,7 +39,7 @@ namespace MeshEditor.SolutionManager.IO
 			if (!(solutionLocator is int))
 				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
 
-			var request = new RestRequest($"api/solution", Method.POST);
+			var request = createCreateNewRequest();
 
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
@@ -125,12 +125,9 @@ namespace MeshEditor.SolutionManager.IO
 
 		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			var request = new RestRequest($"api/solution/{solution.Id}/layer", Method.POST);
-
-			//request.AddUrlSegment("id", simulationId.ToString());
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
+			var request = createAddLayerRequest(solution.Id);
 			request.RequestFormat = DataFormat.Json;
+
 			//request.AddBody(serializedSolution);
 			//request.AddQueryParameter("state", ((int)analysisState).ToString());
 
@@ -212,59 +209,68 @@ namespace MeshEditor.SolutionManager.IO
 
 		private T parseResponse<T>(IRestResponse response)
 		{
-			using (Stream stream = generateStreamFromString(response.Content, string.IsNullOrEmpty(response.ContentEncoding) ? Encoding.UTF8 : Encoding.GetEncoding(response.ContentEncoding)))
+			using (Stream stream = generateStreamFromString(response.Content))
 			{
 				return serializer.Deserialize<T>(stream);
 			}
 		}
 
-		private static Stream generateStreamFromString(string s, Encoding encoding)
+		private static Stream generateStreamFromString(string s)
 		{
 			MemoryStream stream = new MemoryStream();
-			StreamWriter writer = new StreamWriter(stream, encoding);
+			StreamWriter writer = new StreamWriter(stream);
 			writer.Write(s);
 			writer.Flush();
 			stream.Position = 0;
 			return stream;
 		}
 
+		private static RestRequest createCreateNewRequest()
+		{
+			var request = new RestRequest($"api/solution", Method.POST);
+
+			return request;
+		}
+
+		private static RestRequest createAddLayerRequest(int solutionId)
+		{
+			var request = new RestRequest($"api/solution/{solutionId}/layer", Method.POST);
+			addHeadersToRequest(request);
+			return request;
+		}
+
 		private static RestRequest createGetAllRequest()
 		{
 			var request = new RestRequest("api/solution", Method.GET);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			//request.RequestFormat = DataFormat.Json;
+			addHeadersToRequest(request);
 			return request;
 		}
 
 		private static RestRequest createGetRequest(int solutionId)
 		{
 			var request = new RestRequest($"api/solution/{solutionId}", Method.GET);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			//request.RequestFormat = DataFormat.Json;
+			addHeadersToRequest(request);
 			return request;
 		}
 
 		private static RestRequest createDeleteRequest(int solutionId)
 		{
 			var request = new RestRequest($"api/solution/{solutionId}", Method.DELETE);
-
-			request.AddHeader("Accept", "application/json");
-			request.AddHeader("Content-Type", "application/json");
-			//request.RequestFormat = DataFormat.Json;
+			addHeadersToRequest(request);
 			return request;
 		}
 
 		private static RestRequest createDeleteLayerRequest(Solution solution, Solution.Layer layerToDelete)
 		{
 			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
+			addHeadersToRequest(request);
+			return request;
+		}
 
+		private static void addHeadersToRequest(RestRequest request)
+		{
 			request.AddHeader("Accept", "application/json");
 			request.AddHeader("Content-Type", "application/json");
-			return request;
 		}
 
 		#endregion
