@@ -1,0 +1,9 @@
+#!/bin/bash 
+find package -type d -exec chmod 755 {} \;
+find package -type f -exec chmod 644 {} \;
+chmod 755 package/usr/bin/mesheditor
+chmod 755 package/usr/bin/fem-format-converter
+chmod 755 package/usr/bin/layer
+fakeroot dpkg -b package
+echo 'package created.'
+lintian package.deb

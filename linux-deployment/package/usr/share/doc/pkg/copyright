@@ -1,0 +1,9 @@
+Format: http://anonscm.debian.org/viewvc/dep/web/deps/dep5.mdwn?revision=174
+Upstream-Name: myapp
+Upstream-Contact: Ade Malsasa Akbar <teknoloid@gmail.com>
+Source: http://malsasa.wordpress.com
+
+Files: *
+Copyright: 2013, Ade Malsasa Akbar (teknoloid@gmail.com)
+License: GPL-3+
+

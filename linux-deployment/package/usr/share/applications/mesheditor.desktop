@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MeshEditor
+Comment=3D graphical editor of finite element meshes and postprocessor of results from the Finite element method
+Exec=mesheditor %U
+Terminal=false
+StartupNotify=true
+Icon=/usr/share/pixmaps/mesheditor_icon.png
+Type=Application
+Categories=GNOME;Utility;Graphics
