@@ -169,11 +169,11 @@ namespace MeshEditor.Data
 			return allUsedProperties.SelectMany(pair => pair.Value).OrderBy(p => p.Value).Distinct();
 		}
 
-		public IReadOnlyCollection<Property> GetPropertiesOfEntityType(EntityType entityType)
+		public IEnumerable<Property> GetPropertiesOfEntityType(EntityType entityType)
 		{
 			HashSet<Property> properties;
 			if (!allUsedProperties.TryGetValue(entityType, out properties))
-				return new Collection<Property>();
+				return new Property[0];
 			return properties;
 		}
 

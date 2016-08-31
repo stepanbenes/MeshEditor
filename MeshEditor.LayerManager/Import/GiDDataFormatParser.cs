@@ -74,9 +74,9 @@ namespace MeshEditor.LayerManager.Import
 					Equals(ResultTypeString, other.ResultTypeString);
 			}
 
-			private static DataLocationType chooseCommonTargetDataLocationFor(IReadOnlyCollection<ParsedField> fields)
+			private static DataLocationType chooseCommonTargetDataLocationFor(IEnumerable<ParsedField> fields)
 			{
-				Debug.Assert(fields.Count > 0);
+				Debug.Assert(fields.Any());
 				Debug.Assert(fields.All(f => f.Location.HasValue));
 
 				FileDataLocation fileDataLocation = fields.First().Location.Value;
@@ -102,10 +102,10 @@ namespace MeshEditor.LayerManager.Import
 			/// <summary>
 			/// Merges multiple data corresponing to same field and timestep together
 			/// </summary>
-			public static FieldDataDescription CreateMergedDataDescription(IReadOnlyCollection<ParsedField> fields, GeometryDescription geometry, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
+			public static FieldDataDescription CreateMergedDataDescription(IEnumerable<ParsedField> fields, GeometryDescription geometry, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
 			{
 				// NOTE: fields is Stack<T>, so it is in reversed order!
-				Debug.Assert(fields.Count > 0);
+				Debug.Assert(fields.Any());
 
 				DataLocationType targetDataLocation = chooseCommonTargetDataLocationFor(fields);
 
