@@ -29,8 +29,6 @@ namespace MeshEditor.CoreInterface
 
 		#region Static fields, static constructor
 
-		public static readonly string AppSettingsFilename;
-
 		public static readonly int COLOR_BITS;
 		public static readonly int DEPTH_BITS;
 
@@ -62,8 +60,6 @@ namespace MeshEditor.CoreInterface
 			SCREENSHOT_RECTANGLE_COLOR = Color.FromArgb(50, Color.Yellow);
 
 			editorMode = editorModeWithoutModificationKeys = EditorMode.Orbit;
-
-			AppSettingsFilename = @"appSettings.conf";
 		}
 
 		#endregion
@@ -234,9 +230,9 @@ namespace MeshEditor.CoreInterface
 
 		public static string SolutionFileExtension => ".solution.json";
 
-		public static string InputFileFormatFilter => string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply, *{1})|*{0};*.msh;*.vtu;*.obj;*.ply;*{1}|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|Solution file format (*{1})|*{1}|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension, SolutionFileExtension);
+		public static string InputFileFormatFilter => string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply, *{1})|*{0};*.msh;*.vtu;*.obj;*.ply;*{1}|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|Solution file format (*{1})|*{1}|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension, SolutionFileExtension);
 
-		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", AppSettings.Instance.SifelFileformatExtension);
+		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension);
 
 		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu)|*.msh;*.vtu|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|All files (*.*)|*.*";
 

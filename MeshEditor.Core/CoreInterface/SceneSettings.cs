@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
+using MeshEditor.Common;
 
 namespace MeshEditor.CoreInterface
 {
@@ -16,29 +17,29 @@ namespace MeshEditor.CoreInterface
 	/// </summary>
 	[Serializable]
 	[DefaultProperty("LineSmooth")]
-	public class AppSettings
+	public class SceneSettings
 	{
 
 		#region Static members
 
-		private static AppSettings instance;
+		private static SceneSettings instance;
 		private static MemoryStream mem;
 
 		/// <summary>
 		/// Static constructor
 		/// </summary>
-		static AppSettings()
+		static SceneSettings()
 		{
 			instance = null;
 			mem = null;
 		}
 
-		public static AppSettings Instance
+		public static SceneSettings Instance
 		{
 			get
 			{
 				if (instance == null)
-					instance = new AppSettings();
+					instance = new SceneSettings();
 				return instance;
 			}
 		}
@@ -69,7 +70,7 @@ namespace MeshEditor.CoreInterface
 			BinaryFormatter formatter = new BinaryFormatter();
 			try
 			{
-				instance = (AppSettings)formatter.Deserialize(mem);
+				instance = (SceneSettings)formatter.Deserialize(mem);
 				instance.update();
 			}
 #if !DEBUG
@@ -84,59 +85,64 @@ namespace MeshEditor.CoreInterface
 			}
 		}
 
-		public static void SaveToFile(string filename)
+		public static void SaveToConfigurationFile()
 		{
-			// serializace do souboru
-			FileStream stream = null;
-			try
-			{
-				stream = new FileStream(filename, FileMode.Create);
-				BinaryFormatter serializer = new BinaryFormatter();
-				serializer.Serialize(stream, Instance);
-			}
-#if !DEBUG
-			catch (Exception)
-			{
-			}
-#endif
-			finally
-			{
-				if (stream != null)
-					stream.Close();
-			}
+			ConfigurationManager.WriteConfigurationObject("SceneSettings", Instance);
+
+//			// serializace do souboru
+//			FileStream stream = null;
+//			try
+//			{
+//				stream = new FileStream(filename, FileMode.Create);
+//				BinaryFormatter serializer = new BinaryFormatter();
+//				serializer.Serialize(stream, Instance);
+//			}
+//#if !DEBUG
+//			catch (Exception)
+//			{
+//			}
+//#endif
+//			finally
+//			{
+//				if (stream != null)
+//					stream.Close();
+//			}
 		}
 
-		public static void LoadFromFile(string filename)
+		public static void LoadFromConfigurationFile()
 		{
-			if (!File.Exists(filename))
-				return;
+			instance = ConfigurationManager.ReadConfigurationObject<SceneSettings>("SceneSettings") ?? new SceneSettings();
+			instance.update();
 
-			// deserializace ze souboru
-			FileStream stream = null;
-			try
-			{
-				stream = new FileStream(filename, FileMode.Open);
-				BinaryFormatter serializer = new BinaryFormatter();
-				instance = (AppSettings)serializer.Deserialize(stream);
-				instance.update();
-			}
-#if !DEBUG
-			catch (Exception)
-			{
-				instance = new AppSettings();
-			}
-#endif
-			finally
-			{
-				if (stream != null)
-					stream.Close();
-			}
+//			if (!File.Exists(filename))
+//				return;
+
+//			// deserializace ze souboru
+//			FileStream stream = null;
+//			try
+//			{
+//				stream = new FileStream(filename, FileMode.Open);
+//				BinaryFormatter serializer = new BinaryFormatter();
+//				instance = (AppSettings)serializer.Deserialize(stream);
+//				instance.update();
+//			}
+//#if !DEBUG
+//			catch (Exception)
+//			{
+//				instance = new AppSettings();
+//			}
+//#endif
+//			finally
+//			{
+//				if (stream != null)
+//					stream.Close();
+//			}
 		}
 
 		public static void Reset()
 		{
 			Scene.SetDefaultParametres(true);
-			instance = new AppSettings();
+			instance = new SceneSettings();
 			instance.update();
 		}
 
@@ -196,7 +202,7 @@ namespace MeshEditor.CoreInterface
 		/// <summary>
 		/// Private constructor
 		/// </summary>
-		private AppSettings()
+		private SceneSettings()
 		{
 			lineSmooth = LineSmooth;
 			pointSmooth = PointSmooth;

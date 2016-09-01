@@ -39,11 +39,11 @@ namespace MeshEditor.WinUI
 
 		private void init()
 		{
-			AppSettings.SaveState();
+			SceneSettings.SaveState();
 
 			propertyGrid.PropertySort = PropertySort.Categorized;
 						
-			propertyGrid.SelectedObject = AppSettings.Instance;
+			propertyGrid.SelectedObject = SceneSettings.Instance;
 			propertyGrid.PropertyValueChanged += new PropertyValueChangedEventHandler(propertyGrid_PropertyValueChanged);
 		}
 
@@ -97,7 +97,7 @@ namespace MeshEditor.WinUI
 
 		private void buttonCancel_Click(object sender, EventArgs e)
 		{
-			AppSettings.RestoreState();
+			SceneSettings.RestoreState();
 			propertyGrid.Refresh();
 			updateAll();
 			this.Close();
@@ -105,7 +105,7 @@ namespace MeshEditor.WinUI
 		
 		private void buttonReset_Click(object sender, EventArgs e)
 		{
-			AppSettings.Reset();
+			SceneSettings.Reset();
 			propertyGrid.Refresh();
 			updateAll();
 		}

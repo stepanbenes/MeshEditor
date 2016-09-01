@@ -95,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Construction\EdgeMark.cs" />
-    <Compile Include="CoreInterface\AppSettings.cs" />
+    <Compile Include="CoreInterface\SceneSettings.cs" />
     <Compile Include="CoreInterface\AvailableAction.cs" />
     <Compile Include="CoreInterface\AvailableValue.cs" />
     <Compile Include="CoreInterface\ColorScaleLegendPosition.cs" />

@@ -606,11 +606,11 @@ namespace MeshEditor.WinUI
 					ShowErrorMessage("Error while loading mesh", Utilities.Functions.BuildErrorMessage(exception));
 				}
 			}
-			else if (AppSettings.Instance.ShowOpenGLLowVersionMessage && !sceneFacade.CheckOpenGLVersion())
+			else if (SceneSettings.Instance.ShowOpenGLLowVersionMessage && !sceneFacade.CheckOpenGLVersion())
 			{
-				CheckMessageBox mbox = new CheckMessageBox("This application requires graphics card that supports OpenGL version 2.0+ which includes Vertex buffer object (VBO) and OpenGL shading language (GLSL) support. Check that you have the latest graphics card drivers. OpenGL version supported by your graphics drivers is now " + AppSettings.Instance.OpenGLVersion + ".", "Low OpenGL version");
+				CheckMessageBox mbox = new CheckMessageBox("This application requires graphics card that supports OpenGL version 2.0+ which includes Vertex buffer object (VBO) and OpenGL shading language (GLSL) support. Check that you have the latest graphics card drivers. OpenGL version supported by your graphics drivers is now " + SceneSettings.Instance.OpenGLVersion + ".", "Low OpenGL version");
 				mbox.ShowDialog();
-				AppSettings.Instance.ShowOpenGLLowVersionMessage = !mbox.IsChecked;
+				SceneSettings.Instance.ShowOpenGLLowVersionMessage = !mbox.IsChecked;
 			}
 
 			this.Cursor = temp;

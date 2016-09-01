@@ -18,36 +18,43 @@ namespace MeshEditor.Common
 
 		static ConfigurationManager()
 		{
-			string configurationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MeshEditor");
-			if (!Directory.Exists(configurationDirectory))
+			try
 			{
-				Directory.CreateDirectory(configurationDirectory);
-			}
-
-			const string configFileName = "config.json";
-
-			configurationFileFullPath = Path.Combine(configurationDirectory, configFileName);
-
-			var currentAssemblyVersion = Assembly.GetAssembly(typeof(ConfigurationManager)).GetName().Version;
-
-			configurations = readConfigurations(configurationFileFullPath);
-
-			JToken assemblyVersionToken;
-			Version previousAssemblyVersion;
-			if (!configurations.TryGetValue("AssemblyVersion", out assemblyVersionToken) ||
-				!Version.TryParse(assemblyVersionToken.ToObject<string>(), out previousAssemblyVersion) ||
-				currentAssemblyVersion > previousAssemblyVersion)
-			{
-				string templateConfigurationFileFullPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFileName);
-				var templateConfigurations = readConfigurations(templateConfigurationFileFullPath);
-				foreach (var pair in templateConfigurations) // copy to current configurations
+				string configurationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MeshEditor");
+				if (!Directory.Exists(configurationDirectory))
 				{
-					configurations[pair.Key] = pair.Value;
+					Directory.CreateDirectory(configurationDirectory);
 				}
-			}
 
-			// write current assembly version
-			configurations["AssemblyVersion"] = JToken.FromObject(currentAssemblyVersion.ToString());
+				const string configFileName = "config.json";
+
+				configurationFileFullPath = Path.Combine(configurationDirectory, configFileName);
+
+				var currentAssemblyVersion = Assembly.GetAssembly(typeof(ConfigurationManager)).GetName().Version;
+
+				configurations = readConfigurations(configurationFileFullPath);
+
+				JToken assemblyVersionToken;
+				Version previousAssemblyVersion;
+				if (!configurations.TryGetValue("AssemblyVersion", out assemblyVersionToken) ||
+					!Version.TryParse(assemblyVersionToken.ToObject<string>(), out previousAssemblyVersion) ||
+					currentAssemblyVersion > previousAssemblyVersion)
+				{
+					string templateConfigurationFileFullPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFileName);
+					var templateConfigurations = readConfigurations(templateConfigurationFileFullPath);
+					foreach (var pair in templateConfigurations) // copy to current configurations
+					{
+						configurations[pair.Key] = pair.Value;
+					}
+				}
+
+				// write current assembly version
+				configurations["AssemblyVersion"] = JToken.FromObject(currentAssemblyVersion.ToString());
+			}
+			catch
+			{
+				configurations = new ConcurrentDictionary<string, JToken>();
+			}
 		}
 
 		private static ConcurrentDictionary<string, JToken> readConfigurations(string configurationFileFullPath)
@@ -73,8 +80,12 @@ namespace MeshEditor.Common
 
 		public static void Save()
 		{
-			var json = JsonConvert.SerializeObject(configurations, Formatting.Indented);
-			File.WriteAllText(configurationFileFullPath, json);
+			try
+			{
+				var json = JsonConvert.SerializeObject(configurations, Formatting.Indented);
+				File.WriteAllText(configurationFileFullPath, json);
+			}
+			catch { }
 
 			//using (var streamWriter = new StreamWriter(configurationFileFullPath))
 			//using (var jsonWriter = new JsonTextWriter(streamWriter))

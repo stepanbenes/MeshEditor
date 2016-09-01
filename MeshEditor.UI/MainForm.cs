@@ -65,8 +65,6 @@ namespace MeshEditor.WinUI
 
 			InitializeComponent();
 
-			this.settingsFilePath = Path.Combine(Application.StartupPath, SceneFacade.AppSettingsFilename);
-
 			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
 			SceneFacade.ShowError += new ShowErrorEventHandler(SceneFacade_ShowError);
 
@@ -78,12 +76,12 @@ namespace MeshEditor.WinUI
 			initLongOpNotifier();
 
 			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
-			AppSettings.LoadFromFile(this.settingsFilePath);
+			SceneSettings.LoadFromConfigurationFile();
 
 			PropertyColorProvider.LoadPropertyColors();
 
 			// load window state settings
-			mainWindowSettings = loadAppSettings();
+			mainWindowSettings = loadMainWindowSettings();
 
 			setPreprocessorLayoutMode();
 
@@ -139,10 +137,12 @@ namespace MeshEditor.WinUI
 		protected override void OnClosed(EventArgs e)
 		{
 			// save settings from Options dialog
-			AppSettings.SaveToFile(this.settingsFilePath);
+			SceneSettings.SaveToConfigurationFile();
 
 			// save window state settings
-			saveAppSettings();
+			saveMainWindowSettings();
+
+			ConfigurationManager.Save();
 
 			// dispose all meshes
 			foreach (OpenGLControl c in openGLControls)
@@ -1427,7 +1427,7 @@ namespace MeshEditor.WinUI
 			return activeControl.MyContainer is SplitterPanel;
 		}
 
-		private MainWindowSettings loadAppSettings()
+		private MainWindowSettings loadMainWindowSettings()
 		{
 			var mainFormSettings = ConfigurationManager.ReadConfigurationObject<MainWindowSettings>("MainWindowSettings") ?? new MainWindowSettings();
 			if (mainFormSettings.State == FormWindowState.Normal)
@@ -1442,7 +1442,7 @@ namespace MeshEditor.WinUI
 			return mainFormSettings;
 		}
 
-		private void saveAppSettings()
+		private void saveMainWindowSettings()
 		{
 			mainWindowSettings.State = this.WindowState;
 			if (this.WindowState == FormWindowState.Normal)
@@ -1454,8 +1454,6 @@ namespace MeshEditor.WinUI
 			}
 			mainWindowSettings.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
 			ConfigurationManager.WriteConfigurationObject("MainWindowSettings", mainWindowSettings);
-
-			ConfigurationManager.Save();
 		}
 
 		private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
