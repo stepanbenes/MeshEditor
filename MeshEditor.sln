@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.LayerManager", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.SolutionManager", "MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj", "{551F7428-7A4E-4EE2-9681-5DE0105BF887}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.LayerManager.Common", "MeshEditor.LayerManager.Common\MeshEditor.LayerManager.Common.csproj", "{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Common", "MeshEditor.Common\MeshEditor.Common.csproj", "{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,7 +111,6 @@ Global
 		{469F9E5D-1EE2-4219-A9AA-890E2923D26B} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 		{551F7428-7A4E-4EE2-9681-5DE0105BF887} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
-		{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		VisualSVNWorkingCopyRoot = .

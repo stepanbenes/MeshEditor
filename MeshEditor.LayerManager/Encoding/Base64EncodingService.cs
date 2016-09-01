@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
-using MeshEditor.LayerManager.Common;
 using System.Diagnostics;
 using System.Globalization;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.LayerManager.Encoding
 {

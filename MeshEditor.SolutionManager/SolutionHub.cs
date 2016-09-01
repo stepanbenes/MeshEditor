@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Storage;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.LayerManager.Import
 {

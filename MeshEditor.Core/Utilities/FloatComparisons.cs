@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MeshEditor.DataVisualizer.Mathematics
 {
-	public static class Common
+	public static class FloatComparisons
 	{
 		public static readonly double Epsilon = 1e-20;
 		public static readonly float EpsilonF = 1e-20f;

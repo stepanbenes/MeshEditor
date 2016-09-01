@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Data;
 using MeshEditor.LayerManager.Data;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.DataVisualizer
 {

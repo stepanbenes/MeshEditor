@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace MeshEditor.LayerManager.Common
+namespace MeshEditor.Common.Extensions
 {
 	public static class StringExtensions
 	{

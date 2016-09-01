@@ -210,7 +210,7 @@ namespace MeshEditor.DataVisualizer.Data
 			if (rightIndex < controlPoints.Length)
 			{
 				double delta = controlPoints[rightIndex].Value - controlPoints[leftIndex].Value;
-				if (Math.Abs(delta) > Common.Epsilon)
+				if (Math.Abs(delta) > FloatComparisons.Epsilon)
 				{
 					double position = (value - controlPoints[leftIndex].Value) / delta;
 					return Utilities.Functions.InterpolateTwoColors(controlPoints[leftIndex].Color, controlPoints[rightIndex].Color, position);

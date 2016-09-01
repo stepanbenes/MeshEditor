@@ -138,9 +138,9 @@
     <Compile Include="Storage\LocalFileSystemStorageService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MeshEditor.LayerManager.Common\MeshEditor.LayerManager.Common.csproj">
+    <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj">
       <Project>{06d721b8-cdb0-4a95-a009-2bf4c4ac5db9}</Project>
-      <Name>MeshEditor.LayerManager.Common</Name>
+      <Name>MeshEditor.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

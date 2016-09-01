@@ -5,14 +5,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
 using MeshEditor.CoreInterface;
-using MeshEditor.DataVisualizer;
 using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager.IO;
-using MeshEditor.Data;
 
 namespace MeshEditor.DataVisualizer.UI
 {

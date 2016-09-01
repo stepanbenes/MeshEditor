@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.FormatConverter
 {

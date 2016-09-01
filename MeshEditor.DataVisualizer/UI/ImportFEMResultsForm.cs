@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common;
+using MeshEditor.Common.Extensions;
 using System.IO;
 using MeshEditor.DataVisualizer.Services;
-using System.Threading;
 
 namespace MeshEditor.DataVisualizer.UI
 {

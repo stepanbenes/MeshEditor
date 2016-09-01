@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MeshEditor.LayerManager.Common
+namespace MeshEditor.Common
 {
 	public class ConfigurationManager
 	{

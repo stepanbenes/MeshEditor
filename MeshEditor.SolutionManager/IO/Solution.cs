@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
 using Newtonsoft.Json;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.SolutionManager.IO
 {

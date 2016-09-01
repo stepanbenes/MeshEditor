@@ -12,7 +12,8 @@ using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
-using MeshEditor.LayerManager.Common;
+using MeshEditor.Common;
+using MeshEditor.Common.Extensions;
 using MeshEditor.LayerManager.MeshFiltering;
 using System.Threading;
 

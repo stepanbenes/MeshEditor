@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.LayerManager.Common
+namespace MeshEditor.Common.Extensions
 {
 	public static class ArrayExtensions
 	{
