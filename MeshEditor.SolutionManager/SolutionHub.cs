@@ -11,10 +11,8 @@ using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
-using MeshEditor.LayerManager.Serialization;
 using MeshEditor.LayerManager.Storage;
 using MeshEditor.SolutionManager.AzureStorage;
-using MeshEditor.SolutionManager.Configuration;
 using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.SolutionManager
@@ -23,13 +21,12 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Static fields, static constructor
 
-		static Config config;
+		static SolutionConfiguration config;
 
 		static SolutionHub()
 		{
-			var configManager = new ConfigManager();
-			if (!configManager.TryReadConfiguration(out config))
-				config = configManager.GetDefaultConfiguration();
+			var configManager = new ConfigurationManager();
+			config = configManager.ReadConfigurationObject<SolutionConfiguration>("SolutionConfiguration") ?? SolutionConfiguration.CreateDefault();
 		}
 
 		#endregion
@@ -44,8 +41,8 @@ namespace MeshEditor.SolutionManager
 		public static void SetLocalStorageDefaultDirectory(string directoryPath)
 		{
 			config.LocalStorage.Directory = directoryPath;
-			var configManager = new ConfigManager();
-			configManager.WriteConfiguration(config);
+			var configManager = new ConfigurationManager();
+			configManager.WriteConfigurationObject("SolutionConfiguration", config);
 		}
 
 		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)

@@ -36,7 +36,7 @@ namespace MeshEditor.WinUI
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
-		private string settingsFilePath, userGuideFilePath, propertyColorsConfigFilePath;
+		private string settingsFilePath, propertyColorsConfigFilePath;
 
 		private string[] arguments;
 
@@ -52,7 +52,6 @@ namespace MeshEditor.WinUI
 			InitializeComponent();
 
 			this.settingsFilePath = Path.Combine(Application.StartupPath, SceneFacade.AppSettingsFilename);
-			this.userGuideFilePath = Path.Combine(Application.StartupPath, SceneFacade.UserGuideFileName);
 			this.propertyColorsConfigFilePath = Path.Combine(Application.StartupPath, SceneFacade.PropertyColorsConfigFileName);
 
 			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
