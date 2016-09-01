@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using MeshEditor.Common;
 using MeshEditor.CoreInterface;
 using MeshEditor.Data;
 
@@ -18,15 +19,16 @@ namespace MeshEditor.WinUI
 		IEnumerable<Property> propertiesToShow;
         IReadOnlyDictionary<Property, Color> savedPropertyColors;
 
-		string propertyColorsConfigFilePath;
+		readonly ConfigurationManager configurationManager;
 
-        public ConfigurePropertyColorsForm(string propertyColorsConfigFilePath, IEnumerable<SceneFacade> scenes, IEnumerable<Property> propertiesToShow)
+        public ConfigurePropertyColorsForm(ConfigurationManager configurationManager, IEnumerable<SceneFacade> scenes, IEnumerable<Property> propertiesToShow)
 		{
 			InitializeComponent();
 
+			this.configurationManager = configurationManager;
+
 			this.propertiesToShow = propertiesToShow ?? PropertyColorProvider.GetAllUsedPropertiesSorted();
 			this.scenes = scenes;
-			this.propertyColorsConfigFilePath = propertyColorsConfigFilePath;
 
             savePropertyColors();
 			initPropertyPanel();
@@ -83,7 +85,7 @@ namespace MeshEditor.WinUI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			PropertyColorProvider.SavePropertyColorsToFile(propertyColorsConfigFilePath);
+			PropertyColorProvider.SavePropertyColorsToFile(configurationManager);
 			savePropertyColors();
 			isDataDirty = false;
 		}

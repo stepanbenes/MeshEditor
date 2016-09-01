@@ -170,6 +170,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj">
+      <Project>{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}</Project>
+      <Name>MeshEditor.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
       <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
       <Name>MeshEditor.Core</Name>

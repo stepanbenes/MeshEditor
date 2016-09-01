@@ -87,7 +87,7 @@ namespace MeshEditor.Common
 
 			// write assembly version
 			var assemblyVersion = Assembly.GetAssembly(typeof(ConfigurationManager)).GetName().Version;
-			configurations["assemblyVersion"] = JToken.FromObject(assemblyVersion.ToString());
+			configurations["AssemblyVersion"] = JToken.FromObject(assemblyVersion.ToString());
 
 			writeConfigurations();
 		}

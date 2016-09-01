@@ -29,7 +29,7 @@ namespace MeshEditor.CoreInterface
 
 		#region Static fields, static constructor
 
-		public static readonly string AppSettingsFilename, UserGuideFileName, PropertyColorsConfigFileName;
+		public static readonly string AppSettingsFilename;
 
 		public static readonly int COLOR_BITS;
 		public static readonly int DEPTH_BITS;
@@ -64,8 +64,6 @@ namespace MeshEditor.CoreInterface
 			editorMode = editorModeWithoutModificationKeys = EditorMode.Orbit;
 
 			AppSettingsFilename = @"appSettings.conf";
-			UserGuideFileName = @"userGuide.pdf";
-			PropertyColorsConfigFileName = @"propertyColors.xml";
 		}
 
 		#endregion

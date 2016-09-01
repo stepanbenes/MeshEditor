@@ -8,6 +8,7 @@ using System.Linq;
 using Utils = MeshEditor.Utilities.Functions;
 using System.Xml.Linq;
 using System.Diagnostics;
+using MeshEditor.Common;
 
 namespace MeshEditor.Data
 {
@@ -154,40 +155,30 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void LoadPropertyColorsFromFile(string filename)
+		public static void LoadPropertyColorsFromFile(ConfigurationManager configurationManager)
 		{
-			try
+			var propertyColorsMap = configurationManager.ReadConfigurationObject<Dictionary<string, string>>("PropertyColors");
+			if (propertyColorsMap != null)
 			{
-				XElement rootElement = XElement.Load(filename);
-				foreach (var element in rootElement.Elements())
+				foreach (var pair in propertyColorsMap)
 				{
-					Property property = new Property((int)element.Attribute("propertyId"));
-					int color = int.Parse(element.Value, System.Globalization.NumberStyles.HexNumber);
-					colorPalette[property] = color;
+					int property, color;
+					if (int.TryParse(pair.Key, out property) && int.TryParse(pair.Value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out color))
+					{
+						colorPalette[new Property(property)] = color;
+					}
 				}
 			}
-#if !DEBUG
-			catch (Exception) { }
-#endif
-			finally { }
 		}
 
-		public static void SavePropertyColorsToFile(string filename)
+		public static void SavePropertyColorsToFile(ConfigurationManager configurationManager)
 		{
-			try
+			var propertyColorsMap = new Dictionary<string, string>();
+			foreach (var property in GetAllUsedPropertiesSorted())
 			{
-				XElement rootElement = new XElement("PropertyColors", GetAllUsedPropertiesSorted().Select(property =>
-				{
-					var propertyElement = new XElement("Color", colorPalette[property].ToString("X8"));
-					propertyElement.SetAttributeValue("propertyId", property.Value.ToString());
-					return propertyElement;
-				}));
-				rootElement.Save(filename);
+				propertyColorsMap.Add(property.Value.ToString(), colorPalette[property].ToString("X8"));
 			}
-#if !DEBUG
-			catch (Exception) { }
-#endif
-			finally { }
+			configurationManager.WriteConfigurationObject("PropertyColors", propertyColorsMap);
 		}
 
 		public static void ResetToDefaults()

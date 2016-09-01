@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.DataVisualizer.UI;
 using System.Text;
+using MeshEditor.Common;
 
 namespace MeshEditor.WinUI
 {
@@ -36,7 +37,7 @@ namespace MeshEditor.WinUI
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
-		private string settingsFilePath, propertyColorsConfigFilePath;
+		private string settingsFilePath;
 
 		private string[] arguments;
 
@@ -45,6 +46,8 @@ namespace MeshEditor.WinUI
 
 		private LayoutMode layoutMode;
 
+		private readonly ConfigurationManager configurationManager;
+
 		public MainForm(string[] args)
 		{
 			Toolkit.Init();
@@ -52,7 +55,6 @@ namespace MeshEditor.WinUI
 			InitializeComponent();
 
 			this.settingsFilePath = Path.Combine(Application.StartupPath, SceneFacade.AppSettingsFilename);
-			this.propertyColorsConfigFilePath = Path.Combine(Application.StartupPath, SceneFacade.PropertyColorsConfigFileName);
 
 			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
 			SceneFacade.ShowError += new ShowErrorEventHandler(SceneFacade_ShowError);
@@ -64,14 +66,12 @@ namespace MeshEditor.WinUI
 			this.longOpNotifier = null;
 			initLongOpNotifier();
 
+			configurationManager = new ConfigurationManager();
+
 			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
 			AppSettings.LoadFromFile(this.settingsFilePath);
 
-			// load property colors from config file
-			if (File.Exists(propertyColorsConfigFilePath))
-			{
-				PropertyColorProvider.LoadPropertyColorsFromFile(propertyColorsConfigFilePath);
-			}
+			PropertyColorProvider.LoadPropertyColorsFromFile(configurationManager);
 
 			// load window state settings
 			loadAppSettings();
@@ -1563,7 +1563,7 @@ namespace MeshEditor.WinUI
 
 		private void configurePropertyColorsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(propertyColorsConfigFilePath, openGLControls.Select(c => c.SceneFacade), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
+			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(configurationManager, openGLControls.Select(c => c.SceneFacade), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
 			configurePropertyColorsForm.ShowDialog();
 		}
 
