@@ -25,8 +25,7 @@ namespace MeshEditor.SolutionManager
 
 		static SolutionHub()
 		{
-			var configManager = new ConfigurationManager();
-			config = configManager.ReadConfigurationObject<SolutionConfiguration>("SolutionConfiguration") ?? SolutionConfiguration.CreateDefault();
+			config = ConfigurationManager.ReadConfigurationObject<SolutionConfiguration>("SolutionConfiguration") ?? SolutionConfiguration.CreateDefault();
 		}
 
 		#endregion
@@ -41,8 +40,7 @@ namespace MeshEditor.SolutionManager
 		public static void SetLocalStorageDefaultDirectory(string directoryPath)
 		{
 			config.LocalStorage.Directory = directoryPath;
-			var configManager = new ConfigurationManager();
-			configManager.WriteConfigurationObject("SolutionConfiguration", config);
+			ConfigurationManager.WriteConfigurationObject("SolutionConfiguration", config);
 		}
 
 		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)

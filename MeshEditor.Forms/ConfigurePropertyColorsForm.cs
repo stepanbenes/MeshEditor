@@ -19,13 +19,9 @@ namespace MeshEditor.WinUI
 		IEnumerable<Property> propertiesToShow;
         IReadOnlyDictionary<Property, Color> savedPropertyColors;
 
-		readonly ConfigurationManager configurationManager;
-
-        public ConfigurePropertyColorsForm(ConfigurationManager configurationManager, IEnumerable<SceneFacade> scenes, IEnumerable<Property> propertiesToShow)
+        public ConfigurePropertyColorsForm(IEnumerable<SceneFacade> scenes, IEnumerable<Property> propertiesToShow)
 		{
 			InitializeComponent();
-
-			this.configurationManager = configurationManager;
 
 			this.propertiesToShow = propertiesToShow ?? PropertyColorProvider.GetAllUsedPropertiesSorted();
 			this.scenes = scenes;
@@ -85,7 +81,7 @@ namespace MeshEditor.WinUI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			PropertyColorProvider.SavePropertyColorsToFile(configurationManager);
+			PropertyColorProvider.SavePropertyColors();
 			savePropertyColors();
 			isDataDirty = false;
 		}

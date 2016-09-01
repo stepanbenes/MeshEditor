@@ -25,6 +25,17 @@ namespace MeshEditor.WinUI
 	public partial class MainForm : Form
 	{
 
+		class MainWindowSettings
+		{
+			public int Width { get; set; } = 800;
+			public int Height { get; set; } = 600;
+			public FormWindowState State { get; set; } = FormWindowState.Maximized;
+			public int PositionLeft { get; set; } = 100;
+			public int PositionTop { get; set; } = 100;
+			public string LastLoadedMesh { get; set; }
+			public string LastCheckedUpdateVersion { get; set; }
+		}
+
 		#region Fields, Constructor
 
 		public const int PANEL_MINSIZE = 30;
@@ -46,7 +57,7 @@ namespace MeshEditor.WinUI
 
 		private LayoutMode layoutMode;
 
-		private readonly ConfigurationManager configurationManager;
+		private readonly MainWindowSettings mainWindowSettings;
 
 		public MainForm(string[] args)
 		{
@@ -66,15 +77,13 @@ namespace MeshEditor.WinUI
 			this.longOpNotifier = null;
 			initLongOpNotifier();
 
-			configurationManager = new ConfigurationManager();
-
 			// load applications settings accessed by Options dialog (OpenGL context must be initialized first)
 			AppSettings.LoadFromFile(this.settingsFilePath);
 
-			PropertyColorProvider.LoadPropertyColorsFromFile(configurationManager);
+			PropertyColorProvider.LoadPropertyColors();
 
 			// load window state settings
-			loadAppSettings();
+			mainWindowSettings = loadAppSettings();
 
 			setPreprocessorLayoutMode();
 
@@ -85,7 +94,7 @@ namespace MeshEditor.WinUI
 
 			if (UpdateChecker.IsUpdateServiceAvailableForThisPlatform)
 			{
-				var fireAndForgetTask = checkForUpdatesAsync(maxVersionToIgnoreString: Properties.Settings.Default.LastCheckedUpdateVersion); // swallow exceptions
+				checkForUpdatesSilently();
 			}
 		}
 
@@ -109,9 +118,9 @@ namespace MeshEditor.WinUI
 			{
 				await openFiles(arguments[0]);
 			}
-			else if (File.Exists(Properties.Settings.Default.LastLoadedMesh)) // load last loaded file (if exists)
+			else if (File.Exists(mainWindowSettings.LastLoadedMesh)) // load last loaded file (if exists)
 			{
-				await openFiles(Properties.Settings.Default.LastLoadedMesh);
+				await openFiles(mainWindowSettings.LastLoadedMesh);
 			}
 		}
 
@@ -1012,13 +1021,22 @@ namespace MeshEditor.WinUI
 
 		#region Helper methods
 
-		private static async Task<bool> checkForUpdatesAsync(string maxVersionToIgnoreString)
+		private async void checkForUpdatesSilently()
+		{
+			try
+			{
+				var success = await checkForUpdatesAsync(maxVersionToIgnoreString: mainWindowSettings.LastCheckedUpdateVersion); // swallow exceptions
+			}
+			catch { }
+		}
+
+		private async Task<bool> checkForUpdatesAsync(string maxVersionToIgnoreString)
 		{
 			var updateChecker = new UpdateChecker();
 
 			bool updateExists = await updateChecker.CheckForUpdates();
 
-			Properties.Settings.Default.LastCheckedUpdateVersion = updateChecker.ServerVersion.ToString();
+			mainWindowSettings.LastCheckedUpdateVersion = updateChecker.ServerVersion.ToString();
 
 			if (updateExists)
 			{
@@ -1409,47 +1427,35 @@ namespace MeshEditor.WinUI
 			return activeControl.MyContainer is SplitterPanel;
 		}
 
-		//private void alwaysShowNumbersToolStripMenuItem_Click(object sender, EventArgs e)
-		//{
-		//    bool value = (bool)activeControl.SceneFacade.GetValue(AvailableValue.AlwaysShowNumbers);
-		//    value = !value;
-		//    activeControl.SceneFacade.SetValue(AvailableValue.AlwaysShowNumbers, value);
-		//    alwaysShowNumbersToolStripMenuItem.Checked = value;
-		//}
-
-		private void loadAppSettings()
+		private MainWindowSettings loadAppSettings()
 		{
-			if (Properties.Settings.Default.MainWindowState == FormWindowState.Normal)
+			var mainFormSettings = ConfigurationManager.ReadConfigurationObject<MainWindowSettings>("MainWindowSettings") ?? new MainWindowSettings();
+			if (mainFormSettings.State == FormWindowState.Normal)
 			{
-				this.Width = Properties.Settings.Default.MainWindowWidth;
-				this.Height = Properties.Settings.Default.MainWindowHeight;
+				this.Width = mainFormSettings.Width;
+				this.Height = mainFormSettings.Height;
 
-				this.Left = Properties.Settings.Default.MainWindowPositionLeft;
-				this.Top = Properties.Settings.Default.MainWindowPositionTop;
-
-				// Screen screen = Screen.FromControl(this);
-				// Rectangle workingArea = screen.WorkingArea;
-				// if (workingArea.Contains(Properties.Settings.Default.MainWindowPositionLeft, Properties.Settings.Default.MainWindowPositionTop)) ...
+				this.Left = mainFormSettings.PositionLeft;
+				this.Top = mainFormSettings.PositionTop;
 			}
-
-			this.WindowState = Properties.Settings.Default.MainWindowState; // must be AFTER setting window position (Left, Top)
+			this.WindowState = mainFormSettings.State; // must be AFTER setting window position (Left, Top)
+			return mainFormSettings;
 		}
 
 		private void saveAppSettings()
 		{
-			Properties.Settings.Default.MainWindowState = this.WindowState;
+			mainWindowSettings.State = this.WindowState;
 			if (this.WindowState == FormWindowState.Normal)
 			{
-				Properties.Settings.Default.MainWindowWidth = this.Width;
-				Properties.Settings.Default.MainWindowHeight = this.Height;
-				Properties.Settings.Default.MainWindowPositionLeft = this.Left;
-				Properties.Settings.Default.MainWindowPositionTop = this.Top;
+				mainWindowSettings.Width = this.Width;
+				mainWindowSettings.Height = this.Height;
+				mainWindowSettings.PositionLeft = this.Left;
+				mainWindowSettings.PositionTop = this.Top;
 			}
+			mainWindowSettings.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
+			ConfigurationManager.WriteConfigurationObject("MainWindowSettings", mainWindowSettings);
 
-			//if (!string.IsNullOrEmpty(activeControl.SceneFacade.MeshFilename))
-			Properties.Settings.Default.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
-
-			Properties.Settings.Default.Save();
+			ConfigurationManager.Save();
 		}
 
 		private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -1563,7 +1569,7 @@ namespace MeshEditor.WinUI
 
 		private void configurePropertyColorsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(configurationManager, openGLControls.Select(c => c.SceneFacade), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
+			var configurePropertyColorsForm = new ConfigurePropertyColorsForm(openGLControls.Select(c => c.SceneFacade), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
 			configurePropertyColorsForm.ShowDialog();
 		}
 

@@ -155,9 +155,9 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void LoadPropertyColorsFromFile(ConfigurationManager configurationManager)
+		public static void LoadPropertyColors()
 		{
-			var propertyColorsMap = configurationManager.ReadConfigurationObject<Dictionary<string, string>>("PropertyColors");
+			var propertyColorsMap = ConfigurationManager.ReadConfigurationObject<Dictionary<string, string>>("PropertyColors");
 			if (propertyColorsMap != null)
 			{
 				foreach (var pair in propertyColorsMap)
@@ -171,14 +171,14 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public static void SavePropertyColorsToFile(ConfigurationManager configurationManager)
+		public static void SavePropertyColors()
 		{
 			var propertyColorsMap = new Dictionary<string, string>();
 			foreach (var property in GetAllUsedPropertiesSorted())
 			{
 				propertyColorsMap.Add(property.Value.ToString(), colorPalette[property].ToString("X8"));
 			}
-			configurationManager.WriteConfigurationObject("PropertyColors", propertyColorsMap);
+			ConfigurationManager.WriteConfigurationObject("PropertyColors", propertyColorsMap);
 		}
 
 		public static void ResetToDefaults()
