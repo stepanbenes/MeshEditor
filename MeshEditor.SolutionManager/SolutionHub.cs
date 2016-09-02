@@ -21,11 +21,15 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Static fields, static constructor
 
-		static SolutionConfiguration config;
+		readonly static LocalStorageConfiguration localStorageConfiguration;
+		readonly static AzureBlobStorageConfiguration azureBlobStorageConfiguration;
+		readonly static RestApiConfiguration restApiConfiguration;
 
 		static SolutionHub()
 		{
-			config = ConfigurationManager.ReadConfigurationObject<SolutionConfiguration>("SolutionConfiguration") ?? SolutionConfiguration.CreateDefault();
+			localStorageConfiguration = ConfigurationManager.ReadConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration();
+			azureBlobStorageConfiguration = ConfigurationManager.ReadConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration();
+			restApiConfiguration = ConfigurationManager.ReadConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration();
 		}
 
 		#endregion
@@ -34,13 +38,13 @@ namespace MeshEditor.SolutionManager
 
 		public static string GetLocalStorageDefaultDirectory()
 		{
-			return config.LocalStorage.Directory ?? Directory.GetCurrentDirectory();
+			return localStorageConfiguration.Directory ?? Directory.GetCurrentDirectory();
 		}
 
 		public static void SetLocalStorageDefaultDirectory(string directoryPath)
 		{
-			config.LocalStorage.Directory = directoryPath;
-			ConfigurationManager.WriteConfigurationObject("SolutionConfiguration", config);
+			localStorageConfiguration.Directory = directoryPath;
+			ConfigurationManager.WriteConfigurationObject("LocalStorage", localStorageConfiguration);
 		}
 
 		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)
@@ -81,11 +85,11 @@ namespace MeshEditor.SolutionManager
 		{
 			return new SolutionHub(
 				solutionLocator: solutionId,
-				solutionController: new RestApiSolutionController(config.RestApi.Uri, logger),
-				meshImportStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.MeshesBlobContainerName),
-				dataImportStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.ResultsBlobContainerName),
-				layerSourceStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
-				layerDestinationStorage: new AzureBlobStorageService(config.AzureBlobStorage.ConnectionString, config.AzureBlobStorage.LayersBlobContainerName),
+				solutionController: new RestApiSolutionController(restApiConfiguration.Uri, logger),
+				meshImportStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.MeshesBlobContainerName),
+				dataImportStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.ResultsBlobContainerName),
+				layerSourceStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
+				layerDestinationStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
 				logger: logger
 			);
 		}
@@ -104,13 +108,13 @@ namespace MeshEditor.SolutionManager
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
+			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
 			return solutionController.GetAll();
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(config.RestApi.Uri, logger);
+			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
 			return await solutionController.GetAllAsync(cancellationToken);
 		}
 

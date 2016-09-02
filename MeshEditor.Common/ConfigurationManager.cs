@@ -34,12 +34,14 @@ namespace MeshEditor.Common
 
 				configurations = readConfigurations(configurationFileFullPath);
 
+				// check if this is updated version compared to saved version of configuration file
 				JToken assemblyVersionToken;
 				Version previousAssemblyVersion;
 				if (!configurations.TryGetValue("AssemblyVersion", out assemblyVersionToken) ||
 					!Version.TryParse(assemblyVersionToken.ToObject<string>(), out previousAssemblyVersion) ||
 					currentAssemblyVersion > previousAssemblyVersion)
 				{
+					// if configuration file is of older version, try to copy template configurations from installation directory
 					string templateConfigurationFileFullPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configFileName);
 					var templateConfigurations = readConfigurations(templateConfigurationFileFullPath);
 					foreach (var pair in templateConfigurations) // copy to current configurations
