@@ -1,0 +1,3 @@
+#!/bin/sh
+g++ -fPIC -shared driver.cpp util.cpp -o redsvd_native.so -I include
+cp redsvd_native.so ../mesheditor/package/usr/lib/mesheditor/
