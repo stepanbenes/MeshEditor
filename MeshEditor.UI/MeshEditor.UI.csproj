@@ -144,6 +144,10 @@
       <Project>{A282D924-E26B-4077-A803-D3064F36A744}</Project>
       <Name>MeshEditor.Forms</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RedSvdInterface\RedSvdInterface.csproj">
+      <Project>{fdf45534-3d8b-470f-9979-c717b195feb7}</Project>
+      <Name>RedSvdInterface</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\_active_ Save.bmp" />
