@@ -38,7 +38,7 @@ namespace MeshEditor.SolutionManager.IO
 
 			// solve conflicts (existing solution files with same name)
 			var conflicts = Directory.Exists(solutionDirectory) ?
-								(from fileMatch in Directory.EnumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
+								(from fileMatch in enumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
 								 let fileMatchRelativePath = Path.GetFileName(fileMatch)
 								 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray()
 								:
@@ -223,7 +223,8 @@ namespace MeshEditor.SolutionManager.IO
 		private IEnumerable<string> getAllSolutionFiles(bool includeSubDirectories)
 		{
 			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
-			return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+			return enumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+			//return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 		}
 
 		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
@@ -252,6 +253,32 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				localStorage.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
 			}
+		}
+
+		/// <summary>
+		/// A safe way to get all the files in a directory and sub directory without crashing on UnauthorizedException or PathTooLongException
+		/// </summary>
+		/// <param name="path">Starting directory</param>
+		/// <param name="searchPattern">Filename pattern match</param>
+		/// <param name="searchOption">Search subdirectories or only top level directory for files</param>
+		/// <returns>List of files</returns>
+		private static IEnumerable<string> enumerateFiles(string path, string searchPattern, SearchOption searchOption)
+		{
+			try
+			{
+				var dirFiles = Enumerable.Empty<string>();
+				if (searchOption == SearchOption.AllDirectories)
+				{
+					dirFiles = Directory.EnumerateDirectories(path)
+										.SelectMany(x => enumerateFiles(x, searchPattern, searchOption));
+				}
+				return dirFiles.Concat(Directory.EnumerateFiles(path, searchPattern));
+			}
+			catch (UnauthorizedAccessException) { }
+			catch (PathTooLongException) { }
+			catch (IOException) { }
+
+			return Enumerable.Empty<string>();
 		}
 
 		#endregion

@@ -38,7 +38,8 @@ namespace MeshEditor.SolutionManager
 
 		public static string GetLocalStorageDefaultDirectory()
 		{
-			return localStorageConfiguration.Directory ?? Directory.GetCurrentDirectory();
+			var folder = localStorageConfiguration.Directory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			return folder;
 		}
 
 		public static void SetLocalStorageDefaultDirectory(string directoryPath)
