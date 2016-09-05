@@ -31,16 +31,13 @@
 			// 
 			// mainSplitContainer
 			// 
-			this.mainSplitContainer.BackColor = System.Drawing.SystemColors.ControlDarkDark;
 			this.mainSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.mainSplitContainer.Location = new System.Drawing.Point(0, 0);
 			this.mainSplitContainer.Name = "mainSplitContainer";
 			// 
 			// mainSplitContainer.Panel1
 			// 
-			this.mainSplitContainer.Panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(130)))), ((int)(((byte)(124)))), ((int)(((byte)(122)))));
 			this.mainSplitContainer.Panel1.Controls.Add(this.leftSplitContainer);
-			this.mainSplitContainer.Panel1.ForeColor = System.Drawing.Color.White;
 			this.mainSplitContainer.Size = new System.Drawing.Size(1090, 861);
 			this.mainSplitContainer.SplitterDistance = 363;
 			this.mainSplitContainer.TabIndex = 0;

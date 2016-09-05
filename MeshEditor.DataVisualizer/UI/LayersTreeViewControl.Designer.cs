@@ -45,6 +45,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.treeViewLayers.CheckBoxes = true;
+			this.treeViewLayers.HideSelection = false;
 			this.treeViewLayers.Location = new System.Drawing.Point(3, 16);
 			this.treeViewLayers.Name = "treeViewLayers";
 			this.treeViewLayers.Size = new System.Drawing.Size(144, 131);
@@ -69,31 +70,31 @@
             this.toolStripSeparator1,
             this.reloadLayerToolStripMenuItem});
 			this.contextMenuStrip.Name = "contextMenuStrip";
-			this.contextMenuStrip.Size = new System.Drawing.Size(153, 98);
+			this.contextMenuStrip.Size = new System.Drawing.Size(142, 76);
 			// 
 			// applyFilterToolStripMenuItem
 			// 
 			this.applyFilterToolStripMenuItem.Enabled = false;
 			this.applyFilterToolStripMenuItem.Name = "applyFilterToolStripMenuItem";
-			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
 			this.applyFilterToolStripMenuItem.Text = "Apply filter...";
 			// 
 			// deleteLayerToolStripMenuItem
 			// 
 			this.deleteLayerToolStripMenuItem.Enabled = false;
 			this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
-			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
 			this.deleteLayerToolStripMenuItem.Text = "Delete layer";
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(138, 6);
 			// 
 			// reloadLayerToolStripMenuItem
 			// 
 			this.reloadLayerToolStripMenuItem.Name = "reloadLayerToolStripMenuItem";
-			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
 			this.reloadLayerToolStripMenuItem.Text = "Reload layer";
 			this.reloadLayerToolStripMenuItem.Click += new System.EventHandler(this.reloadLayerToolStripMenuItem_Click);
 			// 
