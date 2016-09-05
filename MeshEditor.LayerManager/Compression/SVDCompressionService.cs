@@ -50,7 +50,6 @@ namespace MeshEditor.LayerManager.Compression
 				return new double[0];
 			}
 
-			REDSVD.Driver driver = new REDSVD.Driver();
 			double[] singularValues, U_VT_columnwise;
 			bool resizeIsNeeded = false;
 
@@ -68,7 +67,8 @@ namespace MeshEditor.LayerManager.Compression
 				}
 
 				// COMPUTE SVD RANDOMIZED
-				driver.ComputeSvdRandomized(dataValues, rows, columns, rank, out singularValues, out U_VT_columnwise);
+				double[] inputMartix_RowMajor = convertDataValuesToInputMatrixRowMajor(dataValues, rows, columns);
+				RedSvdDriver.ComputeSvdRandomized(inputMartix_RowMajor, rows, columns, rank, out singularValues, out U_VT_columnwise);
 
 				Debug.Assert(singularValues.Length == rank);
 				Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
@@ -76,7 +76,8 @@ namespace MeshEditor.LayerManager.Compression
 			else
 			{
 				// COMPUTE SVD EXACT
-				driver.ComputeSvdExact(dataValues, rows, columns, out singularValues, out U_VT_columnwise);
+				double[] inputMartix_RowMajor = convertDataValuesToInputMatrixRowMajor(dataValues, rows, columns);
+				RedSvdDriver.ComputeSvdExact(inputMartix_RowMajor, rows, columns, out singularValues, out U_VT_columnwise);
 
 				Debug.Assert(singularValues.Length == rank);
 				Debug.Assert(U_VT_columnwise.Length == rows * rank + rank * columns);
@@ -150,12 +151,34 @@ namespace MeshEditor.LayerManager.Compression
 
 		#region Private methods
 
-		private IEnumerable<double[]> calculateDiff(IEnumerable<double[]> firstSequence, IEnumerable<double[]> secondSequence)
+		private static double[] convertDataValuesToInputMatrixRowMajor(IEnumerable<double[]> dataValues, int rows, int columns)
+		{
+			double[] inputMatrix_RowMajor = new double[rows * columns];
+			using (var enumerator = dataValues.GetEnumerator())
+			{
+				for (int row = 0; row < rows; row++)
+				{
+					if (!enumerator.MoveNext())
+						throw new ArgumentException("Not enough rows provided for data compression.", nameof(dataValues));
+					double[] rowValues = enumerator.Current;
+					for (int column = 0; column < columns; column++)
+					{
+						double value = rowValues[column];
+						inputMatrix_RowMajor[row * columns + column] = double.IsNaN(value) ? 0.0 : value; // eliminate NaNs
+					}
+				}
+				if (enumerator.MoveNext())
+					throw new ArgumentException("Too many rows provided for data compression.", nameof(dataValues));
+			}
+			return inputMatrix_RowMajor;
+		}
+
+		private static IEnumerable<double[]> calculateDiff(IEnumerable<double[]> firstSequence, IEnumerable<double[]> secondSequence)
 		{
 			return firstSequence.Zip(secondSequence, (firstRow, secondRow) => firstRow.Zip(secondRow, (firstValue, secondValue) => firstValue - secondValue).ToArray());
 		}
 
-		private void calculateMaxAndAverageError(IEnumerable<double[]> dataValues, IEnumerable<double[]> decompressedValues, out double maxRelativeError, out double averageRelativeError)
+		private static void calculateMaxAndAverageError(IEnumerable<double[]> dataValues, IEnumerable<double[]> decompressedValues, out double maxRelativeError, out double averageRelativeError)
 		{
 			var max = dataValues.Max(row => row.Max());
 			var min = dataValues.Min(row => row.Min());

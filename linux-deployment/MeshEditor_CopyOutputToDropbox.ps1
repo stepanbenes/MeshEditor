@@ -1,3 +1,3 @@
 Write-Host "Copying MeshEditor and fem-format-converter output files to Dropbox folder"
-robocopy "C:/Projects/MeshEditor/MeshEditor.UI/bin/x64/Release" "C:/Users/benes/Dropbox/Ubuntu/mesheditor/package/usr/lib/mesheditor" *.dll *.exe *.config /xf *.vshost.exe *.vshost.exe.config
-robocopy "C:/Projects/MeshEditor/MeshEditor.FormatConverter/bin/x64/Release" "C:/Users/benes/Dropbox/Ubuntu/mesheditor/package/usr/lib/mesheditor" *.dll *.exe *.config /xf *.vshost.exe *.vshost.exe.config
+robocopy "C:/Projects/MeshEditor/MeshEditor.UI/bin/Release" "C:/Users/benes/Dropbox/Ubuntu/mesheditor/package/usr/lib/mesheditor" *.dll *.exe *.config /xf *.vshost.exe *.vshost.exe.config
+robocopy "C:/Projects/MeshEditor/MeshEditor.FormatConverter/bin/Release" "C:/Users/benes/Dropbox/Ubuntu/mesheditor/package/usr/lib/mesheditor" *.dll *.exe *.config /xf *.vshost.exe *.vshost.exe.config

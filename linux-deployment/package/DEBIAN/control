@@ -1,7 +1,7 @@
 Package: mesheditor
 Version: 1.9.1
-Maintainer: Stepan Benes <benes.stepan@gmail.com>
-Architecture: all
+Maintainer: benesste <benes.stepan@gmail.com>
+Architecture: amd64
 Installed-Size: 0
 Section: graphics
 Priority: optional

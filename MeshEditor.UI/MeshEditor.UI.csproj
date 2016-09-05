@@ -107,11 +107,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Content Include="..\Dependencies\$(Configuration)\OpenTK.Compatibility.dll.config">
+    <Content Include="..\Dependencies\OpenTK.Compatibility.dll.config">
       <Link>OpenTK.Compatibility.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Dependencies\$(Configuration)\OpenTK.dll.config">
+    <Content Include="..\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -143,10 +143,6 @@
     <ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj">
       <Project>{A282D924-E26B-4077-A803-D3064F36A744}</Project>
       <Name>MeshEditor.Forms</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RedSvdInterface\RedSvdInterface.csproj">
-      <Project>{fdf45534-3d8b-470f-9979-c717b195feb7}</Project>
-      <Name>RedSvdInterface</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

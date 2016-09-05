@@ -53,9 +53,6 @@
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="RedSvd">
-      <HintPath>..\Dependencies\Release\RedSvd.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -70,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Compression\CompressionMethod.cs" />
     <Compile Include="Compression\CompressionServiceFactory.cs" />
+    <Compile Include="Compression\RedSvdDriver.cs" />
     <Compile Include="Compression\SVDCompressionFocus.cs" />
     <Compile Include="Compression\TransparentCompressionParameters.cs" />
     <Compile Include="Compression\WaveletCompressionParameters.cs" />
@@ -144,6 +142,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\Dependencies\MeshEditor.LayerManager.dll.config">
+      <Link>MeshEditor.LayerManager.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
