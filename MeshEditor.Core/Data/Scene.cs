@@ -177,7 +177,7 @@ namespace MeshEditor.Data
 
 		public static void SetDefaultParametres(bool openGLIsInitialized)
 		{
-			ActiveBackColor = Color.FromArgb(225, 219, 194);
+			ActiveBackColor = Color.FromArgb(229, 224, 222);
 			NonActiveBackColor = Color.FromArgb(186, 186, 200);
 			LabelColor = Utils.GetContrastColor(ActiveBackColor);
 
