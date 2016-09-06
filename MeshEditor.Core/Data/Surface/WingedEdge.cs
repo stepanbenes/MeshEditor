@@ -124,13 +124,13 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public Node GetOppositeNodeTo(Node n)
+		public Node GetOppositeNodeTo(Node node)
 		{
-			if (n == beginNode)
+			if (node == beginNode)
 				return endNode;
-			if (n == endNode)
+			if (node == endNode)
 				return beginNode;
-			throw new ArgumentException("Edge does not contain this node.", "n");
+			throw new ArgumentException("Edge does not contain this node.", nameof(node));
 		}
 
 		//public void Draw()

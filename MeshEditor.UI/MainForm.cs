@@ -48,8 +48,6 @@ namespace MeshEditor.WinUI
 		private CutEditorForm cutEditorForm;
 		private ShowHideElementsForm showHideElementsForm;
 
-		private string settingsFilePath;
-
 		private string[] arguments;
 
 		private int takeScreenshotLastFilterIndex;

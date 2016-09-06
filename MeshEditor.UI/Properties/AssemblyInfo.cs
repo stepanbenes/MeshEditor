@@ -7,7 +7,7 @@ using System.Resources;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Mesh Editor")]
-[assembly: AssemblyDescription("3D Graphical Editor for Finite Element Meshes")]
+[assembly: AssemblyDescription("3D graphical editor for finite element meshes and postpocessor of the results from the Finite element method")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("Mesh Editor")]
@@ -33,6 +33,6 @@ using System.Resources;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.9.1")]
-[assembly: AssemblyFileVersion("1.9.1")]
+[assembly: AssemblyVersion("1.9.2")]
+[assembly: AssemblyFileVersion("1.9.2")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]

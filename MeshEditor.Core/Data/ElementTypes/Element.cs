@@ -207,7 +207,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return 20;
 				default:
-					throw new ArgumentException("This argument is not supported", "elementType");
+					throw new ArgumentException("This argument is not supported", nameof(elementType));
 			}
 		}
 
@@ -242,7 +242,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return 12;
 				default:
-					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), nameof(elementType));
 			}
 		}
 
@@ -277,7 +277,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return 6;
 				default:
-					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), nameof(elementType));
 			}
 		}
 		
@@ -302,7 +302,7 @@ namespace MeshEditor.Data
 				case ElementType.HexahedronQuadratic:
 					return ApproximationType.Quadratic;
 				default:
-					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), "elementType");
+					throw new ArgumentException(string.Format("Argument '{0}' is not supported.", elementType), nameof(elementType));
 			}
 		}
 

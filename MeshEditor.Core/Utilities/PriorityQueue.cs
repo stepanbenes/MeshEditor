@@ -176,7 +176,7 @@ namespace MeshEditor.Utilities
 
 			// throw exception if newCapacity < numItems
 			if (newCap < numItems)
-				throw new ArgumentOutOfRangeException("newCapacity", "New capacity is less than Count");
+				throw new ArgumentOutOfRangeException(nameof(newCapacity), "New capacity is less than Count");
 
 			this.capacity = newCap;
 			if (items == null)
@@ -345,9 +345,9 @@ namespace MeshEditor.Utilities
 		public void CopyTo(PriorityQueueItem<TValue, TPriority>[] array, int arrayIndex)
 		{
 			if (array == null)
-				throw new ArgumentNullException("array");
+				throw new ArgumentNullException(nameof(array));
 			if (arrayIndex < 0)
-				throw new ArgumentOutOfRangeException("arrayIndex", "arrayIndex is less than 0.");
+				throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex is less than 0.");
 			if (array.Rank > 1)
 				throw new ArgumentException("array is multidimensional.");
 			if (arrayIndex >= array.Length)
@@ -364,8 +364,7 @@ namespace MeshEditor.Utilities
 		/// <returns>A new array containing elements copied from the Queue.</returns>
 		public PriorityQueueItem<TValue, TPriority>[] ToArray()
 		{
-			PriorityQueueItem<TValue, TPriority>[] newItems =
-			   new PriorityQueueItem<TValue, TPriority>[numItems];
+			var newItems = new PriorityQueueItem<TValue, TPriority>[numItems];
 			Array.Copy(items, newItems, numItems);
 			return newItems;
 		}

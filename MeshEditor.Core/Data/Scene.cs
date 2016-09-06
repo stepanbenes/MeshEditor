@@ -1750,7 +1750,7 @@ namespace MeshEditor.Data
 					};
 					break;
 				default:
-					throw new ArgumentOutOfRangeException("mode");
+					throw new ArgumentOutOfRangeException(nameof(mode));
 			}
 			// ------------------------------------
 			return getBorderEdges(edgeHit, getNeighborsFun);
