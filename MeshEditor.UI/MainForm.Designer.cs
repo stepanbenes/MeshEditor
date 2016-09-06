@@ -989,7 +989,6 @@
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
 			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
 			this.aboutToolStripMenuItem.Text = "&HELP";
-			this.aboutToolStripMenuItem.DropDownOpening += new System.EventHandler(this.aboutToolStripMenuItem_DropDownOpening);
 			// 
 			// checkForUpdatesToolStripMenuItem
 			// 

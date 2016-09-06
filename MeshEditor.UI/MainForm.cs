@@ -994,11 +994,6 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		private void aboutToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-		{
-			checkForUpdatesToolStripMenuItem.Enabled = UpdateChecker.IsUpdateServiceAvailableForThisPlatform;
-		}
-
 		private async void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			try
@@ -1054,6 +1049,7 @@ namespace MeshEditor.WinUI
 				if (dialogResult == DialogResult.Yes)
 				{
 					Process.Start(updateChecker.PackageFileUri); // start web browser with package file uri
+					this.Close(); // close application
 				}
 			}
 			return updateExists;
