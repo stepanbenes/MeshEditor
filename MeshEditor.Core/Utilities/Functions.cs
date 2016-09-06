@@ -442,6 +442,16 @@ namespace MeshEditor.Utilities
 			return ColorToRgba32(c.R, c.G, c.B, alpha);
 		}
 
+		public static Color ColorFromRgba32(int color)
+		{
+			// parse RGBA in big endian
+			int a = (color >> 24) & 0x000000FF;
+			int b = (color >> 16) & 0x000000FF;
+			int g = (color >> 8) & 0x000000FF;
+			int r = color & 0x000000FF;
+			return Color.FromArgb(a, r, g, b);
+		}
+
 		/// <summary>
 		/// Get byte components of color in RGBA 32bit format
 		/// </summary>

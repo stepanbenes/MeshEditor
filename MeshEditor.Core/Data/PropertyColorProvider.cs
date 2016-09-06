@@ -98,23 +98,13 @@ namespace MeshEditor.Data
 		public static Color Get(Property property)
 		{
 			Debug.Assert(colorPalette.ContainsKey(property));
-			// parse RGBA in big endian
-			int color = GetRGBA32(property);
-			int a = (color >> 24) & 0x000000FF;
-			int b = (color >> 16) & 0x000000FF;
-			int g = (color >> 8) & 0x000000FF;
-			int r = color & 0x000000FF;
-			return Color.FromArgb(a, r, g, b);
+			return Utils.ColorFromRgba32(colorPalette[property]);
 		}
 
 		public static void Set(Property property, Color color)
 		{
 			Debug.Assert(colorPalette.ContainsKey(property));
-			int rgba = 0;
-			rgba |= color.R;
-			rgba |= color.G << 8;
-			rgba |= color.B << 16;
-			rgba |= color.A << 24;
+			int rgba = Utils.ColorToRgba32(color);
 			colorPalette[property] = rgba;
 		}
 

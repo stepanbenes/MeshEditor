@@ -33,13 +33,13 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.comboBoxColorScaleType = new System.Windows.Forms.ComboBox();
 			this.label2 = new System.Windows.Forms.Label();
-			this.colorScaleSetter = new MeshEditor.DataVisualizer.UI.ColorScaleSetter();
+			this.controlPointsPanel = new System.Windows.Forms.Panel();
 			this.SuspendLayout();
 			// 
 			// buttonOK
 			// 
 			this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonOK.Location = new System.Drawing.Point(222, 330);
+			this.buttonOK.Location = new System.Drawing.Point(111, 252);
 			this.buttonOK.Name = "buttonOK";
 			this.buttonOK.Size = new System.Drawing.Size(75, 23);
 			this.buttonOK.TabIndex = 1;
@@ -51,7 +51,7 @@
 			// 
 			this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.buttonCancel.Location = new System.Drawing.Point(303, 330);
+			this.buttonCancel.Location = new System.Drawing.Point(192, 252);
 			this.buttonCancel.Name = "buttonCancel";
 			this.buttonCancel.Size = new System.Drawing.Size(75, 23);
 			this.buttonCancel.TabIndex = 2;
@@ -86,16 +86,16 @@
 			this.label2.TabIndex = 5;
 			this.label2.Text = "Color scale type";
 			// 
-			// colorScaleSetter
+			// controlPointsPanel
 			// 
-			this.colorScaleSetter.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+			this.controlPointsPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.colorScaleSetter.ColorScale = null;
-			this.colorScaleSetter.Location = new System.Drawing.Point(12, 74);
-			this.colorScaleSetter.Name = "colorScaleSetter";
-			this.colorScaleSetter.Size = new System.Drawing.Size(366, 250);
-			this.colorScaleSetter.TabIndex = 0;
+			this.controlPointsPanel.AutoScroll = true;
+			this.controlPointsPanel.Location = new System.Drawing.Point(15, 74);
+			this.controlPointsPanel.Name = "controlPointsPanel";
+			this.controlPointsPanel.Size = new System.Drawing.Size(252, 172);
+			this.controlPointsPanel.TabIndex = 7;
 			// 
 			// EditColorScaleForm
 			// 
@@ -103,13 +103,14 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(390, 365);
+			this.ClientSize = new System.Drawing.Size(279, 287);
+			this.Controls.Add(this.controlPointsPanel);
 			this.Controls.Add(this.comboBoxColorScaleType);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.buttonOK);
-			this.Controls.Add(this.colorScaleSetter);
+			this.MinimumSize = new System.Drawing.Size(285, 242);
 			this.Name = "EditColorScaleForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Edit color scale";
@@ -119,12 +120,11 @@
 		}
 
 		#endregion
-
-		private MeshEditor.DataVisualizer.UI.ColorScaleSetter colorScaleSetter;
 		private System.Windows.Forms.Button buttonOK;
 		private System.Windows.Forms.Button buttonCancel;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.ComboBox comboBoxColorScaleType;
 		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Panel controlPointsPanel;
 	}
 }

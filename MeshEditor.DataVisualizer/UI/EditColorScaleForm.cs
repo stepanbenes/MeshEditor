@@ -41,7 +41,7 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				updatingView = true;
 				comboBoxColorScaleType.SelectedItem = ColorScale?.Type;
-				colorScaleSetter.ColorScale = ColorScale;
+				setupControlPoints();
 			}
 			finally
 			{
@@ -54,12 +54,46 @@ namespace MeshEditor.DataVisualizer.UI
 			if (updatingView)
 				return;
 			ColorScale.Type = (ColorScale.Types)comboBoxColorScaleType.SelectedItem;
-			colorScaleSetter.SetupControlPoints();
+			setupControlPoints();
 		}
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
 			DialogResult = DialogResult.OK;
 		}
+
+		private void setupControlPoints()
+		{
+			controlPointsPanel.Controls.Clear();
+			if (ColorScale != null)
+			{
+				int controlTop = 2;
+				foreach (var controlPoint in ColorScale.ControlPoints)
+				{
+					var controlPointSetter = new ColorScaleControlPointSetter(controlPoint);
+					controlPointSetter.Top = controlTop;
+					controlPointsPanel.Controls.Add(controlPointSetter);
+					controlTop += controlPointSetter.Height;
+				}
+			}
+			//buttonRemove.Enabled = ColorScale.ControlPoints.Any();
+		}
+
+		//private void buttonAdd_Click(object sender, EventArgs e)
+		//{
+		//	var newControlPoint = new ColorScale.ControlPoint(ColorScale.UndefinedValueColor);
+		//	ColorScale.AddNewControlPoint(newControlPoint);
+		//	setupControlPoints();
+		//}
+
+		//private void buttonRemove_Click(object sender, EventArgs e)
+		//{
+		//	var lastControlPoint = ColorScale.ControlPoints.LastOrDefault();
+		//	if (lastControlPoint != null)
+		//	{
+		//		ColorScale.RemoveControlPoint(lastControlPoint);
+		//		setupControlPoints();
+		//	}
+		//}
 	}
 }

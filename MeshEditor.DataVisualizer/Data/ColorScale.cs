@@ -242,7 +242,7 @@ namespace MeshEditor.DataVisualizer.Data
 			controlPoints = controlPoints.Concat(new[] { controlPoint }).ToArray();
 			updateControlPointValues();
 
-			throw new NotImplementedException();
+			throw new NotImplementedException(); // isoareas shader does not support more than 5 control points !
 		}
 
 		public void RemoveControlPoint(ControlPoint controlPoint)

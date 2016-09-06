@@ -83,11 +83,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\MemoryLogger.cs" />
     <Compile Include="Services\LayerManagerProcessInvokeService.cs" />
-    <Compile Include="UI\ColorScaleSetter.cs">
+    <Compile Include="UI\ColorScaleControlPointSetter.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ColorScaleSetter.Designer.cs">
-      <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    <Compile Include="UI\ColorScaleControlPointSetter.Designer.cs">
+      <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\ContentViewControl.cs">
       <SubType>UserControl</SubType>
@@ -159,8 +159,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\ColorScaleSetter.resx">
-      <DependentUpon>ColorScaleSetter.cs</DependentUpon>
+    <EmbeddedResource Include="UI\ColorScaleControlPointSetter.resx">
+      <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\DataSelectionControl.resx">
       <DependentUpon>DataSelectionControl.cs</DependentUpon>
