@@ -1,0 +1,10 @@
+Package: mesheditor
+Version: 2.0.0
+Maintainer: Stepan Benes <benes.stepan@gmail.com>
+Architecture: amd64
+Installed-Size: 0
+Section: graphics
+Priority: optional
+Description: 3D graphical editor of finite element meshes
+ Postprocessor of the results from the Finite Element Method.
+Depends: mono-complete (>=4.2)
