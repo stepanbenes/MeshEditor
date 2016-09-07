@@ -38,7 +38,7 @@ namespace MeshEditor.SolutionManager.IO
 
 			// solve conflicts (existing solution files with same name)
 			var conflicts = Directory.Exists(solutionDirectory) ?
-								(from fileMatch in enumerateFiles(solutionDirectory, prefix + "*" + suffix, SearchOption.AllDirectories)
+								(from fileMatch in enumerateFiles(solutionDirectory, prefix + "*" + suffix, maxDepth: 0) // top directory only
 								 let fileMatchRelativePath = Path.GetFileName(fileMatch)
 								 select fileMatchRelativePath.Substring(0, fileMatchRelativePath.Length - suffix.Length)).ToArray()
 								:
@@ -76,11 +76,11 @@ namespace MeshEditor.SolutionManager.IO
 			return solution;
 		}
 
-		IEnumerable<ISolutionInfo> ISolutionController.GetAll() => GetAll(includeSubDirectories: true);
+		IEnumerable<ISolutionInfo> ISolutionController.GetAll() => GetAll(includeOneSubDirectory: true);
 
-		public IEnumerable<ISolutionInfo> GetAll(bool includeSubDirectories)
+		public IEnumerable<ISolutionInfo> GetAll(bool includeOneSubDirectory)
 		{
-			foreach (string solutionFile in getAllSolutionFiles(includeSubDirectories))
+			foreach (string solutionFile in getAllSolutionFiles(includeOneSubDirectory ? 1 : 0))
 			{
 				using (Stream stream = localStorage.Load(solutionFile))
 				{
@@ -91,11 +91,11 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		Task<IEnumerable<ISolutionInfo>> ISolutionController.GetAllAsync(CancellationToken cancellationToken) => GetAllAsync(includeSubDirectories: true, cancellationToken: cancellationToken);
+		Task<IEnumerable<ISolutionInfo>> ISolutionController.GetAllAsync(CancellationToken cancellationToken) => GetAllAsync(includeOneSubDirectory: true, cancellationToken: cancellationToken);
 
-		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(bool includeSubDirectories, CancellationToken cancellationToken)
+		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(bool includeOneSubDirectory, CancellationToken cancellationToken)
 		{
-			return await Task.WhenAll(from solutionFile in getAllSolutionFiles(includeSubDirectories)
+			return await Task.WhenAll(from solutionFile in getAllSolutionFiles(includeOneSubDirectory ? 1 : 0)
 									  select loadSolutionInfoAsync(solutionFile, cancellationToken));
 		}
 
@@ -185,6 +185,14 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
+		public static void DeleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer, IWriteStorageService storageService)
+		{
+			foreach (var childLayer in traverseLayerTreePostOrder(rootLayer))
+			{
+				storageService.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
+			}
+		}
+
 		#region Private methods
 
 		private void deleteSolution(Solution solution, string solutionFile)
@@ -220,10 +228,10 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		private IEnumerable<string> getAllSolutionFiles(bool includeSubDirectories)
+		private IEnumerable<string> getAllSolutionFiles(int maxDepth)
 		{
 			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
-			return enumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+			return enumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, maxDepth);
 			//return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 		}
 
@@ -249,30 +257,27 @@ namespace MeshEditor.SolutionManager.IO
 
 		private void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer)
 		{
-			foreach (var childLayer in traverseLayerTreePostOrder(rootLayer))
-			{
-				localStorage.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
-			}
+			DeleteAllLayerFilesOfLayerTree(rootLayer, localStorage);
 		}
 
 		/// <summary>
 		/// A safe way to get all the files in a directory and sub directory without crashing on UnauthorizedException or PathTooLongException
 		/// </summary>
-		/// <param name="path">Starting directory</param>
+		/// <param name="directoryPath">Starting directory</param>
 		/// <param name="searchPattern">Filename pattern match</param>
-		/// <param name="searchOption">Search subdirectories or only top level directory for files</param>
+		/// <param name="maxDepth">Search subdirectories only until <paramref name="maxDepth">max depth</paramref> level is reached</param>
 		/// <returns>List of files</returns>
-		private static IEnumerable<string> enumerateFiles(string path, string searchPattern, SearchOption searchOption)
+		private static IEnumerable<string> enumerateFiles(string directoryPath, string searchPattern, int maxDepth)
 		{
 			try
 			{
 				var dirFiles = Enumerable.Empty<string>();
-				if (searchOption == SearchOption.AllDirectories)
+				if (maxDepth > 0)
 				{
-					dirFiles = Directory.EnumerateDirectories(path)
-										.SelectMany(x => enumerateFiles(x, searchPattern, searchOption));
+					dirFiles = Directory.EnumerateDirectories(directoryPath)
+										.SelectMany(subdir => enumerateFiles(subdir, searchPattern, maxDepth - 1));
 				}
-				return dirFiles.Concat(Directory.EnumerateFiles(path, searchPattern));
+				return dirFiles.Concat(Directory.EnumerateFiles(directoryPath, searchPattern));
 			}
 			catch (UnauthorizedAccessException) { }
 			catch (PathTooLongException) { }
