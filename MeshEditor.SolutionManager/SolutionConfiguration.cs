@@ -12,7 +12,6 @@ namespace MeshEditor.SolutionManager
 	class AzureBlobStorageConfiguration
 	{
 		public string ConnectionString { get; set; }
-		public string MeshesBlobContainerName { get; set; }
 		public string ResultsBlobContainerName { get; set; }
 		public string LayersBlobContainerName { get; set; }
 	}

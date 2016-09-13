@@ -11,7 +11,7 @@ namespace MeshEditor.LayerManager.Import
 {
 	public static class AnalysisResultImportServiceFactory
 	{
-		public static IAnalysisResultImportService Create(IReadStorageService geometryStorageService, IReadStorageService dataStorageService, AnalysisResult result, string gaussPointsExtrapolationStrategyName)
+		public static IAnalysisResultImportService Create(IReadStorageService storageService, AnalysisResult result, string gaussPointsExtrapolationStrategyName)
 		{
 			GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy;
 			if (gaussPointsExtrapolationStrategyName == null)
@@ -24,8 +24,8 @@ namespace MeshEditor.LayerManager.Import
 			}
 
 			return new AnalysisResultImportService(
-				createGeometryImportService(geometryStorageService, result.MeshRecordNames.Single()),
-				(result.DataRecordNames.Count > 0) ? createDataImportService(dataStorageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
+				createGeometryImportService(storageService, result.MeshRecordNames.Single()),
+				(result.DataRecordNames.Count > 0) ? createDataImportService(storageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
 			);
 		}
 

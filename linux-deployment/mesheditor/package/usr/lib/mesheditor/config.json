@@ -1,7 +1,6 @@
 ﻿{
   "AzureBlobStorage": {
       "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
-      "MeshesBlobContainerName": "fea-meshes",
       "ResultsBlobContainerName": "fea-results",
       "LayersBlobContainerName": "fea-layers"
   },

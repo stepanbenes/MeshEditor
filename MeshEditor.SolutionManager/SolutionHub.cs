@@ -58,8 +58,7 @@ namespace MeshEditor.SolutionManager
 			return new SolutionHub(
 				solutionLocator: null,
 				solutionController: solutionController,
-				meshImportStorage: localStorage,
-				dataImportStorage: localStorage,
+				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
 				logger: logger
@@ -76,8 +75,7 @@ namespace MeshEditor.SolutionManager
 			return new SolutionHub(
 				solutionLocator: solutionFileName,
 				solutionController: solutionController,
-				meshImportStorage: localStorage,
-				dataImportStorage: localStorage,
+				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
 				logger: logger
@@ -89,8 +87,7 @@ namespace MeshEditor.SolutionManager
 			return new SolutionHub(
 				solutionLocator: solutionId,
 				solutionController: new RestApiSolutionController(restApiConfiguration.Uri, logger),
-				meshImportStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.MeshesBlobContainerName),
-				dataImportStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.ResultsBlobContainerName),
+				importStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.ResultsBlobContainerName),
 				layerSourceStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
 				layerDestinationStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
 				logger: logger
@@ -127,15 +124,14 @@ namespace MeshEditor.SolutionManager
 
 		object solutionLocator;
 		ISolutionController solutionController;
-		IStorageService meshImportStorage, dataImportStorage, layerSourceStorage, layerDestinationStorage;
+		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
 		ILogger logger;
 
-		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService meshImportStorage, IStorageService dataImportStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
+		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService importStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
 			this.solutionLocator = solutionLocator;
 			this.solutionController = solutionController;
-			this.meshImportStorage = meshImportStorage;
-			this.dataImportStorage = dataImportStorage;
+			this.importStorage = importStorage;
 			this.layerSourceStorage = layerSourceStorage;
 			this.layerDestinationStorage = layerDestinationStorage;
 			this.logger = logger;
@@ -196,7 +192,7 @@ namespace MeshEditor.SolutionManager
 
 			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
 
-			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result, gaussPointsExtrapolationStrategyName));
+			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName));
 
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
