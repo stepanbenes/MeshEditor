@@ -30,7 +30,6 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 		public Stream Load(string record)
 		{
-			//return new WebClient().OpenRead(Path.Combine(blobUri, record));
 			return downloadFile(storageAccount, blobContainerName, record);
 		}
 
@@ -61,7 +60,7 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 			foreach (CloudBlob cloudBlob in blobsToDelete)
 			{
-				cloudBlob.Delete();
+				cloudBlob.DeleteIfExists();
 			}
 		}
 
@@ -98,7 +97,7 @@ namespace MeshEditor.SolutionManager.AzureStorage
 			//return fullPath;
 		}
 
-		private static void deleteFileFromBlobStorage(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
+		private static bool deleteFileFromBlobStorage(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
 		{
 			// Create the blob client and reference the container
 			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
@@ -106,7 +105,7 @@ namespace MeshEditor.SolutionManager.AzureStorage
 			// Retrieve reference to a blob
 			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
 			// Delete the blob
-			blockBlob.Delete(); // TODO: make async
+			return blockBlob.DeleteIfExists(); // TODO: make async
 		}
 
 		#endregion
