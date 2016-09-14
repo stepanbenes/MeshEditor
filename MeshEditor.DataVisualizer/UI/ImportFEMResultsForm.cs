@@ -11,6 +11,7 @@ using MeshEditor.Common;
 using MeshEditor.Common.Extensions;
 using System.IO;
 using MeshEditor.DataVisualizer.Services;
+using MeshEditor.LayerManager.Import;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -45,8 +46,15 @@ namespace MeshEditor.DataVisualizer.UI
 
 				string[] resultFiles = textBoxResultFiles.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-				IEnumerable<int> analysisResultGroupLengths = new[] { resultFiles.Length + 1 };
-				IEnumerable<string> analysisResultRecordNames = resultFiles.Prepend(textBoxMeshFile.Text).Select(filename => filename.RemoveQuotes());
+				IEnumerable<AnalysisResult> analysisResults = new[]
+					{
+						new AnalysisResult
+						{
+							TimeStep = null, // TODO: use explicit time steps for .vtu
+							MeshRecordNames = new[] { textBoxMeshFile.Text.RemoveQuotes() },
+							DataRecordNames = resultFiles.Select(filename => filename.RemoveQuotes()).ToArray()
+						}
+					};
 				string projectName = textBoxProjectName.Text;
 				string location = textBoxLocation.Text;
 				string solutionDirectory;
@@ -58,9 +66,9 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					solutionDirectory = location;
 				}
-				string solutionFileName = createNewSolution(solutionDirectory, analysisResultGroupLengths, analysisResultRecordNames, projectName, logger);
+				string solutionFileName = createNewSolution(solutionDirectory, analysisResults, projectName, logger);
 
-				var success = await importResultFilesAsync(analysisResultGroupLengths, analysisResultRecordNames, solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
+				var success = await importResultFilesAsync(solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
 
 				if (success)
 				{
@@ -125,24 +133,18 @@ namespace MeshEditor.DataVisualizer.UI
 			return comboBoxGaussPointExtrapolationStrategy.SelectedItem as string;
 		}
 
-		private static string createNewSolution(string solutionDirectory, IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName, ILogger logger)
+		private static string createNewSolution(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName, ILogger logger)
 		{
-			//int returnCode = await LayerManagerProcessInvokeService.Invoke($"create -l {string.Join(" ", analysisResultGroupLengths)} -r {string.Join(" ", analysisResultRecordNames)} --solution {solutionId} --verbose --pressanykey");
-
 			var solutionHub = SolutionHub.CreateEmptyLocal(solutionDirectory, logger: logger);
-			var solutionFileName = solutionHub.Create(analysisResultGroupLengths, analysisResultRecordNames, projectName);
+			var solutionFileName = solutionHub.Create(analysisResults, projectName);
 			return solutionFileName;
 		}
 
-		private static async Task<bool> importResultFilesAsync(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string solutionFileName, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
+		private static async Task<bool> importResultFilesAsync(string solutionFileName, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
 		{
-			//solutionHub.Import(analysisResultGroupLengths, analysisResultRecordNames, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>());
-
 			StringBuilder arguments = new StringBuilder();
 
 			arguments.Append("import");
-			arguments.Append(" -l " + string.Join(" ", analysisResultGroupLengths));
-			arguments.Append(" -r " + string.Join(" ", analysisResultRecordNames.Select(recordName => recordName.QuoteIfContainsWhiteSpace())));
 			arguments.Append(" --solution " + solutionFileName.QuoteIfContainsWhiteSpace());
 			if (compressionParameters.Any())
 			{

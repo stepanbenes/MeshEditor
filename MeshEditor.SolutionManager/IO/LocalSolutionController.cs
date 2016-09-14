@@ -61,6 +61,7 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				Id = solutionId,
 				ProjectName = projectName,
+				Results = analysisResults.ToArray(),
 				Layers = new Solution.Layer[0]
 			};
 

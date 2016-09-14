@@ -24,8 +24,8 @@ namespace MeshEditor.LayerManager.Import
 			}
 
 			return new AnalysisResultImportService(
-				createGeometryImportService(storageService, result.MeshRecordNames.Single()),
-				(result.DataRecordNames.Count > 0) ? createDataImportService(storageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
+				geometryImportService: createGeometryImportService(storageService, result.MeshRecordNames.Single()),
+				dataImportService: result.DataRecordNames.Any() ?createDataImportService(storageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
 			);
 		}
 

@@ -5,11 +5,14 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
 using Newtonsoft.Json;
 using MeshEditor.Common.Extensions;
+using MeshEditor.LayerManager.Import;
 
 namespace MeshEditor.SolutionManager.IO
 {
 	class Solution : SolutionInfo, ISolutionDescription
 	{
+		#region class Layer
+
 		public class Layer : ILayerInfo
 		{
 			public Guid Id { get; set; }
@@ -32,30 +35,48 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
+		#endregion
+
+		#region Properties
+
+		public AnalysisResult[] Results { get; set; }
 		public Layer[] Layers { get; set; }
 
 		IReadOnlyList<ILayerInfo> ISolutionDescription.Layers => Layers;
 
+		#endregion
+
+		#region Public static methods
+
 		public static Solution CreateNewByAddingLayer(Solution solution, Layer layerToAdd, Guid? parentLayerId)
 		{
-			Solution newSolution = new Solution
-			{
-				Id = solution.Id,
-				ProjectName = solution.ProjectName,
-				Layers = parentLayerId.HasValue ?
+			Solution newSolution = createShallowCopy(solution);
+			newSolution.Layers = parentLayerId.HasValue ?
 					solution.Layers.Select(layer => cloneLayerAppend(layer, parentLayerId.Value, layerToAdd)).ToArray() :
-					(solution.Layers?.Select(layer => cloneLayer(layer))).EmptyIfNull().Append(layerToAdd).ToArray()
-			};
+					(solution.Layers?.Select(layer => cloneLayer(layer))).EmptyIfNull().Append(layerToAdd).ToArray();
 			return newSolution;
 		}
 
 		public static Solution CreateNewByDeletingLayer(Solution solution, Guid layerToDeleteId)
 		{
+			Solution newSolution = createShallowCopy(solution);
+			newSolution.Layers = solution.Layers.Where(layer => layer.Id != layerToDeleteId).Select(layer => cloneLayerExcept(layer, layerToDeleteId)).ToArray();
+			return newSolution;
+		}
+
+		#endregion
+
+		#region Private methods
+
+		private static Solution createShallowCopy(Solution toCopy)
+		{
 			Solution newSolution = new Solution
 			{
-				Id = solution.Id,
-				ProjectName = solution.ProjectName,
-				Layers = solution.Layers.Where(layer => layer.Id != layerToDeleteId).Select(layer => cloneLayerExcept(layer, layerToDeleteId)).ToArray()
+				Id = toCopy.Id,
+				ProjectName = toCopy.ProjectName,
+				Location = toCopy.Location,
+				Results = toCopy.Results,
+				Layers = toCopy.Layers
 			};
 			return newSolution;
 		}
@@ -97,5 +118,7 @@ namespace MeshEditor.SolutionManager.IO
 			}
 			return clone;
 		}
+
+		#endregion
 	}
 }

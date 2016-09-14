@@ -120,10 +120,9 @@ namespace MeshEditor.FormatConverter
 
 		public int Run(IEnumerable<string> args)
 		{
-			return Parser.Default.ParseArguments<CreateOptions, ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions>(args)
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions>(args)
 					.WithParsed((Options options) => initializeSolutionHub(options))
 					.MapResult(
-						(CreateOptions options) => runCreateCommand(options),
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
 						(CompressOptions options) => runCompressCommand(options),
@@ -136,15 +135,9 @@ namespace MeshEditor.FormatConverter
 
 		#region Commands
 
-		private int runCreateCommand(CreateOptions options)
-		{
-			solutionHub.Create(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.ProjectName);
-			return 0;
-		}
-
 		private int runImportCommand(ImportOptions options)
 		{
-			solutionHub.Import(options.AnalysisResultGroupLengths, options.AnalysisResultRecordNames, options.KeyTimeSteps, options.CompressionParameters, options.GaussPointsExtrapolationStrategyName, options.FieldName, options.LayerName);
+			solutionHub.Import(options.KeyTimeSteps, options.CompressionParameters, options.GaussPointsExtrapolationStrategyName, options.FieldName, options.LayerName);
 			return 0;
 		}
 

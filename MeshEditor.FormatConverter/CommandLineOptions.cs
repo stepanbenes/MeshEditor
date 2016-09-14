@@ -25,19 +25,6 @@ namespace MeshEditor.FormatConverter
 		//public string ConfigFile { get; set; }
 	}
 
-	[Verb("create", HelpText = "Create new solution")]
-	class CreateOptions : Options
-	{
-		[Option('p', "project", Required = false, HelpText = "Project name")]
-		public string ProjectName { get; set; }
-
-		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
-		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
-
-		[Option('r', "results", Required = true, HelpText = "Mesh and result files to be processed (first file in each group is expected to be mesh, others data)")]
-		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
-	}
-
 	abstract class LayerProducerOptions : Options
 	{
 		[Option('k', "keytimes", Required = false, HelpText = "Key time steps")]
@@ -56,12 +43,6 @@ namespace MeshEditor.FormatConverter
 	[Verb("import", HelpText = "Convert supported mesh and result files to universal layer format")]
 	class ImportOptions : LayerProducerOptions
 	{
-		[Option('l', "lengths", Required = true, HelpText = "Lenghts of analysis result groups")]
-		public IEnumerable<int> AnalysisResultGroupLengths { get; set; }
-
-		[Option('r', "results", Required = true, HelpText = "Mesh and result files to be processed (first file in each group is expected to be mesh, others data)")]
-		public IEnumerable<string> AnalysisResultRecordNames { get; set; }
-
 		[Option("gpextrapolation", Required = false, HelpText = "Gauss points extrapolation strategy (Default is Nearest)")]
 		public string GaussPointsExtrapolationStrategyName { get; set; }
 	}

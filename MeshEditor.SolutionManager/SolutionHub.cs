@@ -175,25 +175,22 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
 		}
 
-		public string Create(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, string projectName = null)
+		public string Create(IEnumerable<AnalysisResult> analysisResults, string projectName = null)
 		{
-			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
 			Solution solution = solutionController.CreateNew(solutionLocator, analysisResults, projectName);
 			solutionLocator = solution.Location;
 			logger?.LogMessage($"Created at '{solution.Location}'");
 			return solution.Location;
 		}
 
-		public void Import(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
+		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
 			//Debug.Assert(!keyTimeSteps.Any());
 
 			Solution solution = solutionController.Get(solutionLocator);
 
-			var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
-
-			var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName));
-
+			var analysisResultImportServices = solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
+			
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
@@ -337,20 +334,6 @@ namespace MeshEditor.SolutionManager
 		#endregion
 
 		#region Private helper methods
-
-		private static List<AnalysisResult> composeAnalysisResults(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames)
-		{
-			var analysisResults = new List<AnalysisResult>();
-			int offset = 0;
-			foreach (int groupLength in analysisResultGroupLengths)
-			{
-				var resultGroup = analysisResultRecordNames.Skip(offset).Take(groupLength).ToList();
-				analysisResults.Add(new AnalysisResult(resultGroup.Take(1).ToArray(), resultGroup.Skip(1).ToArray()));
-				offset += groupLength;
-			}
-
-			return analysisResults;
-		}
 
 		private static Solution.Layer createLayerRecordFromLayerSummaryFile(SummaryFile layerSummary)
 		{
