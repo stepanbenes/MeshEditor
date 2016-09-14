@@ -25,7 +25,7 @@ namespace MeshEditor.LayerManager.Import
 
 			return new AnalysisResultImportService(
 				geometryImportService: createGeometryImportService(storageService, result.MeshRecordNames.Single()),
-				dataImportService: result.DataRecordNames.Any() ?createDataImportService(storageService, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
+				dataImportService: result.DataRecordNames.Any() ? createDataImportService(storageService, result.TimeStep, result.DataRecordNames, gaussPointsExtrapolationStrategy) : null
 			);
 		}
 
@@ -47,7 +47,7 @@ namespace MeshEditor.LayerManager.Import
 			}
 		}
 
-		private static IDataImportService createDataImportService(IReadStorageService storageService, IEnumerable<string> recordNames, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
+		private static IDataImportService createDataImportService(IReadStorageService storageService, double? timeStep, IEnumerable<string> recordNames, GaussPointsExtrapolationStrategy gaussPointsExtrapolationStrategy)
 		{
 			Debug.Assert(recordNames != null);
 			Debug.Assert(recordNames.Count() > 0);
@@ -59,7 +59,7 @@ namespace MeshEditor.LayerManager.Import
 				case ".res": // GiD results 
 					return new GiDDataFormatParser(storageService, recordNames, gaussPointsExtrapolationStrategy);
 				case ".vtu": // VTK XML, only serial UnstructuredGrid (.vtu) is supported
-					return new VTKXmlDataFormatParser(storageService, recordNames);
+					return new VTKXmlDataFormatParser(storageService, timeStep ?? 0.0, recordNames);
 
 				default:
 					throw new NotSupportedException();

@@ -14,11 +14,13 @@ namespace MeshEditor.LayerManager.Import
 	class VTKXmlDataFormatParser : VTKXmlFormatParserBase, IDataImportService
 	{
 		IReadStorageService storageService;
+		double timeStep;
 		IEnumerable<string> recordNames;
 
-		public VTKXmlDataFormatParser(IReadStorageService storageService, IEnumerable<string> recordNames)
+		public VTKXmlDataFormatParser(IReadStorageService storageService, double timeStep, IEnumerable<string> recordNames)
 		{
 			this.storageService = storageService;
+			this.timeStep = timeStep;
 			this.recordNames = recordNames;
 		}
 
@@ -26,7 +28,6 @@ namespace MeshEditor.LayerManager.Import
 		{
 			foreach (string recordName in recordNames)
 			{
-				double timeStep = tryGetOrdinalFromFileName(recordName) ?? 0.0;
 				using (Stream fileStream = storageService.Load(recordName))
 				{
 					string fileType;
@@ -134,15 +135,6 @@ namespace MeshEditor.LayerManager.Import
 				yield return dataDescription;
 
 			} while (input.ReadToNextSibling("DataArray"));
-		}
-
-		private static int? tryGetOrdinalFromFileName(string filename)
-		{
-			string extension = Path.GetExtension(Path.GetFileNameWithoutExtension(filename)).TrimStart('.');
-			int ordinal;
-			if (int.TryParse(extension, out ordinal))
-				return ordinal;
-			return null;
 		}
 
 		private static void readToPieceElement(XmlReader input, out int numberOfPoints, out int numberOfCells)
