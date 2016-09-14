@@ -23,9 +23,9 @@ namespace MeshEditor.DataVisualizer
 
 		private IsoAreasShader isoAreasShader;
 
-		public DataVisualizerBase()
+		protected DataVisualizerBase(IVisualizerSettings settings)
 		{
-			Settings = new VisualizerSettings();
+			Settings = settings ?? new VisualizerSettings();
 		}
 
 		#endregion

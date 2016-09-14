@@ -90,7 +90,7 @@ namespace MeshEditor.DataVisualizer.Data
 			{
 				var geometry = await reloadMeshAsync(scene, solutionHub, layerId, layerName, newDataSelection, progressReport, cancellationToken);
 				Debug.Assert(scene.Mesh != null);
-				dataVisualizer = new LayerDataVisualizer(geometry);
+				dataVisualizer = new LayerDataVisualizer(geometry, dataVisualizer?.Settings);
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
 

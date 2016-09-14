@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MeshEditor.Data;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.Common.Extensions;
+using MeshEditor.DataVisualizer.Data;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -20,7 +21,8 @@ namespace MeshEditor.DataVisualizer
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
 
-		public LayerDataVisualizer(GeometryDescription geometry)
+		public LayerDataVisualizer(GeometryDescription geometry, IVisualizerSettings settings)
+			: base(settings)
 		{
 			Debug.Assert(geometry != null);
 			this.geometry = geometry;
