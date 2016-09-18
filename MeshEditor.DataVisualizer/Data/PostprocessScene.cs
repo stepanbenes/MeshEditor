@@ -219,16 +219,18 @@ namespace MeshEditor.DataVisualizer.Data
 		}
 
 		string IScene.Title => ProjectName ?? "[Untitled project]"; // ignore layer name
-		//{
-		//	get
-		//	{
-		//		var projectName = ProjectName ?? "[Untitled project]";
-		//		var meshTitle = currentScene.Title;
-		//		if (string.IsNullOrEmpty(meshTitle))
-		//			return projectName;
-		//		return projectName + " - " + meshTitle;
-		//	}
-		//}
+																	//{
+																	//	get
+																	//	{
+																	//		var projectName = ProjectName ?? "[Untitled project]";
+																	//		var meshTitle = currentScene.Title;
+																	//		if (string.IsNullOrEmpty(meshTitle))
+																	//			return projectName;
+																	//		return projectName + " - " + meshTitle;
+																	//	}
+																	//}
+
+		public bool ContainsMeshWithIdentifier(int meshIdentifier) => enumerateAllMeshes().Any(m => m.UniqueIdentifier == meshIdentifier);
 
 		#endregion
 

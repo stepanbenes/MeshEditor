@@ -275,10 +275,7 @@ namespace MeshEditor.Data
 
 		public string Title => mesh?.Name;
 
-		public Mesh Mesh
-		{
-			get { return mesh; }
-		}
+		public Mesh Mesh => mesh;
 
 		public Camera Camera
 		{
@@ -349,15 +346,9 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public List<CutPlane> CutPlanes
-		{
-			get { return cutPlanes; }
-		}
+		public List<CutPlane> CutPlanes => cutPlanes;
 
-		public List<Node> CutPlaneDefinitionNodes
-		{
-			get { return cutPlaneDefinitionNodes; }
-		}
+		public List<Node> CutPlaneDefinitionNodes => cutPlaneDefinitionNodes;
 
 		public int[] NodeSignal
 		{
@@ -385,20 +376,13 @@ namespace MeshEditor.Data
 			}
 		}
 
-		public List<Vector3> NodeSignalPositions
-		{
-			get { return nodeSignalPositions; }
-		}
+		public List<Vector3> NodeSignalPositions => nodeSignalPositions;
 
-		public Vector3 ElementSignalPosition
-		{
-			get { return elementSignalPosition; }
-		}
+		public Vector3 ElementSignalPosition => elementSignalPosition;
 
-		public CutInfo LastUsedCutInfo
-		{
-			get { return lastUsedCutInfo; }
-		}
+		public CutInfo LastUsedCutInfo => lastUsedCutInfo;
+
+		public bool ContainsMeshWithIdentifier(int meshIdentifier) => mesh?.UniqueIdentifier == meshIdentifier;
 
 		#endregion
 

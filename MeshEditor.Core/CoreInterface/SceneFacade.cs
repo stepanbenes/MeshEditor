@@ -167,7 +167,8 @@ namespace MeshEditor.CoreInterface
 
 		public string MeshSourceFileName => scene.Mesh?.SourceFilename;
 
-		public int? MeshUniqueIdentifier => scene.Mesh?.UniqueIdentifier;
+		public int? ActiveMeshUniqueIdentifier => scene.Mesh?.UniqueIdentifier;
+		public bool ContainsMeshWithIdentifier(int meshIdentifier) => scene.ContainsMeshWithIdentifier(meshIdentifier);
 
 		public bool ContainsMesh => scene.Mesh != null;
 		

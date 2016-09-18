@@ -115,6 +115,7 @@ namespace MeshEditor.Data
 		void HideSelectedElements();
 
 		void RestoreWholeMesh();
+		bool ContainsMeshWithIdentifier(int meshIdentifier);
 
 		#endregion
 	}

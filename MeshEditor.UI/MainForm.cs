@@ -392,7 +392,7 @@ namespace MeshEditor.WinUI
 			{
 				if (ea.SkipSender && ReferenceEquals(sender, c))
 					continue;
-				if (ea.MeshIdentifier == c.SceneFacade.MeshUniqueIdentifier)
+				if (c.SceneFacade.ContainsMeshWithIdentifier(ea.MeshIdentifier))
 					c.Invalidate();
 			}
 		}
@@ -1105,11 +1105,12 @@ namespace MeshEditor.WinUI
 			// zajistit, ze se me to nebude ptat na site, ktere jsou jeste otevrene
 			foreach (OpenGLControl c in openGLControls)
 				if (c.SceneFacade.ContainsMesh && !controls.Contains(c))
-					processedMeshes.Add(c.SceneFacade.MeshUniqueIdentifier.Value);
+					processedMeshes.Add(c.SceneFacade.ActiveMeshUniqueIdentifier.Value);
 			// ----------------------------------------------------
+			// TODO: iterating only over active meshes, there may be more meshes in each control
 			foreach (OpenGLControl control in controls)
 			{
-				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.MeshUniqueIdentifier.Value))
+				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.ActiveMeshUniqueIdentifier.Value))
 				{
 					bool unsaved = (bool)control.SceneFacade.GetValue(AvailableValue.UnsavedChangesInMesh);
 					if (unsaved)
@@ -1403,6 +1404,11 @@ namespace MeshEditor.WinUI
 				{
 					caption += " - " + sceneTitle;
 				}
+				//string meshName = activeControl.SceneFacade.MeshName;
+				//if (!string.IsNullOrEmpty(meshName))
+				//{
+				//	caption += " - " + meshName;
+				//}
 			}
 			this.Text = caption;
 		}
