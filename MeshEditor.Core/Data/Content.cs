@@ -680,6 +680,7 @@ namespace MeshEditor.Data
 				return;
 
 			bool beamPropertyColors = (colorMode & PropertyColorsMode.Beams) != 0;
+			bool drawData = dataVisualizer != null && dataVisualizer.DisplayColors && !beamPropertyColors;
 
 			IntPtr videoMemory;
 
@@ -694,7 +695,7 @@ namespace MeshEditor.Data
 				int vertexIndex = 0;
 				foreach (Beam beam in beams)
 				{
-					if (dataVisualizer != null && dataVisualizer.DisplayColors)
+					if (drawData)
 					{
 						int beginColor = dataVisualizer.GetDataColor(beam.BeginNode, beam);
 						int endColor = dataVisualizer.GetDataColor(beam.EndNode, beam);
