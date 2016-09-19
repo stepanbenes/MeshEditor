@@ -67,7 +67,7 @@ namespace MeshEditor.FormatConverter
 		public string Layer { get; set; }
 	}
 
-	[Verb("list", HelpText = "Enumerate all solutions in base directory")]
+	[Verb("list", HelpText = "Enumerate all layers in solution")]
 	class ListOptions : Options
 	{
 	}

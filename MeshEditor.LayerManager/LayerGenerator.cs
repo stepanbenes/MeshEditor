@@ -123,6 +123,8 @@ namespace MeshEditor.LayerManager
 			{
 				IReadOnlyList<AttributeDescription> attributeDescriptions;
 				GeometryDescription geometry = analysisResultImportService.ReadGeometry(out attributeDescriptions);
+				if (geometry.IsEmpty)
+					continue;
 
 				// divide dataDescriptions to time step chunks according to --keytimes option
 
@@ -194,6 +196,10 @@ namespace MeshEditor.LayerManager
 			int resultIndex = 1;
 			foreach (var parentMesh in parentLayer.Meshes)
 			{
+				GeometryDescription originalGeometry = LoadGeometry(parentLayerId, parentMesh.Index);
+				if (originalGeometry.IsEmpty)
+					throw new InvalidOperationException($"Geometry is empty (mesh index: {parentMesh.Index})");
+
 				switch (filter.Type)
 				{
 					case FilterType.AttributeSelection:
@@ -206,10 +212,9 @@ namespace MeshEditor.LayerManager
 						break;
 				}
 
-				GeometryDescription originalGeometry = LoadGeometry(parentLayerId, parentMesh.Index);
 				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
-
-				// TODO: check if filteredGeometry is not empty
+				if (filteredGeometry.IsEmpty)
+					continue;
 
 				// filter attributes
 				var originalAttributeRecordNames = parentMesh.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
@@ -735,7 +740,7 @@ namespace MeshEditor.LayerManager
 			GeometryDescription geometry = new GeometryDescription();
 
 			geometry.PointCoordinates = decodeGeometryDataArray<float>(layerMesh.PointCoordinates, expandEnd: false);
-			geometry.NumberOfCoordinateComponents = geometry.PointCoordinates.Length / layerMesh.NumberOfPoints;
+			geometry.NumberOfCoordinateComponents = (layerMesh.NumberOfPoints > 0) ? geometry.PointCoordinates.Length / layerMesh.NumberOfPoints : 0;
 			geometry.CellConnectivity = decodeGeometryDataArray<int>(layerMesh.CellConnectivity, expandEnd: false);
 
 			if (layerMesh.CellTypes != null)

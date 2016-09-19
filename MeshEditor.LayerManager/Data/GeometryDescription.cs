@@ -16,8 +16,10 @@ namespace MeshEditor.LayerManager.Data
 
 		public GeometryEntityMapping Mapping { get; set; }
 
-		public int NumberOfPoints => PointCoordinates.Length / NumberOfCoordinateComponents;
+		public int NumberOfPoints => IsEmpty ? 0 : PointCoordinates.Length / NumberOfCoordinateComponents;
 		public int NumberOfCells => CellTypes.Length;
+
+		public bool IsEmpty => PointCoordinates.Length == 0;
 
 		#region Public methods
 
