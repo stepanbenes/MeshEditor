@@ -74,10 +74,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				}
 			}
 
-			public override string ToString()
-			{
-				return $"{nameof(TriangleFace)} [{Point1Id}, {Point2Id}, {Point3Id}]";
-			}
+			public override string ToString() => $"{nameof(TriangleFace)} [{Point1Id}, {Point2Id}, {Point3Id}]";
 
 			public static void SplitRectangleToTriangles(int p1, int p2, int p3, int p4, out TriangleFace firstTriangle, out TriangleFace secondTriangle)
 			{
@@ -104,10 +101,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				}
 			}
 
-			public bool IsCollapsed()
-			{
-				return Point1Id == Point2Id || Point1Id == Point3Id || Point2Id == Point3Id;
-			}
+			public bool IsCollapsed() => Point1Id == Point2Id || Point1Id == Point3Id || Point2Id == Point3Id;
 		}
 
 		#endregion
@@ -212,12 +206,29 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 					yield break; // point and beam have no face
 
-				case CellType.TriangleLinear:
+				case CellType.TriangleLinear: // just make a copy
+					yield return new TriangleFace(
+						connectivity[startIndex + 0],
+						connectivity[startIndex + 1],
+						connectivity[startIndex + 2]);
+					break;
 				case CellType.TriangleQuadratic:
-				case CellType.QuadLinear:
+
+					throw new NotImplementedException();
+
+				case CellType.QuadLinear: // just split to two triangles
+					TriangleFace.SplitRectangleToTriangles(
+						connectivity[startIndex + 0],
+						connectivity[startIndex + 1],
+						connectivity[startIndex + 2],
+						connectivity[startIndex + 3],
+						out t1, out t2);
+					yield return t1;
+					yield return t2;
+					break;
 				case CellType.QuadQuadratic:
 
-					yield break; // ignore 2D elements
+					throw new NotImplementedException();
 
 				case CellType.TetraLinear:
 					yield return new TriangleFace(
