@@ -11,6 +11,8 @@ namespace MeshEditor.LayerManager.Data
 		public static class KnownAttributeNames
 		{
 			public static readonly string ElementProperty = "ElementProperty";
+			public static readonly string NodeNumber = "NodeNumber";
+			public static readonly string ElementNumber = "ElementNumber";
 		}
 
 		public string Name { get; set; }
