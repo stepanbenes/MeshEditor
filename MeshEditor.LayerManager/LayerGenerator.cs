@@ -376,11 +376,11 @@ namespace MeshEditor.LayerManager
 						{
 							int oldIndex;
 							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryGetOldPointId(newPointIndex, out oldIndex))
+							if (mapping.TryMapPoint(newPointIndex, out oldIndex))
 							{
 								newValues[newPointIndex] = oldAttribute.Values[oldIndex];
 							}
-							else if (mapping.TryGetOldPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
 							{
 								newValues[newPointIndex] = interpolateAttributeValue(
 									firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
@@ -397,11 +397,11 @@ namespace MeshEditor.LayerManager
 							{
 								int oldCellPointIndex;
 								EdgeIntersection oldEdgeIntersection;
-								if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
+								if (mapping.TryMapCellPoint(newCellPointIndex, out oldCellPointIndex))
 								{
 									newValues[newCellPointIndex] = oldAttribute.Values[oldCellPointIndex];
 								}
-								else if (mapping.TryGetOldCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+								else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
 								{
 									newValues[newCellPointIndex] = interpolateAttributeValue(
 										firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
@@ -417,7 +417,7 @@ namespace MeshEditor.LayerManager
 						for (int newCellIndex = 0; newCellIndex < newValues.Length; newCellIndex++)
 						{
 							int oldIndex;
-							if (mapping.TryGetOldCellId(newCellIndex, out oldIndex))
+							if (mapping.TryMapCell(newCellIndex, out oldIndex))
 							{
 								newValues[newCellIndex] = oldAttribute.Values[oldIndex];
 							}
@@ -455,11 +455,11 @@ namespace MeshEditor.LayerManager
 						{
 							int oldPointIndex;
 							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryGetOldPointId(newPointIndex, out oldPointIndex))
+							if (mapping.TryMapPoint(newPointIndex, out oldPointIndex))
 							{
 								newValues[newPointIndex] = oldResult.Values[oldPointIndex];
 							}
-							else if (mapping.TryGetOldPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
 							{
 								newValues[newPointIndex] = interpolateDataValue(
 									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
@@ -478,11 +478,11 @@ namespace MeshEditor.LayerManager
 						{
 							int oldCellPointIndex;
 							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryGetOldCellPointId(newCellPointIndex, out oldCellPointIndex))
+							if (mapping.TryMapCellPoint(newCellPointIndex, out oldCellPointIndex))
 							{
 								newValues[newCellPointIndex] = oldResult.Values[oldCellPointIndex];
 							}
-							else if (mapping.TryGetOldCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
 							{
 								newValues[newCellPointIndex] = interpolateDataValue(
 									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
@@ -500,7 +500,7 @@ namespace MeshEditor.LayerManager
 						for (int newCellIndex = 0; newCellIndex < filteredGeometry.NumberOfCells; newCellIndex++)
 						{
 							int oldCellIndex;
-							if (mapping.TryGetOldCellId(newCellIndex, out oldCellIndex))
+							if (mapping.TryMapCell(newCellIndex, out oldCellIndex))
 							{
 								newValues[newCellIndex] = oldResult.Values[oldCellIndex];
 							}
@@ -580,7 +580,7 @@ namespace MeshEditor.LayerManager
 			{
 				logger?.LogOperationProgress($"Generating attribute file '{attribute.Name}'");
 
-				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, DataLocationType.Cells, layerId, attributeIndex, meshIndex);
+				DataFile elementPropertyAttributeLayer = createAttributeLayerFile(attribute.Name, attribute.Values, attribute.Location, layerId, attributeIndex, meshIndex);
 				storeLayerFile(elementPropertyAttributeLayer, getLayerAttributeRecordName(layerId, elementPropertyAttributeLayer.Index));
 				attributeDescriptors.Add(DataFileDescriptor.CreateFrom(elementPropertyAttributeLayer));
 				attributeIndex++;

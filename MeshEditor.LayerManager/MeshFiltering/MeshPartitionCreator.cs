@@ -44,7 +44,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 						int pointIndex = geometry.CellConnectivity[offset];
 						remainingPointIndices.Add(pointIndex);
 
-						mapping.AddCellPointMapping(newCellPointId: cellConnectivity.Count, oldCellPointId: offset);
+						mapping.AddCellPointMapping(from: cellConnectivity.Count, to: offset);
 						cellConnectivity.Add(pointIndex);
 					}
 					cellOffsets.Add(cellConnectivity.Count);

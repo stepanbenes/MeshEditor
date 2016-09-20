@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.LayerManager.Data;
 using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.DataVisualizer
 {
 	public class DataSelection
 	{
-		public DataSelection(int meshIndex, int? elementPropertyAttributeIndex)
-			: this(null, null, 0.0, null, meshIndex, elementPropertyAttributeIndex)
+		public DataSelection(IMeshFileDescriptor mesh)
+			: this(null, null, 0.0, null, mesh)
 		{ }
 
-		public DataSelection(string fieldName, string componentName, double timeStep, int? dataIndex, int meshIndex, int? elementPropertyAttributeIndex)
+		public DataSelection(string fieldName, string componentName, double timeStep, int? dataIndex, IMeshFileDescriptor mesh)
 		{
 			FieldName = fieldName;
 			ComponentName = componentName;
 			TimeStep = timeStep;
 			DataIndex = dataIndex;
-			MeshIndex = meshIndex;
-			ElementPropertyAttributeIndex = elementPropertyAttributeIndex;
+			Mesh = mesh;
 		}
 
 		public string FieldName { get; }
@@ -29,8 +29,6 @@ namespace MeshEditor.DataVisualizer
 
 		public int? DataIndex { get; }
 
-		public int MeshIndex { get; }
-
-		public int? ElementPropertyAttributeIndex { get; }
+		public IMeshFileDescriptor Mesh { get; }
 	}
 }

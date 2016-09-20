@@ -15,16 +15,16 @@ namespace MeshEditor.DataVisualizer.IO
 {
 	class LayerMeshFileParser : IMeshFileParser, INameProvider
 	{
-		GeometryDescription geometry;
-		AttributeDescription elementPropertiesAttribute;
+		readonly GeometryDescription geometry;
+		readonly AttributeDescription elementPropertyAttribute;
 
-		public LayerMeshFileParser(string layerName, GeometryDescription geometry, AttributeDescription elementPropertiesAttribute = null)
+		public LayerMeshFileParser(string layerName, GeometryDescription geometry, AttributeDescription elementPropertyAttribute)
 		{
 			Debug.Assert(geometry != null);
-			Debug.Assert(elementPropertiesAttribute == null || elementPropertiesAttribute.Location == DataLocationType.Cells);
+			Debug.Assert(elementPropertyAttribute == null || elementPropertyAttribute.Location == DataLocationType.Cells);
 			Name = layerName;
 			this.geometry = geometry;
-			this.elementPropertiesAttribute = elementPropertiesAttribute;
+			this.elementPropertyAttribute = elementPropertyAttribute;
 		}
 
 		public string Name { get; }
@@ -35,13 +35,13 @@ namespace MeshEditor.DataVisualizer.IO
 
 		public IEnumerable<Node> ReadNodes()
 		{
-			for (int i = 0; i < geometry.NumberOfPoints; i++)
+			for (int index = 0; index < geometry.NumberOfPoints; index++)
 			{
-				float x = (geometry.NumberOfCoordinateComponents > 0) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 0] : 0f;
-				float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 1] : 0f;
-				float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[i * geometry.NumberOfCoordinateComponents + 2] : 0f;
+				float x = (geometry.NumberOfCoordinateComponents > 0) ? geometry.PointCoordinates[index * geometry.NumberOfCoordinateComponents + 0] : 0f;
+				float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[index * geometry.NumberOfCoordinateComponents + 1] : 0f;
+				float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[index * geometry.NumberOfCoordinateComponents + 2] : 0f;
 
-				Node node = new Node(id: i /* IMPORTANT: index as id is bound to result data, do not change*/, position: new Vector3(x, y, z), properties: null);
+				Node node = new Node(id: index /* IMPORTANT: index as id is bound to result data, do not change*/, position: new Vector3(x, y, z), properties: null);
 				yield return node;
 			}
 		}
@@ -49,24 +49,29 @@ namespace MeshEditor.DataVisualizer.IO
 		public IEnumerable<ElementDraft> ReadElements()
 		{
 			int offset = 0;
-			for (int i = 0; i < geometry.NumberOfCells; i++)
+			for (int index = 0; index < geometry.NumberOfCells; index++)
 			{
-				int nextOffset = geometry.CellOffsets[i];
+				int nextOffset = geometry.CellOffsets[index];
 
 				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(geometry.CellConnectivity, offset, nextOffset - offset);
 
-				var cellType = geometry.CellTypes[i];
+				var cellType = geometry.CellTypes[index];
 
 				if (cellType == CellType.HexaQuadratic) // numbering is differs between VTK file format and GiD file format, change it
 				{
 					nodeIDs.SwapSegments(firstIndex: 12, secondIndex: 16, length: 4);
 				}
 
-				ElementDraft element = new ElementDraft { ID = i, NodeIDs = nodeIDs, Type = mapCellTypeToElementType(cellType) };
-				if (elementPropertiesAttribute != null)
+				ElementDraft element = new ElementDraft
 				{
-					Debug.Assert(elementPropertiesAttribute.Location == DataLocationType.Cells);
-					element.Property = new Property(elementPropertiesAttribute.Values[i]);
+					ID = index, // IMPORTANT: index as id is bound to result data, do not change
+					NodeIDs = nodeIDs,
+					Type = mapCellTypeToElementType(cellType)
+				};
+
+				if (elementPropertyAttribute != null)
+				{
+					element.Property = new Property(elementPropertyAttribute.Values[index]);
 				}
 
 				yield return element;
@@ -76,9 +81,7 @@ namespace MeshEditor.DataVisualizer.IO
 		}
 
 		public void Dispose()
-		{
-			geometry = null;
-		}
+		{ }
 
 		#region Private methods
 

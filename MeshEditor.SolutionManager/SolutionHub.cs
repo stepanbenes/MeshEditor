@@ -94,16 +94,16 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, bool includeSubDirectories, ILogger logger = null)
+		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, bool includeOneSubDirectory, ILogger logger = null)
 		{
 			var solutionController = new LocalSolutionController(solutionDirectory);
-			return solutionController.GetAll(includeSubDirectories);
+			return solutionController.GetAll(includeOneSubDirectory);
 		}
 
-		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, bool includeSubDirectories, CancellationToken cancellationToken, ILogger logger = null)
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, bool includeOneSubDirectory, CancellationToken cancellationToken, ILogger logger = null)
 		{
 			var solutionController = new LocalSolutionController(solutionDirectory);
-			return await solutionController.GetAllAsync(includeSubDirectories, cancellationToken);
+			return await solutionController.GetAllAsync(includeOneSubDirectory, cancellationToken);
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)

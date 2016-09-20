@@ -8,13 +8,13 @@ using Newtonsoft.Json.Converters;
 
 namespace MeshEditor.LayerManager.Data
 {
-	internal interface IDataDescription
+	public interface IDataDescription
 	{
-		string FieldName { get; set; }
-		string ComponentName { get; set; }
-		int Index { get; set; }
-		double[] TimeSteps { get; set; }
-		DataLocationType Location { get; set; }
+		string FieldName { get; }
+		string ComponentName { get; }
+		int Index { get; }
+		double[] TimeSteps { get; }
+		DataLocationType Location { get; }
 	}
 
 	public class DataFileDescriptor : IDataDescription

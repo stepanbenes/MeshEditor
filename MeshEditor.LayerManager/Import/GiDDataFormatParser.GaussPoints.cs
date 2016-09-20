@@ -701,12 +701,12 @@ namespace MeshEditor.LayerManager.Import
 					{
 						case FileDataLocation.Nodes:
 							{
-								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								var mapping = geometry.Mapping;
 								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
 									int pointId = ids[idIndex];
 									int pointIndex;
-									if (mapping.TryGetNewPointId(pointId, out pointIndex))
+									if (mapping.TryMapPoint(pointId, out pointIndex))
 									{
 										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 										{
@@ -770,12 +770,12 @@ namespace MeshEditor.LayerManager.Import
 
 							if (gaussPointsExtrapolationStrategy == GaussPointsExtrapolationStrategy.Nearest)
 							{
-								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								var mapping = geometry.Mapping;
 								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
 									int cellId = ids[idIndex];
 									int cellIndex;
-									if (mapping.TryGetNewCellId(cellId, out cellIndex))
+									if (mapping.TryMapCell(cellId, out cellIndex))
 									{
 										int previousCellOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 										int cellOffset = geometry.CellOffsets[cellIndex];
@@ -809,12 +809,12 @@ namespace MeshEditor.LayerManager.Import
 						case FileDataLocation.GaussPoints: // do arithmetic mean of all values in gauss points if a cell
 							{
 								int numberOfGaussPoints = gaussPoints.NumberOfGaussPoints;
-								var mapping = (ImportGeometryEntityMapping)geometry.Mapping;
+								var mapping = geometry.Mapping;
 								for (int idIndex = 0; idIndex < ids.Count; idIndex++)
 								{
 									int cellId = ids[idIndex];
 									int cellIndex;
-									if (mapping.TryGetNewCellId(cellId, out cellIndex))
+									if (mapping.TryMapCell(cellId, out cellIndex))
 									{
 										for (int componentIndex = 0; componentIndex < numberOfComponents; componentIndex++)
 										{

@@ -281,9 +281,8 @@ namespace MeshEditor.DataVisualizer.UI
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			if (firstMesh != null)
 			{
-				int? elementPropertyAttributeIndex = firstMesh?.Attributes.FirstOrDefault(a => a.FieldName == AttributeDescription.KnownAttributeNames.ElementProperty)?.Index;
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				var dataSelection = new DataSelection(firstMesh.Index, elementPropertyAttributeIndex);
+				var dataSelection = new DataSelection(firstMesh);
 				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...

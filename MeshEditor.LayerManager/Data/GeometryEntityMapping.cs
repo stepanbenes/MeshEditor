@@ -7,111 +7,50 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public abstract class GeometryEntityMapping
+	public class GeometryEntityMapping
 	{
+		private readonly Dictionary<int, int> pointMap;
+		private readonly Dictionary<int, int> cellMap;
 
-	}
-
-	public sealed class ImportGeometryEntityMapping : GeometryEntityMapping
-	{
-		private readonly Dictionary<int, int> oldToNewPointIdMap;
-		private readonly Dictionary<int, int> oldToNewCellIdMap;
-
-		public ImportGeometryEntityMapping()
+		public GeometryEntityMapping()
 		{
-			oldToNewPointIdMap = new Dictionary<int, int>();
-			oldToNewCellIdMap = new Dictionary<int, int>();
+			pointMap = new Dictionary<int, int>();
+			cellMap = new Dictionary<int, int>();
 		}
 
-		public void AddPointMapping(int oldPointId, int newPointId)
-		{
-			oldToNewPointIdMap.Add(oldPointId, newPointId);
-		}
+		public void AddPointMapping(int from, int to) => pointMap.Add(from, to);
 
-		public void AddCellMapping(int oldCellId, int newCellId)
-		{
-			oldToNewCellIdMap.Add(oldCellId, newCellId);
-		}
+		public void AddCellMapping(int from, int to) => cellMap.Add(from, to);
 
+		public bool TryMapPoint(int from, out int to) => pointMap.TryGetValue(from, out to);
 
-		public bool TryGetNewPointId(int oldPointId, out int newPointId)
-		{
-			return oldToNewPointIdMap.TryGetValue(oldPointId, out newPointId);
-		}
-
-		public bool TryGetNewCellId(int oldCellId, out int newCellId)
-		{
-			return oldToNewCellIdMap.TryGetValue(oldCellId, out newCellId);
-		}
+		public bool TryMapCell(int from, out int to) => cellMap.TryGetValue(from, out to);
 	}
 
 	internal sealed class FilterGeometryEntityMapping : GeometryEntityMapping
 	{
-		private readonly Dictionary<int, int> newToOldPointIdMap;
-		private readonly Dictionary<int, int> newToOldCellIdMap;
-		private readonly Dictionary<int, int> newToOldCellPointIdMap;
+		private readonly Dictionary<int, int> cellPointMap;
 
-		private readonly Dictionary<int, EdgeIntersection> newPointIdToOldEdgeIntersectionMap;
-		private readonly Dictionary<int, EdgeIntersection> newCellPointIdToOldEdgeIntersectionMap;
+		private readonly Dictionary<int, EdgeIntersection> pointEdgeIntersectionMap;
+		private readonly Dictionary<int, EdgeIntersection> cellPointEdgeIntersectionMap;
 
 		public FilterGeometryEntityMapping()
 		{
-			newToOldPointIdMap = new Dictionary<int, int>();
-			newToOldCellIdMap = new Dictionary<int, int>();
-			newToOldCellPointIdMap = new Dictionary<int, int>();
-			newPointIdToOldEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
-			newCellPointIdToOldEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
+			cellPointMap = new Dictionary<int, int>();
+			pointEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
+			cellPointEdgeIntersectionMap = new Dictionary<int, EdgeIntersection>();
 		}
 
-		public void AddPointMapping(int newPointId, int oldPointId)
-		{
-			newToOldPointIdMap.Add(newPointId, oldPointId);
-		}
+		public void AddCellPointMapping(int from, int to) => cellPointMap.Add(from, to);
 
-		public void AddCellMapping(int newCellId, int oldCellId)
-		{
-			newToOldCellIdMap.Add(newCellId, oldCellId);
-		}
+		public void AddPointEdgeMapping(int point, EdgeIntersection edgeIntersection) => pointEdgeIntersectionMap.Add(point, edgeIntersection);
 
-		public void AddCellPointMapping(int newCellPointId, int oldCellPointId)
-		{
-			newToOldCellPointIdMap.Add(newCellPointId, oldCellPointId);
-		}
+		public void AddCellPointEdgeMapping(int cell, EdgeIntersection edgeIntersection) => cellPointEdgeIntersectionMap.Add(cell, edgeIntersection);
 
-		public void AddPointEdgeMapping(int newPointId, EdgeIntersection edgeIntersection)
-		{
-			newPointIdToOldEdgeIntersectionMap.Add(newPointId, edgeIntersection);
-		}
+		public bool TryMapCellPoint(int from, out int to) => cellPointMap.TryGetValue(from, out to);
 
-		public void AddCellPointEdgeMapping(int newCellPointId, EdgeIntersection edgeIntersection)
-		{
-			newCellPointIdToOldEdgeIntersectionMap.Add(newCellPointId, edgeIntersection);
-		}
+		public bool TryMapPointEdgeIntersection(int point, out EdgeIntersection edgeIntersection) => pointEdgeIntersectionMap.TryGetValue(point, out edgeIntersection);
 
-
-		public bool TryGetOldPointId(int newPointId, out int oldPointId)
-		{
-			return newToOldPointIdMap.TryGetValue(newPointId, out oldPointId);
-		}
-
-		public bool TryGetOldCellId(int newCellId, out int oldCellId)
-		{
-			return newToOldCellIdMap.TryGetValue(newCellId, out oldCellId);
-		}
-
-		public bool TryGetOldCellPointId(int newCellPointId, out int oldCellPointId)
-		{
-			return newToOldCellPointIdMap.TryGetValue(newCellPointId, out oldCellPointId);
-		}
-
-		public bool TryGetOldPointEdgeIntersection(int newPointId, out EdgeIntersection edgeIntersection)
-		{
-			return newPointIdToOldEdgeIntersectionMap.TryGetValue(newPointId, out edgeIntersection);
-		}
-
-		public bool TryGetOldCellPointEdgeIntersection(int newCellPointId, out EdgeIntersection edgeIntersection)
-		{
-			return newCellPointIdToOldEdgeIntersectionMap.TryGetValue(newCellPointId, out edgeIntersection);
-		}
+		public bool TryMapCellPointEdgeIntersection(int cell, out EdgeIntersection edgeIntersection) => cellPointEdgeIntersectionMap.TryGetValue(cell, out edgeIntersection);
 	}
 }

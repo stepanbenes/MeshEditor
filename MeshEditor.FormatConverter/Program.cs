@@ -195,12 +195,15 @@ namespace MeshEditor.FormatConverter
 						{
 							// first try to look in current directory (exclude sub-directories)
 							var solutionDirectory = Directory.GetCurrentDirectory();
-							var solutions = SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, includeSubDirectories: false, logger: logger).ToArray();
+							var solutions = SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, includeOneSubDirectory: true, logger: logger).ToArray();
+
+#if DEBUG
 							if (solutions.Length == 0) // if nothing found, try to look in default local storage
 							{
 								solutionDirectory = SolutionHub.GetLocalStorageDefaultDirectory();
-								solutions = SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, includeSubDirectories: true, logger: logger).ToArray();
+								solutions = SolutionHub.EnumerateAllLocalSolutions(solutionDirectory, includeOneSubDirectory: true, logger: logger).ToArray();
 							}
+#endif
 
 							var solutionIndex = chooseSolution(solutions);
 							if (solutionIndex.HasValue)

@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class MeshFileDescriptor
+	public interface IMeshFileDescriptor
+	{
+		int Index { get; }
+		IReadOnlyList<IDataDescription> Attributes { get; }
+		IReadOnlyList<IDataDescription> Results { get; }
+	}
+
+	public class MeshFileDescriptor : IMeshFileDescriptor
 	{
 		public int Index { get; set; }
 
@@ -14,5 +21,8 @@ namespace MeshEditor.LayerManager.Data
 
 		public DataFileDescriptor[] Attributes { get; set; }
 		public DataFileDescriptor[] Results { get; set; }
+
+		IReadOnlyList<IDataDescription> IMeshFileDescriptor.Attributes => Attributes;
+		IReadOnlyList<IDataDescription> IMeshFileDescriptor.Results => Results;
 	}
 }
