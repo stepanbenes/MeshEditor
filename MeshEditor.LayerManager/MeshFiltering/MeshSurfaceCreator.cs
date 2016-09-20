@@ -64,12 +64,13 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			public override int GetHashCode()
 			{
+				TriangleFace thisSorted = createSorted();
 				unchecked // Overflow is fine, just wrap
 				{
 					int hash = 17;
-					hash = hash * Point1Id.GetHashCode();
-					hash = hash * Point2Id.GetHashCode();
-					hash = hash * Point3Id.GetHashCode();
+					hash = hash * thisSorted.Point1Id.GetHashCode();
+					hash = hash * thisSorted.Point2Id.GetHashCode();
+					hash = hash * thisSorted.Point3Id.GetHashCode();
 					return hash;
 				}
 			}
@@ -197,7 +198,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			int startIndex = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 			TriangleFace t1, t2;
 
-			// depends on face ordering!
+			// depends on face ordering! see: http://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf
 			switch (cellType)
 			{
 				case CellType.Point:
@@ -213,9 +214,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 						connectivity[startIndex + 2]);
 					break;
 				case CellType.TriangleQuadratic:
-
-					throw new NotImplementedException();
-
+					foreach (var qt in getFacesOfQuadraticTriangle(connectivity, startIndex, 0, 1, 2, 3, 4, 5))
+						yield return qt;
+					break;
 				case CellType.QuadLinear: // just split to two triangles
 					TriangleFace.SplitRectangleToTriangles(
 						connectivity[startIndex + 0],
@@ -227,9 +228,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					yield return t2;
 					break;
 				case CellType.QuadQuadratic:
-
-					throw new NotImplementedException();
-
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 0, 1, 2, 3, 4, 5, 6, 7))
+						yield return qq;
+					break;
 				case CellType.TetraLinear:
 					yield return new TriangleFace(
 						connectivity[startIndex + 2],
@@ -249,9 +250,15 @@ namespace MeshEditor.LayerManager.MeshFiltering
 						connectivity[startIndex + 2]);
 					break;
 				case CellType.TetraQuadratic:
-
-					throw new NotImplementedException();
-
+					foreach (var qt in getFacesOfQuadraticTriangle(connectivity, startIndex, 0, 1, 3, 4, 8, 7))
+						yield return qt;
+					foreach (var qt in getFacesOfQuadraticTriangle(connectivity, startIndex, 0, 3, 2, 7, 9, 6))
+						yield return qt;
+					foreach (var qt in getFacesOfQuadraticTriangle(connectivity, startIndex, 0, 2, 1, 6, 5, 4))
+						yield return qt;
+					foreach (var qt in getFacesOfQuadraticTriangle(connectivity, startIndex, 1, 2, 3, 5, 9, 8))
+						yield return qt;
+					break;
 				case CellType.WedgeLinear:
 					yield return new TriangleFace( // bottom triangle
 						connectivity[startIndex + 0],
@@ -352,13 +359,74 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 					break;
 				case CellType.HexaQuadratic:
-
-					throw new NotImplementedException();
-
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 0, 1, 2, 3, 8, 9, 10, 11))
+						yield return qq;
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 4, 5, 6, 7, 12, 13, 14, 15))
+						yield return qq;
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 0, 1, 5, 4, 8, 17, 12, 16))
+						yield return qq;
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 1, 2, 6, 5, 9, 18, 13, 17))
+						yield return qq;
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 2, 3, 7, 6, 10, 19, 14, 18))
+						yield return qq;
+					foreach (var qq in getFacesOfQuadraticQuad(connectivity, startIndex, 3, 0, 4, 7, 11, 16, 15, 19))
+						yield return qq;
+					break;
 				default:
 
 					throw new NotSupportedException();
 			}
+		}
+
+		private static IEnumerable<TriangleFace> getFacesOfQuadraticTriangle(int[] connectivity, int startIndex, int n0, int n1, int n2, int n3, int n4, int n5)
+		{
+			yield return new TriangleFace(
+				connectivity[startIndex + n0],
+				connectivity[startIndex + n3],
+				connectivity[startIndex + n5]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n1],
+				connectivity[startIndex + n4],
+				connectivity[startIndex + n3]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n2],
+				connectivity[startIndex + n5],
+				connectivity[startIndex + n4]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n3],
+				connectivity[startIndex + n4],
+				connectivity[startIndex + n5]);
+		}
+
+		private static IEnumerable<TriangleFace> getFacesOfQuadraticQuad(int[] connectivity, int startIndex, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
+		{
+			// four corner triangles
+			yield return new TriangleFace(
+				connectivity[startIndex + n0],
+				connectivity[startIndex + n4],
+				connectivity[startIndex + n7]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n1],
+				connectivity[startIndex + n5],
+				connectivity[startIndex + n4]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n2],
+				connectivity[startIndex + n6],
+				connectivity[startIndex + n5]);
+			yield return new TriangleFace(
+				connectivity[startIndex + n3],
+				connectivity[startIndex + n7],
+				connectivity[startIndex + n6]);
+			// two inner triangles
+			TriangleFace innerT1, innerT2;
+			TriangleFace.SplitRectangleToTriangles(
+						connectivity[startIndex + n4],
+						connectivity[startIndex + n5],
+						connectivity[startIndex + n6],
+						connectivity[startIndex + n7],
+						out innerT1, out innerT2);
+			yield return innerT1;
+			yield return innerT2;
 		}
 
 		#endregion

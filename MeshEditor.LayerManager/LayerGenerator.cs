@@ -38,39 +38,29 @@ namespace MeshEditor.LayerManager
 				encodedDataLength += encoding.Length;
 			}
 
-			public double GetCompressionFactor()
-			{
-				return (double)compressedDataLength / inputDataLength;
-			}
+			public double GetCompressionFactor() => (double)compressedDataLength / inputDataLength;
 
-			public double GetEncodingFactor()
-			{
-				return (double)encodedDataLength / compressedDataLength;
-			}
+			public double GetEncodingFactor() => (double)encodedDataLength / compressedDataLength;
 
-			public double GetOverallFactor()
-			{
-				return (double)encodedDataLength / inputDataLength;
-			}
+			public double GetOverallFactor() => (double)encodedDataLength / inputDataLength;
 
-			public long GetMemoryConsumption()
-			{
-				return encodedDataLength * sizeof(double);
-			}
+			public long GetMemoryConsumption() => encodedDataLength * sizeof(double);
 
 			public override string ToString()
 			{
 				StringBuilder text = new StringBuilder();
-				text.AppendLine("| OVERVIEW:");
-				text.Append("| compression factor: ");
-				text.AppendLine(GetCompressionFactor().ToString());
-				text.Append("| encoding factor: ");
-				text.AppendLine(GetEncodingFactor().ToString());
-				text.Append("| overall factor: ");
-				text.AppendLine(GetOverallFactor().ToString());
-				text.Append("| memory consumption: ");
-				text.Append(GetMemoryConsumption().ToString());
-				text.Append(" bytes");
+				{
+					text.AppendLine("| OVERVIEW:");
+					text.Append("| compression factor: ");
+					text.AppendLine(GetCompressionFactor().ToString());
+					text.Append("| encoding factor: ");
+					text.AppendLine(GetEncodingFactor().ToString());
+					text.Append("| overall factor: ");
+					text.AppendLine(GetOverallFactor().ToString());
+					text.Append("| memory consumption: ");
+					text.Append(GetMemoryConsumption().ToString());
+					text.Append(" bytes");
+				}
 				return text.ToString();
 			}
 		}

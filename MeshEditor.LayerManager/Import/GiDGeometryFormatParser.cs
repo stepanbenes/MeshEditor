@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.Common.Extensions;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Storage;
 
@@ -156,7 +157,8 @@ namespace MeshEditor.LayerManager.Import
 									}
 									Debug.Assert(parts.Length >= nnode + 1);
 
-									cellOffsets.Add(cellOffsets.LastOrDefault() + GeometryDescription.MapCellTypeToNumberOfPoints(elementType));
+									int lastOffset = cellOffsets.LastOrDefault();
+									cellOffsets.Add(lastOffset + GeometryDescription.MapCellTypeToNumberOfPoints(elementType));
 									cellTypes.Add(elementType);
 
 									int elementId = ParseInt32(parts[0]);
@@ -171,6 +173,12 @@ namespace MeshEditor.LayerManager.Import
 											throw new KeyNotFoundException($"node with id {nodeId} was not found");
 										cellConnectivity.Add(nodeIndex);
 									}
+
+									if (elementType == CellType.HexaQuadratic) // numbering is differs between VTK file format and GiD file format, change it
+									{
+										cellConnectivity.SwapSegments(firstIndex: lastOffset + 12, secondIndex: lastOffset + 16, length: 4);
+									}
+
 									if (parts.Length > nnode + 1)
 									{
 										int elementProperty = ParseInt32(parts[nnode + 1]); // read optional material number

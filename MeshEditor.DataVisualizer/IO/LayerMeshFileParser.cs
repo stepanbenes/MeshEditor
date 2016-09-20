@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.Common.Extensions;
 using MeshEditor.Data;
 using MeshEditor.IO;
 using MeshEditor.LayerManager.Data;
@@ -51,8 +52,17 @@ namespace MeshEditor.DataVisualizer.IO
 			for (int i = 0; i < geometry.NumberOfCells; i++)
 			{
 				int nextOffset = geometry.CellOffsets[i];
+
 				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(geometry.CellConnectivity, offset, nextOffset - offset);
-				ElementDraft element = new ElementDraft { ID = i, NodeIDs = nodeIDs, Type = mapCellTypeToElementType(geometry.CellTypes[i]) };
+
+				var cellType = geometry.CellTypes[i];
+
+				if (cellType == CellType.HexaQuadratic) // numbering is differs between VTK file format and GiD file format, change it
+				{
+					nodeIDs.SwapSegments(firstIndex: 12, secondIndex: 16, length: 4);
+				}
+
+				ElementDraft element = new ElementDraft { ID = i, NodeIDs = nodeIDs, Type = mapCellTypeToElementType(cellType) };
 				if (elementPropertiesAttribute != null)
 				{
 					Debug.Assert(elementPropertiesAttribute.Location == DataLocationType.Cells);
