@@ -331,6 +331,17 @@ namespace MeshEditor.SolutionManager
 			}
 		}
 
+		public void Diff(string layerIdOrName)
+		{
+			Solution solution = solutionController.Get(solutionLocator);
+			var layer = findLayer(solution, layerIdOrName);
+
+			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
+			var diff = layerGenerator.CreateDiff(layer.Id);
+
+			logger?.LogMessage(diff.ToString());
+		}
+
 		#endregion
 
 		#region Private helper methods

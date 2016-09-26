@@ -9,29 +9,36 @@ namespace MeshEditor.LayerManager.Data
 	public class LayerDiff
 	{
 		public LayerDiff(
+			string dataDescription,
 			int numberOfDataValues,
 			double maxRelativeError,
 			double averageRelativeError,
-			double standardDeviation)
+			double meanSquareError)
 		{
+			DataDescription = dataDescription;
 			NumberOfDataValues = numberOfDataValues;
 			MaxRelativeError = maxRelativeError;
 			AverageRelativeError = averageRelativeError;
-			StandardDeviation = standardDeviation;
+			MeanSquareError = meanSquareError;
 		}
 
+		public string DataDescription { get; }
 		public int NumberOfDataValues { get; }
 		public double MaxRelativeError { get; }
 		public double AverageRelativeError { get; }
-		public double StandardDeviation { get; }
+		public double MeanSquareError { get; }
 
 		public override string ToString()
 		{
 			StringBuilder text = new StringBuilder();
+
+			text.AppendLine($"Diff of {DataDescription}");
+
 			text.AppendLine($"{nameof(NumberOfDataValues)}: {NumberOfDataValues}");
 			text.AppendLine($"{nameof(MaxRelativeError)}: {MaxRelativeError}");
 			text.AppendLine($"{nameof(AverageRelativeError)}: {AverageRelativeError}");
-			text.Append($"{nameof(StandardDeviation)}: {StandardDeviation}");
+			text.Append($"{nameof(MeanSquareError)}: {MeanSquareError}");
+
 			return text.ToString();
 		}
 	}

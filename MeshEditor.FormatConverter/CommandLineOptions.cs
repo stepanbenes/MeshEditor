@@ -81,4 +81,11 @@ namespace MeshEditor.FormatConverter
 		[Option("all", Required = false, HelpText = "Delete all layers in solution")]
 		public bool DeleteAll { get; set; }
 	}
+
+	[Verb("diff", HelpText = "Compare layer with its parent")]
+	class DiffOptions : Options
+	{
+		[Value(index: 0, MetaName = "Layer to compare with its parent", Required = true, HelpText = "layer's guid or name")]
+		public string Layer { get; set; }
+	}
 }

@@ -264,6 +264,66 @@ namespace MeshEditor.LayerManager
 			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors);
 		}
 
+		public LayerDiff CreateDiff(Guid layerId)
+		{
+			SummaryFile layerSummary;
+			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
+			{
+				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
+			}
+
+			if (layerSummary.Filter?.Type != FilterType.TimeCompression)
+			{
+				logger?.LogWarning($"'{FilterType.TimeCompression}' layer filter was expected instead of '{layerSummary.Filter?.Type}'");
+			}
+
+			if (!layerSummary.ParentId.HasValue)
+				throw new ArgumentException("Layer is master layer (has no parent), can't create diff.");
+
+			SummaryFile parentLayerSummary;
+			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerSummary.ParentId.Value)))
+			{
+				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
+			}
+
+			int numberOfDataValues = 0;
+			double maxRelativeError = double.MinValue;
+			double averageRelativeErrorWeightedSum = 0.0;
+			double meanSquareErrorWeightedSum = 0.0;
+
+			{
+				var firstResults = from mesh in parentLayerSummary.Meshes
+								   from result in mesh.Results
+								   from data in LoadData(parentLayerSummary.Id, result.Index)
+								   select data;
+
+				var secondResults = from mesh in layerSummary.Meshes
+									from result in mesh.Results
+									from data in LoadData(layerSummary.Id, result.Index)
+									select data;
+
+				var diffs = from a in firstResults
+							join b in secondResults on new { a.FieldName, a.ComponentName, a.TimeStep } equals new { b.FieldName, b.ComponentName, b.TimeStep }
+							select compareTwoDataDescriptions(a, b);
+
+				foreach (var diff in diffs)
+				{
+					//logger?.LogOperationProgress("Comparing " + diff.DataDescription);
+					logger?.LogOperationProgress(diff.ToString());
+
+					numberOfDataValues += diff.NumberOfDataValues;
+					maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
+					averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
+					meanSquareErrorWeightedSum += diff.MeanSquareError * diff.NumberOfDataValues;
+				}
+			}
+
+			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
+			double meanSquareError = meanSquareErrorWeightedSum / numberOfDataValues;
+
+			return new LayerDiff($"Layer '{layerSummary.Name}'", numberOfDataValues, maxRelativeError, averageRelativeError, meanSquareError);
+		}
+
 		#endregion
 
 		public SummaryFile LoadLayerSummary(Guid layerId)
@@ -909,6 +969,7 @@ namespace MeshEditor.LayerManager
 			double minValue = double.MaxValue, maxValue = double.MinValue;
 			double maxAbsoluteError = double.MinValue;
 			double absoluteErrorSum = 0.0;
+			double squareErrorSum = 0.0;
 
 			for (int i = 0; i < a.Values.Length; i++)
 			{
@@ -919,6 +980,7 @@ namespace MeshEditor.LayerManager
 				double error = Math.Abs(a.Values[i] - b.Values[i]);
 				maxAbsoluteError = Math.Max(maxAbsoluteError, error);
 				absoluteErrorSum += error;
+				squareErrorSum += error * error;
 				numberOfDataValues += 1;
 			}
 
@@ -929,7 +991,8 @@ namespace MeshEditor.LayerManager
 			averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValues;
 
 			double averageRelativeError = (numberOfDataValues > 0) ? averageRelativeErrorWeightedSum / numberOfDataValues : 0.0;
-			return new LayerDiff(numberOfDataValues, maxRelativeError, averageRelativeError, standardDeviation: double.NaN);
+			double meanSquareError = (numberOfDataValues > 0) ? squareErrorSum / numberOfDataValues : 0.0;
+			return new LayerDiff($"{a.FieldName}/{a.ComponentName}/{a.TimeStep}", numberOfDataValues, maxRelativeError, averageRelativeError, meanSquareError);
 		}
 
 		#endregion
