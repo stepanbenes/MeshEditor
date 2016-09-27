@@ -37,7 +37,7 @@ namespace MeshEditor.LayerManager.Data
 			text.AppendLine($"{nameof(NumberOfDataValues)}: {NumberOfDataValues}");
 			text.AppendLine($"{nameof(MaxRelativeError)}: {MaxRelativeError}");
 			text.AppendLine($"{nameof(AverageRelativeError)}: {AverageRelativeError}");
-			text.Append($"{nameof(MeanSquareError)}: {MeanSquareError}");
+			text.AppendLine($"{nameof(MeanSquareError)}: {MeanSquareError}");
 
 			return text.ToString();
 		}

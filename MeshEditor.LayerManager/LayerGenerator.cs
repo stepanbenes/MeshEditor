@@ -266,62 +266,80 @@ namespace MeshEditor.LayerManager
 
 		public LayerDiff CreateDiff(Guid layerId)
 		{
-			SummaryFile layerSummary;
+			SummaryFile childLayerSummary;
 			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerId)))
 			{
-				layerSummary = serializationService.Deserialize<SummaryFile>(stream);
+				childLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
-			if (layerSummary.Filter?.Type != FilterType.TimeCompression)
+			if (childLayerSummary.Filter?.Type != FilterType.TimeCompression)
 			{
-				logger?.LogWarning($"'{FilterType.TimeCompression}' layer filter was expected instead of '{layerSummary.Filter?.Type}'");
+				logger?.LogWarning($"'{FilterType.TimeCompression}' layer filter was expected instead of '{childLayerSummary.Filter?.Type}'");
 			}
 
-			if (!layerSummary.ParentId.HasValue)
+			if (!childLayerSummary.ParentId.HasValue)
 				throw new ArgumentException("Layer is master layer (has no parent), can't create diff.");
 
 			SummaryFile parentLayerSummary;
-			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(layerSummary.ParentId.Value)))
+			using (var stream = sourceStorage.Load(getLayerSummaryRecordName(childLayerSummary.ParentId.Value)))
 			{
 				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
-			int numberOfDataValues = 0;
-			double maxRelativeError = double.MinValue;
-			double averageRelativeErrorWeightedSum = 0.0;
-			double meanSquareErrorWeightedSum = 0.0;
+			int globalNumberOfDataValues = 0;
+			double globalMaxRelativeError = double.MinValue;
+			double globalAverageRelativeErrorWeightedSum = 0.0;
+			double globalMeanSquareErrorWeightedSum = 0.0;
 
 			{
-				var firstResults = from mesh in parentLayerSummary.Meshes
-								   from result in mesh.Results
-								   from data in LoadData(parentLayerSummary.Id, result.Index)
-								   select data;
 
-				var secondResults = from mesh in layerSummary.Meshes
+				var parentResults = from mesh in parentLayerSummary.Meshes
 									from result in mesh.Results
-									from data in LoadData(layerSummary.Id, result.Index)
+									from data in LoadData(parentLayerSummary.Id, result.Index)
 									select data;
 
-				var diffs = from a in firstResults
-							join b in secondResults on new { a.FieldName, a.ComponentName, a.TimeStep } equals new { b.FieldName, b.ComponentName, b.TimeStep }
-							select compareTwoDataDescriptions(a, b);
+				var childResults = from mesh in childLayerSummary.Meshes
+								   from result in mesh.Results
+								   from data in LoadData(childLayerSummary.Id, result.Index)
+								   select data;
 
-				foreach (var diff in diffs)
+				var diffGroups = from a in parentResults
+								 join b in childResults on new { a.FieldName, a.ComponentName, a.TimeStep } equals new { b.FieldName, b.ComponentName, b.TimeStep }
+								 group compareTwoDataDescriptions(a, b) by new { a.FieldName, a.ComponentName } into g
+								 select g;
+
+				foreach (var diffGroup in diffGroups) // group components together
 				{
-					//logger?.LogOperationProgress("Comparing " + diff.DataDescription);
-					logger?.LogOperationProgress(diff.ToString());
+					int numberOfDataValues = 0;
+					double maxRelativeError = double.MinValue;
+					double averageRelativeErrorWeightedSum = 0.0;
+					double meanSquareErrorWeightedSum = 0.0;
 
-					numberOfDataValues += diff.NumberOfDataValues;
-					maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
-					averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
-					meanSquareErrorWeightedSum += diff.MeanSquareError * diff.NumberOfDataValues;
+					foreach (var diff in diffGroup) // group time steps together
+					{
+						numberOfDataValues += diff.NumberOfDataValues;
+						maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
+						averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
+						meanSquareErrorWeightedSum += diff.MeanSquareError * diff.NumberOfDataValues;
+					}
+
+					double componentAverageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
+					double componentMeanSquareError = meanSquareErrorWeightedSum / numberOfDataValues;
+
+					var componentDiff = new LayerDiff($"{diffGroup.Key.FieldName}/{diffGroup.Key.ComponentName}", numberOfDataValues, maxRelativeError, componentAverageRelativeError, componentMeanSquareError);
+					logger?.LogMessage(componentDiff.ToString());
+
+					globalNumberOfDataValues += numberOfDataValues;
+					globalMaxRelativeError = Math.Max(globalMaxRelativeError, maxRelativeError);
+					globalAverageRelativeErrorWeightedSum += averageRelativeErrorWeightedSum;
+					globalMeanSquareErrorWeightedSum += meanSquareErrorWeightedSum;
 				}
 			}
 
-			double averageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
-			double meanSquareError = meanSquareErrorWeightedSum / numberOfDataValues;
+			double globalAverageRelativeError = globalAverageRelativeErrorWeightedSum / globalNumberOfDataValues;
+			double globalMeanSquareError = globalMeanSquareErrorWeightedSum / globalNumberOfDataValues;
 
-			return new LayerDiff($"Layer '{layerSummary.Name}'", numberOfDataValues, maxRelativeError, averageRelativeError, meanSquareError);
+			return new LayerDiff($"Layer '{childLayerSummary.Name}'", globalNumberOfDataValues, globalMaxRelativeError, globalAverageRelativeError, globalMeanSquareError);
 		}
 
 		#endregion
