@@ -156,9 +156,10 @@ namespace MeshEditor.FormatConverter
 
 		private int runListCommand(ListOptions options)
 		{
-			foreach (var layerInfo in solutionHub.GetSolutionDescription().Layers)
+			var layers = solutionHub.GetSolutionDescription().Layers;
+			for (int i = 0; i < layers.Count; i++)
 			{
-				printLayerInfo(layerInfo, depth: 1);
+				printLayerInfo(layers[i], "", isLast: i == layers.Count - 1);
 			}
 			return 0;
 		}
@@ -294,12 +295,24 @@ namespace MeshEditor.FormatConverter
 			}
 		}
 
-		private void printLayerInfo(ILayerInfo layerInfo, int depth)
+		private static void printLayerInfo(ILayerInfo layerInfo, string indentation, bool isLast)
 		{
-			logger.LogMessage($"{new string(' ', depth * 2)}+ '{layerInfo.Name}', filter: {layerInfo.FilterType}, {layerInfo.Id}");
+			using (new ConsoleBrush(ConsoleColor.Yellow))
+				Console.Write($"{indentation}{(isLast ? '└' : '├')}─");
+			using (new ConsoleBrush(ConsoleColor.Magenta))
+				Console.Write(layerInfo.Name);
+			using (new ConsoleBrush(ConsoleColor.DarkGreen))
+				Console.Write(" " + layerInfo.FilterType);
+			using (new ConsoleBrush(ConsoleColor.DarkCyan))
+				Console.Write(" " + layerInfo.Id);
+			Console.WriteLine();
+
+			indentation += isLast ? @"  " : @"| ";
+
+			var lastChild = layerInfo.Children.LastOrDefault();
 			foreach (var child in layerInfo.Children)
 			{
-				printLayerInfo(child, depth + 1);
+				printLayerInfo(child, indentation, isLast: ReferenceEquals(child, lastChild));
 			}
 		}
 
