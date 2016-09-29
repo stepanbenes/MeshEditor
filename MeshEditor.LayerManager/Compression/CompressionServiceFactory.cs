@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.Common;
 
 namespace MeshEditor.LayerManager.Compression
 {
 	public static class CompressionServiceFactory
 	{
-		public static ICompressionService Create(CompressionMethod compressionMethod)
+		public static ICompressionService Create(CompressionMethod compressionMethod, ILogger logger)
 		{
 			switch (compressionMethod)
 			{
 				case CompressionMethod.Transparent:
 					return new TransparentCompressionService();
 				case CompressionMethod.SVD:
-					return new SVDCompressionService(randomized: false);
+					return new SVDCompressionService(randomized: false, logger: logger);
 				case CompressionMethod.WT:
 					return new WaveletCompressionService();
 				default:
@@ -23,7 +24,7 @@ namespace MeshEditor.LayerManager.Compression
 			}
 		}
 
-		public static ICompressionService Create(IEnumerable<string> parameters)
+		public static ICompressionService Create(IEnumerable<string> parameters, ILogger logger)
 		{
 			if (parameters == null)
 				throw new ArgumentNullException(nameof(parameters));
@@ -77,11 +78,11 @@ namespace MeshEditor.LayerManager.Compression
 						{
 							if (factor.HasValue)
 							{
-								return new SVDCompressionService(randomized, focus.Value, factor.Value);
+								return new SVDCompressionService(randomized, logger, focus.Value, factor.Value);
 							}
-							return new SVDCompressionService(randomized, focus.Value);
+							return new SVDCompressionService(randomized, logger, focus.Value);
 						}
-						return new SVDCompressionService(randomized);
+						return new SVDCompressionService(randomized, logger);
 					}
 				case CompressionMethod.WT:
 					return new WaveletCompressionService();

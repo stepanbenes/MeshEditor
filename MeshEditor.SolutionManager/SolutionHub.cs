@@ -194,7 +194,7 @@ namespace MeshEditor.SolutionManager
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
-										compressionService: CompressionServiceFactory.Create(compressionParameters),
+										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
 			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
@@ -270,7 +270,7 @@ namespace MeshEditor.SolutionManager
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
-										compressionService: CompressionServiceFactory.Create(compressionParameters),
+										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
 			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName);
@@ -290,7 +290,7 @@ namespace MeshEditor.SolutionManager
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
-										compressionService: CompressionServiceFactory.Create(compressionParameters),
+										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
 			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName);
@@ -337,8 +337,9 @@ namespace MeshEditor.SolutionManager
 			var layer = findLayer(solution, layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-			var diff = layerGenerator.CreateDiff(layer.Id);
 
+			logger?.LogMessage(LayerDiff.GetTableHeader());
+			var diff = layerGenerator.CreateDiff(layer.Id);
 			logger?.LogMessage(diff.ToString());
 		}
 

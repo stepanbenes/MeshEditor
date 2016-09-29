@@ -289,7 +289,7 @@ namespace MeshEditor.LayerManager
 			int globalNumberOfDataValues = 0;
 			double globalMaxRelativeError = double.MinValue;
 			double globalAverageRelativeErrorWeightedSum = 0.0;
-			double globalMeanSquareErrorWeightedSum = 0.0;
+			double globalNormalizedRootedMeanSquareDeviationWeightedSum = 0.0;
 
 			{
 
@@ -313,33 +313,34 @@ namespace MeshEditor.LayerManager
 					int numberOfDataValues = 0;
 					double maxRelativeError = double.MinValue;
 					double averageRelativeErrorWeightedSum = 0.0;
-					double meanSquareErrorWeightedSum = 0.0;
+					double normalizedRootedMeanSquareDeviationWeightedSum = 0.0;
 
 					foreach (var diff in diffGroup) // group time steps together
 					{
 						numberOfDataValues += diff.NumberOfDataValues;
 						maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
 						averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
-						meanSquareErrorWeightedSum += diff.MeanSquareError * diff.NumberOfDataValues;
+						normalizedRootedMeanSquareDeviationWeightedSum += diff.NormalizedRootedMeanSquareDeviation * diff.NumberOfDataValues;
 					}
 
 					double componentAverageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
-					double componentMeanSquareError = meanSquareErrorWeightedSum / numberOfDataValues;
+					double componentNormalizedMeanSquareError = normalizedRootedMeanSquareDeviationWeightedSum / numberOfDataValues;
 
-					var componentDiff = new LayerDiff($"{diffGroup.Key.FieldName}/{diffGroup.Key.ComponentName}", numberOfDataValues, maxRelativeError, componentAverageRelativeError, componentMeanSquareError);
-					logger?.LogMessage(componentDiff.ToString());
+					logger?.LogOperationProgress(
+						new LayerDiff($"{diffGroup.Key.FieldName}/{diffGroup.Key.ComponentName}", numberOfDataValues, maxRelativeError, componentAverageRelativeError, componentNormalizedMeanSquareError)
+						.ToString());
 
 					globalNumberOfDataValues += numberOfDataValues;
 					globalMaxRelativeError = Math.Max(globalMaxRelativeError, maxRelativeError);
 					globalAverageRelativeErrorWeightedSum += averageRelativeErrorWeightedSum;
-					globalMeanSquareErrorWeightedSum += meanSquareErrorWeightedSum;
+					globalNormalizedRootedMeanSquareDeviationWeightedSum += normalizedRootedMeanSquareDeviationWeightedSum;
 				}
 			}
 
 			double globalAverageRelativeError = globalAverageRelativeErrorWeightedSum / globalNumberOfDataValues;
-			double globalMeanSquareError = globalMeanSquareErrorWeightedSum / globalNumberOfDataValues;
+			double globalNormalizedRootedMeanSquareDeviation = globalNormalizedRootedMeanSquareDeviationWeightedSum / globalNumberOfDataValues;
 
-			return new LayerDiff($"Layer '{childLayerSummary.Name}'", globalNumberOfDataValues, globalMaxRelativeError, globalAverageRelativeError, globalMeanSquareError);
+			return new LayerDiff($"LAYER DIFF", globalNumberOfDataValues, globalMaxRelativeError, globalAverageRelativeError, globalNormalizedRootedMeanSquareDeviation);
 		}
 
 		#endregion
@@ -926,7 +927,7 @@ namespace MeshEditor.LayerManager
 		private IEnumerable<double[]> decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
-			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method);
+			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method, logger);
 			IEnumerable<double[]> originalDataValues = selectedCompressionService.Decompress(compressedValues, compressionParameters);
 			return originalDataValues;
 		}
@@ -1010,7 +1011,10 @@ namespace MeshEditor.LayerManager
 
 			double averageRelativeError = (numberOfDataValues > 0) ? averageRelativeErrorWeightedSum / numberOfDataValues : 0.0;
 			double meanSquareError = (numberOfDataValues > 0) ? squareErrorSum / numberOfDataValues : 0.0;
-			return new LayerDiff($"{a.FieldName}/{a.ComponentName}/{a.TimeStep}", numberOfDataValues, maxRelativeError, averageRelativeError, meanSquareError);
+			double rootedMeanSquareDeviation = Math.Sqrt(meanSquareError);
+			double normalizedRootedMeanSquareDeviation = (range > 0.0) ? rootedMeanSquareDeviation / range : 0.0;
+			//double normalizedMeanSquareError = (range > 0.0 && numberOfDataValues > 0) ? squareErrorSum / (range * numberOfDataValues) : 0.0;
+			return new LayerDiff($"{a.FieldName}/{a.ComponentName}/{a.TimeStep}", numberOfDataValues, maxRelativeError, averageRelativeError, normalizedRootedMeanSquareDeviation);
 		}
 
 		#endregion

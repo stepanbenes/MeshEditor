@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeshEditor.Common;
 using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.LayerManager.Compression
@@ -16,9 +17,12 @@ namespace MeshEditor.LayerManager.Compression
 		private readonly double? qualityFactor;
 		private readonly double? sizeFactor;
 
-		public SVDCompressionService(bool randomized, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
+		private readonly ILogger logger;
+
+		public SVDCompressionService(bool randomized, ILogger logger, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
 		{
 			this.randomized = randomized;
+			this.logger = logger;
 			switch (focus)
 			{
 				case SVDCompressionFocus.Quality:
@@ -49,6 +53,8 @@ namespace MeshEditor.LayerManager.Compression
 
 				return new double[0];
 			}
+
+			logger?.LogOperationProgress($"Starting SVD compression of matrix {rows}\u00D7{columns}");
 
 			double[] singularValues, U_VT_columnwise;
 			bool resizeIsNeeded = false;
@@ -84,7 +90,6 @@ namespace MeshEditor.LayerManager.Compression
 
 				if (sizeFactor.HasValue)
 				{
-
 					int newRank = calculateRankFromSizeFactor(rows, columns);
 					Debug.Assert(newRank <= rank);
 					if (newRank != rank)
@@ -94,6 +99,7 @@ namespace MeshEditor.LayerManager.Compression
 					}
 				}
 			}
+
 
 			if (qualityFactor.HasValue)
 			{
@@ -105,6 +111,8 @@ namespace MeshEditor.LayerManager.Compression
 					resizeIsNeeded = true;
 				}
 			}
+
+			logger?.LogOperationProgress($"Singular values calculated. Length: {singularValues.Length}, Input rank: {Math.Min(rows, columns)}, Final rank: {rank}");
 
 			if (resizeIsNeeded)
 			{
@@ -150,6 +158,29 @@ namespace MeshEditor.LayerManager.Compression
 		#endregion
 
 		#region Private methods
+
+		private static string formatSingularValues(IReadOnlyList<double> singularValues, int originalLength, int finalLength)
+		{
+			int currentLength = singularValues.Count;
+
+			Debug.Assert(originalLength >= currentLength);
+			Debug.Assert(currentLength >= finalLength);
+
+			List<string> strings = new List<string>();
+			for (int i = 0; i < finalLength; i++)
+			{
+				strings.Add(singularValues[i].ToString());
+			}
+			for (int i = finalLength; i < currentLength; i++)
+			{
+				strings.Add("(" + singularValues[i].ToString() + ")");
+			}
+			for (int i = currentLength; i < originalLength; i++)
+			{
+				strings.Add("(?)");
+			}
+			return "[" + string.Join("; ", strings) + "]";
+		}
 
 		private static double[] convertDataValuesToInputMatrixRowMajor(IEnumerable<double[]> dataValues, int rows, int columns)
 		{

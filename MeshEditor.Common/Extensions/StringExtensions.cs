@@ -79,5 +79,21 @@ namespace MeshEditor.Common.Extensions
 			byte[] tempBytes = Encoding.GetEncoding("ISO-8859-8").GetBytes(text);
 			return Encoding.UTF8.GetString(tempBytes, 0, tempBytes.Length);
 		}
+
+		public static string TrimOrExtendToLength(this string text, int length)
+		{
+			if (length < 0)
+				throw new ArgumentException(nameof(length));
+			if (string.IsNullOrEmpty(text))
+				return new string(' ', length);
+			if (text.Length == length)
+				return text;
+			if (text.Length < length)
+				return text.PadRight(length);
+			const string elipsis = "...";
+			if (length < elipsis.Length)
+				return text.Substring(0, length);
+			return text.Substring(0, length - elipsis.Length) + elipsis;
+		}
 	}
 }
