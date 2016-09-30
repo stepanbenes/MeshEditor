@@ -74,59 +74,5 @@ namespace MeshEditor.Common.Extensions
 				array[index + i] = value;
 			}
 		}
-
-		/// <summary>
-		/// Get min value in array, ignore value passed as argument
-		/// </summary>
-		/// <param name="ignore">Value to ignore in comparisons</param>
-		/// <returns>Min value in array or null if empty or full of ignore values</returns>
-		public static T? Min<T>(this T[] array, T ignore) where T : struct, IComparable<T>
-		{
-			bool minSet = false;
-			T min = default(T);
-			for (int i = 0; i < array.Length; i++)
-			{
-				if (array[i].CompareTo(ignore) != 0)
-				{
-					if (!minSet)
-					{
-						min = array[i];
-						minSet = true;
-					}
-					else if (array[i].CompareTo(min) < 0)
-					{
-						min = array[i];
-					}
-				}
-			}
-			return (minSet) ? min : (T?)null;
-		}
-
-		/// <summary>
-		/// Get max value in array, ignore value passed as argument
-		/// </summary>
-		/// <param name="ignore">Value to ignore in comparisons</param>
-		/// <returns>Max value in array or null if empty or full of ignore values</returns>
-		public static T? Max<T>(this T[] array, T ignore) where T : struct, IComparable<T>
-		{
-			bool maxSet = false;
-			T max = default(T);
-			for (int i = 0; i < array.Length; i++)
-			{
-				if (array[i].CompareTo(ignore) != 0)
-				{
-					if (!maxSet)
-					{
-						max = array[i];
-						maxSet = true;
-					}
-					else if (array[i].CompareTo(max) > 0)
-					{
-						max = array[i];
-					}
-				}
-			}
-			return (maxSet) ? max : (T?)null;
-		}
 	}
 }

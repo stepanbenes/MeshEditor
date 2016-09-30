@@ -337,8 +337,7 @@ namespace MeshEditor.SolutionManager
 			var layer = findLayer(solution, layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
-
-			logger?.LogMessage(LayerDiff.GetTableHeader());
+			logger?.LogMessage(ComponentDiff.GetTableHeader());
 			var diff = layerGenerator.CreateDiff(layer.Id);
 			logger?.LogMessage(diff.ToString());
 		}

@@ -286,10 +286,7 @@ namespace MeshEditor.LayerManager
 				parentLayerSummary = serializationService.Deserialize<SummaryFile>(stream);
 			}
 
-			int globalNumberOfDataValues = 0;
-			double globalMaxRelativeError = double.MinValue;
-			double globalAverageRelativeErrorWeightedSum = 0.0;
-			double globalNormalizedRootedMeanSquareDeviationWeightedSum = 0.0;
+			var componentDiffs = new List<ComponentDiff>();
 
 			{
 
@@ -303,44 +300,21 @@ namespace MeshEditor.LayerManager
 								   from data in LoadData(childLayerSummary.Id, result.Index)
 								   select data;
 
-				var diffGroups = from a in parentResults
-								 join b in childResults on new { a.FieldName, a.ComponentName, a.TimeStep } equals new { b.FieldName, b.ComponentName, b.TimeStep }
-								 group compareTwoDataDescriptions(a, b) by new { a.FieldName, a.ComponentName } into g
-								 select g;
+				var timeStepGroups = from a in parentResults
+									 join b in childResults on new { a.FieldName, a.ComponentName, a.TimeStep } equals new { b.FieldName, b.ComponentName, b.TimeStep }
+									 group new Tuple<ComponentDataDescription, ComponentDataDescription>(a, b) by new { a.FieldName, a.ComponentName } into g
+									 select g;
 
-				foreach (var diffGroup in diffGroups) // group components together
+				
+				foreach (var timeStepGroup in timeStepGroups)
 				{
-					int numberOfDataValues = 0;
-					double maxRelativeError = double.MinValue;
-					double averageRelativeErrorWeightedSum = 0.0;
-					double normalizedRootedMeanSquareDeviationWeightedSum = 0.0;
-
-					foreach (var diff in diffGroup) // group time steps together
-					{
-						numberOfDataValues += diff.NumberOfDataValues;
-						maxRelativeError = Math.Max(maxRelativeError, diff.MaxRelativeError);
-						averageRelativeErrorWeightedSum += diff.AverageRelativeError * diff.NumberOfDataValues;
-						normalizedRootedMeanSquareDeviationWeightedSum += diff.NormalizedRootedMeanSquareDeviation * diff.NumberOfDataValues;
-					}
-
-					double componentAverageRelativeError = averageRelativeErrorWeightedSum / numberOfDataValues;
-					double componentNormalizedMeanSquareError = normalizedRootedMeanSquareDeviationWeightedSum / numberOfDataValues;
-
-					logger?.LogOperationProgress(
-						new LayerDiff($"{diffGroup.Key.FieldName}/{diffGroup.Key.ComponentName}", numberOfDataValues, maxRelativeError, componentAverageRelativeError, componentNormalizedMeanSquareError)
-						.ToString());
-
-					globalNumberOfDataValues += numberOfDataValues;
-					globalMaxRelativeError = Math.Max(globalMaxRelativeError, maxRelativeError);
-					globalAverageRelativeErrorWeightedSum += averageRelativeErrorWeightedSum;
-					globalNormalizedRootedMeanSquareDeviationWeightedSum += normalizedRootedMeanSquareDeviationWeightedSum;
+					var componentDiff = ComponentDiff.CreateFrom(timeStepGroup);
+					logger?.LogOperationProgress("  " + componentDiff.ToString());
+					componentDiffs.Add(componentDiff);
 				}
 			}
 
-			double globalAverageRelativeError = globalAverageRelativeErrorWeightedSum / globalNumberOfDataValues;
-			double globalNormalizedRootedMeanSquareDeviation = globalNormalizedRootedMeanSquareDeviationWeightedSum / globalNumberOfDataValues;
-
-			return new LayerDiff($"LAYER DIFF", globalNumberOfDataValues, globalMaxRelativeError, globalAverageRelativeError, globalNormalizedRootedMeanSquareDeviation);
+			return LayerDiff.CreateFrom(componentDiffs);
 		}
 
 		#endregion
@@ -976,45 +950,6 @@ namespace MeshEditor.LayerManager
 		{
 			//return $"{layerId}/{layerId}.{index}.result{serializationService.FileExtension}";
 			return $"{layerId}/{index}.result{serializationService.FileExtension}";
-		}
-
-		private static LayerDiff compareTwoDataDescriptions(ComponentDataDescription a, ComponentDataDescription b)
-		{
-			Debug.Assert(a.Values.Length == b.Values.Length);
-			double maxRelativeError = double.MinValue;
-			double averageRelativeErrorWeightedSum = 0.0;
-			int numberOfDataValues = 0;
-
-			double minValue = double.MaxValue, maxValue = double.MinValue;
-			double maxAbsoluteError = double.MinValue;
-			double absoluteErrorSum = 0.0;
-			double squareErrorSum = 0.0;
-
-			for (int i = 0; i < a.Values.Length; i++)
-			{
-				if (double.IsNaN(a.Values[i]) || double.IsNaN(b.Values[i]))
-					continue;
-				minValue = Math.Min(minValue, Math.Min(a.Values[i], b.Values[i]));
-				maxValue = Math.Max(maxValue, Math.Max(a.Values[i], b.Values[i]));
-				double error = Math.Abs(a.Values[i] - b.Values[i]);
-				maxAbsoluteError = Math.Max(maxAbsoluteError, error);
-				absoluteErrorSum += error;
-				squareErrorSum += error * error;
-				numberOfDataValues += 1;
-			}
-
-			double range = maxValue - minValue;
-			double maxRelativeErrorPerComponent = (range > 0.0) ? maxAbsoluteError / range : 0.0;
-			double averageRelativeErrorPerComponent = (range > 0.0 && numberOfDataValues > 0) ? absoluteErrorSum / (range * numberOfDataValues) : 0.0;
-			maxRelativeError = Math.Max(maxRelativeError, maxRelativeErrorPerComponent);
-			averageRelativeErrorWeightedSum += averageRelativeErrorPerComponent * numberOfDataValues;
-
-			double averageRelativeError = (numberOfDataValues > 0) ? averageRelativeErrorWeightedSum / numberOfDataValues : 0.0;
-			double meanSquareError = (numberOfDataValues > 0) ? squareErrorSum / numberOfDataValues : 0.0;
-			double rootedMeanSquareDeviation = Math.Sqrt(meanSquareError);
-			double normalizedRootedMeanSquareDeviation = (range > 0.0) ? rootedMeanSquareDeviation / range : 0.0;
-			//double normalizedMeanSquareError = (range > 0.0 && numberOfDataValues > 0) ? squareErrorSum / (range * numberOfDataValues) : 0.0;
-			return new LayerDiff($"{a.FieldName}/{a.ComponentName}/{a.TimeStep}", numberOfDataValues, maxRelativeError, averageRelativeError, normalizedRootedMeanSquareDeviation);
 		}
 
 		#endregion

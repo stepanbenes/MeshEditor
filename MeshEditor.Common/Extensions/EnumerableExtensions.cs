@@ -30,33 +30,29 @@ namespace MeshEditor.Common.Extensions
 			return concatIterator(head, tail, true);
 		}
 
-		private static IEnumerable<T> concatIterator<T>(T extraElement, IEnumerable<T> source, bool insertAtStart)
-		{
-			if (insertAtStart)
-				yield return extraElement;
-			foreach (var e in source)
-				yield return e;
-			if (!insertAtStart)
-				yield return extraElement;
-		}
-
 		/// <summary>
 		/// Returns empty enumerable if source sequence is null.
 		/// </summary>
-		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
-		{
-			return source ?? Enumerable.Empty<T>();
-		}
+		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source) => source ?? Enumerable.Empty<T>();
 
 		/// <summary>
 		/// Returns null reference if source sequence is empty.
 		/// </summary>
-		public static IEnumerable<T> NullIfEmpty<T>(this IEnumerable<T> source)
-		{
-			if (source == null || !source.Any())
-				return null;
-			return source;
-		}
+		public static IEnumerable<T> NullIfEmpty<T>(this IEnumerable<T> source) => (source != null && source.Any()) ? source : null;
+
+		/// <summary>
+		/// Get min value in sequence, ignore value passed as argument
+		/// </summary>
+		/// <param name="ignore">Value to ignore in comparisons</param>
+		/// <returns>Min value in sequence or null if empty or full of ignore values</returns>
+		public static T? Min<T>(this IEnumerable<T> source, T ignore) where T : struct, IComparable<T> => source.extremeWithIgnore(ignore, -1);
+
+		/// <summary>
+		/// Get max value in sequence, ignore value passed as argument
+		/// </summary>
+		/// <param name="ignore">Value to ignore in comparisons</param>
+		/// <returns>Max value in sequence or null if empty or full of ignore values</returns>
+		public static T? Max<T>(this IEnumerable<T> source, T ignore) where T : struct, IComparable<T> => source.extremeWithIgnore(ignore, +1);
 
 		/// <summary>
 		/// Split an IEnumerable<T> into fixed-sized chunks.
@@ -69,45 +65,6 @@ namespace MeshEditor.Common.Extensions
 			if (partitionSize <= 0)
 				throw new ArgumentOutOfRangeException(nameof(partitionSize));
 			return new PartitionHelper<T>(items, partitionSize);
-		}
-
-		private sealed class PartitionHelper<T> : IEnumerable<IEnumerable<T>>
-		{
-			readonly IEnumerable<T> items;
-			readonly int partitionSize;
-			bool hasMoreItems;
-
-			internal PartitionHelper(IEnumerable<T> i, int ps)
-			{
-				items = i;
-				partitionSize = ps;
-			}
-
-			public IEnumerator<IEnumerable<T>> GetEnumerator()
-			{
-				using (var enumerator = items.GetEnumerator())
-				{
-					hasMoreItems = enumerator.MoveNext();
-					while (hasMoreItems)
-						yield return GetNextBatch(enumerator).ToList();
-				}
-			}
-
-			IEnumerable<T> GetNextBatch(IEnumerator<T> enumerator)
-			{
-				for (int i = 0; i < partitionSize; ++i)
-				{
-					yield return enumerator.Current;
-					hasMoreItems = enumerator.MoveNext();
-					if (!hasMoreItems)
-						yield break;
-				}
-			}
-
-			IEnumerator IEnumerable.GetEnumerator()
-			{
-				return GetEnumerator();
-			}
 		}
 
 		public static bool IsOrdered<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
@@ -178,6 +135,87 @@ namespace MeshEditor.Common.Extensions
 			return indicesOfExtremeElements(source, +1);
 		}
 
+		#region Private members
+
+		private static T? extremeWithIgnore<T>(this IEnumerable<T> source, T ignore, int extremeSign) where T : struct, IComparable<T>
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			var comparer = Comparer<T>.Default;
+			bool minSet = false;
+			T extreme = default(T);
+			using (var iterator = source.GetEnumerator())
+			{
+				while (iterator.MoveNext())
+				{
+					T current = iterator.Current;
+					if (!current.Equals(ignore))
+					{
+						if (!minSet)
+						{
+							extreme = current;
+							minSet = true;
+						}
+						else if (extreme.CompareTo(current) * extremeSign < 0)
+						{
+							extreme = current;
+						}
+					}
+				}
+			}
+			return (minSet) ? extreme : (T?)null;
+		}
+
+		private static IEnumerable<T> concatIterator<T>(T extraElement, IEnumerable<T> source, bool insertAtStart)
+		{
+			if (insertAtStart)
+				yield return extraElement;
+			foreach (var e in source)
+				yield return e;
+			if (!insertAtStart)
+				yield return extraElement;
+		}
+
+		private sealed class PartitionHelper<T> : IEnumerable<IEnumerable<T>>
+		{
+			readonly IEnumerable<T> items;
+			readonly int partitionSize;
+			bool hasMoreItems;
+
+			internal PartitionHelper(IEnumerable<T> i, int ps)
+			{
+				items = i;
+				partitionSize = ps;
+			}
+
+			public IEnumerator<IEnumerable<T>> GetEnumerator()
+			{
+				using (var enumerator = items.GetEnumerator())
+				{
+					hasMoreItems = enumerator.MoveNext();
+					while (hasMoreItems)
+						yield return GetNextBatch(enumerator).ToList();
+				}
+			}
+
+			IEnumerable<T> GetNextBatch(IEnumerator<T> enumerator)
+			{
+				for (int i = 0; i < partitionSize; ++i)
+				{
+					yield return enumerator.Current;
+					hasMoreItems = enumerator.MoveNext();
+					if (!hasMoreItems)
+						yield break;
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+		}
+
 		private static IEnumerable<int> indicesOfExtremeElements(IEnumerable<double> source, int extremeSign)
 		{
 			Debug.Assert(source != null);
@@ -215,5 +253,7 @@ namespace MeshEditor.Common.Extensions
 			}
 			return indices;
 		}
+
+		#endregion
 	}
 }
