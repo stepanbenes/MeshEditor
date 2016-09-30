@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.Data
 			return new LayerDiff(
 				totalComponents: componentDiffs.Count,
 				lowestMaxError: relevantCds.Where(cd => cd.NormalizedMaxError == minNormMaxErr),
-				lowestMeanError: relevantCds.Where(cd => cd.NormalizedMeanError == maxNormMeanErr),
+				lowestMeanError: relevantCds.Where(cd => cd.NormalizedMeanError == minNormMeanErr),
 				highestMaxError: relevantCds.Where(cd => cd.NormalizedMaxError == maxNormMaxErr),
 				highestMeanError: relevantCds.Where(cd => cd.NormalizedMeanError == maxNormMeanErr));
 		}
