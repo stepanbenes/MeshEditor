@@ -68,7 +68,7 @@ namespace MeshEditor.LayerManager.Compression
 					if (newRank != rank)
 					{
 						rank = newRank;
-						resizeIsNeeded = true;
+						// resize is NOT needed because ComputeSvdRandomized returns singularValues already shrinked to rank length
 					}
 				}
 
