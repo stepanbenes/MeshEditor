@@ -113,6 +113,9 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			logger?.LogOperationProgress($"Singular values calculated. Length: {singularValues.Length}, Input rank: {Math.Min(rows, columns)}, Final rank: {rank}");
+#if DEBUG
+			logger?.LogOperationProgress(formatSingularValues(singularValues, originalLength: Math.Min(rows, columns), finalLength: rank));
+#endif
 
 			if (resizeIsNeeded)
 			{
@@ -155,9 +158,9 @@ namespace MeshEditor.LayerManager.Compression
 			return multiplyUSandVTandEnumerateRowsOfResultMatrix(compressedData, svdParameters.Rows, svdParameters.Columns, svdParameters.Rank);
 		}
 
-		#endregion
+#endregion
 
-		#region Private methods
+#region Private methods
 
 		private static string formatSingularValues(IReadOnlyList<double> singularValues, int originalLength, int finalLength)
 		{
@@ -289,6 +292,6 @@ namespace MeshEditor.LayerManager.Compression
 			return singularValues.TakeWhile(sv => Math.Abs(sv) > tolerance).Count();
 		}
 
-		#endregion
+#endregion
 	}
 }

@@ -21,31 +21,41 @@ namespace MeshEditor.LayerManager.Data
 
 			return new LayerDiff(
 				totalComponents: componentDiffs.Count,
-				best: relevantCds.Where(cd => cd.NormalizedMaxError == minNormMaxErr || cd.NormalizedMeanError == minNormMeanErr),
-				worst: relevantCds.Where(cd => cd.NormalizedMaxError == maxNormMaxErr || cd.NormalizedMeanError == maxNormMeanErr));
+				lowestMaxError: relevantCds.Where(cd => cd.NormalizedMaxError == minNormMaxErr),
+				lowestMeanError: relevantCds.Where(cd => cd.NormalizedMeanError == maxNormMeanErr),
+				highestMaxError: relevantCds.Where(cd => cd.NormalizedMaxError == maxNormMaxErr),
+				highestMeanError: relevantCds.Where(cd => cd.NormalizedMeanError == maxNormMeanErr));
 		}
 
 		readonly int totalComponents;
-		readonly IEnumerable<ComponentDiff> best, worst;
+		readonly IEnumerable<ComponentDiff> lowestMaxError, lowestMeanError, highestMaxError, highestMeanError;
 
-		private LayerDiff(int totalComponents, IEnumerable<ComponentDiff> best, IEnumerable<ComponentDiff> worst)
+		private LayerDiff(int totalComponents, IEnumerable<ComponentDiff> lowestMaxError, IEnumerable<ComponentDiff> lowestMeanError, IEnumerable<ComponentDiff> highestMaxError, IEnumerable<ComponentDiff> highestMeanError)
 		{
 			this.totalComponents = totalComponents;
-			this.best = best;
-			this.worst = worst;
+			this.lowestMaxError = lowestMaxError;
+			this.lowestMeanError = lowestMeanError;
+			this.highestMaxError = highestMaxError;
+			this.highestMeanError = highestMeanError;
 		}
 
 		public override string ToString()
 		{
 			StringBuilder text = new StringBuilder();
 			{
-				text.AppendLine("╔═ BEST");
-				foreach (var diff in best)
+				text.AppendLine("╔═ LOWEST MAX ERROR");
+				foreach (var diff in lowestMaxError)
 					text.AppendLine("║ " + diff.ToString());
-				text.AppendLine("╠═ WORST");
-				foreach (var diff in worst)
+				text.AppendLine("╠═ LOWEST MEAN ERROR");
+				foreach (var diff in lowestMeanError)
 					text.AppendLine("║ " + diff.ToString());
-				text.Append($"╚═ {totalComponents} total components");
+				text.AppendLine("╠═ HIGHEST MAX ERROR");
+				foreach (var diff in highestMaxError)
+					text.AppendLine("║ " + diff.ToString());
+				text.AppendLine("╠═ HIGHEST MEAN ERROR");
+				foreach (var diff in highestMeanError)
+					text.AppendLine("║ " + diff.ToString());
+				text.Append($"╚═ of {totalComponents} total components");
 			}
 			return text.ToString();
 		}

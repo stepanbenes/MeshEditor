@@ -324,14 +324,12 @@ namespace MeshEditor.FormatConverter
      --.
   ._// <>
   |_|_
- (o___o)
-",
+ (o___o)",
 @"
    //\\  ___          
    Y  \\/_/=| 
   _L  ((|_L_| 
- (/\)(__(____)	 
-",
+ (/\)(__(____)",
 @"
      __
     //\\`'-.___
@@ -339,13 +337,17 @@ namespace MeshEditor.FormatConverter
    Y    \\//~//.--|
    :    /\\~~//_  |
   _L   |_((_|___L_|
- (/\) (____(_______)
-",
+ (/\) (____(_______)",
 			};
 
 			using (new ConsoleBrush(ConsoleColor.Cyan))
 			{
-				Console.WriteLine(excavators[new Random().Next(excavators.Length)]);
+				Console.WriteLine(excavators[new Random().Next(excavators.Length)]
+#if DEBUG
+					+ " DEBUGGING..."
+#endif
+					+ Environment.NewLine
+					);
 			}
 		}
 
