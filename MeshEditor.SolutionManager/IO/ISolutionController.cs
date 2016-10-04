@@ -19,8 +19,8 @@ namespace MeshEditor.SolutionManager.IO
 		void Delete(object solutionLocator);
 		Task DeleteAsync(object solutionLocator, CancellationToken cancellationToken);
 
-		Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer);
-		Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete);
-		Task<Solution> DeleteLayerAsync(Solution solution, Solution.Layer layerToDelete, CancellationToken cancellationToken);
+		Solution AddLayer(object solutionLocator, Solution.Layer parentLayer, Solution.Layer newLayer);
+		Solution DeleteLayer(object solutionLocator, Solution.Layer layerToDelete);
+		Task<Solution> DeleteLayerAsync(object solutionLocator, Solution.Layer layerToDelete, CancellationToken cancellationToken);
 	}
 }

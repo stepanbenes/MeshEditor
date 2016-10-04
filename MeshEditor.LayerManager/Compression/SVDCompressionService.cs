@@ -158,9 +158,9 @@ namespace MeshEditor.LayerManager.Compression
 			return multiplyUSandVTandEnumerateRowsOfResultMatrix(compressedData, svdParameters.Rows, svdParameters.Columns, svdParameters.Rank);
 		}
 
-#endregion
+		#endregion
 
-#region Private methods
+		#region Private methods
 
 		private static string formatSingularValues(IReadOnlyList<double> singularValues, int originalLength, int finalLength)
 		{
@@ -292,6 +292,6 @@ namespace MeshEditor.LayerManager.Compression
 			return singularValues.TakeWhile(sv => Math.Abs(sv) > tolerance).Count();
 		}
 
-#endregion
+		#endregion
 	}
 }

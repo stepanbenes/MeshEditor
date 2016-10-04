@@ -123,9 +123,14 @@ namespace MeshEditor.SolutionManager.IO
 			await executeRequestAsync(request, cancellationToken);
 		}
 
-		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
+		public Solution AddLayer(object solutionLocator, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
-			var request = createAddLayerRequest(solution.Id);
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+
+			var request = createAddLayerRequest(solutionId);
 			request.RequestFormat = DataFormat.Json;
 
 			//request.AddBody(serializedSolution);
@@ -135,7 +140,7 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				Id = newLayer.Id,
 				ParentLayerId = parentLayer?.Id,
-				SolutionId = solution.Id,
+				SolutionId = solutionId,
 				Name = newLayer.Name,
 				FilterType = newLayer.FilterType
 			};
@@ -147,16 +152,26 @@ namespace MeshEditor.SolutionManager.IO
 			return parseResponse<Solution>(response);
 		}
 
-		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete)
+		public Solution DeleteLayer(object solutionLocator, Solution.Layer layerToDelete)
 		{
-			RestRequest request = createDeleteLayerRequest(solution, layerToDelete);
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+
+			RestRequest request = createDeleteLayerRequest(solutionId, layerToDelete);
 			var response = executeRequest(request);
 			return parseResponse<Solution>(response);
 		}
 
-		public async Task<Solution> DeleteLayerAsync(Solution solution, Solution.Layer layerToDelete, CancellationToken cancellationToken)
+		public async Task<Solution> DeleteLayerAsync(object solutionLocator, Solution.Layer layerToDelete, CancellationToken cancellationToken)
 		{
-			RestRequest request = createDeleteLayerRequest(solution, layerToDelete);
+			if (!(solutionLocator is int))
+				throw new ArgumentException("Solution id is not specified", nameof(solutionLocator));
+
+			int solutionId = (int)solutionLocator;
+
+			RestRequest request = createDeleteLayerRequest(solutionId, layerToDelete);
 			var response = await executeRequestAsync(request, cancellationToken);
 			return parseResponse<Solution>(response);
 		}
@@ -260,9 +275,9 @@ namespace MeshEditor.SolutionManager.IO
 			return request;
 		}
 
-		private static RestRequest createDeleteLayerRequest(Solution solution, Solution.Layer layerToDelete)
+		private static RestRequest createDeleteLayerRequest(int solutionId, Solution.Layer layerToDelete)
 		{
-			var request = new RestRequest($"api/solution/{solution.Id}/layer/{layerToDelete.Id}", Method.DELETE);
+			var request = new RestRequest($"api/solution/{solutionId}/layer/{layerToDelete.Id}", Method.DELETE);
 			addHeadersToRequest(request);
 			return request;
 		}

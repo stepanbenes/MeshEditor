@@ -185,10 +185,7 @@ namespace MeshEditor.SolutionManager
 
 		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
-			//Debug.Assert(!keyTimeSteps.Any());
-
 			Solution solution = solutionController.Get(solutionLocator);
-
 			var analysisResultImportServices = solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 			
 			var layerGenerator = new LayerGenerator(
@@ -198,63 +195,9 @@ namespace MeshEditor.SolutionManager
 										logger: logger);
 
 			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
-			
-			var masterLayer = createLayerRecordFromLayerSummaryFile(masterLayerSummaryFile);
-			logNewLayer(masterLayer);
-			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: masterLayer);
+
+			addLayer(masterLayerSummaryFile, parentLayer: null);
 		}
-
-		//public void ImportWithTemporaryStorageOptimization(IEnumerable<int> analysisResultGroupLengths, IEnumerable<string> analysisResultRecordNames, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
-		//{
-		//	Debug.Assert(keyTimeSteps.Any());
-
-		//	Solution solution = solutionController.Get(solutionLocator);
-
-		//	var analysisResults = composeAnalysisResults(analysisResultGroupLengths, analysisResultRecordNames);
-
-		//	var analysisResultImportServices = analysisResults.Select(result => AnalysisResultImportServiceFactory.Create(meshImportStorage, dataImportStorage, result, gaussPointsExtrapolationStrategyName));
-
-		//	string tempPath = Path.GetTempPath();
-		//	logger.LogOperationProgress("Creating temporary master layer in folder: " + tempPath);
-
-		//	IStorageService tempStorageService = new LocalFileSystemStorageService(tempPath);
-
-		//	var layerGeneratorForMaster = new LayerGenerator(
-		//								sourceStorage: layerSourceStorage,
-		//								destinationStorage: tempStorageService, // save temporary master in local temp folder
-		//								compressionService: CompressionServiceFactory.Create(CompressionMethod.Transparent), // do not use compression for temporary master
-		//								logger: logger);
-
-		//	// pass empty key time steps to temporary master
-		//	var masterLayerSummaryFile = layerGeneratorForMaster.GenerateMasterLayer("temporary_master", analysisResultImportServices, keyTimeSteps: Enumerable.Empty<double>(), fieldName: fieldName);
-
-		//	var masterLayer = createLayerRecordFromLayerSummaryFile(masterLayerSummaryFile);
-		//	logNewLayer(masterLayer);
-
-		//	// -----------------------------------
-		//	logger.LogOperationProgress("Starting compression");
-
-		//	// continue with generating actual layer by compressing temporary master
-		//	var layerGeneratorForCompressedMaster = new LayerGenerator(
-		//								sourceStorage: tempStorageService, // use temporary folder as source storage
-		//								destinationStorage: layerDestinationStorage,
-		//								compressionService: CompressionServiceFactory.Create(compressionParameters),
-		//								logger: logger);
-
-		//	// create new layer by compressing temporary master
-		//	var compressedMasterLayerSummaryFile = layerGeneratorForCompressedMaster.CompressLayer(masterLayer.Id, keyTimeSteps, layerName: masterLayerName ?? DefaultMasterLayerName, fieldName: fieldName);
-		//	compressedMasterLayerSummaryFile.ParentId = null; // this is new master, so set filter and parentId to null
-		//	compressedMasterLayerSummaryFile.Filter = null;
-
-		//	logger.LogOperationProgress("Deleting temporary master layer");
-		//	LocalSolutionController.DeleteAllLayerFilesOfLayerTree(masterLayer, tempStorageService);
-		//	logger.LogOperationProgress("Temporary master layer deleted");
-
-		//	var compressedMasterLayer = createLayerRecordFromLayerSummaryFile(compressedMasterLayerSummaryFile);
-		//	logNewLayer(compressedMasterLayer);
-
-		//	Solution updatedSolution = solutionController.AddLayer(solution, parentLayer: null, newLayer: compressedMasterLayer);
-		//}
 
 		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
@@ -262,10 +205,8 @@ namespace MeshEditor.SolutionManager
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
+			var parentLayer = findLayer(parentLayerIdOrName);
 			Filter filter = FilterFactory.Create(filterType, filterParameters);
-			Solution solution = solutionController.Get(solutionLocator);
-
-			var parentLayer = findLayer(solution, parentLayerIdOrName);
 
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
@@ -274,18 +215,14 @@ namespace MeshEditor.SolutionManager
 										logger: logger);
 
 			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName);
-			
+
 			// convert filter layer to layer record and append it to parent layer's children
-			var filterLayer = createLayerRecordFromLayerSummaryFile(filterLayerSummaryFile);
-			logNewLayer(filterLayer);
-			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, filterLayer);
+			addLayer(filterLayerSummaryFile, parentLayer);
 		}
 
 		public void Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
-			Solution solution = solutionController.Get(solutionLocator);
-
-			var parentLayer = findLayer(solution, parentLayerIdOrName);
+			var parentLayer = findLayer(parentLayerIdOrName);
 
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
@@ -294,11 +231,9 @@ namespace MeshEditor.SolutionManager
 										logger: logger);
 
 			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName);
-			
+
 			// convert filter layer to layer record and append it to parent layer's children
-			var compressedLayer = createLayerRecordFromLayerSummaryFile(compressedLayerSummaryFile);
-			logNewLayer(compressedLayer);
-			Solution updatedSolution = solutionController.AddLayer(solution, parentLayer, compressedLayer);
+			addLayer(compressedLayerSummaryFile, parentLayer);
 		}
 
 		public void Delete(string layerIdOrName, bool deleteAll = false)
@@ -311,8 +246,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				Solution solution = solutionController.Get(solutionLocator);
-				solution = solutionController.DeleteLayer(solution, findLayer(solution, layerIdOrName));
+				var updatedSolution = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
 			}
 		}
 
@@ -326,15 +260,13 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				Solution solution = await solutionController.GetAsync(solutionLocator, cancellationToken);
-				solution = await solutionController.DeleteLayerAsync(solution, findLayer(solution, layerIdOrName), cancellationToken);
+				var updatedSolution = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
 			}
 		}
 
 		public void Diff(string layerIdOrName)
 		{
-			Solution solution = solutionController.Get(solutionLocator);
-			var layer = findLayer(solution, layerIdOrName);
+			var layer = findLayer(layerIdOrName);
 
 			var layerGenerator = new LayerGenerator(sourceStorage: layerSourceStorage, destinationStorage: layerDestinationStorage, logger: logger);
 			logger?.LogMessage(ComponentDiff.GetTableHeader());
@@ -358,10 +290,19 @@ namespace MeshEditor.SolutionManager
 			return newLayerRecord;
 		}
 
-		private Solution.Layer findLayer(Solution solution, string layerIdentifier)
+		private void addLayer(SummaryFile layerSummary, Solution.Layer parentLayer)
+		{
+			var newLayer = createLayerRecordFromLayerSummaryFile(layerSummary);
+			logNewLayer(newLayer);
+			Solution updatedSolution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+		}
+
+		private Solution.Layer findLayer(string layerIdentifier)
 		{
 			if (layerIdentifier == null)
 				throw new ArgumentNullException(nameof(layerIdentifier));
+
+			Solution solution = solutionController.Get(solutionLocator);
 
 			// find layer according to either provided layer guid or layer name
 			Solution.Layer layer;

@@ -146,8 +146,9 @@ namespace MeshEditor.SolutionManager.IO
 			deleteSolution(solution, (string)solutionLocator);
 		}
 
-		public Solution AddLayer(Solution solution, Solution.Layer parentLayer, Solution.Layer newLayer)
+		public Solution AddLayer(object solutionLocator, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
+			Solution solution = Get(solutionLocator);
 			Solution updatedSolution = Solution.CreateNewByAddingLayer(solution, newLayer, parentLayer?.Id);
 			string solutionFile = solution.Location;
 			using (Stream stream = localStorage.Save(solutionFile))
@@ -158,10 +159,11 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
-		public Solution DeleteLayer(Solution solution, Solution.Layer layerToDelete /*root layer*/)
+		public Solution DeleteLayer(object solutionLocator, Solution.Layer layerToDelete /*root layer*/)
 		{
 			deleteAllLayerFilesOfLayerTree(layerToDelete);
 
+			Solution solution = Get(solutionLocator);
 			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
 			string solutionFile = solution.Location;
 			using (Stream stream = localStorage.Save(solutionFile))
@@ -172,10 +174,11 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
-		public async Task<Solution> DeleteLayerAsync(Solution solution, Solution.Layer layerToDelete, CancellationToken cancellationToken)
+		public async Task<Solution> DeleteLayerAsync(object solutionLocator, Solution.Layer layerToDelete, CancellationToken cancellationToken)
 		{
 			deleteAllLayerFilesOfLayerTree(layerToDelete);
 
+			Solution solution = Get(solutionLocator);
 			Solution updatedSolution = Solution.CreateNewByDeletingLayer(solution, layerToDelete.Id);
 			string solutionFile = solution.Location;
 			using (Stream stream = localStorage.Save(solutionFile))
@@ -186,15 +189,15 @@ namespace MeshEditor.SolutionManager.IO
 			return updatedSolution;
 		}
 
-		public static void DeleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer, IWriteStorageService storageService)
+		#region Private methods
+
+		private static void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer, IWriteStorageService storageService)
 		{
 			foreach (var childLayer in traverseLayerTreePostOrder(rootLayer))
 			{
 				storageService.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
 			}
 		}
-
-		#region Private methods
 
 		private void deleteSolution(Solution solution, string solutionFile)
 		{
@@ -258,7 +261,7 @@ namespace MeshEditor.SolutionManager.IO
 
 		private void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer)
 		{
-			DeleteAllLayerFilesOfLayerTree(rootLayer, localStorage);
+			deleteAllLayerFilesOfLayerTree(rootLayer, localStorage);
 		}
 
 		/// <summary>
