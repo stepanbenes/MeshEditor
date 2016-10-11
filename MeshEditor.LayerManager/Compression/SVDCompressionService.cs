@@ -55,6 +55,8 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 			logger?.LogOperationProgress($"Starting SVD compression of matrix {rows}\u00D7{columns}");
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
 
 			double[] singularValues, U_VT_columnwise;
 			bool resizeIsNeeded = false;
@@ -112,7 +114,8 @@ namespace MeshEditor.LayerManager.Compression
 				}
 			}
 
-			logger?.LogOperationProgress($"Singular values calculated. Length: {singularValues.Length}, Input rank: {Math.Min(rows, columns)}, Final rank: {rank}");
+			stopwatch.Stop();
+			logger?.LogOperationProgress($"Singular values calculated (exe-time {stopwatch.Elapsed}). Length: {singularValues.Length}, Input rank: {Math.Min(rows, columns)}, Final rank: {rank}");
 #if DEBUG
 			logger?.LogOperationProgress(formatSingularValues(singularValues, originalLength: Math.Min(rows, columns), finalLength: rank));
 #endif
@@ -182,7 +185,7 @@ namespace MeshEditor.LayerManager.Compression
 			{
 				strings.Add("(?)");
 			}
-			return "[" + string.Join("; ", strings) + "]";
+			return "singular values: [" + string.Join("; ", strings) + "]";
 		}
 
 		private static double[] convertDataValuesToInputMatrixRowMajor(IEnumerable<double[]> dataValues, int rows, int columns)
