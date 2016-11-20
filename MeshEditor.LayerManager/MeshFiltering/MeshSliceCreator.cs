@@ -98,11 +98,11 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				for (int i = 1; i < intersections.Length - 1; i++)
 				{
 					geometryBuilder.AddCell(CellType.TriangleLinear, cellIndex, new[] { connectivityIndices[0], connectivityIndices[i], connectivityIndices[i + 1] }, new[] { intersectionInfoList[intersectionIndices[0]], intersectionInfoList[intersectionIndices[i]], intersectionInfoList[intersectionIndices[i + 1]] });
-					geometryBuilder.AddEdge(connectivityIndices[i], connectivityIndices[i + 1]);
+					geometryBuilder.AddEdge(connectivityIndices[i], connectivityIndices[i + 1], faceAngle: 0f);
 				}
 
-				geometryBuilder.AddEdge(connectivityIndices[0], connectivityIndices[1]);
-				geometryBuilder.AddEdge(connectivityIndices[connectivityIndices.Length - 1], connectivityIndices[0]);
+				geometryBuilder.AddEdge(connectivityIndices[0], connectivityIndices[1], faceAngle: 0f);
+				geometryBuilder.AddEdge(connectivityIndices[connectivityIndices.Length - 1], connectivityIndices[0], faceAngle: 0f);
 
 			} // end of element loop
 

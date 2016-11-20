@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
-using MeshEditor.LayerManager.Import;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
@@ -109,21 +107,12 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Fields, constructor
 
-		private SurfaceFilter surfaceFilter;
+		readonly SurfaceFilter surfaceFilter;
 
 		public MeshSurfaceCreator(SurfaceFilter surfaceFilter)
 		{
 			this.surfaceFilter = surfaceFilter;
 		}
-
-		#endregion
-
-		#region Properties
-
-		//public int NumberOfTriangles => TriangleConnectivity.Length / 3;
-		//public int NumberOfEdges => EdgeConnectivity.Length / 2;
-		//public int[] TriangleConnectivity { get; private set; }
-		//public int[] EdgeConnectivity { get; private set; }
 
 		#endregion
 

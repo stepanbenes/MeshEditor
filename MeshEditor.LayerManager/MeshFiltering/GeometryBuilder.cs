@@ -122,7 +122,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			cellConnectivity.AddRange(connectivity);
 		}
 
-		public void AddEdge(int point1, int point2)
+		public void AddEdge(int point1, int point2, float faceAngle)
 		{
 			// TODO: add implementation
 		}
