@@ -9,7 +9,7 @@ namespace MeshEditor.LayerManager.Compression
 	public enum SVDCompressionFocus
 	{
 		None = 0,
-		Quality,
+		Error,
 		Size
 	}
 }

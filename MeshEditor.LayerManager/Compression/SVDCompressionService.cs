@@ -14,19 +14,19 @@ namespace MeshEditor.LayerManager.Compression
 		#region Constructor, Fields
 
 		private readonly bool randomized;
-		private readonly double? qualityFactor;
+		private readonly double? maxError;
 		private readonly double? sizeFactor;
 
 		private readonly ILogger logger;
 
-		public SVDCompressionService(bool randomized, ILogger logger, SVDCompressionFocus focus = SVDCompressionFocus.None, double factor = 1.0)
+		public SVDCompressionService(bool randomized, ILogger logger, SVDCompressionFocus focus = SVDCompressionFocus.None, double? factor = null)
 		{
 			this.randomized = randomized;
 			this.logger = logger;
 			switch (focus)
 			{
-				case SVDCompressionFocus.Quality:
-					qualityFactor = factor;
+				case SVDCompressionFocus.Error:
+					maxError = factor;
 					break;
 				case SVDCompressionFocus.Size:
 					sizeFactor = factor;
@@ -58,6 +58,8 @@ namespace MeshEditor.LayerManager.Compression
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 
+			double[] inputMartix_RowMajor = convertDataValuesToInputMatrixRowMajor(dataValues, rows, columns);
+
 			double[] singularValues, U_VT_columnwise;
 			bool resizeIsNeeded = false;
 
@@ -75,7 +77,6 @@ namespace MeshEditor.LayerManager.Compression
 				}
 
 				// COMPUTE SVD RANDOMIZED
-				double[] inputMartix_RowMajor = convertDataValuesToInputMatrixRowMajor(dataValues, rows, columns);
 				RedSvdDriver.ComputeSvdRandomized(inputMartix_RowMajor, rows, columns, rank, out singularValues, out U_VT_columnwise);
 
 				Debug.Assert(singularValues.Length == rank);
@@ -84,7 +85,6 @@ namespace MeshEditor.LayerManager.Compression
 			else
 			{
 				// COMPUTE SVD EXACT
-				double[] inputMartix_RowMajor = convertDataValuesToInputMatrixRowMajor(dataValues, rows, columns);
 				RedSvdDriver.ComputeSvdExact(inputMartix_RowMajor, rows, columns, out singularValues, out U_VT_columnwise);
 
 				Debug.Assert(singularValues.Length == rank);
@@ -103,9 +103,12 @@ namespace MeshEditor.LayerManager.Compression
 			}
 
 
-			if (qualityFactor.HasValue)
+			if (maxError.HasValue)
 			{
-				int newRank = calculateRankFromQualityFactor(singularValues);
+				int newRank = calculateRankFromMaxError(singularValues,
+								matrixElementCount: rows * columns,
+								valueRange: inputMartix_RowMajor.Max() - inputMartix_RowMajor.Min()
+								);
 				Debug.Assert(newRank <= rank);
 				if (newRank != rank)
 				{
@@ -198,6 +201,8 @@ namespace MeshEditor.LayerManager.Compression
 					if (!enumerator.MoveNext())
 						throw new ArgumentException("Not enough rows provided for data compression.", nameof(dataValues));
 					double[] rowValues = enumerator.Current;
+					if (rowValues?.Length != columns)
+						throw new ArgumentException("Data row has unexpected length.", nameof(dataValues));
 					for (int column = 0; column < columns; column++)
 					{
 						double value = rowValues[column];
@@ -284,15 +289,48 @@ namespace MeshEditor.LayerManager.Compression
 
 		private int calculateRankFromSizeFactor(int rows, int columns)
 		{
+			Debug.Assert(sizeFactor.HasValue);
 			return (int)Math.Ceiling((sizeFactor.Value * rows * columns) / ((double)rows + columns));
 		}
 
-		private int calculateRankFromQualityFactor(IReadOnlyList<double> singularValues)
+		private int calculateRankFromMaxError(IReadOnlyList<double> singularValues, int matrixElementCount, double valueRange)
 		{
-			Debug.Assert(singularValues.IsOrderedDescending(sv => sv)); // NOTE: I assume that singular values are sorted in descending order
-			double firstSingularValue = singularValues[0];
-			double tolerance = (1.0 - qualityFactor.Value) * Math.Abs(firstSingularValue);
-			return singularValues.TakeWhile(sv => Math.Abs(sv) > tolerance).Count();
+			Debug.Assert(maxError.HasValue);
+			Debug.Assert(singularValues.Count > 0);
+			Debug.Assert(singularValues.IsOrderedDescending(s => s));
+			Debug.Assert(matrixElementCount > 0);
+			Debug.Assert(valueRange >= 0);
+
+			if (double.IsPositiveInfinity(maxError.Value))
+				return 0; // allowed error is too high, everything can be thrown away
+
+			// TODO: test cases with zero valueRange and non-zero singular values (same non-zero value for all elements in input matrix)
+			//logger.LogMessage("sv: " + string.Join(", ", singularValues));
+
+			for (int rank = singularValues.Count - 1; rank >= 0; rank--)
+			{
+				// Mean square error
+				double MSE = singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount; // TODO: this equation should be verified
+				
+				// Root-mean-square deviation
+				double RMSD = Math.Sqrt(MSE);
+				
+				// Normalized root-mean-square deviation
+				double NRMSD = (valueRange > 0) ? RMSD / valueRange : RMSD; // if valueRange equals to zero then use absolute value instead of relative (RMSD instead of NRMSD)
+				
+				//logger.LogMessage($"rank: {rank} MSE: {MSE} RMSD: {RMSD} NRMSD: {NRMSD}");
+				
+				if (NRMSD > maxError.Value)
+				{
+					// if error is higher then prescribed limit then return rank from previous iteration (or full rank for first iteration)
+					return rank + 1;
+				}
+			}
+
+			if (singularValues[0] > 0)
+				return 1;
+
+			return 0; // should return 0 only when maxError is Infinite or all singular values are zero
 		}
 
 		#endregion
