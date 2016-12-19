@@ -105,9 +105,10 @@ namespace MeshEditor.LayerManager.Compression
 
 			if (maxError.HasValue)
 			{
+				double valueRange = inputMartix_RowMajor.Max() - inputMartix_RowMajor.Min();
 				int newRank = calculateRankFromMaxError(singularValues,
 								matrixElementCount: rows * columns,
-								valueRange: inputMartix_RowMajor.Max() - inputMartix_RowMajor.Min()
+								matrixNorm: (valueRange > 0) ? valueRange : inputMartix_RowMajor.Average() // norm is value range or average value if range is zero
 								);
 				Debug.Assert(newRank <= rank);
 				if (newRank != rank)
@@ -293,13 +294,14 @@ namespace MeshEditor.LayerManager.Compression
 			return (int)Math.Ceiling((sizeFactor.Value * rows * columns) / ((double)rows + columns));
 		}
 
-		private int calculateRankFromMaxError(IReadOnlyList<double> singularValues, int matrixElementCount, double valueRange)
+		private int calculateRankFromMaxError(IReadOnlyList<double> singularValues, int matrixElementCount, double matrixNorm)
 		{
 			Debug.Assert(maxError.HasValue);
 			Debug.Assert(singularValues.Count > 0);
 			Debug.Assert(singularValues.IsOrderedDescending(s => s));
 			Debug.Assert(matrixElementCount > 0);
-			Debug.Assert(valueRange >= 0);
+			Debug.Assert(matrixNorm >= 0);
+			Debug.Assert(!(matrixNorm > 0 ^ singularValues[0] > 0)); // both must be greater than zero or both must be equal to zero, all at once
 
 			if (double.IsPositiveInfinity(maxError.Value))
 				return 0; // allowed error is too high, everything can be thrown away
@@ -311,15 +313,15 @@ namespace MeshEditor.LayerManager.Compression
 			{
 				// Mean square error
 				double MSE = singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount; // TODO: this equation should be verified
-				
+
 				// Root-mean-square deviation
 				double RMSD = Math.Sqrt(MSE);
-				
+
 				// Normalized root-mean-square deviation
-				double NRMSD = (valueRange > 0) ? RMSD / valueRange : RMSD; // if valueRange equals to zero then use absolute value instead of relative (RMSD instead of NRMSD)
-				
+				double NRMSD = (matrixNorm > 0) ? RMSD / matrixNorm : RMSD; // if valueRange equals to zero then use absolute value instead of relative (RMSD instead of NRMSD)
+
 				//logger.LogMessage($"rank: {rank} MSE: {MSE} RMSD: {RMSD} NRMSD: {NRMSD}");
-				
+
 				if (NRMSD > maxError.Value)
 				{
 					// if error is higher then prescribed limit then return rank from previous iteration (or full rank for first iteration)
