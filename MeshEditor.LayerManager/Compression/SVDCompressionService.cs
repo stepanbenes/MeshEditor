@@ -309,13 +309,15 @@ namespace MeshEditor.LayerManager.Compression
 			// TODO: test cases with zero valueRange and non-zero singular values (same non-zero value for all elements in input matrix)
 			//logger.LogMessage("sv: " + string.Join(", ", singularValues));
 
+			double runningMSE = 0.0;
 			for (int rank = singularValues.Count - 1; rank >= 0; rank--)
 			{
 				// Mean square error
-				double MSE = singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount; // TODO: this equation should be verified
+				runningMSE += singularValues[rank].Square() / matrixElementCount; // TODO: this equation should be verified
+				Debug.Assert(runningMSE == singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount);
 
 				// Root-mean-square deviation
-				double RMSD = Math.Sqrt(MSE);
+				double RMSD = Math.Sqrt(runningMSE);
 
 				// Normalized root-mean-square deviation
 				double NRMSD = (matrixNorm > 0) ? RMSD / matrixNorm : RMSD; // if valueRange equals to zero then use absolute value instead of relative (RMSD instead of NRMSD)
