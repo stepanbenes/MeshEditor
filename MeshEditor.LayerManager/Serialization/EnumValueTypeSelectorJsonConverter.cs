@@ -28,7 +28,7 @@ namespace MeshEditor.LayerManager.Serialization
 			// Use reflection to find all EnumValueTypeSelectorAttributes, if any
 			foreach (EnumValueTypeSelectorAttribute attribute in Attribute.GetCustomAttributes(objectType).OfType<EnumValueTypeSelectorAttribute>())
 			{
-				string enumValueText = (string)jObject[attribute.EnumPropertyName];
+				string enumValueText = (string)jObject.GetValue(attribute.EnumPropertyName, StringComparison.OrdinalIgnoreCase);
 				Type enumType = attribute.EnumValue.GetType();
 
 				if (Enum.IsDefined(enumType, enumValueText))
