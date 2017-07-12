@@ -52,12 +52,12 @@ namespace MeshEditor.SolutionManager
 
 		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
 
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			return new SolutionHub(
 				solutionLocator: null,
-				solutionController: solutionController,
+				solutionController: controller,
 				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
@@ -69,12 +69,12 @@ namespace MeshEditor.SolutionManager
 		{
 			Debug.Assert(solutionFileName != null);
 			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
-			var solutionController = new LocalSolutionController(solutionDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
 
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			return new SolutionHub(
 				solutionLocator: solutionFileName,
-				solutionController: solutionController,
+				solutionController: controller,
 				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
@@ -96,26 +96,26 @@ namespace MeshEditor.SolutionManager
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, bool includeOneSubDirectory, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
-			return solutionController.GetAll(includeOneSubDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
+			return controller.GetAll(includeOneSubDirectory);
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, bool includeOneSubDirectory, CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
-			return await solutionController.GetAllAsync(includeOneSubDirectory, cancellationToken);
+			var controller = new LocalSolutionController(solutionDirectory);
+			return await controller.GetAllAsync(includeOneSubDirectory, cancellationToken);
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
-			return solutionController.GetAll();
+			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			return controller.GetAll();
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
-			return await solutionController.GetAllAsync(cancellationToken);
+			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			return await controller.GetAllAsync(cancellationToken);
 		}
 
 		#endregion
@@ -123,9 +123,9 @@ namespace MeshEditor.SolutionManager
 		#region Fields, Constructors
 
 		object solutionLocator;
-		ISolutionController solutionController;
-		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
-		ILogger logger;
+		readonly ISolutionController solutionController;
+		readonly IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
+		readonly ILogger logger;
 
 		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService importStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
@@ -246,7 +246,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				var updatedSolution = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
+				_ = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
 			}
 		}
 
@@ -260,7 +260,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				var updatedSolution = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
+				_ = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
 			}
 		}
 
@@ -294,7 +294,7 @@ namespace MeshEditor.SolutionManager
 		{
 			var newLayer = createLayerRecordFromLayerSummaryFile(layerSummary);
 			logNewLayer(newLayer);
-			Solution updatedSolution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+			_ = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
 		}
 
 		private Solution.Layer findLayer(string layerIdentifier)
@@ -318,7 +318,7 @@ namespace MeshEditor.SolutionManager
 
 			if (layer == null)
 			{
-				throw new Exception($"Layer '{layerIdentifier}' not found.");
+				throw new ArgumentException($"Layer '{layerIdentifier}' not found.");
 			}
 
 			return layer;
