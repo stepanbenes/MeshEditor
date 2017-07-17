@@ -74,6 +74,7 @@
     <Compile Include="Data\FieldDescriptor.cs" />
     <Compile Include="Data\LayerDiff.cs" />
     <Compile Include="Data\MeshFileDescriptor.cs" />
+    <Compile Include="Filters\DeformationFilter.cs" />
     <Compile Include="Filters\SurfaceFilter.cs" />
     <Compile Include="Filters\TimeCompressionFilter.cs" />
     <Compile Include="Import\AnalysisResult.cs" />

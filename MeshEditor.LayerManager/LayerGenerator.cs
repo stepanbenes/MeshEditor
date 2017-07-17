@@ -69,12 +69,12 @@ namespace MeshEditor.LayerManager
 
 		#region Fields, constructor
 
-		IReadStorageService sourceStorage;
-		IWriteStorageService destinationStorage;
-		ISerializationService serializationService;
-		ICompressionService compressionService;
-		IEncodingService encodingService;
-		ILogger logger;
+		readonly IReadStorageService sourceStorage;
+		readonly IWriteStorageService destinationStorage;
+		readonly ISerializationService serializationService;
+		readonly ICompressionService compressionService;
+		readonly IEncodingService encodingService;
+		readonly ILogger logger;
 
 		public LayerGenerator(
 			IReadStorageService sourceStorage,
@@ -146,42 +146,11 @@ namespace MeshEditor.LayerManager
 			// find parentLayer in storage and download summary
 			SummaryFile parentLayer = LoadLayerSummary(parentLayerId);
 
-			IMeshFilterCreator meshFilterCreator;
-			string filterLayerName;
-
-			switch (filter.Type)
-			{
-				case FilterType.Surface:
-					{
-						meshFilterCreator = new MeshSurfaceCreator((SurfaceFilter)filter);
-						filterLayerName = layerName ?? "surface";
-					}
-					break;
-				case FilterType.Slice:
-					{
-						var sliceFilter = (SliceFilter)filter;
-						meshFilterCreator = new MeshSliceCreator(sliceFilter);
-						filterLayerName = layerName ?? $"slice {sliceFilter.Offset}"; // TODO: use better name
-					}
-					break;
-				case FilterType.Clip:
-				// TODO: use MeshSliceCreator
-				case FilterType.IsoSurface:
-				case FilterType.StreamLines:
-					throw new NotImplementedException();
-				case FilterType.AttributeSelection:
-					{
-						var attributeSelectionFilter = (AttributeSelectionFilter)filter;
-						meshFilterCreator = null;
-						filterLayerName = layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
-					}
-					break;
-				default:
-					throw new NotSupportedException();
-			}
+			string filterLayerName = constructFilterLayerName();
 
 			Guid newLayerId = Guid.NewGuid();
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
+			int meshIndex = 1;
 			int attributeIndex = 1;
 			int resultIndex = 1;
 			foreach (var parentMesh in parentLayer.Meshes)
@@ -190,24 +159,62 @@ namespace MeshEditor.LayerManager
 				if (originalGeometry.IsEmpty)
 					throw new InvalidOperationException($"Geometry is empty (mesh index: {parentMesh.Index})");
 
-				switch (filter.Type)
-				{
-					case FilterType.AttributeSelection:
-						{
-							var attributeSelectionFilter = (AttributeSelectionFilter)filter;
-							var attributeDescriptor = parentMesh.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
-							var attribute = LoadAttribute(parentLayerId, attributeDescriptor.Index);
-							meshFilterCreator = new MeshPartitionCreator(attributeSelectionFilter, attribute);
-						}
-						break;
-				}
+				IMeshFilterCreator meshFilterCreator = constructMeshFilterCreator(parentMesh);
 
-				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry);
+				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry); // TODO: Must return multiple geometries, one for each time step -> IDictionaty<,>
 				if (filteredGeometry.IsEmpty)
 					continue;
 
+				var meshFileDesriptor = constructFilteredMesh(filteredGeometry, parentMesh.Attributes, parentMesh.Results);
+				meshFileDescriptors.Add(meshFileDesriptor);
+			}
+
+			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
+
+			IMeshFilterCreator constructMeshFilterCreator(MeshFileDescriptor parentMesh)
+			{
+				switch (filter)
+				{
+					case SurfaceFilter surfaceFilter:
+						{
+							return new MeshSurfaceCreator(surfaceFilter);
+						}
+					case SliceFilter sliceFilter:
+						{
+							return new MeshSliceCreator(sliceFilter);
+						}
+					case AttributeSelectionFilter attributeSelectionFilter:
+						{
+							var attributeDescriptor = parentMesh.Attributes.Single(a => a.FieldName == attributeSelectionFilter.AttributeName);
+							var attribute = LoadAttribute(parentLayerId, attributeDescriptor.Index);
+							return new MeshPartitionCreator(attributeSelectionFilter, attribute);
+						}
+					default:
+						throw new NotSupportedException();
+				}
+			}
+
+			string constructFilterLayerName()
+			{
+				switch (filter)
+				{
+					case SurfaceFilter _:
+						return layerName ?? "surface";
+					case SliceFilter sliceFilter:
+						return layerName ?? $"slice {sliceFilter.Offset}";
+					case AttributeSelectionFilter attributeSelectionFilter:
+						return layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
+					default:
+						throw new NotSupportedException();
+				}
+			}
+
+			MeshFileDescriptor constructFilteredMesh(GeometryDescription filteredGeometry, IEnumerable<DataFileDescriptor> attributes, IEnumerable<DataFileDescriptor> results)
+			{
+				// do not include attributes and data if mapping would be 1 : 1 (filteredGeometry.Mapping is null or Mapping is IdentityGeometryMapping)
+
 				// filter attributes
-				var originalAttributeRecordNames = parentMesh.Attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
+				var originalAttributeRecordNames = attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
 
 				// filter results
@@ -217,7 +224,7 @@ namespace MeshEditor.LayerManager
 
 				if (keyTimeSteps.Any())
 				{
-					filteredDataDescriptionsChunks = from result in parentMesh.Results
+					filteredDataDescriptionsChunks = from result in results
 													 where (fieldName == null || fieldName == result.FieldName)
 													 group result by new { result.FieldName, result.ComponentName } into resultGroup
 													 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometry, resultGroup.Select(r => getLayerResultRecordName(parentLayerId, r.Index))), keyTimeSteps)
@@ -225,17 +232,14 @@ namespace MeshEditor.LayerManager
 				}
 				else
 				{
-					filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometry, from result in parentMesh.Results
+					filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometry, from result in results
 																										 where (fieldName == null || fieldName == result.FieldName)
 																										 select getLayerResultRecordName(parentLayerId, result.Index))
 													 select new[] { data };
 				}
 
-				var meshFileDesriptor = generateDataFilesForMesh(parentMesh.Index, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptionsChunks, ref attributeIndex, ref resultIndex);
-				meshFileDescriptors.Add(meshFileDesriptor);
+				return generateDataFilesForMesh(meshIndex++, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptionsChunks, ref attributeIndex, ref resultIndex);
 			}
-
-			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
 		}
 
 		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null)
@@ -305,7 +309,7 @@ namespace MeshEditor.LayerManager
 									 group new Tuple<ComponentDataDescription, ComponentDataDescription>(a, b) by new { a.FieldName, a.ComponentName } into g
 									 select g;
 
-				
+
 				foreach (var timeStepGroup in timeStepGroups)
 				{
 					var componentDiff = ComponentDiff.CreateFrom(timeStepGroup);
@@ -589,17 +593,14 @@ namespace MeshEditor.LayerManager
 			List<DataDescription> dataListForCurrentTimeInterval = new List<DataDescription>();
 			foreach (var dataComponent in dataDescriptions)
 			{
-				if (keyTimeIndex < keyTimes.Length)
+				if (keyTimeIndex < keyTimes.Length && dataComponent.TimeStep >= keyTimes[keyTimeIndex])
 				{
-					if (dataComponent.TimeStep >= keyTimes[keyTimeIndex])
+					if (dataListForCurrentTimeInterval.Count > 0)
 					{
-						if (dataListForCurrentTimeInterval.Count > 0)
-						{
-							yield return dataListForCurrentTimeInterval;
-							dataListForCurrentTimeInterval = new List<DataDescription>();
-						}
-						keyTimeIndex += 1;
+						yield return dataListForCurrentTimeInterval;
+						dataListForCurrentTimeInterval = new List<DataDescription>();
 					}
+					keyTimeIndex += 1;
 				}
 				dataListForCurrentTimeInterval.Add(dataComponent);
 			}
@@ -615,8 +616,6 @@ namespace MeshEditor.LayerManager
 
 		private static double interpolateDataValue(double firstDataValue, double secondDataValue, float edgeCoordinate)
 		{
-			//if (double.IsNaN(firstDataValue) || double.IsNaN(secondDataValue))
-			//	return double.NaN;
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
@@ -709,7 +708,7 @@ namespace MeshEditor.LayerManager
 					{
 						if (timeStepGroup.Count() > 1)
 						{
-							logger.LogWarning($"Multiple data components for {fieldGroup.Key}/{componentGroup.Key}/t={timeStepGroup.Key}. Data indices: " + string.Join(", ", timeStepGroup.Select(t => t.Result.Index)));
+							logger?.LogWarning($"Multiple data components for {fieldGroup.Key}/{componentGroup.Key}/t={timeStepGroup.Key}. Data indices: " + string.Join(", ", timeStepGroup.Select(t => t.Result.Index)));
 						}
 						var timeStep = timeStepGroup.First();
 						timeSteps[timeStepGroup.Key] = new TimeStepDescriptor
@@ -930,25 +929,21 @@ namespace MeshEditor.LayerManager
 
 		private string getLayerSummaryRecordName(Guid layerId)
 		{
-			//return $"{layerId}/{layerId}.summary{serializationService.FileExtension}";
 			return $"{layerId}/summary{serializationService.FileExtension}";
 		}
 
 		private string getLayerMeshRecordName(Guid layerId, int index)
 		{
-			//return $"{layerId}/{layerId}.mesh{serializationService.FileExtension}";
 			return $"{layerId}/{index}.mesh{serializationService.FileExtension}";
 		}
 
 		private string getLayerAttributeRecordName(Guid layerId, int index)
 		{
-			//return $"{layerId}/{layerId}.{index}.attribute{serializationService.FileExtension}";
 			return $"{layerId}/{index}.attribute{serializationService.FileExtension}";
 		}
 
 		private string getLayerResultRecordName(Guid layerId, int index)
 		{
-			//return $"{layerId}/{layerId}.{index}.result{serializationService.FileExtension}";
 			return $"{layerId}/{index}.result{serializationService.FileExtension}";
 		}
 
