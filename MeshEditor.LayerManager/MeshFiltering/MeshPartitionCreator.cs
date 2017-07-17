@@ -11,8 +11,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 {
 	internal class MeshPartitionCreator : IMeshFilterCreator
 	{
-		private AttributeSelectionFilter attributeSelectionFilter;
-		private AttributeDescription attribute;
+		readonly AttributeSelectionFilter attributeSelectionFilter;
+		readonly AttributeDescription attribute;
 
 		public MeshPartitionCreator(AttributeSelectionFilter attributeSelectionFilter, AttributeDescription attribute)
 		{
@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.attribute = attribute;
 		}
 
-		public GeometryDescription Create(GeometryDescription geometry)
+		public IList<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
 		{
 			// TODO: use GeometryBuilder
 
@@ -91,7 +91,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				Mapping = mapping
 			};
 
-			return filteredGeometry;
+			return new[] { (filteredGeometry, timeSteps.ToList()) };
 		}
 	}
 }

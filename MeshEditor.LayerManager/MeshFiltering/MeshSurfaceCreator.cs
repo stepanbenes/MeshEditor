@@ -92,7 +92,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					firstTriangle = new TriangleFace(p3, p4, p1);
 					secondTriangle = new TriangleFace(p3, p1, p2);
 				}
-				else //if (n4 < n1 && n4 < n2 && n4 < n3) // fourth is smallest
+				else // fourth is smallest
 				{
 					Debug.Assert(p4 < p1 && p4 < p2 && p4 < p3);
 					firstTriangle = new TriangleFace(p4, p1, p2);
@@ -118,7 +118,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Public methods
 
-		public GeometryDescription Create(GeometryDescription geometry)
+		public IList<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
 		{
 			Dictionary<TriangleFace, int> surfaceTriangles = new Dictionary<TriangleFace, int>();
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
@@ -173,7 +173,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				);
 			}
 
-			return geometryBuilder.Build();
+			var surface = geometryBuilder.Build();
+
+			return new[] { (surface, timeSteps.ToList()) };
 		}
 
 		#endregion

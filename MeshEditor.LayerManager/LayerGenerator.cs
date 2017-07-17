@@ -161,15 +161,23 @@ namespace MeshEditor.LayerManager
 
 				IMeshFilterCreator meshFilterCreator = constructMeshFilterCreator(parentMesh);
 
-				GeometryDescription filteredGeometry = meshFilterCreator.Create(originalGeometry); // TODO: Must return multiple geometries, one for each time step -> IDictionaty<,>
-				if (filteredGeometry.IsEmpty)
-					continue;
+				var parentMeshTimeSteps = new HashSet<double>(parentMesh.Results.SelectMany(r => r.TimeSteps));
+				var filteredGeometries = meshFilterCreator.Create(originalGeometry, parentMeshTimeSteps);
 
-				var meshFileDesriptor = constructFilteredMesh(filteredGeometry, parentMesh.Attributes, parentMesh.Results);
-				meshFileDescriptors.Add(meshFileDesriptor);
+				foreach (var (filteredGeometry, filteredMeshTimeSteps) in filteredGeometries)
+				{
+					if (filteredGeometry.IsEmpty)
+						continue;
+					var meshFileDesriptor = constructFilteredMesh(filteredGeometry,
+						parentMesh.Attributes,
+						parentMesh.Results.Where(r => filteredMeshTimeSteps.Intersect(r.TimeSteps).Any()).ToList());
+					meshFileDescriptors.Add(meshFileDesriptor);
+				}
 			}
 
 			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
+
+			// local functions >>>
 
 			IMeshFilterCreator constructMeshFilterCreator(MeshFileDescriptor parentMesh)
 			{
