@@ -1404,22 +1404,14 @@ namespace MeshEditor.WinUI
 				{
 					caption += " - " + sceneTitle;
 				}
-				//string meshName = activeControl.SceneFacade.MeshName;
-				//if (!string.IsNullOrEmpty(meshName))
-				//{
-				//	caption += " - " + meshName;
-				//}
 			}
 			this.Text = caption;
 		}
 
 		private void updateStatus()
 		{
-			if (statusLabel.ForeColor == Color.Black)
-			{
-				string desc = (string)activeControl.SceneFacade.GetValue(AvailableValue.Status);
-				statusLabel.Text = string.IsNullOrEmpty(desc) ? "Ready" : desc;
-			}
+			string desc = (string)activeControl.SceneFacade.GetValue(AvailableValue.Status);
+			statusLabel.Text = string.IsNullOrEmpty(desc) ? "Ready" : desc;
 		}
 
 		private bool activeWindowCanBeClosed()
