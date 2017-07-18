@@ -23,7 +23,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.sliceFilter = sliceFilter;
 		}
 
-		public IList<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
 		{
 			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents);
 
@@ -116,22 +116,14 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			int currentOffset = geometry.CellOffsets[cellIndex];
 			for (int offset = previousOffset; offset < currentOffset; offset++)
 			{
-				yield return getPointCoordinates(geometry, geometry.CellConnectivity[offset]);
+				yield return MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[offset]);
 			}
-		}
-
-		private static Vector3 getPointCoordinates(GeometryDescription geometry, int pointIndex)
-		{
-			float x = geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 0];
-			float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 1] : 0f;
-			float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 2] : 0f;
-			return new Vector3(x, y, z);
 		}
 
 		private static Vector3 getIntersectionPoint(GeometryDescription geometry, EdgeIntersection edgeIntersection)
 		{
-			Vector3 v1 = getPointCoordinates(geometry, edgeIntersection.FirstPointId);
-			Vector3 v2 = getPointCoordinates(geometry, edgeIntersection.SecondPointId);
+			Vector3 v1 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.FirstPointId);
+			Vector3 v2 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.SecondPointId);
 			Vector3 result;
 			Vector3.Subtract(ref v2, ref v1, out result);
 			Vector3.Multiply(ref result, edgeIntersection.Coordinate, out result);
@@ -165,8 +157,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			{
 				int firstIndex = baseOffset + edgePointIndexArray[i];
 				int secondIndex = baseOffset + edgePointIndexArray[i + 1];
-				Vector3 firstPoint = getPointCoordinates(geometry, geometry.CellConnectivity[firstIndex]);
-				Vector3 secondPoint = getPointCoordinates(geometry, geometry.CellConnectivity[secondIndex]);
+				Vector3 firstPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[firstIndex]);
+				Vector3 secondPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[secondIndex]);
 				if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref planeNormal, planeOffset, out float intersection))
 				{
 					yield return new EdgeIntersection(firstIndex, secondIndex, intersection);

@@ -142,7 +142,6 @@ namespace MeshEditor.Common.Extensions
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
-			var comparer = Comparer<T>.Default;
 			bool minSet = false;
 			T extreme = default(T);
 			using (var iterator = source.GetEnumerator())

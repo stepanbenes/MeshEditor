@@ -7,7 +7,25 @@ using System.Threading.Tasks;
 
 namespace MeshEditor.LayerManager.Data
 {
-	public class GeometryEntityMapping
+	public interface IGeometryEntityMapping
+	{
+		void AddPointMapping(int from, int to);
+		void AddCellMapping(int from, int to);
+		bool TryMapPoint(int from, out int to);
+		bool TryMapCell(int from, out int to);
+	}
+
+	public interface IFilterGeometryEntityMapping : IGeometryEntityMapping
+	{
+		void AddCellPointMapping(int from, int to);
+		void AddPointEdgeMapping(int point, EdgeIntersection edgeIntersection);
+		void AddCellPointEdgeMapping(int cell, EdgeIntersection edgeIntersection);
+		bool TryMapCellPoint(int from, out int to);
+		bool TryMapPointEdgeIntersection(int point, out EdgeIntersection edgeIntersection);
+		bool TryMapCellPointEdgeIntersection(int cell, out EdgeIntersection edgeIntersection);
+	}
+
+	class GeometryEntityMapping : IGeometryEntityMapping
 	{
 		private readonly Dictionary<int, int> pointMap;
 		private readonly Dictionary<int, int> cellMap;
@@ -27,7 +45,7 @@ namespace MeshEditor.LayerManager.Data
 		public bool TryMapCell(int from, out int to) => cellMap.TryGetValue(from, out to);
 	}
 
-	internal sealed class FilterGeometryEntityMapping : GeometryEntityMapping
+	sealed class FilterGeometryEntityMapping : GeometryEntityMapping, IFilterGeometryEntityMapping
 	{
 		private readonly Dictionary<int, int> cellPointMap;
 
@@ -52,5 +70,40 @@ namespace MeshEditor.LayerManager.Data
 		public bool TryMapPointEdgeIntersection(int point, out EdgeIntersection edgeIntersection) => pointEdgeIntersectionMap.TryGetValue(point, out edgeIntersection);
 
 		public bool TryMapCellPointEdgeIntersection(int cell, out EdgeIntersection edgeIntersection) => cellPointEdgeIntersectionMap.TryGetValue(cell, out edgeIntersection);
+	}
+
+	sealed class IdentityGeometryEntityMapping : IFilterGeometryEntityMapping
+	{
+		public void AddCellMapping(int from, int to) => throw new NotSupportedException();
+
+		public void AddCellPointEdgeMapping(int cell, EdgeIntersection edgeIntersection) => throw new NotSupportedException();
+
+		public void AddCellPointMapping(int from, int to) => throw new NotSupportedException();
+
+		public void AddPointEdgeMapping(int point, EdgeIntersection edgeIntersection) => throw new NotSupportedException();
+
+		public void AddPointMapping(int from, int to) => throw new NotSupportedException();
+
+		public bool TryMapCell(int from, out int to)
+		{
+			to = from;
+			return true;
+		}
+
+		public bool TryMapCellPoint(int from, out int to)
+		{
+			to = from;
+			return true;
+		}
+
+		public bool TryMapCellPointEdgeIntersection(int cell, out EdgeIntersection edgeIntersection) => throw new NotSupportedException();
+
+		public bool TryMapPoint(int from, out int to)
+		{
+			to = from;
+			return true;
+		}
+
+		public bool TryMapPointEdgeIntersection(int point, out EdgeIntersection edgeIntersection) => throw new NotSupportedException();
 	}
 }

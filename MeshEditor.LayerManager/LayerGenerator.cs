@@ -162,7 +162,7 @@ namespace MeshEditor.LayerManager
 				IMeshFilterCreator meshFilterCreator = constructMeshFilterCreator(parentMesh);
 
 				var parentMeshTimeSteps = new HashSet<double>(parentMesh.Results.SelectMany(r => r.TimeSteps));
-				var filteredGeometries = meshFilterCreator.Create(originalGeometry, parentMeshTimeSteps);
+				var filteredGeometries = meshFilterCreator.Create(originalGeometry, parentMeshTimeSteps.OrderBy(t => t));
 
 				foreach (var (filteredGeometry, filteredMeshTimeSteps) in filteredGeometries)
 				{
@@ -197,6 +197,15 @@ namespace MeshEditor.LayerManager
 							var attribute = LoadAttribute(parentLayerId, attributeDescriptor.Index);
 							return new MeshPartitionCreator(attributeSelectionFilter, attribute);
 						}
+					case DeformationFilter deformationFilter:
+						{
+							Debug.Assert(parentMesh.Results.Where(r => r.FieldName == deformationFilter.FieldName).All(r => r.Location == DataLocationType.Points));
+							var dataComponentDescriptors = from r in parentMesh.Results
+														   where r.FieldName == deformationFilter.FieldName
+														   from d in LoadData(parentLayerId, r.Index)
+														   group d by d.TimeStep;
+							return new DeformedMeshCreator(deformationFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.OrderBy(d => d.ComponentName).ToList()));
+						}
 					default:
 						throw new NotSupportedException();
 				}
@@ -212,6 +221,8 @@ namespace MeshEditor.LayerManager
 						return layerName ?? $"slice {sliceFilter.Offset}";
 					case AttributeSelectionFilter attributeSelectionFilter:
 						return layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
+					case DeformationFilter _:
+						return layerName ?? "deformed";
 					default:
 						throw new NotSupportedException();
 				}
@@ -429,7 +440,7 @@ namespace MeshEditor.LayerManager
 
 		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalAttributeRecordNames)
 		{
-			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
+			IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
 			foreach (AttributeDescription oldAttribute in originalAttributeRecordNames.Select(record => loadAttribute(record)))
 			{
 				int[] newValues;
@@ -507,7 +518,7 @@ namespace MeshEditor.LayerManager
 		private IEnumerable<ComponentDataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalResultRecordNames)
 		{
 			const double EMPTY_VALUE = double.NaN;
-			FilterGeometryEntityMapping mapping = (FilterGeometryEntityMapping)filteredGeometry.Mapping;
+			IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
 			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => loadData(record)))
 			{
 				double[] newValues;

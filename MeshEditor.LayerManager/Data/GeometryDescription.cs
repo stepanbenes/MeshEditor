@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.Data
 		public int[] CellOffsets { get; set; }
 		public CellType[] CellTypes { get; set; }
 
-		public GeometryEntityMapping Mapping { get; set; }
+		public IGeometryEntityMapping Mapping { get; set; }
 
 		public int NumberOfPoints => IsEmpty ? 0 : PointCoordinates.Length / NumberOfCoordinateComponents;
 		public int NumberOfCells => CellTypes.Length;

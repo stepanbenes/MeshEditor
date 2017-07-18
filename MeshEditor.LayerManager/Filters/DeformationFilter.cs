@@ -14,6 +14,6 @@ namespace MeshEditor.LayerManager.Filters
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string FieldName { get; set; } = null;
 
-		// TODO: add deformation scale?
+		public double? RelativeScale { get; set; }
 	}
 }

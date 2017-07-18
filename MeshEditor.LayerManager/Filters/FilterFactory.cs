@@ -41,10 +41,16 @@ namespace MeshEditor.LayerManager.Filters
 						FieldName = parameters.ElementAtOrDefault(0)
 					};
 				case FilterType.Deformation:
-					return new DeformationFilter
+					var deformationFilter = new DeformationFilter
 					{
-						FieldName = parameters.ElementAtOrDefault(0)
+						FieldName = parameters.ElementAt(0)
 					};
+					var scaleParameter = parameters.ElementAtOrDefault(1);
+					if (scaleParameter != null)
+					{
+						deformationFilter.RelativeScale = double.Parse(scaleParameter);
+					}
+					return deformationFilter;
 				default:
 					throw new NotSupportedException();
 			}

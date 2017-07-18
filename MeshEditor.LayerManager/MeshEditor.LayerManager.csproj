@@ -84,6 +84,7 @@
     <Compile Include="Import\AnalysisResultImportServiceFactory.cs" />
     <Compile Include="Import\GaussPointsExtrapolationStrategy.cs" />
     <Compile Include="Import\IAnalysisResultImportService.cs" />
+    <Compile Include="MeshFiltering\DeformedMeshCreator.cs" />
     <Compile Include="MeshFiltering\GeometryBuilder.cs" />
     <Compile Include="Compression\SVDCompressionParameters.cs" />
     <Compile Include="Compression\SVDCompressionService.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Import\VTKXmlGeometryFormatParser.cs" />
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFiltering\IMeshFilterCreator.cs" />
+    <Compile Include="MeshFiltering\MeshFilterCreatorHelper.cs" />
     <Compile Include="MeshFiltering\MeshPartitionCreator.cs" />
     <Compile Include="MeshFiltering\Vector3.cs" />
     <Compile Include="MeshFiltering\MeshSliceCreator.cs" />
