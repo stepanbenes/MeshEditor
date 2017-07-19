@@ -97,7 +97,7 @@ namespace MeshEditor.DataVisualizer.UI
 				// add compression factor parameters
 				if (radioButtonQuality.Checked)
 				{
-					parameters.Add("quality");
+					parameters.Add("error");
 					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
 				}
 				else if (radioButtonSize.Checked)
