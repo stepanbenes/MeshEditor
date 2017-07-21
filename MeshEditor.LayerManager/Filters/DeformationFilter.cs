@@ -12,7 +12,7 @@ namespace MeshEditor.LayerManager.Filters
 		public override FilterType Type => FilterType.Deformation;
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public string FieldName { get; set; } = null;
+		public string DeformationFieldName { get; set; } = null;
 
 		public double? RelativeScale { get; set; }
 	}

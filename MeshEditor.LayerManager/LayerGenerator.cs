@@ -107,8 +107,9 @@ namespace MeshEditor.LayerManager
 
 			Guid newLayerId = Guid.NewGuid();
 			int attributeIndex = 1;
-			int resultIndex = 1;
 			var meshDescriptors = new List<MeshFileDescriptor>();
+			var dataDescriptionsChunks = new List<IReadOnlyList<DataDescription>>();
+			var fieldDescriptors = new Dictionary<string, FieldDescriptor>();
 			foreach (var analysisResultImportService in analysisResultImportServices)
 			{
 				IReadOnlyList<AttributeDescription> attributeDescriptions;
@@ -117,28 +118,39 @@ namespace MeshEditor.LayerManager
 					continue;
 
 				// divide dataDescriptions to time step chunks according to --keytimes option
-
-				IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionsChunks;
+				IEnumerable<IReadOnlyList<DataDescription>> dataGroups;
 
 				if (keyTimeSteps.Any())
 				{
-					dataDescriptionsChunks = from result in analysisResultImportService.ReadData(geometry) // TODO: pass logger to import service to view progress
-											 where (fieldName == null || fieldName == result.FieldName)
-											 group result by result.FieldName into resultGroup
-											 from list in createDataDescriptionGroups(resultGroup, keyTimeSteps)
-											 select list;
+					dataGroups = from result in analysisResultImportService.ReadData(geometry) // TODO: pass logger to import service to view progress
+								 where (fieldName == null || fieldName == result.FieldName)
+								 group result by result.FieldName into resultGroup
+								 from list in createDataDescriptionGroups(resultGroup, keyTimeSteps)
+								 select list;
 				}
 				else // optimization
 				{
-					dataDescriptionsChunks = from result in analysisResultImportService.ReadData(geometry)
-											 where (fieldName == null || fieldName == result.FieldName)
-											 select new[] { result };
+					dataGroups = from result in analysisResultImportService.ReadData(geometry)
+								 where (fieldName == null || fieldName == result.FieldName)
+								 select new[] { result };
 				}
 
-				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, dataDescriptionsChunks, ref attributeIndex, ref resultIndex);
+				var timeSteps = (from g in dataGroups
+								 from description in g
+								 orderby description.TimeStep
+								 select description.TimeStep).Distinct();
+				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, timeSteps, ref attributeIndex);
 				meshDescriptors.Add(meshDescriptor);
+
+				var fieldsMap = generateDataFilesForFields(newLayerId, meshDescriptor.TimeSteps.ToDictionary(t => t, _ => meshDescriptor.Index), dataGroups);
+				foreach (var (fn, fd) in fieldsMap)
+				{
+					fieldDescriptors.Add(fn, fd);
+				}
+
+				dataDescriptionsChunks.AddRange(dataGroups);
 			}
-			return generateSummaryFile(layerName, null, newLayerId, null, meshDescriptors);
+			return generateSummaryFile(layerName, null, newLayerId, null, meshDescriptors, fieldDescriptors);
 		}
 
 		public SummaryFile GenerateFilterLayer(Guid parentLayerId, Filter filter, string layerName, IEnumerable<double> keyTimeSteps, string fieldName = null)
@@ -152,7 +164,8 @@ namespace MeshEditor.LayerManager
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
 			int meshIndex = 1;
 			int attributeIndex = 1;
-			int resultIndex = 1;
+			var filteredGeometryMap = new Dictionary<double, GeometryDescription>();
+
 			foreach (var parentMesh in parentLayer.Meshes)
 			{
 				GeometryDescription originalGeometry = LoadGeometry(parentLayerId, parentMesh.Index);
@@ -161,21 +174,44 @@ namespace MeshEditor.LayerManager
 
 				IMeshFilterCreator meshFilterCreator = constructMeshFilterCreator(parentMesh);
 
-				var parentMeshTimeSteps = new HashSet<double>(parentMesh.Results.SelectMany(r => r.TimeSteps));
-				var filteredGeometries = meshFilterCreator.Create(originalGeometry, parentMeshTimeSteps.OrderBy(t => t));
+				var filteredGeometries = meshFilterCreator.Create(originalGeometry, parentMesh.TimeSteps);
 
 				foreach (var (filteredGeometry, filteredMeshTimeSteps) in filteredGeometries)
 				{
 					if (filteredGeometry.IsEmpty)
 						continue;
-					var meshFileDesriptor = constructFilteredMesh(filteredGeometry,
-						parentMesh.Attributes,
-						parentMesh.Results.Where(r => filteredMeshTimeSteps.Intersect(r.TimeSteps).Any()).ToList());
-					meshFileDescriptors.Add(meshFileDesriptor);
+					var meshFileDescriptor = constructFilteredMesh(filteredGeometry, filteredMeshTimeSteps, parentMesh.Attributes);
+					meshFileDescriptors.Add(meshFileDescriptor);
+
+					foreach (var timeStep in filteredMeshTimeSteps)
+					{
+						filteredGeometryMap.Add(timeStep, filteredGeometry);
+					}
 				}
 			}
 
-			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors);
+			// filter results
+			// divide filteredDataDescriptions to time step chunks according to --keytimes option
+			IEnumerable<IReadOnlyList<DataDescription>> filteredDataDescriptionsChunks;
+
+			var test = getResultIndicesGroupedByTimeStep(parentLayer, fieldName).ToList();
+
+			if (keyTimeSteps.Any())
+			{
+				filteredDataDescriptionsChunks = from g in getResultIndicesGroupedByTimeStep(parentLayer, fieldName)
+												 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometryMap, g.Select(index => getLayerResultRecordName(parentLayerId, index))), keyTimeSteps)
+												 select list;
+			}
+			else
+			{
+				filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometryMap, from index in getResultIndicesGroupedByTimeStep(parentLayer, fieldName).SelectMany(g => g)
+																										select getLayerResultRecordName(parentLayerId, index))
+												 select new[] { data };
+			}
+
+			var fieldDescriptors = generateDataFilesForFields(newLayerId, getTimeStepMeshIndexMap(meshFileDescriptors), filteredDataDescriptionsChunks);
+
+			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors, fieldDescriptors);
 
 			// local functions >>>
 
@@ -199,10 +235,8 @@ namespace MeshEditor.LayerManager
 						}
 					case DeformationFilter deformationFilter:
 						{
-							Debug.Assert(parentMesh.Results.Where(r => r.FieldName == deformationFilter.FieldName).All(r => r.Location == DataLocationType.Points));
-							var dataComponentDescriptors = from r in parentMesh.Results
-														   where r.FieldName == deformationFilter.FieldName
-														   from d in LoadData(parentLayerId, r.Index)
+							var dataComponentDescriptors = from index in getResultIndicesGroupedByTimeStep(parentLayer, deformationFilter.DeformationFieldName).SelectMany(g => g)
+														   from d in LoadData(parentLayerId, index)
 														   group d by d.TimeStep;
 							return new DeformedMeshCreator(deformationFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.OrderBy(d => d.ComponentName).ToList()));
 						}
@@ -228,7 +262,7 @@ namespace MeshEditor.LayerManager
 				}
 			}
 
-			MeshFileDescriptor constructFilteredMesh(GeometryDescription filteredGeometry, IEnumerable<DataFileDescriptor> attributes, IEnumerable<DataFileDescriptor> results)
+			MeshFileDescriptor constructFilteredMesh(GeometryDescription filteredGeometry, IEnumerable<double> timeSteps, IEnumerable<DataFileDescriptor> attributes)
 			{
 				// do not include attributes and data if mapping would be 1 : 1 (filteredGeometry.Mapping is null or Mapping is IdentityGeometryMapping)
 
@@ -236,29 +270,47 @@ namespace MeshEditor.LayerManager
 				var originalAttributeRecordNames = attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
 
-				// filter results
-				// divide filteredDataDescriptions to time step chunks according to --keytimes option
-
-				IEnumerable<IReadOnlyList<DataDescription>> filteredDataDescriptionsChunks;
-
-				if (keyTimeSteps.Any())
-				{
-					filteredDataDescriptionsChunks = from result in results
-													 where (fieldName == null || fieldName == result.FieldName)
-													 group result by new { result.FieldName, result.ComponentName } into resultGroup
-													 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometry, resultGroup.Select(r => getLayerResultRecordName(parentLayerId, r.Index))), keyTimeSteps)
-													 select list;
-				}
-				else
-				{
-					filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometry, from result in results
-																										 where (fieldName == null || fieldName == result.FieldName)
-																										 select getLayerResultRecordName(parentLayerId, result.Index))
-													 select new[] { data };
-				}
-
-				return generateDataFilesForMesh(meshIndex++, newLayerId, filteredGeometry, filteredAttributeDescriptions, filteredDataDescriptionsChunks, ref attributeIndex, ref resultIndex);
+				return generateDataFilesForMesh(meshIndex++, newLayerId, filteredGeometry, filteredAttributeDescriptions, timeSteps, ref attributeIndex);
 			}
+		}
+
+		private IEnumerable<IEnumerable<int>> getResultIndicesGroupedByTimeStep(SummaryFile summaryFile, string fieldName = null)
+		{
+			//from result in results
+			//where (fieldName == null || fieldName == result.FieldName)
+			//group result by new { result.FieldName, result.ComponentName } into resultGroup
+
+			foreach (var field in summaryFile.Fields.Keys)
+			{
+				if (fieldName == null || fieldName == field)
+				{
+					foreach (var component in summaryFile.Fields[field].Components.Keys)
+					{
+						yield return groupIterator().Distinct().ToList();
+
+						IEnumerable<int> groupIterator()
+						{
+							foreach (var time in summaryFile.Fields[field].Components[component].TimeSteps)
+							{
+								yield return time.Value.DataIndex;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		private Dictionary<double, int> getTimeStepMeshIndexMap(IEnumerable<MeshFileDescriptor> meshFileDescriptors)
+		{
+			var result = new Dictionary<double, int>();
+			foreach (var meshFileDescriptor in meshFileDescriptors)
+			{
+				foreach (var timeStep in meshFileDescriptor.TimeSteps)
+				{
+					result.Add(timeStep, meshFileDescriptor.Index);
+				}
+			}
+			return result;
 		}
 
 		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null)
@@ -269,22 +321,18 @@ namespace MeshEditor.LayerManager
 			Guid compressedLayerId = Guid.NewGuid();
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
 			int attributeIndex = 1;
-			int resultIndex = 1;
 			foreach (var mesh in layerSummary.Meshes)
 			{
 				GeometryDescription geometry = LoadGeometry(layerId, mesh.Index);
 				IEnumerable<AttributeDescription> attributeDescriptions = mesh.Attributes.Select(a => LoadAttribute(layerId, a.Index));
-
-				var dataDescriptionGroups = from result in mesh.Results
-											where (fieldName == null || fieldName == result.FieldName)
-											group result by new { result.FieldName, result.ComponentName } into descriptorsGroup
-											from list in createDataDescriptionGroups(descriptorsGroup.SelectMany(r => LoadData(layerId, r.Index)), keyTimeSteps)
-											select list;
-
-				var meshFileDesriptor = generateDataFilesForMesh(mesh.Index, compressedLayerId, geometry, attributeDescriptions, dataDescriptionGroups, ref attributeIndex, ref resultIndex);
+				var meshFileDesriptor = generateDataFilesForMesh(mesh.Index, compressedLayerId, geometry, attributeDescriptions, mesh.TimeSteps, ref attributeIndex);
 				meshFileDescriptors.Add(meshFileDesriptor);
 			}
-			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors);
+			var dataDescriptionGroups = from g in getResultIndicesGroupedByTimeStep(layerSummary, fieldName)
+										from list in createDataDescriptionGroups(g.SelectMany(index => LoadData(layerId, index)), keyTimeSteps)
+										select list;
+			var fieldDescriptors = generateDataFilesForFields(compressedLayerId, getTimeStepMeshIndexMap(meshFileDescriptors), dataDescriptionGroups);
+			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors, fieldDescriptors);
 		}
 
 		public LayerDiff CreateDiff(Guid layerId)
@@ -313,14 +361,12 @@ namespace MeshEditor.LayerManager
 
 			{
 
-				var parentResults = from mesh in parentLayerSummary.Meshes
-									from result in mesh.Results
-									from data in LoadData(parentLayerSummary.Id, result.Index)
+				var parentResults = from resultIndex in getResultIndicesGroupedByTimeStep(parentLayerSummary).SelectMany(g => g)
+									from data in LoadData(parentLayerSummary.Id, resultIndex)
 									select data;
 
-				var childResults = from mesh in childLayerSummary.Meshes
-								   from result in mesh.Results
-								   from data in LoadData(childLayerSummary.Id, result.Index)
+				var childResults = from resultIndex in getResultIndicesGroupedByTimeStep(childLayerSummary).SelectMany(g => g)
+								   from data in LoadData(childLayerSummary.Id, resultIndex)
 								   select data;
 
 				var timeStepGroups = from a in parentResults
@@ -515,12 +561,13 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<ComponentDataDescription> filterDataByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalResultRecordNames)
+		private IEnumerable<ComponentDataDescription> filterDataByGeometry(IDictionary<double, GeometryDescription> filteredGeometryMap, IEnumerable<string> originalResultRecordNames)
 		{
 			const double EMPTY_VALUE = double.NaN;
-			IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
 			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => loadData(record)))
 			{
+				var filteredGeometry = filteredGeometryMap[oldResult.TimeStep];
+				IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
 				double[] newValues;
 
 				switch (oldResult.Location)
@@ -638,7 +685,7 @@ namespace MeshEditor.LayerManager
 			return firstDataValue + edgeCoordinate * (secondDataValue - firstDataValue);
 		}
 
-		private MeshFileDescriptor generateDataFilesForMesh(int meshIndex, Guid layerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, ref int attributeIndex, ref int resultIndex)
+		private MeshFileDescriptor generateDataFilesForMesh(int meshIndex, Guid layerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IEnumerable<double> timeSteps, ref int attributeIndex)
 		{
 			logger?.LogOperationProgress("Generating mesh file");
 
@@ -657,6 +704,20 @@ namespace MeshEditor.LayerManager
 				attributeIndex++;
 			}
 
+			MeshFileDescriptor meshFileDescriptor = new MeshFileDescriptor
+			{
+				Index = meshIndex,
+				Attributes = attributeDescriptors.ToArray(),
+				TimeSteps = timeSteps.ToArray()
+			};
+
+			return meshFileDescriptor;
+		}
+
+		private Dictionary<string, FieldDescriptor> generateDataFilesForFields(Guid layerId, Dictionary<double, int> meshIndexMap, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups)
+		{
+			int resultIndex = 1;
+
 			// process results
 			var resultDescriptors = new List<DataFileDescriptor>();
 			var compressionCounter = new CompressionCounter();
@@ -665,6 +726,7 @@ namespace MeshEditor.LayerManager
 				DataDescription firstDataField = dataDescriptionGroup.FirstOrDefault();
 				if (firstDataField != null)
 				{
+					int meshIndex = meshIndexMap[firstDataField.TimeStep];
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
@@ -684,17 +746,27 @@ namespace MeshEditor.LayerManager
 
 			logger?.LogMessage(compressionCounter.ToString());
 
-			MeshFileDescriptor meshFileDescriptor = new MeshFileDescriptor
-			{
-				Index = meshIndex,
-				Attributes = attributeDescriptors.ToArray(),
-				Results = resultDescriptors.ToArray(),
-			};
-
-			return meshFileDescriptor;
+			return convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexMap);
 		}
 
-		private SummaryFile generateSummaryFile(string layerName, Guid? parentLayerId, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors)
+		private Dictionary<string, FieldDescriptor> convertDataFileDescriptorsToFieldDescriptors(IEnumerable<DataFileDescriptor> resultDescriptors, Dictionary<double, int> meshIndexMap)
+		{
+			var fields = new Dictionary<string, FieldDescriptor>();
+			foreach (var resultDescriptor in resultDescriptors)
+			{
+				if (!fields.TryGetValue(resultDescriptor.FieldName, out var field))
+					field = fields[resultDescriptor.FieldName] = new FieldDescriptor { Components = new Dictionary<string, ComponentDescriptor>() };
+				if (!field.Components.TryGetValue(resultDescriptor.ComponentName, out var component))
+					component = field.Components[resultDescriptor.ComponentName] = new ComponentDescriptor { TimeSteps = new Dictionary<double, TimeStepDescriptor>() };
+				foreach (var timeStep in resultDescriptor.TimeSteps)
+				{
+					component.TimeSteps.Add(timeStep, new TimeStepDescriptor { DataIndex = resultDescriptor.Index, MeshIndex = meshIndexMap[timeStep] });
+				}
+			}
+			return fields;
+		}
+
+		private SummaryFile generateSummaryFile(string layerName, Guid? parentLayerId, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors, Dictionary<string, FieldDescriptor> fieldDescriptors)
 		{
 			logger?.LogOperationProgress("Generating summary file");
 
@@ -704,42 +776,9 @@ namespace MeshEditor.LayerManager
 				Name = layerName,
 				ParentId = parentLayerId,
 				Filter = filter,
-				Meshes = meshFileDescriptors.ToArray()
+				Meshes = meshFileDescriptors.ToArray(),
+				Fields = fieldDescriptors
 			};
-			var fields = new Dictionary<string, FieldDescriptor>();
-			foreach (var fieldGroup in from mesh in meshFileDescriptors
-									   from result in mesh.Results
-									   group new { Mesh = mesh, Result = result } by result.FieldName into resultGroup
-									   select resultGroup)
-			{
-				var components = new Dictionary<string, ComponentDescriptor>();
-				fields[fieldGroup.Key] = new FieldDescriptor { Components = components };
-				foreach (var componentGroup in from result in fieldGroup
-											   group result by result.Result.ComponentName into resultGroup
-											   select resultGroup)
-				{
-					var timeSteps = new Dictionary<double, TimeStepDescriptor>();
-					components[componentGroup.Key] = new ComponentDescriptor { TimeSteps = timeSteps };
-					foreach (var timeStepGroup in from result in componentGroup
-												  from timeStep in result.Result.TimeSteps
-												  group result by timeStep into resultGroup
-												  select resultGroup)
-					{
-						if (timeStepGroup.Count() > 1)
-						{
-							logger?.LogWarning($"Multiple data components for {fieldGroup.Key}/{componentGroup.Key}/t={timeStepGroup.Key}. Data indices: " + string.Join(", ", timeStepGroup.Select(t => t.Result.Index)));
-						}
-						var timeStep = timeStepGroup.First();
-						timeSteps[timeStepGroup.Key] = new TimeStepDescriptor
-						{
-							MeshIndex = timeStep.Mesh.Index,
-							DataIndex = timeStep.Result.Index
-						};
-					}
-				}
-			}
-
-			layerSummary.Fields = fields;
 
 			storeLayerFile(layerSummary, getLayerSummaryRecordName(newLayerId));
 

@@ -43,7 +43,7 @@ namespace MeshEditor.LayerManager.Filters
 				case FilterType.Deformation:
 					var deformationFilter = new DeformationFilter
 					{
-						FieldName = parameters.ElementAt(0)
+						DeformationFieldName = parameters.ElementAt(0)
 					};
 					var scaleParameter = parameters.ElementAtOrDefault(1);
 					if (scaleParameter != null)
