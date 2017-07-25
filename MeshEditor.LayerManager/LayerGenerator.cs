@@ -108,7 +108,6 @@ namespace MeshEditor.LayerManager
 			Guid newLayerId = Guid.NewGuid();
 			int attributeIndex = 1;
 			var meshDescriptors = new List<MeshFileDescriptor>();
-			var dataDescriptionsChunks = new List<IReadOnlyList<DataDescription>>();
 			var fieldDescriptors = new Dictionary<string, FieldDescriptor>();
 			foreach (var analysisResultImportService in analysisResultImportServices)
 			{
@@ -135,20 +134,18 @@ namespace MeshEditor.LayerManager
 								 select new[] { result };
 				}
 
-				var timeSteps = (from g in dataGroups
-								 from description in g
-								 orderby description.TimeStep
-								 select description.TimeStep).Distinct();
-				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, timeSteps, ref attributeIndex);
-				meshDescriptors.Add(meshDescriptor);
+				var meshDescriptor = generateDataFilesForMesh(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, /*timeSteps:*/ null, ref attributeIndex);
 
-				var fieldsMap = generateDataFilesForFields(newLayerId, meshDescriptor.TimeSteps.ToDictionary(t => t, _ => meshDescriptor.Index), dataGroups);
+				Func<double, int> meshIndexFromTimeStepProvider = _ => meshDescriptor.Index;
+				var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, dataDescriptionGroups: dataGroups);
+				var fieldsMap = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
 				foreach (var (fn, fd) in fieldsMap)
 				{
 					fieldDescriptors.Add(fn, fd);
 				}
 
-				dataDescriptionsChunks.AddRange(dataGroups);
+				meshDescriptor.TimeSteps = findAllTimeStepsSorted(resultDescriptors).ToArray();
+				meshDescriptors.Add(meshDescriptor);
 			}
 			return generateSummaryFile(layerName, null, newLayerId, null, meshDescriptors, fieldDescriptors);
 		}
@@ -194,8 +191,6 @@ namespace MeshEditor.LayerManager
 			// divide filteredDataDescriptions to time step chunks according to --keytimes option
 			IEnumerable<IReadOnlyList<DataDescription>> filteredDataDescriptionsChunks;
 
-			var test = getResultIndicesGroupedByTimeStep(parentLayer, fieldName).ToList();
-
 			if (keyTimeSteps.Any())
 			{
 				filteredDataDescriptionsChunks = from g in getResultIndicesGroupedByTimeStep(parentLayer, fieldName)
@@ -209,8 +204,9 @@ namespace MeshEditor.LayerManager
 												 select new[] { data };
 			}
 
-			var fieldDescriptors = generateDataFilesForFields(newLayerId, getTimeStepMeshIndexMap(meshFileDescriptors), filteredDataDescriptionsChunks);
-
+			Func<double, int> meshIndexFromTimeStepProvider = createMeshIndexFromTimeStepProvider(meshFileDescriptors);
+			var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, filteredDataDescriptionsChunks);
+			var fieldDescriptors = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
 			return generateSummaryFile(filterLayerName, parentLayerId, newLayerId, filter, meshFileDescriptors, fieldDescriptors);
 
 			// local functions >>>
@@ -274,45 +270,6 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<IEnumerable<int>> getResultIndicesGroupedByTimeStep(SummaryFile summaryFile, string fieldName = null)
-		{
-			//from result in results
-			//where (fieldName == null || fieldName == result.FieldName)
-			//group result by new { result.FieldName, result.ComponentName } into resultGroup
-
-			foreach (var field in summaryFile.Fields.Keys)
-			{
-				if (fieldName == null || fieldName == field)
-				{
-					foreach (var component in summaryFile.Fields[field].Components.Keys)
-					{
-						yield return groupIterator().Distinct().ToList();
-
-						IEnumerable<int> groupIterator()
-						{
-							foreach (var time in summaryFile.Fields[field].Components[component].TimeSteps)
-							{
-								yield return time.Value.DataIndex;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		private Dictionary<double, int> getTimeStepMeshIndexMap(IEnumerable<MeshFileDescriptor> meshFileDescriptors)
-		{
-			var result = new Dictionary<double, int>();
-			foreach (var meshFileDescriptor in meshFileDescriptors)
-			{
-				foreach (var timeStep in meshFileDescriptor.TimeSteps)
-				{
-					result.Add(timeStep, meshFileDescriptor.Index);
-				}
-			}
-			return result;
-		}
-
 		public SummaryFile CompressLayer(Guid layerId, IEnumerable<double> keyTimeSteps, string layerName = null, string fieldName = null)
 		{
 			// find layer in storage and download summary
@@ -331,7 +288,9 @@ namespace MeshEditor.LayerManager
 			var dataDescriptionGroups = from g in getResultIndicesGroupedByTimeStep(layerSummary, fieldName)
 										from list in createDataDescriptionGroups(g.SelectMany(index => LoadData(layerId, index)), keyTimeSteps)
 										select list;
-			var fieldDescriptors = generateDataFilesForFields(compressedLayerId, getTimeStepMeshIndexMap(meshFileDescriptors), dataDescriptionGroups);
+			Func<double, int> meshIndexFromTimeStepProvider = createMeshIndexFromTimeStepProvider(meshFileDescriptors);
+			var resultDescriptors = generateDataFilesForFields(compressedLayerId, meshIndexFromTimeStepProvider, dataDescriptionGroups);
+			var fieldDescriptors = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
 			return generateSummaryFile(layerName ?? "time compression", layerId, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors, fieldDescriptors);
 		}
 
@@ -496,13 +455,11 @@ namespace MeshEditor.LayerManager
 						newValues = new int[filteredGeometry.NumberOfPoints];
 						for (int newPointIndex = 0; newPointIndex < newValues.Length; newPointIndex++)
 						{
-							int oldIndex;
-							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryMapPoint(newPointIndex, out oldIndex))
+							if (mapping.TryMapPoint(newPointIndex, out int oldIndex))
 							{
 								newValues[newPointIndex] = oldAttribute.Values[oldIndex];
 							}
-							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out EdgeIntersection oldEdgeIntersection))
 							{
 								newValues[newPointIndex] = interpolateAttributeValue(
 									firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
@@ -517,13 +474,11 @@ namespace MeshEditor.LayerManager
 						{
 							for (int newCellPointIndex = 0; newCellPointIndex < newValues.Length; newCellPointIndex++)
 							{
-								int oldCellPointIndex;
-								EdgeIntersection oldEdgeIntersection;
-								if (mapping.TryMapCellPoint(newCellPointIndex, out oldCellPointIndex))
+								if (mapping.TryMapCellPoint(newCellPointIndex, out int oldCellPointIndex))
 								{
 									newValues[newCellPointIndex] = oldAttribute.Values[oldCellPointIndex];
 								}
-								else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+								else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out EdgeIntersection oldEdgeIntersection))
 								{
 									newValues[newCellPointIndex] = interpolateAttributeValue(
 										firstAttributeValue: oldAttribute.Values[oldEdgeIntersection.FirstPointId],
@@ -538,8 +493,7 @@ namespace MeshEditor.LayerManager
 						newValues = new int[filteredGeometry.NumberOfCells];
 						for (int newCellIndex = 0; newCellIndex < newValues.Length; newCellIndex++)
 						{
-							int oldIndex;
-							if (mapping.TryMapCell(newCellIndex, out oldIndex))
+							if (mapping.TryMapCell(newCellIndex, out int oldIndex))
 							{
 								newValues[newCellIndex] = oldAttribute.Values[oldIndex];
 							}
@@ -576,13 +530,11 @@ namespace MeshEditor.LayerManager
 						newValues = new double[filteredGeometry.NumberOfPoints];
 						for (int newPointIndex = 0; newPointIndex < filteredGeometry.NumberOfPoints; newPointIndex++)
 						{
-							int oldPointIndex;
-							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryMapPoint(newPointIndex, out oldPointIndex))
+							if (mapping.TryMapPoint(newPointIndex, out int oldPointIndex))
 							{
 								newValues[newPointIndex] = oldResult.Values[oldPointIndex];
 							}
-							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapPointEdgeIntersection(newPointIndex, out EdgeIntersection oldEdgeIntersection))
 							{
 								newValues[newPointIndex] = interpolateDataValue(
 									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
@@ -599,13 +551,11 @@ namespace MeshEditor.LayerManager
 						newValues = new double[filteredGeometry.CellConnectivity.Length];
 						for (int newCellPointIndex = 0; newCellPointIndex < filteredGeometry.CellConnectivity.Length; newCellPointIndex++)
 						{
-							int oldCellPointIndex;
-							EdgeIntersection oldEdgeIntersection;
-							if (mapping.TryMapCellPoint(newCellPointIndex, out oldCellPointIndex))
+							if (mapping.TryMapCellPoint(newCellPointIndex, out int oldCellPointIndex))
 							{
 								newValues[newCellPointIndex] = oldResult.Values[oldCellPointIndex];
 							}
-							else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out oldEdgeIntersection))
+							else if (mapping.TryMapCellPointEdgeIntersection(newCellPointIndex, out EdgeIntersection oldEdgeIntersection))
 							{
 								newValues[newCellPointIndex] = interpolateDataValue(
 									firstDataValue: oldResult.Values[oldEdgeIntersection.FirstPointId],
@@ -622,8 +572,7 @@ namespace MeshEditor.LayerManager
 						newValues = new double[filteredGeometry.NumberOfCells];
 						for (int newCellIndex = 0; newCellIndex < filteredGeometry.NumberOfCells; newCellIndex++)
 						{
-							int oldCellIndex;
-							if (mapping.TryMapCell(newCellIndex, out oldCellIndex))
+							if (mapping.TryMapCell(newCellIndex, out int oldCellIndex))
 							{
 								newValues[newCellIndex] = oldResult.Values[oldCellIndex];
 							}
@@ -650,6 +599,70 @@ namespace MeshEditor.LayerManager
 				yield return newResult;
 			}
 		}
+
+
+		private IEnumerable<IEnumerable<int>> getResultIndicesGroupedByTimeStep(SummaryFile summaryFile, string fieldName = null)
+		{
+			//from result in results
+			//where (fieldName == null || fieldName == result.FieldName)
+			//group result by new { result.FieldName, result.ComponentName } into resultGroup
+
+			foreach (var field in summaryFile.Fields.Keys)
+			{
+				if (fieldName == null || fieldName == field)
+				{
+					foreach (var component in summaryFile.Fields[field].Components.Keys)
+					{
+						yield return groupIterator().Distinct().ToList();
+
+						IEnumerable<int> groupIterator()
+						{
+							foreach (var time in summaryFile.Fields[field].Components[component].TimeSteps)
+							{
+								yield return time.Value.DataIndex;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		private Func<double, int> createMeshIndexFromTimeStepProvider(IEnumerable<MeshFileDescriptor> meshFileDescriptors)
+		{
+			var map = new Dictionary<double, int>();
+			foreach (var meshFileDescriptor in meshFileDescriptors)
+			{
+				foreach (var timeStep in meshFileDescriptor.TimeSteps)
+				{
+					map.Add(timeStep, meshFileDescriptor.Index);
+				}
+			}
+			return t => map[t];
+		}
+
+		private IEnumerable<double> findAllTimeStepsSorted(IEnumerable<DataFileDescriptor> resultDescriptors)
+		{
+			var sortedSet = new SortedSet<double>();
+			foreach (var resultDescriptor in resultDescriptors)
+			{
+				foreach (var timeStep in resultDescriptor.TimeSteps)
+				{
+					sortedSet.Add(timeStep);
+				}
+			}
+			//foreach (var field in fieldDescriptors.Keys)
+			//{
+			//	foreach (var component in fieldDescriptors[field].Components.Keys)
+			//	{
+			//		foreach (var time in fieldDescriptors[field].Components[component].TimeSteps.Keys)
+			//		{
+			//			sortedSet.Add(time);
+			//		}
+			//	}
+			//}
+			return sortedSet;
+		}
+
 
 		private IEnumerable<IReadOnlyList<DataDescription>> createDataDescriptionGroups(IEnumerable<DataDescription> dataDescriptions, IEnumerable<double> keyTimeSteps)
 		{
@@ -708,13 +721,13 @@ namespace MeshEditor.LayerManager
 			{
 				Index = meshIndex,
 				Attributes = attributeDescriptors.ToArray(),
-				TimeSteps = timeSteps.ToArray()
+				TimeSteps = timeSteps?.ToArray()
 			};
 
 			return meshFileDescriptor;
 		}
 
-		private Dictionary<string, FieldDescriptor> generateDataFilesForFields(Guid layerId, Dictionary<double, int> meshIndexMap, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups)
+		private IEnumerable<DataFileDescriptor> generateDataFilesForFields(Guid layerId, Func<double, int> meshIndexFromTimeStepProvider, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups)
 		{
 			int resultIndex = 1;
 
@@ -726,7 +739,7 @@ namespace MeshEditor.LayerManager
 				DataDescription firstDataField = dataDescriptionGroup.FirstOrDefault();
 				if (firstDataField != null)
 				{
-					int meshIndex = meshIndexMap[firstDataField.TimeStep];
+					int meshIndex = meshIndexFromTimeStepProvider(firstDataField.TimeStep);
 					IEnumerable<DataDescription> restDataFields = dataDescriptionGroup.Skip(1);
 
 					for (int componentIndex = 0; componentIndex < firstDataField.NumberOfComponents; componentIndex++)
@@ -746,10 +759,10 @@ namespace MeshEditor.LayerManager
 
 			logger?.LogMessage(compressionCounter.ToString());
 
-			return convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexMap);
+			return resultDescriptors;
 		}
 
-		private Dictionary<string, FieldDescriptor> convertDataFileDescriptorsToFieldDescriptors(IEnumerable<DataFileDescriptor> resultDescriptors, Dictionary<double, int> meshIndexMap)
+		private Dictionary<string, FieldDescriptor> convertDataFileDescriptorsToFieldDescriptors(IEnumerable<DataFileDescriptor> resultDescriptors, Func<double, int> meshIndexFromTimeStepProvider)
 		{
 			var fields = new Dictionary<string, FieldDescriptor>();
 			foreach (var resultDescriptor in resultDescriptors)
@@ -760,7 +773,7 @@ namespace MeshEditor.LayerManager
 					component = field.Components[resultDescriptor.ComponentName] = new ComponentDescriptor { TimeSteps = new Dictionary<double, TimeStepDescriptor>() };
 				foreach (var timeStep in resultDescriptor.TimeSteps)
 				{
-					component.TimeSteps.Add(timeStep, new TimeStepDescriptor { DataIndex = resultDescriptor.Index, MeshIndex = meshIndexMap[timeStep] });
+					component.TimeSteps.Add(timeStep, new TimeStepDescriptor { DataIndex = resultDescriptor.Index, MeshIndex = meshIndexFromTimeStepProvider(timeStep) });
 				}
 			}
 			return fields;
@@ -975,8 +988,7 @@ namespace MeshEditor.LayerManager
 
 		private string encodeGeometryDataArray<T>(T[] geometryData, bool trimEnd) where T : struct
 		{
-			EncodingParameters ignored;
-			return encodingService.Encode(geometryData, trimEnd ? TrimOptions.End : TrimOptions.None, out ignored);
+			return encodingService.Encode(geometryData, trimEnd ? TrimOptions.End : TrimOptions.None, out _);
 		}
 
 		private T[] decodeGeometryDataArray<T>(string data, bool expandEnd, int originalLength = 0) where T : struct
