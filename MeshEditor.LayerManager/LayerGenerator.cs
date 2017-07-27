@@ -194,13 +194,12 @@ namespace MeshEditor.LayerManager
 			if (keyTimeSteps.Any())
 			{
 				filteredDataDescriptionsChunks = from g in getResultIndicesGroupedByTimeStep(parentLayer, fieldName)
-												 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometryMap, g.Select(index => getLayerResultRecordName(parentLayerId, index))), keyTimeSteps)
+												 from list in createDataDescriptionGroups(filterDataByGeometry(filteredGeometryMap, parentLayerId, g), keyTimeSteps)
 												 select list;
 			}
 			else
 			{
-				filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometryMap, from index in getResultIndicesGroupedByTimeStep(parentLayer, fieldName).SelectMany(g => g)
-																										select getLayerResultRecordName(parentLayerId, index))
+				filteredDataDescriptionsChunks = from data in filterDataByGeometry(filteredGeometryMap, parentLayerId, getResultIndicesGroupedByTimeStep(parentLayer, fieldName).SelectMany(g => g))
 												 select new[] { data };
 			}
 
@@ -263,8 +262,11 @@ namespace MeshEditor.LayerManager
 				// do not include attributes and data if mapping would be 1 : 1 (filteredGeometry.Mapping is null or Mapping is IdentityGeometryMapping)
 
 				// filter attributes
-				var originalAttributeRecordNames = attributes.Select(a => getLayerAttributeRecordName(parentLayerId, a.Index));
-				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(filteredGeometry, originalAttributeRecordNames);
+				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(
+					filteredGeometry,
+					originalLayerId: parentLayerId,
+					originalAttributeIndices: attributes.Select(a => a.Index)
+				);
 
 				return generateDataFilesForMesh(meshIndex++, newLayerId, filteredGeometry, filteredAttributeDescriptions, timeSteps, ref attributeIndex);
 			}
@@ -385,30 +387,7 @@ namespace MeshEditor.LayerManager
 
 		public IEnumerable<ComponentDataDescription> LoadData(Guid layerId, int dataIndex)
 		{
-			return loadData(getLayerResultRecordName(layerId, dataIndex));
-		}
-
-		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
-		{
-			return loadDataAsync(getLayerResultRecordName(layerId, dataIndex), cancellationToken);
-		}
-
-		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
-		{
-			return loadAttribute(getLayerAttributeRecordName(layerId, attributeIndex));
-		}
-
-		public Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
-		{
-			return loadAttributeAsync(getLayerAttributeRecordName(layerId, attributeIndex), cancellationToken);
-		}
-
-		#endregion
-
-		#region Private methods
-
-		private IEnumerable<ComponentDataDescription> loadData(string record)
-		{
+			string record = getLayerResultRecordName(layerId, dataIndex);
 			using (Stream stream = sourceStorage.Load(record))
 			{
 				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
@@ -416,8 +395,9 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private async Task<IEnumerable<ComponentDataDescription>> loadDataAsync(string record, CancellationToken cancellationToken)
+		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
+			string record = getLayerResultRecordName(layerId, dataIndex);
 			using (Stream stream = sourceStorage.Load(record))
 			{
 				DataFile layerResult = await serializationService.DeserializeAsync<DataFile>(stream, cancellationToken);
@@ -425,8 +405,9 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private AttributeDescription loadAttribute(string record)
+		public AttributeDescription LoadAttribute(Guid layerId, int attributeIndex)
 		{
+			string record = getLayerAttributeRecordName(layerId, attributeIndex);
 			using (Stream attributeStream = sourceStorage.Load(record))
 			{
 				DataFile layerAttributes = serializationService.Deserialize<DataFile>(attributeStream);
@@ -434,8 +415,9 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private async Task<AttributeDescription> loadAttributeAsync(string record, CancellationToken cancellationToken)
+		public async Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
 		{
+			string record = getLayerAttributeRecordName(layerId, attributeIndex);
 			using (Stream attributeStream = sourceStorage.Load(record))
 			{
 				DataFile layerAttributes = await serializationService.DeserializeAsync<DataFile>(attributeStream, cancellationToken);
@@ -443,10 +425,14 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, IEnumerable<string> originalAttributeRecordNames)
+		#endregion
+
+		#region Private methods
+
+		private IEnumerable<AttributeDescription> filterAttributesByGeometry(GeometryDescription filteredGeometry, Guid originalLayerId, IEnumerable<int> originalAttributeIndices)
 		{
 			IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
-			foreach (AttributeDescription oldAttribute in originalAttributeRecordNames.Select(record => loadAttribute(record)))
+			foreach (AttributeDescription oldAttribute in originalAttributeIndices.Select(attributeIndex => LoadAttribute(originalLayerId, attributeIndex)))
 			{
 				int[] newValues;
 				switch (oldAttribute.Location)
@@ -515,10 +501,10 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<ComponentDataDescription> filterDataByGeometry(IDictionary<double, GeometryDescription> filteredGeometryMap, IEnumerable<string> originalResultRecordNames)
+		private IEnumerable<ComponentDataDescription> filterDataByGeometry(IDictionary<double, GeometryDescription> filteredGeometryMap, Guid originalLayerId, IEnumerable<int> originalResultDataIndices)
 		{
 			const double EMPTY_VALUE = double.NaN;
-			foreach (ComponentDataDescription oldResult in originalResultRecordNames.SelectMany(record => loadData(record)))
+			foreach (ComponentDataDescription oldResult in originalResultDataIndices.SelectMany(dataIndex => LoadData(originalLayerId, dataIndex)))
 			{
 				var filteredGeometry = filteredGeometryMap[oldResult.TimeStep];
 				IFilterGeometryEntityMapping mapping = (IFilterGeometryEntityMapping)filteredGeometry.Mapping;
@@ -650,16 +636,6 @@ namespace MeshEditor.LayerManager
 					sortedSet.Add(timeStep);
 				}
 			}
-			//foreach (var field in fieldDescriptors.Keys)
-			//{
-			//	foreach (var component in fieldDescriptors[field].Components.Keys)
-			//	{
-			//		foreach (var time in fieldDescriptors[field].Components[component].TimeSteps.Keys)
-			//		{
-			//			sortedSet.Add(time);
-			//		}
-			//	}
-			//}
 			return sortedSet;
 		}
 
