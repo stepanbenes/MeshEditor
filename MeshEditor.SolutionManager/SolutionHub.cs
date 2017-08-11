@@ -187,7 +187,7 @@ namespace MeshEditor.SolutionManager
 		{
 			Solution solution = solutionController.Get(solutionLocator);
 			var analysisResultImportServices = solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
-			
+
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
@@ -201,8 +201,7 @@ namespace MeshEditor.SolutionManager
 
 		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
-			FilterType filterType;
-			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
+			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out FilterType filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
 			var parentLayer = findLayer(parentLayerIdOrName);
@@ -239,7 +238,7 @@ namespace MeshEditor.SolutionManager
 		public void Delete(string layerIdOrName, bool deleteAll = false)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
-			
+
 			if (deleteAll)
 			{
 				solutionController.Delete(solutionLocator); // delete solution itself
@@ -305,42 +304,41 @@ namespace MeshEditor.SolutionManager
 			Solution solution = solutionController.Get(solutionLocator);
 
 			// find layer according to either provided layer guid or layer name
-			Solution.Layer layer;
-			Guid guid;
-			if (Guid.TryParse(layerIdentifier, out guid))
+			Solution.Layer result;
+			if (Guid.TryParse(layerIdentifier, out Guid guid))
 			{
-				layer = findLayer(solution.Layers, l => l.Id == guid);
+				result = findLayer(solution.Layers, l => l.Id == guid);
 			}
 			else
 			{
-				layer = findLayer(solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
+				result = findLayer(solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
 			}
 
-			if (layer == null)
+			if (result == null)
 			{
 				throw new ArgumentException($"Layer '{layerIdentifier}' not found.");
 			}
 
-			return layer;
-		}
+			return result;
 
-		private static Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
-		{
-			if (layers != null)
+			Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
 			{
-				foreach (var layer in layers)
+				if (layers != null)
 				{
-					if (predicate(layer))
-						return layer;
+					foreach (var layer in layers)
+					{
+						if (predicate(layer))
+							return layer;
+					}
+					foreach (var layer in layers)
+					{
+						var hit = findLayer(layer.Children, predicate);
+						if (hit != null)
+							return hit;
+					}
 				}
-				foreach (var layer in layers)
-				{
-					var hit = findLayer(layer.Children, predicate);
-					if (hit != null)
-						return hit;
-				}
+				return null;
 			}
-			return null;
 		}
 
 		private void logNewLayer(ILayerInfo layerInfo)

@@ -25,14 +25,7 @@ namespace MeshEditor.SolutionManager.IO
 			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
 
 			public override int GetHashCode() => Id.GetHashCode();
-
-			public override bool Equals(object obj)
-			{
-				var other = obj as ILayerInfo;
-				if (other == null)
-					return false;
-				return this.Id.Equals(other.Id);
-			}
+			public override bool Equals(object obj) => obj is ILayerInfo other && this.Id.Equals(other.Id);
 		}
 
 		#endregion
