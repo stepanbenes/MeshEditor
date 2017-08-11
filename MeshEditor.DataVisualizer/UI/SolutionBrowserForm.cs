@@ -148,7 +148,7 @@ namespace MeshEditor.DataVisualizer.UI
 				var logger = new MemoryLogger();
 				try
 				{
-					var solutionHub = SolutionHub.CreateLocal(selectedSolution.Location, logger);
+					var solutionHub = SolutionHub.OpenLocal(selectedSolution.Location, logger);
 					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
 				}
 				catch (Exception ex)
@@ -179,7 +179,7 @@ namespace MeshEditor.DataVisualizer.UI
 				var logger = new MemoryLogger();
 				try
 				{
-					var solutionHub = SolutionHub.CreateRemote(selectedSolution.Id, logger);
+					var solutionHub = SolutionHub.OpenRemote(selectedSolution.Id, logger);
 					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
 				}
 				catch (Exception ex)

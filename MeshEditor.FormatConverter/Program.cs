@@ -29,9 +29,9 @@ namespace MeshEditor.FormatConverter
 			//bool isRunningLocally = webjobName == null;
 
 			string dashboardAndStorageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsDashboard");
-			bool isRunningLocally = dashboardAndStorageConnectionString == null;
+			bool runningLocally = dashboardAndStorageConnectionString == null;
 
-			if (isRunningLocally) // running locally
+			if (runningLocally)
 			{
 				if (args == null || args.Length == 0)
 				{
@@ -39,8 +39,8 @@ namespace MeshEditor.FormatConverter
 				}
 
 				int returnCode = 1;
-				
-				var program = new Program(isRunningLocally, storageType: StorageType.Local, logger: new ConsoleLogger());
+
+				var program = new Program(runningLocally, storageType: StorageType.Local, logger: new ConsoleLogger());
 
 				Stopwatch stopwatch = new Stopwatch();
 				stopwatch.Start();
@@ -101,11 +101,9 @@ namespace MeshEditor.FormatConverter
 
 		#region Fields, constructor
 
-		SolutionHub solutionHub;
-		ILogger logger;
-
 		readonly bool isRunningLocally;
 		readonly StorageType storageType;
+		readonly ILogger logger;
 
 		public Program(bool isRunningLocally, StorageType storageType, ILogger logger)
 		{
@@ -121,7 +119,6 @@ namespace MeshEditor.FormatConverter
 		public int Run(IEnumerable<string> args)
 		{
 			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions, DiffOptions>(args)
-					.WithParsed((Options options) => initializeSolutionHub(options))
 					.MapResult(
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
@@ -138,24 +135,28 @@ namespace MeshEditor.FormatConverter
 
 		private int runImportCommand(ImportOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			solutionHub.Import(options.KeyTimeSteps, options.CompressionParameters, options.GaussPointsExtrapolationStrategyName, options.FieldName, options.LayerName);
 			return 0;
 		}
 
 		private int runFilterCommand(FilterOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			solutionHub.Filter(options.ParentLayer, options.FilterType, options.FilterParameters, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
 			return 0;
 		}
 
 		private int runCompressCommand(CompressOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			solutionHub.Compress(options.Layer, options.KeyTimeSteps, options.CompressionParameters, options.FieldName, options.LayerName);
 			return 0;
 		}
 
 		private int runListCommand(ListOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			var layers = solutionHub.GetSolutionDescription().Layers;
 			for (int i = 0; i < layers.Count; i++)
 			{
@@ -166,12 +167,14 @@ namespace MeshEditor.FormatConverter
 
 		private int runDeleteCommand(DeleteOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			solutionHub.Delete(options.Layer, options.DeleteAll);
 			return 0;
 		}
 
 		private int runDiffCommand(DiffOptions options)
 		{
+			var solutionHub = initializeSolutionHub(options);
 			solutionHub.Diff(options.Layer);
 			return 0;
 		}
@@ -180,7 +183,7 @@ namespace MeshEditor.FormatConverter
 
 		#region Private methods
 
-		private void initializeSolutionHub(Options options)
+		private SolutionHub initializeSolutionHub(Options options)
 		{
 			if (logger != null)
 			{
@@ -193,9 +196,9 @@ namespace MeshEditor.FormatConverter
 				throw new FormatException("Argument Solution is not an integer");
 			}
 
-			StorageType storageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
+			StorageType requestedStorageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
 
-			switch (storageType)
+			switch (requestedStorageType)
 			{
 				case StorageType.Local:
 					{
@@ -214,52 +217,40 @@ namespace MeshEditor.FormatConverter
 #endif
 
 							var solutionIndex = chooseSolution(solutions);
-							if (solutionIndex.HasValue)
-							{
-								var solutionFileName = solutions[solutionIndex.Value].Location;
-								solutionHub = SolutionHub.CreateLocal(solutionFileName, logger);
-							}
-							else
-							{
-								solutionHub = SolutionHub.CreateEmptyLocal(solutionDirectory, logger);
-							}
+							var solutionFileName = solutions[solutionIndex].Location;
+							return SolutionHub.OpenLocal(solutionFileName, logger);
 						}
 						else // option.Solution should be solution file full path
 						{
-							solutionHub = SolutionHub.CreateLocal(options.Solution, logger);
+							return SolutionHub.OpenLocal(options.Solution, logger);
 						}
 					}
-					break;
 				case StorageType.Remote:
 					{
 						if (options.Solution == null)
 						{
 							var solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
 							var solutionIndex = chooseSolution(solutions);
-							if (!solutionIndex.HasValue)
-							{
-								throw new FileNotFoundException("No solution found.");
-							}
-							solutionId = solutions[solutionIndex.Value].Id;
+							solutionId = solutions[solutionIndex].Id;
 						}
 						else
 						{
 							solutionId = int.Parse(options.Solution);
 						}
-						solutionHub = SolutionHub.CreateRemote(solutionId, logger);
+						return SolutionHub.OpenRemote(solutionId, logger);
 					}
-					break;
 				default:
 					throw new NotSupportedException();
 			}
 		}
 
-		private int? chooseSolution(IReadOnlyList<ISolutionInfo> solutions)
+		private int chooseSolution(IReadOnlyList<ISolutionInfo> solutions)
 		{
 			Debug.Assert(isRunningLocally);
 
 			if (solutions.Count == 0)
-				return null;
+				throw new FileNotFoundException("No solution found.");
+
 			if (solutions.Count == 1)
 				return solutions[0].Id;
 
@@ -276,10 +267,6 @@ namespace MeshEditor.FormatConverter
 			{
 				Console.Write("Index = ");
 				string input = Console.ReadLine();
-				if (string.IsNullOrEmpty(input))
-				{
-					return null;
-				}
 				int index;
 				if (!int.TryParse(input, out index))
 				{

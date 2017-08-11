@@ -135,8 +135,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private static string createNewSolution(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName, ILogger logger)
 		{
-			var solutionHub = SolutionHub.CreateEmptyLocal(solutionDirectory, logger: logger);
-			var solutionFileName = solutionHub.Create(analysisResults, projectName);
+			var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+			var solutionFileName = solutionHub.GetSolutionDescription().Location;
 			return solutionFileName;
 		}
 

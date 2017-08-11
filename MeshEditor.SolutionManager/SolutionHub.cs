@@ -50,22 +50,29 @@ namespace MeshEditor.SolutionManager
 			ConfigurationManager.WriteConfigurationObject("LocalStorage", localStorageConfiguration);
 		}
 
-		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)
+		public static SolutionHub CreateNewLocal(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName = null, ILogger logger = null)
 		{
 			var controller = new LocalSolutionController(solutionDirectory);
 
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
+
+			Solution createdSolution = controller.CreateNew(/*solutionLocator*/ null, analysisResults, projectName);
+			logger?.LogMessage($"Created at '{createdSolution.Location}'");
+
 			return new SolutionHub(
-				solutionLocator: null,
+				solutionLocator: createdSolution.Location,
 				solutionController: controller,
 				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
 				logger: logger
-			);
+			)
+			{
+				Solution = createdSolution
+			};
 		}
 
-		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
+		public static SolutionHub OpenLocal(string solutionFileName, ILogger logger = null)
 		{
 			Debug.Assert(solutionFileName != null);
 			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
@@ -82,7 +89,7 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static SolutionHub CreateRemote(int solutionId, ILogger logger = null)
+		public static SolutionHub OpenRemote(int solutionId, ILogger logger = null)
 		{
 			return new SolutionHub(
 				solutionLocator: solutionId,
@@ -122,10 +129,12 @@ namespace MeshEditor.SolutionManager
 
 		#region Fields, Constructors
 
-		object solutionLocator;
+		readonly object solutionLocator;
 		readonly ISolutionController solutionController;
 		readonly IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
 		readonly ILogger logger;
+
+		private Solution _solution;
 
 		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService importStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
@@ -139,16 +148,27 @@ namespace MeshEditor.SolutionManager
 
 		#endregion
 
+		#region Private Properties
+
+		private Solution Solution
+		{
+			get => _solution ?? (_solution = solutionController.Get(solutionLocator));
+			set => _solution = value;
+		}
+
+		#endregion
+
 		#region Commands (SolutionManager's public interface)
 
-		public ISolutionDescription GetSolutionDescription()
-		{
-			return solutionController.Get(solutionLocator);
-		}
+		public ISolutionDescription GetSolutionDescription() => Solution;
 
 		public async Task<ISolutionDescription> GetSolutionDescriptionAsync(CancellationToken cancellationToken)
 		{
-			return await solutionController.GetAsync(solutionLocator, cancellationToken);
+			if (_solution == null)
+			{
+				Solution = await solutionController.GetAsync(solutionLocator, cancellationToken);
+			}
+			return Solution;
 		}
 
 		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
@@ -175,18 +195,9 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
 		}
 
-		public string Create(IEnumerable<AnalysisResult> analysisResults, string projectName = null)
-		{
-			Solution solution = solutionController.CreateNew(solutionLocator, analysisResults, projectName);
-			solutionLocator = solution.Location;
-			logger?.LogMessage($"Created at '{solution.Location}'");
-			return solution.Location;
-		}
-
 		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
-			Solution solution = solutionController.Get(solutionLocator);
-			var analysisResultImportServices = solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
+			var analysisResultImportServices = Solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
@@ -245,7 +256,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				_ = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
+				Solution = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
 			}
 		}
 
@@ -259,7 +270,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				_ = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
+				Solution = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
 			}
 		}
 
@@ -293,7 +304,7 @@ namespace MeshEditor.SolutionManager
 		{
 			var newLayer = createLayerRecordFromLayerSummaryFile(layerSummary);
 			logNewLayer(newLayer);
-			_ = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+			Solution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
 		}
 
 		private Solution.Layer findLayer(string layerIdentifier)
@@ -301,17 +312,15 @@ namespace MeshEditor.SolutionManager
 			if (layerIdentifier == null)
 				throw new ArgumentNullException(nameof(layerIdentifier));
 
-			Solution solution = solutionController.Get(solutionLocator);
-
 			// find layer according to either provided layer guid or layer name
 			Solution.Layer result;
 			if (Guid.TryParse(layerIdentifier, out Guid guid))
 			{
-				result = findLayer(solution.Layers, l => l.Id == guid);
+				result = findLayer(Solution.Layers, l => l.Id == guid);
 			}
 			else
 			{
-				result = findLayer(solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
+				result = findLayer(Solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
 			}
 
 			if (result == null)
