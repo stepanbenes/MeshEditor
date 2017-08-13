@@ -134,7 +134,8 @@ namespace MeshEditor.SolutionManager
 		readonly IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
 		readonly ILogger logger;
 
-		private Solution _solution;
+		Solution _solution;
+		readonly Dictionary<Guid, SummaryFile> layerSummaryCache;
 
 		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService importStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
@@ -144,6 +145,8 @@ namespace MeshEditor.SolutionManager
 			this.layerSourceStorage = layerSourceStorage;
 			this.layerDestinationStorage = layerDestinationStorage;
 			this.logger = logger;
+
+			this.layerSummaryCache = new Dictionary<Guid, SummaryFile>();
 		}
 
 		#endregion
@@ -189,10 +192,15 @@ namespace MeshEditor.SolutionManager
 			return layerGenerator.LoadAttributeAsync(layerId, attributeIndex, cancellationToken);
 		}
 
-		public Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
+		public async Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
+			if (!layerSummaryCache.TryGetValue(layerId, out var layerSummary))
+			{
+				var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
+				layerSummary = await layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
+				layerSummaryCache[layerId] = layerSummary; // cache it
+			}
+			return layerSummary;
 		}
 
 		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
