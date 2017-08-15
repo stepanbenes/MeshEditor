@@ -9,14 +9,15 @@ namespace MeshEditor.LayerManager.MeshFiltering
 {
 	internal class GeometryBuilder
 	{
-		private List<float> pointCoordinates;
-		private List<int> cellConnectivity;
-		private List<int> cellOffsets;
-		private List<CellType> cellTypes;
-		private int numberOfCoordinateComponents;
-		private int pointCounter;
+		readonly List<float> pointCoordinates;
+		readonly List<int> cellConnectivity;
+		readonly List<int> cellOffsets;
+		readonly List<CellType> cellTypes;
+		readonly int numberOfCoordinateComponents;
 
-		private FilterGeometryEntityMapping mapping;
+		readonly FilterGeometryEntityMapping mapping;
+
+		private int pointCounter;
 
 		public GeometryBuilder(int numberOfCoordinateComponents)
 		{
