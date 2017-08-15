@@ -174,22 +174,25 @@ namespace MeshEditor.SolutionManager
 			return Solution;
 		}
 
-		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
+		public async Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadGeometryAsync(layerId, meshIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadGeometryAsync(layerId, layerSummary.MeshFallbackLayerId, meshIndex, cancellationToken);
 		}
 
-		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
+		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadDataAsync(layerId, dataIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
 		}
 
-		public Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
+		public async Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadAttributeAsync(layerId, attributeIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadAttributeAsync(layerId, layerSummary.AttributeFallbackLayerId, attributeIndex, cancellationToken);
 		}
 
 		public async Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
