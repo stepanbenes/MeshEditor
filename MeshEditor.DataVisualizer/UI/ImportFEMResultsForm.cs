@@ -68,14 +68,18 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					solutionDirectory = location;
 				}
-				
-				var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+
+				var keyTimeSteps = buildKeyTimeSteps();
+				var compressionParameters = buildCompressionParameters();
+				var gaussPointsExtrapolationStrategyName = buildGaussPointsExtrapolationStrategyName();
+
 				using (longOpNotifier.Begin("Importing FEM results", isCancellable: false, logger: logger))
 				{
-					await Task.Run(() => solutionHub.Import(buildKeyTimeSteps(), buildCompressionParameters(), buildGaussPointsExtrapolationStrategyName()));
+					var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+					await Task.Run(() => solutionHub.Import(keyTimeSteps, compressionParameters, gaussPointsExtrapolationStrategyName));
+					SolutionFileName = solutionHub.GetSolutionDescription().Location;
 				}
 
-				SolutionFileName = solutionHub.GetSolutionDescription().Location;
 				DialogResult = DialogResult.OK; // close dialog
 			}
 			catch (Exception ex)
