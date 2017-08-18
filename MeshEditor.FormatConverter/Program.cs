@@ -9,7 +9,7 @@ using System.Diagnostics;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
 using Microsoft.Azure.WebJobs;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 
 namespace MeshEditor.FormatConverter
 {

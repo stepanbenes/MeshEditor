@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MeshEditor.CoreInterface;
-using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.Common.Logging;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -32,7 +27,7 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			InitializeComponent();
 
-			var ignoredTask = initLocalSolutionListAsync(formClosedCancellationSource.Token); // start loading LOCAL solutions
+			_ = initLocalSolutionListAsync(formClosedCancellationSource.Token); // start loading LOCAL solutions
 
 			updateButtonStates();
 		}

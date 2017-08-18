@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 using MeshEditor.Common.Extensions;
 using System.IO;
 using MeshEditor.DataVisualizer.Services;

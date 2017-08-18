@@ -90,7 +90,7 @@ namespace MeshEditor.WinUI
 
 			if (UpdateChecker.IsUpdateServiceAvailableForThisPlatform)
 			{
-				checkForUpdatesSilently();
+				_ = checkForUpdatesSilently(); // don't await
 			}
 		}
 
@@ -1014,13 +1014,16 @@ namespace MeshEditor.WinUI
 
 		#region Helper methods
 
-		private async void checkForUpdatesSilently()
+		private async Task checkForUpdatesSilently()
 		{
 			try
 			{
-				var success = await checkForUpdatesAsync(maxVersionToIgnoreString: mainWindowSettings.LastCheckedUpdateVersion); // swallow exceptions
+				_ = await checkForUpdatesAsync(maxVersionToIgnoreString: mainWindowSettings.LastCheckedUpdateVersion);
 			}
-			catch { }
+			catch
+			{
+				// swallow exceptions
+			}
 		}
 
 		private async Task<bool> checkForUpdatesAsync(string maxVersionToIgnoreString)
@@ -1033,8 +1036,7 @@ namespace MeshEditor.WinUI
 
 			if (updateExists)
 			{
-				Version maxVersionToIgnore;
-				if (!Version.TryParse(maxVersionToIgnoreString, out maxVersionToIgnore) && maxVersionToIgnore >= updateChecker.ServerVersion)
+				if (!Version.TryParse(maxVersionToIgnoreString, out Version maxVersionToIgnore) && maxVersionToIgnore >= updateChecker.ServerVersion)
 					return false;
 
 				StringBuilder questionTextBuilder = new StringBuilder();
@@ -1179,11 +1181,9 @@ namespace MeshEditor.WinUI
 				activeControl.SetCursorAccordingToEditorMode();
 				statusLabel.ForeColor = Color.Black;
 				updateStatus();
-				ProgressViewForm progressViewForm;
-				if (progressViewForms.TryGetValue(token, out progressViewForm))
+				if (progressViewForms.TryGetValue(token, out ProgressViewForm progressViewForm))
 				{
 					progressViewForm.Quit();
-					progressViewForm = null;
 					progressViewForms.Remove(token);
 				}
 			};
@@ -1200,8 +1200,7 @@ namespace MeshEditor.WinUI
 			statusLabel.Text = operationState.ToString();
 			statusStrip.Refresh();
 
-			ProgressViewForm progressViewForm;
-			if (progressViewForms.TryGetValue(operationToken, out progressViewForm))
+			if (progressViewForms.TryGetValue(operationToken, out ProgressViewForm progressViewForm))
 			{
 				progressViewForm.Caption = operationState.TaskName;
 				progressViewForm.OperationName = operationState.OperationName;

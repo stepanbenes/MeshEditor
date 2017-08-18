@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using MeshEditor.Common.Logging;
 
 namespace MeshEditor.WinUI
 {
@@ -51,7 +52,7 @@ namespace MeshEditor.WinUI
 		/// Konstruktor formulare
 		/// </summary>
 		/// <param name="caption">titulek, ktery se zobrazi v zahlavi</param>
-		public ProgressViewForm(string caption, bool enableCancellation)
+		public ProgressViewForm(string caption, bool enableCancellation, MemoryLogger logger = null)
 		{
 			InitializeComponent();
 			this.Caption = caption;

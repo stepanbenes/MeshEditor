@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.LayerManager.Compression

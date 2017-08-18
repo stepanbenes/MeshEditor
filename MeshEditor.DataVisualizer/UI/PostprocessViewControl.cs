@@ -9,8 +9,8 @@ using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
 using MeshEditor.DataVisualizer.Data;
-using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.Common.Logging;
 
 namespace MeshEditor.DataVisualizer.UI
 {

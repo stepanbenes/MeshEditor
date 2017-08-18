@@ -80,7 +80,6 @@
     <Compile Include="Graphics\IsoAreasShader.cs" />
     <Compile Include="IO\LayerMeshFileParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\MemoryLogger.cs" />
     <Compile Include="Services\LayerManagerProcessInvokeService.cs" />
     <Compile Include="UI\ColorScaleControlPointSetter.cs">
       <SubType>UserControl</SubType>
