@@ -1219,7 +1219,7 @@ namespace MeshEditor.WinUI
 				{
 					Debug.Assert(!progressViewForms.ContainsKey(operationToken));
 					LongOpNotifier.State state = longOpNotifier.GetState(operationToken);
-					ProgressViewForm progressViewForm = new ProgressViewForm(state.TaskName ?? "Operation in progress...", isCancellable);
+					ProgressViewForm progressViewForm = new ProgressViewForm(state.TaskName ?? "Operation in progress...", isCancellable, logger: longOpNotifier.GetLogger(operationToken));
 					progressViewForms[operationToken] = progressViewForm;
 					if (isCancellable)
 						progressViewForm.Cancel += (s, e) => longOpNotifier.Cancel(operationToken);
@@ -1626,7 +1626,7 @@ namespace MeshEditor.WinUI
 
 		private async void importFEMResultsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var importFEMResultsForm = new ImportFEMResultsForm { Owner = this };
+			var importFEMResultsForm = new ImportFEMResultsForm(longOpNotifier) { Owner = this };
 			if (importFEMResultsForm.ShowDialog() == DialogResult.OK)
 			{
 				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));

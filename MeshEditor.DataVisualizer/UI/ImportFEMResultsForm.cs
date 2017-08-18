@@ -10,18 +10,20 @@ using MeshEditor.SolutionManager;
 using MeshEditor.Common.Logging;
 using MeshEditor.Common.Extensions;
 using System.IO;
-using MeshEditor.DataVisualizer.Services;
 using MeshEditor.LayerManager.Import;
+using MeshEditor.CoreInterface;
 
 namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ImportFEMResultsForm : Form
 	{
 		bool isImportOperationRunning;
+		readonly LongOpNotifier longOpNotifier;
 
-		public ImportFEMResultsForm()
+		public ImportFEMResultsForm(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
+			this.longOpNotifier = longOpNotifier;
 			comboBoxCompressionMethod.SelectedIndex = 0;
 			radioButtonQuality.Checked = true;
 			trackBarCompressionFactor.Value = 95;
@@ -66,15 +68,15 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					solutionDirectory = location;
 				}
-				string solutionFileName = createNewSolution(solutionDirectory, analysisResults, projectName, logger);
-
-				var success = await importResultFilesAsync(solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
-
-				if (success)
+				
+				var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+				using (longOpNotifier.Begin("Importing FEM results", isCancellable: false, logger: logger))
 				{
-					SolutionFileName = solutionFileName;
-					DialogResult = DialogResult.OK; // close dialog
+					await Task.Run(() => solutionHub.Import(buildKeyTimeSteps(), buildCompressionParameters(), buildGaussPointsExtrapolationStrategyName()));
 				}
+
+				SolutionFileName = solutionHub.GetSolutionDescription().Location;
+				DialogResult = DialogResult.OK; // close dialog
 			}
 			catch (Exception ex)
 			{
@@ -113,18 +115,18 @@ namespace MeshEditor.DataVisualizer.UI
 			return parameters;
 		}
 
-		private IEnumerable<string> buildKeyTimeSteps()
+		private IEnumerable<double> buildKeyTimeSteps()
 		{
 			if (checkBoxMergeTimeSteps.Checked)
 			{
-				string[] keyTimes = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-				if (!keyTimes.Any())
-					return Enumerable.Repeat("Infinity", 1);
-				return keyTimes;
+				string[] tokens = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				if (!tokens.Any())
+					return Enumerable.Repeat(double.PositiveInfinity, 1);
+				return tokens.Select(token => double.Parse(token)); // TODO: handle parsing errors
 			}
 			else
 			{
-				return Enumerable.Empty<string>();
+				return Enumerable.Empty<double>();
 			}
 		}
 
@@ -133,37 +135,30 @@ namespace MeshEditor.DataVisualizer.UI
 			return comboBoxGaussPointExtrapolationStrategy.SelectedItem as string;
 		}
 
-		private static string createNewSolution(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName, ILogger logger)
-		{
-			var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
-			var solutionFileName = solutionHub.GetSolutionDescription().Location;
-			return solutionFileName;
-		}
+		//private static async Task<bool> importResultFilesAsync(string solutionFileName, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
+		//{
+		//	StringBuilder arguments = new StringBuilder();
 
-		private static async Task<bool> importResultFilesAsync(string solutionFileName, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
-		{
-			StringBuilder arguments = new StringBuilder();
+		//	arguments.Append("import");
+		//	arguments.Append(" --solution " + solutionFileName.QuoteIfContainsWhiteSpace());
+		//	if (compressionParameters.Any())
+		//	{
+		//		arguments.Append(" -c " + string.Join(" ", compressionParameters));
+		//	}
+		//	if (keyTimeSteps.Any())
+		//	{
+		//		arguments.Append(" -k " + string.Join(" ", keyTimeSteps));
+		//	}
+		//	if (gaussPointsExtrapolationStrategyName != null)
+		//	{
+		//		arguments.Append(" --gpextrapolation " + gaussPointsExtrapolationStrategyName);
+		//	}
+		//	arguments.Append(" --verbose");
+		//	arguments.Append(" --pressanykey");
 
-			arguments.Append("import");
-			arguments.Append(" --solution " + solutionFileName.QuoteIfContainsWhiteSpace());
-			if (compressionParameters.Any())
-			{
-				arguments.Append(" -c " + string.Join(" ", compressionParameters));
-			}
-			if (keyTimeSteps.Any())
-			{
-				arguments.Append(" -k " + string.Join(" ", keyTimeSteps));
-			}
-			if (gaussPointsExtrapolationStrategyName != null)
-			{
-				arguments.Append(" --gpextrapolation " + gaussPointsExtrapolationStrategyName);
-			}
-			arguments.Append(" --verbose");
-			arguments.Append(" --pressanykey");
-
-			var exitCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
-			return exitCode == 0;
-		}
+		//	var exitCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
+		//	return exitCode == 0;
+		//}
 
 		private void buttonChooseMeshFile_Click(object sender, EventArgs e)
 		{

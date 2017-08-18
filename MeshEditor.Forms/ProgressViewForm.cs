@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using MeshEditor.Common.Logging;
+using System.Threading.Tasks;
 
 namespace MeshEditor.WinUI
 {
@@ -52,13 +53,35 @@ namespace MeshEditor.WinUI
 		/// Konstruktor formulare
 		/// </summary>
 		/// <param name="caption">titulek, ktery se zobrazi v zahlavi</param>
-		public ProgressViewForm(string caption, bool enableCancellation, MemoryLogger logger = null)
+		public ProgressViewForm(string caption, bool enableCancellation, IMemoryLogger logger = null)
 		{
 			InitializeComponent();
 			this.Caption = caption;
 			this.buttonCancel.Enabled = enableCancellation;
 			progressBar.Minimum = 0;
 			progressBar.Maximum = 100;
+
+			if (logger != null)
+			{
+				// change width and height of the form to show listBoxLog
+				this.Width = 600;
+				this.Height = 500;
+				// show listBoxLog
+				this.listBoxLog.Visible = true;
+				// subscribe to log
+				logger.LogRecordReported += (sender, args) =>
+				{
+					// must be run on UI thread
+					BeginInvoke((Action)(() =>
+					{
+						string message = (args.LogRecord.Type == RecordType.OperationProgress) ?
+											args.LogRecord.Content :
+											$"[{args.LogRecord.Type}] {args.LogRecord.Content}";
+						listBoxLog.Items.Add(message);
+						listBoxLog.TopIndex = listBoxLog.Items.Count - 1; // scroll to bottom
+					}));
+				};
+			}
 		}
 
 		/// <summary>

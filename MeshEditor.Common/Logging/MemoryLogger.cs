@@ -8,7 +8,7 @@ using MeshEditor.Common;
 
 namespace MeshEditor.Common.Logging
 {
-	public class MemoryLogger : ILogger
+	public class MemoryLogger : IMemoryLogger
 	{
 		readonly List<LogRecord> recordHistory = new List<LogRecord>();
 

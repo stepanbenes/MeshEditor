@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MeshEditor.Common.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -90,14 +91,18 @@ namespace MeshEditor.CoreInterface
 
 		readonly HashSet<Token> runningOperations = new HashSet<Token>();
 		readonly Dictionary<Token, State> operationStateMap = new Dictionary<Token, State>();
-		//readonly Dictionary<Token, ILogger>
+		readonly Dictionary<Token, IMemoryLogger> operationLoggersMap = new Dictionary<Token, IMemoryLogger>();
 
-		public Token Begin(string taskName, bool isCancellable = false)
+		public Token Begin(string taskName, bool isCancellable = false, IMemoryLogger logger = null)
 		{
 			var token = Token.CreateNew(this);
 			Debug.Assert(!runningOperations.Contains(token));
 			runningOperations.Add(token);
 			operationStateMap[token] = new State(taskName);
+			if (logger != null)
+			{
+				operationLoggersMap[token] = logger;
+			}
 			HasBegun?.Invoke(token, isCancellable);
 			return token;
 		}
@@ -106,6 +111,9 @@ namespace MeshEditor.CoreInterface
 		{
 			if (runningOperations.Remove(operationToken))
 			{
+				operationStateMap.Remove(operationToken);
+				operationLoggersMap.Remove(operationToken);
+
 				HasEnded?.Invoke(operationToken);
 			}
 		}
@@ -115,12 +123,9 @@ namespace MeshEditor.CoreInterface
 			CancellationRequested?.Invoke(operationToken);
 		}
 
-		public State GetState(Token operationToken)
-		{
-			if (!IsRunning(operationToken))
-				return State.Empty;
-			return operationStateMap[operationToken];
-		}
+		public State GetState(Token operationToken) => operationStateMap.TryGetValue(operationToken, out var state) ? state : State.Empty;
+
+		public IMemoryLogger GetLogger(Token operationToken) => operationLoggersMap.TryGetValue(operationToken, out var logger) ? logger : null;
 
 		public void UpdateState(Token operationToken, string operationName, int percentDone = -1)
 		{

@@ -69,6 +69,7 @@
     <Compile Include="Extensions\KeyValuePairExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\IMemoryLogger.cs" />
     <Compile Include="Logging\LogRecord.cs" />
     <Compile Include="Logging\LogRecordEventArgs.cs" />
     <Compile Include="Logging\LogVerbosityLevel.cs" />
