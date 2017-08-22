@@ -15,6 +15,8 @@ namespace MeshEditor.SolutionManager.IO
 
 		public class Layer : ILayerInfo
 		{
+			private static ILayerInfo[] emptyLayerInfoArray;
+
 			public Guid Id { get; set; }
 			public string Name { get; set; }
 			public string FilterType { get; set; }
@@ -22,7 +24,7 @@ namespace MeshEditor.SolutionManager.IO
 			public Layer[] Children { get; set; }
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
-			IEnumerable<ILayerInfo> ILayerInfo.Children => Children ?? Enumerable.Empty<ILayerInfo>();
+			IReadOnlyList<ILayerInfo> ILayerInfo.Children => Children ?? emptyLayerInfoArray ?? (emptyLayerInfoArray = new ILayerInfo[0]);
 
 			public override int GetHashCode() => Id.GetHashCode();
 			public override bool Equals(object obj) => obj is ILayerInfo other && this.Id.Equals(other.Id);

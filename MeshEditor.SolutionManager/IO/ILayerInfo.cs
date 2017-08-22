@@ -11,6 +11,6 @@ namespace MeshEditor.SolutionManager.IO
 		Guid Id { get; }
 		string Name { get; }
 		string FilterType { get; }
-		IEnumerable<ILayerInfo> Children { get; }
+		IReadOnlyList<ILayerInfo> Children { get; }
 	}
 }
