@@ -14,9 +14,9 @@ namespace MeshEditor.LayerManager.Serialization
 		string FileExtension { get; }
 
 		void Serialize<T>(T obj, Stream stream);
-		T Deserialize<T>(Stream stream);
+		Task SerializeAsync<T>(T obj, Stream stream, CancellationToken cancellationToken);
 
-		Task SerializeAsync<T>(T obj, Stream stream);
+		T Deserialize<T>(Stream stream);
 		Task<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken);
 	}
 }
