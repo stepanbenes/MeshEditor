@@ -272,7 +272,7 @@ namespace MeshEditor.SolutionManager
 			}
 		}
 
-		public async Task DeleteAsync(CancellationToken cancellationToken, string layerIdOrName, bool deleteAll = false)
+		public async Task DeleteAsync(string layerIdOrName, bool deleteAll = false, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
 

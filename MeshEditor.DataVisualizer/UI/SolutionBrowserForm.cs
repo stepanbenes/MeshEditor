@@ -144,7 +144,7 @@ namespace MeshEditor.DataVisualizer.UI
 				try
 				{
 					var solutionHub = SolutionHub.OpenLocal(selectedSolution.Location, logger);
-					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
+					await solutionHub.DeleteAsync(layerIdOrName: null, deleteAll: true, cancellationToken: formClosedCancellationSource.Token);
 				}
 				catch (Exception ex)
 				{
@@ -175,7 +175,7 @@ namespace MeshEditor.DataVisualizer.UI
 				try
 				{
 					var solutionHub = SolutionHub.OpenRemote(selectedSolution.Id, logger);
-					await solutionHub.DeleteAsync(cancellationToken: formClosedCancellationSource.Token, layerIdOrName: null, deleteAll: true);
+					await solutionHub.DeleteAsync(layerIdOrName: null, deleteAll: true, cancellationToken: formClosedCancellationSource.Token);
 				}
 				catch (Exception ex)
 				{
