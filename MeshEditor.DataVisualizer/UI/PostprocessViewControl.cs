@@ -44,7 +44,9 @@ namespace MeshEditor.DataVisualizer.UI
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
 			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
-			layersTreeView.ReloadLayerRequested += layersTreeView_ReloadLayerRequested;
+			layersTreeView.LayerReloadRequested += layersTreeView_LayerReloadRequested;
+			layersTreeView.LayerFilterRequested += layersTreeView_LayerFilterRequested;
+			layersTreeView.LayerDeleteRequested += layersTreeView_LayerDeleteRequested;
 
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
@@ -155,10 +157,33 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(!visibleLayerIds.Contains(e.Layer.Id));
 		}
 
-		private async void layersTreeView_ReloadLayerRequested(object sender, LayerSelectionEventArgs e)
+		private async void layersTreeView_LayerReloadRequested(object sender, LayerSelectionEventArgs e)
 		{
 			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromAllUncheckedLayers();
 			await loadLayerWithErrorHandlingAsync(e.Layer, ActiveScene);
+		}
+
+		private async void layersTreeView_LayerFilterRequested(object sender, LayerFilterEventArgs e)
+		{
+			throw new NotImplementedException();
+			// TODO: add progress reporting
+			// TODO: add error handling (reuse loadLayerWithErrorHandlingAsync method)
+			// TODO: make async version of filter method
+			await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: e.Layer.Id.ToString("N"), filterTypeName: e.FilterType.ToString(), filterParameters: new[] { "Displacements" }, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>()));
+			// TODO: refresh layers tree and select new layer
+			//await loadSolutionWithErrorHandlingAsync();
+		}
+
+
+		private async void layersTreeView_LayerDeleteRequested(object sender, LayerSelectionEventArgs e)
+		{
+			throw new NotImplementedException();
+			// TODO: add confirmation dialog
+			// TODO: add progress reporting
+			// TODO: add error handling (reuse loadLayerWithErrorHandlingAsync method)
+			await solutionHub.DeleteAsync(e.Layer.Id.ToString("N"));
+			// TODO: refresh layers tree and select parent layer
+			//await loadSolutionWithErrorHandlingAsync();
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)

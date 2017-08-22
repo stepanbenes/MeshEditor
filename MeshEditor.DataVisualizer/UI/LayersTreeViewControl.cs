@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.DataVisualizer.Data;
 using System.Diagnostics;
+using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -30,7 +31,9 @@ namespace MeshEditor.DataVisualizer.UI
 		public event EventHandler<LayerSelectionEventArgs> LayerSelected;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
-		public event EventHandler<LayerSelectionEventArgs> ReloadLayerRequested;
+		public event EventHandler<LayerSelectionEventArgs> LayerReloadRequested;
+		public event EventHandler<LayerSelectionEventArgs> LayerDeleteRequested;
+		public event EventHandler<LayerFilterEventArgs> LayerFilterRequested;
 
 		public ILayerInfo GetSelectedLayer() => treeViewLayers.SelectedNode?.Tag as ILayerInfo;
 		public bool IsLayerSelected(Guid layerId) => layerIdTreeNodeMap.ContainsKey(layerId) && layerIdTreeNodeMap[layerId].IsSelected;
@@ -38,9 +41,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public void SetSelectedLayer(Guid? layerId)
 		{
-			//checkAllNodes(treeViewLayers.Nodes, false);
-			TreeNode treeNode;
-			if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out treeNode))
+			if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out TreeNode treeNode))
 			{
 				treeViewLayers.SelectedNode = treeNode;
 			}
@@ -143,9 +144,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void reloadLayerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Debug.Assert(treeViewLayers.SelectedNode != null);
 			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
-			ReloadLayerRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+			LayerReloadRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 		}
 
 		private void treeViewLayers_MouseUp(object sender, MouseEventArgs e)
@@ -163,6 +163,34 @@ namespace MeshEditor.DataVisualizer.UI
 					contextMenuStrip.Show(treeViewLayers, p);
 				}
 			}
+		}
+
+		private void deformationToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerFilterRequested?.Invoke(this, new LayerFilterEventArgs(layerInfo, FilterType.Deformation));
+		}
+
+		private void deleteLayerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerDeleteRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+		}
+
+		private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			deleteLayerToolStripMenuItem.Enabled = !isMasterLayer(layerInfo);
+		}
+
+		private bool isMasterLayer(ILayerInfo layerInfo)
+		{
+			foreach (TreeNode node in treeViewLayers.Nodes)
+			{
+				if (layerInfo.Equals(node.Tag))
+					return true;
+			}
+			return false;
 		}
 	}
 }

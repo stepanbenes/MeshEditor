@@ -74,6 +74,7 @@
     <Compile Include="Data\Interval.cs" />
     <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
     <Compile Include="Data\ColorScale.cs" />
+    <Compile Include="Data\LayerFilterEventArgs.cs" />
     <Compile Include="Data\PostprocessScene.cs" />
     <Compile Include="Data\VisualizerSettings.cs" />
     <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
