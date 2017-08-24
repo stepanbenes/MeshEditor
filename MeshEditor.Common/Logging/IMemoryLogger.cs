@@ -10,6 +10,8 @@ namespace MeshEditor.Common.Logging
 	{
 		event EventHandler<LogRecordEventArgs> LogRecordReported;
 
-		IReadOnlyCollection<LogRecord> GetRecordHistory();
+		IReadOnlyList<LogRecord> GetRecordHistory();
+
+		void ClearHistory();
 	}
 }

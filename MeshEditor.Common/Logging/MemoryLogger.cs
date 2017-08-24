@@ -16,7 +16,9 @@ namespace MeshEditor.Common.Logging
 
 		public event EventHandler<LogRecordEventArgs> LogRecordReported;
 
-		public IReadOnlyCollection<LogRecord> GetRecordHistory() => new ReadOnlyCollection<LogRecord>(recordHistory);
+		public IReadOnlyList<LogRecord> GetRecordHistory() => new ReadOnlyCollection<LogRecord>(recordHistory);
+
+		public void ClearHistory() => recordHistory.Clear();
 
 		public void LogOperationProgress(string message)
 		{
