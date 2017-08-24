@@ -207,7 +207,7 @@ namespace MeshEditor.SolutionManager
 			return layerSummary;
 		}
 
-		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
+		public ILayerInfo Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
 			var analysisResultImportServices = Solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 
@@ -219,10 +219,10 @@ namespace MeshEditor.SolutionManager
 
 			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
 
-			addLayer(masterLayerSummaryFile, parentLayer: null);
+			return addLayer(masterLayerSummaryFile, parentLayer: null);
 		}
 
-		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out FilterType filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
@@ -239,10 +239,10 @@ namespace MeshEditor.SolutionManager
 			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName);
 
 			// convert filter layer to layer record and append it to parent layer's children
-			addLayer(filterLayerSummaryFile, parentLayer);
+			return addLayer(filterLayerSummaryFile, parentLayer);
 		}
 
-		public void Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			var parentLayer = findLayer(parentLayerIdOrName);
 
@@ -255,7 +255,7 @@ namespace MeshEditor.SolutionManager
 			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName);
 
 			// convert filter layer to layer record and append it to parent layer's children
-			addLayer(compressedLayerSummaryFile, parentLayer);
+			return addLayer(compressedLayerSummaryFile, parentLayer);
 		}
 
 		public void Delete(string layerIdOrName, bool deleteAll = false)
@@ -312,11 +312,12 @@ namespace MeshEditor.SolutionManager
 			return newLayerRecord;
 		}
 
-		private void addLayer(SummaryFile layerSummary, Solution.Layer parentLayer)
+		private Solution.Layer addLayer(SummaryFile layerSummary, Solution.Layer parentLayer)
 		{
 			var newLayer = createLayerRecordFromLayerSummaryFile(layerSummary);
 			logNewLayer(newLayer);
 			Solution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+			return newLayer;
 		}
 
 		private Solution.Layer findLayer(string layerIdentifier)
