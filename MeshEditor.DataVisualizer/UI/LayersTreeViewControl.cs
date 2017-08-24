@@ -54,8 +54,12 @@ namespace MeshEditor.DataVisualizer.UI
 		public bool SetCheckedFlagOfLayer(Guid layerId, bool check)
 		{
 			bool wasChecked = layerIdTreeNodeMap[layerId].Checked;
-			layerIdTreeNodeMap[layerId].Checked = check;
-			return wasChecked != check;
+			if (wasChecked != check)
+			{
+				layerIdTreeNodeMap[layerId].Checked = check;
+				return true;
+			}
+			return false; ;
 		}
 
 		public void SetCheckedLayers(IEnumerable<Guid> layerIds)
