@@ -222,9 +222,7 @@ namespace MeshEditor.CoreInterface
 				if (SceneFacade.editorMode != value)
 				{
 					SceneFacade.editorMode = value;
-					var handler = EditorModeChanged;
-					if (handler != null)
-						handler(null, EventArgs.Empty);
+					EditorModeChanged?.Invoke(null, EventArgs.Empty);
 				}
 			}
 		}
@@ -412,8 +410,7 @@ namespace MeshEditor.CoreInterface
 
 		public void DrawScene(bool isActive, bool swapBuffers)
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			if (clickTimerFlag)
 			{
@@ -448,8 +445,8 @@ namespace MeshEditor.CoreInterface
 			if (scene.NodeSignal != null || scene.ElementSignal != null)
 				drawSignals();
 
-			if (swapBuffers && SwapBuffersNeeded != null)
-				SwapBuffersNeeded(this, EventArgs.Empty);
+			if (swapBuffers)
+				SwapBuffersNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void LostFocusHandler()
@@ -464,8 +461,7 @@ namespace MeshEditor.CoreInterface
 
 		public void ResizeScene(int width, int height)
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			this.clientWindowSize.Width = width;
 			this.clientWindowSize.Height = height;
@@ -481,8 +477,7 @@ namespace MeshEditor.CoreInterface
 			Utils.GluPerspective(Scene.FOVY_PARAM, aspect, Scene.Z_NEAR_PARAM, Scene.Z_FAR_PARAM);
 			// --------------------------
 
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void PerformAction(AvailableAction action)
@@ -634,16 +629,14 @@ namespace MeshEditor.CoreInterface
 					if (CutPlaneDefinitionPointsCount > 0)
 					{
 						scene.ClearPlaneDefinitionPoints();
-						if (CutPlaneDefinitionPointsChanged != null)
-							CutPlaneDefinitionPointsChanged(this, EventArgs.Empty);
+						CutPlaneDefinitionPointsChanged?.Invoke(this, EventArgs.Empty);
 					}
 					scene.UnselectAllItems();
 					thisMeshNeedRefreshInOtherWindows = true;
 					break;
 				case AvailableAction.ClearPlaneDefinitionPoints:
 					scene.ClearPlaneDefinitionPoints();
-					if (CutPlaneDefinitionPointsChanged != null)
-						CutPlaneDefinitionPointsChanged(this, EventArgs.Empty);
+					CutPlaneDefinitionPointsChanged?.Invoke(this, EventArgs.Empty);
 					break;
 				case AvailableAction.CreateCutPlane:
 					scene.CreateCutPlaneFromDefinitionPoints();
@@ -686,8 +679,7 @@ namespace MeshEditor.CoreInterface
 					}
 					catch (ArgumentException ex)
 					{
-						if (ShowError != null)
-							ShowError(this, new ShowErrorEventArgs("Can not signal node", ex.Message));
+						ShowError?.Invoke(this, new ShowErrorEventArgs("Can not signal node", ex.Message));
 						scene.NodeSignal = null;
 					}
 					needToComputeVisibleNodesFlag = true;
@@ -699,8 +691,7 @@ namespace MeshEditor.CoreInterface
 					}
 					catch (ArgumentException ex)
 					{
-						if (ShowError != null)
-							ShowError(this, new ShowErrorEventArgs("Can not signal element", ex.Message));
+						ShowError?.Invoke(this, new ShowErrorEventArgs("Can not signal element", ex.Message));
 						scene.ElementSignal = null;
 					}
 					needToComputeVisibleNodesFlag = true;
@@ -892,16 +883,14 @@ namespace MeshEditor.CoreInterface
 					{
 						scene.RenderMode = (RenderMode)value;
 						computeVisibleNodes();
-						if (RenderModeChanged != null)
-							RenderModeChanged(this, EventArgs.Empty);
+						RenderModeChanged?.Invoke(this, EventArgs.Empty);
 					}
 					break;
 				case AvailableValue.ColorMode:
 					if (scene.Mesh != null && value != null)
 					{
 						scene.Mesh.ColorMode = (PropertyColorsMode)value;
-						if (ColorModeChanged != null)
-							ColorModeChanged(this, EventArgs.Empty);
+						ColorModeChanged?.Invoke(this, EventArgs.Empty);
 					}
 					break;
 				case AvailableValue.UnsavedChangesInMesh:
@@ -912,10 +901,7 @@ namespace MeshEditor.CoreInterface
 					{
 						IDataVisualizer dataVisualizer = value as IDataVisualizer;
 						Debug.Assert(scene.Mesh != null || dataVisualizer == null);
-						if (scene.Mesh != null)
-						{
-							scene.Mesh.SetDataVisualizer(dataVisualizer);
-						}
+						scene.Mesh?.SetDataVisualizer(dataVisualizer);
 					}
 					break;
 				case AvailableValue.SelectedLayerId:
@@ -940,8 +926,7 @@ namespace MeshEditor.CoreInterface
 
 		public void MouseDownHandler(Point location)
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			this.mouseDownCount++;
 			this.prevMouseLocation = location;
@@ -996,8 +981,7 @@ namespace MeshEditor.CoreInterface
 			{
 				scene.Camera.ZoomToFit(scene.Mesh?.CenterOfRotation ?? Vector3.Zero, scene.Mesh?.Radius ?? 1f);
 				needToComputeVisibleNodesFlag = true;
-				if (InvalidateNeeded != null)
-					InvalidateNeeded(this, EventArgs.Empty);
+				InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 			}
 		}
 
@@ -1051,8 +1035,7 @@ namespace MeshEditor.CoreInterface
 
 		public void ZoomCamera(Point mouseLocation, int delta)
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			pointUnderCursorContext.Compute(scene, mouseLocation, false);
 			Vector3 direction = pointUnderCursorContext.PointUnderCursor - scene.Camera.Eye;
@@ -1089,24 +1072,20 @@ namespace MeshEditor.CoreInterface
 
 			cameraChangedTimer.Start();
 
-			if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
+			RefreshNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void Initialize()
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			scene.SetDefaultCameraView();
 
 			createBuffers();
 			needToComputeVisibleNodesFlag = true;
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 
-			if (EditorModeChanged != null)
-				EditorModeChanged(null, EventArgs.Empty);
+			EditorModeChanged?.Invoke(null, EventArgs.Empty);
 		}
 
 		public IScene GetUnderlyingSceneObject()
@@ -1238,8 +1217,7 @@ namespace MeshEditor.CoreInterface
 
 		private void createBuffers()
 		{
-			if (scene.Mesh != null)
-				scene.Mesh.CreateBuffers();
+			scene.Mesh?.CreateBuffers();
 		}
 
 		private void setAppropriateEditorMode()
@@ -1303,8 +1281,7 @@ namespace MeshEditor.CoreInterface
 			if (scene.Mesh == null)
 			{
 				// smazat nakresleny obdelnik vyberu
-				if (InvalidateNeeded != null)
-					InvalidateNeeded(this, EventArgs.Empty);
+				InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 				return;
 			}
 			switch (EditorMode)
@@ -1356,8 +1333,7 @@ namespace MeshEditor.CoreInterface
 
 		private void rectangleSelection(ItemTypeToSelect itemType)
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 
 			bool allNodesMustBeInAreaToSelectFace = (mouseUpLocation.X > mouseDownLocation.X);
 
@@ -1390,15 +1366,13 @@ namespace MeshEditor.CoreInterface
 		private void computeVisibleNodes()
 		{
 			cameraChangedTimer.Enabled = false;
-
 			scene.ComputeVisibleNodes(clientWindowSize);
 		}
 
 		public void MakeToComputeVisibleNodes()
 		{
 			this.needToComputeVisibleNodesFlag = true;
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void lookAroundCamera(int dX, int dY)
@@ -1411,8 +1385,7 @@ namespace MeshEditor.CoreInterface
 			cameraChangedDirection = true;
 
 			cameraChangedTimer.Start();
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void strafeCamera(int dX, int dY)
@@ -1438,14 +1411,12 @@ namespace MeshEditor.CoreInterface
 			cameraChangedDirection = true;
 
 			cameraChangedTimer.Start();
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void zoomWindow()
 		{
-			if (MakeCurrentNeeded != null)
-				MakeCurrentNeeded(this, EventArgs.Empty);
+			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);
 			// -----------------------------------------------
 
 			Rectangle area = getSelectionRectangle();
@@ -1473,8 +1444,8 @@ namespace MeshEditor.CoreInterface
 			// -----------------------------------------------
 			cameraChangedDirection = true; /**/
 			needToComputeVisibleNodesFlag = true;
-			if (RefreshNeeded != null)
-				RefreshNeeded(this, EventArgs.Empty);
+
+			RefreshNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void findClosestPointInArea(ref Rectangle area)
@@ -1553,8 +1524,7 @@ namespace MeshEditor.CoreInterface
 			scene.Camera.Move(translation);
 
 			cameraChangedTimer.Start();
-			if (InvalidateNeeded != null)
-				InvalidateNeeded(this, EventArgs.Empty);
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void drawSelectionRectangle()
