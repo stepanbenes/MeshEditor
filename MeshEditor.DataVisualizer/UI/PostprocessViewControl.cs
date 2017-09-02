@@ -344,10 +344,11 @@ namespace MeshEditor.DataVisualizer.UI
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			var summary = await getSummaryFileForLayerAsync(layerInfo.Id, cancellationToken);
 			var firstMesh = summary.Meshes.FirstOrDefault();
+			DataSelection dataSelection = null;
 			if (firstMesh != null)
 			{
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				var dataSelection = new DataSelection(firstMesh);
+				dataSelection = new DataSelection(timeStep: firstMesh.TimeSteps.First(), mesh: firstMesh);
 				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
@@ -355,8 +356,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 				visualizerSettingsControl.Settings = dataVisualizerController?.Settings;
 			}
-
-			dataSelectionControl.UpdateDataSource(summary, null);
+			dataSelectionControl.UpdateDataSource(summary, dataSelection);
 		}
 
 		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo, SceneFacade targetScene)
