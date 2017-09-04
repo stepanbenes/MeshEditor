@@ -103,6 +103,12 @@
       <DependentUpon>DataSelectionControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\DataSelectionEventArgs.cs" />
+    <Compile Include="UI\DeformationFilterParamsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\DeformationFilterParamsForm.Designer.cs">
+      <DependentUpon>DeformationFilterParamsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\EditColorScaleForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -114,6 +120,9 @@
     </Compile>
     <Compile Include="UI\ErrorReportForm.Designer.cs">
       <DependentUpon>ErrorReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\FilterParamsForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\ImportFEMResultsForm.cs">
       <SubType>Form</SubType>
@@ -165,6 +174,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\DataSelectionControl.resx">
       <DependentUpon>DataSelectionControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\DeformationFilterParamsForm.resx">
+      <DependentUpon>DeformationFilterParamsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\EditColorScaleForm.resx">
       <DependentUpon>EditColorScaleForm.cs</DependentUpon>

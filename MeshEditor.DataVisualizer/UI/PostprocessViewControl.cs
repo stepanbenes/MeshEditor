@@ -165,37 +165,58 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private async void layersTreeView_LayerFilterRequested(object sender, LayerFilterEventArgs e)
 		{
-			const string taskName = "Generating filter layer";
-			try
+			FilterParamsForm filterParamsForm;
+
+			switch (e.FilterType)
 			{
-				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				case LayerManager.Filters.FilterType.Deformation:
+					var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, shoul run synchronously and return layer summary from cache
+					filterParamsForm = new DeformationFilterParamsForm(
+						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count == 3).Select(pair => pair.Key))
+					{
+						Owner = this.ParentForm
+					};
+					break;
+				default:
+					throw new NotSupportedException($"Filter type '{e.FilterType}' is not supported in UI");
+			}
+
+			if (filterParamsForm.ShowDialog() == DialogResult.OK)
+			{
+				var filterParams = filterParamsForm.GetOutput();
+
+				// TODO: extract method
+
+				const string taskName = "Generating filter layer";
 				try
 				{
-					var cancellationToken = currentOperationCancellationTokenSource.Token;
-					var parentLayerIdentifier = e.Layer.Id.ToString();
-					
-					// TODO: open filter dialog for an input definition
+					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+					try
+					{
+						var cancellationToken = currentOperationCancellationTokenSource.Token;
+						var parentLayerIdentifier = e.Layer.Id.ToString();
 
-					var filterLayerInfo = await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: parentLayerIdentifier, filterTypeName: e.FilterType.ToString(), filterParameters: new[] { "Displacements" }, keyTimeSteps: Enumerable.Empty<double>(), compressionParameters: Enumerable.Empty<string>()), cancellationToken);
+						var filterLayerInfo = await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: parentLayerIdentifier, filterTypeName: e.FilterType.ToString(), filterParameters: filterParams.FilterParameters, keyTimeSteps: filterParams.KeyTimeSteps, compressionParameters: filterParams.CompressionParameters, fieldName: filterParams.ConstraintFieldName, newLayerName: filterParams.LayerName), cancellationToken);
 
-					layersTreeView.SetCheckedFlagOfLayer(e.Layer.Id, true);
-					ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);
-					layersTreeView.AddNewLayer(e.Layer.Id, filterLayerInfo, selectNewLayer: true);
+						layersTreeView.SetCheckedFlagOfLayer(e.Layer.Id, true);
+						ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);
+						layersTreeView.AddNewLayer(e.Layer.Id, filterLayerInfo, selectNewLayer: true);
 
-					cancellationToken.ThrowIfCancellationRequested();
+						cancellationToken.ThrowIfCancellationRequested();
+					}
+					finally
+					{
+						endLongOperation(operationToken);
+					}
 				}
-				finally
+				catch (OperationCanceledException)
 				{
-					endLongOperation(operationToken);
+					// probably because of close solution command, do nothing
 				}
-			}
-			catch (OperationCanceledException)
-			{
-				// probably because of close solution command, do nothing
-			}
-			catch (Exception ex)
-			{
-				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+				catch (Exception ex)
+				{
+					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+				}
 			}
 		}
 
