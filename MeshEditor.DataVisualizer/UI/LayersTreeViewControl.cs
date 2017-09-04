@@ -208,6 +208,12 @@ namespace MeshEditor.DataVisualizer.UI
 			LayerFilterRequested?.Invoke(this, new LayerFilterEventArgs(layerInfo, FilterType.Deformation));
 		}
 
+		private void sliceToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerFilterRequested?.Invoke(this, new LayerFilterEventArgs(layerInfo, FilterType.Slice));
+		}
+
 		private void deleteLayerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;

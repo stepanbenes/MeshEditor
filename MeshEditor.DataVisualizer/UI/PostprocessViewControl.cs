@@ -11,6 +11,7 @@ using System.Threading;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.Common.Logging;
+using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -166,24 +167,29 @@ namespace MeshEditor.DataVisualizer.UI
 		private async void layersTreeView_LayerFilterRequested(object sender, LayerFilterEventArgs e)
 		{
 			FilterParamsForm filterParamsForm;
-
+			bool modal;
 			switch (e.FilterType)
 			{
-				case LayerManager.Filters.FilterType.Deformation:
+				case FilterType.Deformation:
 					var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, shoul run synchronously and return layer summary from cache
 					filterParamsForm = new DeformationFilterParamsForm(
-						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count == 3).Select(pair => pair.Key))
-					{
-						Owner = this.ParentForm
-					};
+						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count == 3).Select(pair => pair.Key)
+					);
+					modal = true;
+					break;
+				case FilterType.Slice:
+					filterParamsForm = new SliceFilterParamsForm(ActiveScene);
+					modal = false;
 					break;
 				default:
 					throw new NotSupportedException($"Filter type '{e.FilterType}' is not supported in UI");
 			}
 
-			if (filterParamsForm.ShowDialog() == DialogResult.OK)
+			filterParamsForm.Owner = this.ParentForm;
+
+			if (await filterParamsForm.ShowAsync(modal) == DialogResult.OK)
 			{
-				var filterParams = filterParamsForm.GetOutput();
+				var filterParams = filterParamsForm.FilterParams;
 
 				// TODO: extract method
 

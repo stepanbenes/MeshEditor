@@ -76,7 +76,7 @@
             this.toolStripSeparator1,
             this.reloadLayerToolStripMenuItem});
 			this.contextMenuStrip.Name = "contextMenuStrip";
-			this.contextMenuStrip.Size = new System.Drawing.Size(176, 110);
+			this.contextMenuStrip.Size = new System.Drawing.Size(162, 82);
 			this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
 			// 
 			// applyFilterToolStripMenuItem
@@ -86,7 +86,7 @@
             this.sliceToolStripMenuItem,
             this.isosurfaceToolStripMenuItem});
 			this.applyFilterToolStripMenuItem.Name = "applyFilterToolStripMenuItem";
-			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(175, 24);
+			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
 			this.applyFilterToolStripMenuItem.Text = "Apply filter...";
 			// 
 			// deformationToolStripMenuItem
@@ -98,10 +98,10 @@
 			// 
 			// sliceToolStripMenuItem
 			// 
-			this.sliceToolStripMenuItem.Enabled = false;
 			this.sliceToolStripMenuItem.Name = "sliceToolStripMenuItem";
 			this.sliceToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
 			this.sliceToolStripMenuItem.Text = "Slice...";
+			this.sliceToolStripMenuItem.Click += new System.EventHandler(this.sliceToolStripMenuItem_Click);
 			// 
 			// isosurfaceToolStripMenuItem
 			// 
@@ -113,19 +113,19 @@
 			// deleteLayerToolStripMenuItem
 			// 
 			this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
-			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(175, 24);
+			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
 			this.deleteLayerToolStripMenuItem.Text = "Delete layer";
 			this.deleteLayerToolStripMenuItem.Click += new System.EventHandler(this.deleteLayerToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(172, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(158, 6);
 			// 
 			// reloadLayerToolStripMenuItem
 			// 
 			this.reloadLayerToolStripMenuItem.Name = "reloadLayerToolStripMenuItem";
-			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(175, 24);
+			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
 			this.reloadLayerToolStripMenuItem.Text = "Reload layer";
 			this.reloadLayerToolStripMenuItem.Click += new System.EventHandler(this.reloadLayerToolStripMenuItem_Click);
 			// 

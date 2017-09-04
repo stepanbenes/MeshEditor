@@ -48,21 +48,23 @@ namespace MeshEditor.DataVisualizer.UI
 				updatingDataSource = true;
 				this.layerSummary = layerSummary;
 
+				comboBoxTimeStep.Items.Clear();
+				comboBoxField.Items.Clear();
+				comboBoxComponent.Items.Clear();
+
 				if (layerSummary != null)
 				{
-					Debug.Assert(dataSelection != null);
 					setupTimeSteps();
-					setupFields(dataSelection.TimeStep);
-					setupComponents(dataSelection.FieldName);
-					comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
-					comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.FieldName);
-					comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.ComponentName);
-				}
-				else
-				{
-					comboBoxTimeStep.Items.Clear();
-					comboBoxField.Items.Clear();
-					comboBoxComponent.Items.Clear();
+
+					if (dataSelection != null)
+					{
+						setupFields(dataSelection.TimeStep);
+						setupComponents(dataSelection.FieldName);
+
+						comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
+						comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.FieldName);
+						comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.ComponentName);
+					}
 				}
 			}
 			finally

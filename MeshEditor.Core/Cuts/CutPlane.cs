@@ -61,15 +61,11 @@ namespace MeshEditor.Cuts
 
 		#region Properties
 
-		public Vector3 PointOnPlane
-		{
-			get { return pointOnPlane; }
-		}
+		public Vector3 PointOnPlane => pointOnPlane;
 
-		public Vector3 NormalVector
-		{
-			get { return normalVector; }
-		}
+		public Vector3 NormalVector => normalVector;
+
+		public float Offset => -shownDParameter;
 
 		public bool IsSelected
 		{

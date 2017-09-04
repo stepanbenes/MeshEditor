@@ -13,8 +13,6 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class DeformationFilterParamsForm : FilterParamsForm
 	{
-		Output output;
-
 		public DeformationFilterParamsForm(IEnumerable<string> availableVectorFields)
 		{
 			InitializeComponent();
@@ -31,29 +29,9 @@ namespace MeshEditor.DataVisualizer.UI
 			comboBoxDeformationField.SelectedItem = availableVectorFieldsArray.FirstOrDefault(field => field.StartsWith("displacement", StringComparison.InvariantCultureIgnoreCase));
 		}
 
-		public override Output GetOutput() => output ?? throw new InvalidOperationException("Filter params should be requested only if dialog result is OK");
+		private double getScaleValue() => trackBarScale.Value * 0.01;
 
 		#region Event handlers
-
-		private void buttonOK_Click(object sender, EventArgs e)
-		{
-			string selectedDeformationField = comboBoxDeformationField.SelectedItem as string;
-			string layerNameText = textBoxLayerName.Text;
-
-			// build filter params
-			output = new Output(
-				filterParameters: new[] { selectedDeformationField, getScaleValue().ToString() },
-				keyTimeSteps: new double[0],
-				compressionParameters: new string[0],
-				layerName: string.IsNullOrWhiteSpace(layerNameText) ? null : layerNameText,
-				constraintFieldName: null
-			);
-
-			// close dialog
-			DialogResult = DialogResult.OK;
-		}
-
-		#endregion
 
 		private void trackBarScale_ValueChanged(object sender, EventArgs e)
 		{
@@ -62,6 +40,31 @@ namespace MeshEditor.DataVisualizer.UI
 			this.textBoxLayerName.Text = $"deformation (scale: {scale.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		private double getScaleValue() => trackBarScale.Value * 0.01;
+		private void buttonOK_Click(object sender, EventArgs e)
+		{
+			string selectedDeformationField = comboBoxDeformationField.SelectedItem as string;
+			string layerNameText = textBoxLayerName.Text;
+
+			// build filter params
+			FilterParams = new FilterParams(
+				filterParameters: new[] { selectedDeformationField, getScaleValue().ToString() },
+				keyTimeSteps: new double[0], // ignored for deformation filter
+				compressionParameters: new string[0], // ignored for deformation filter
+				layerName: string.IsNullOrWhiteSpace(layerNameText) ? null : layerNameText,
+				constraintFieldName: null
+			);
+
+			DialogResult = DialogResult.OK;
+			Close();
+		}
+
+		private void buttonCancel_Click(object sender, EventArgs e)
+		{
+			DialogResult = DialogResult.Cancel;
+			Close();
+		}
+
+		#endregion
+
 	}
 }
