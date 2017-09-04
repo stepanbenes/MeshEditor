@@ -313,8 +313,8 @@ namespace MeshEditor.LayerManager.Compression
 			for (int rank = singularValues.Count - 1; rank >= 0; rank--)
 			{
 				// Mean square error
-				runningMSE += singularValues[rank].Square() / matrixElementCount; // TODO: this equation should be verified
-				Debug.Assert(runningMSE == singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount);
+				runningMSE += singularValues[rank].Square() / matrixElementCount;
+				// runningMSE ~== singularValues.Skip(count: rank).Select(s => s.Square()).Sum() / matrixElementCount
 
 				// Root-mean-square deviation
 				double RMSD = Math.Sqrt(runningMSE);
