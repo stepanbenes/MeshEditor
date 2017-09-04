@@ -517,7 +517,9 @@ namespace MeshEditor.LayerManager
 			{
 				foreach (ComponentDataDescription originalResult in LoadData(originalLayer.Id, originalLayer.DataFallbackLayerId, originalDataIndex))
 				{
-					var filteredGeometry = filteredGeometryMap[originalResult.TimeStep];
+					GeometryDescription filteredGeometry;
+					if (!filteredGeometryMap.TryGetValue(originalResult.TimeStep, out filteredGeometry))
+						continue;
 
 					if (filteredGeometry.Mapping is IdentityGeometryEntityMapping)
 						continue;
