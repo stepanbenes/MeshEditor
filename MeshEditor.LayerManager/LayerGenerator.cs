@@ -17,6 +17,7 @@ using MeshEditor.Common.Logging;
 using MeshEditor.Common.Extensions;
 using MeshEditor.LayerManager.MeshFiltering;
 using System.Threading;
+using System.Globalization;
 
 namespace MeshEditor.LayerManager
 {
@@ -253,8 +254,8 @@ namespace MeshEditor.LayerManager
 						return layerName ?? $"slice {sliceFilter.Offset}";
 					case AttributeSelectionFilter attributeSelectionFilter:
 						return layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
-					case DeformationFilter _:
-						return layerName ?? "deformed";
+					case DeformationFilter deformationFilter:
+						return layerName ?? $"deformation (scale: {deformationFilter.RelativeScale?.ToString(CultureInfo.InvariantCulture)})".TrimEnd(); // TODO: use FormattableString.Invariant
 					default:
 						throw new NotSupportedException();
 				}

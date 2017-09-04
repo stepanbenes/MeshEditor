@@ -191,7 +191,7 @@ namespace MeshEditor.FormatConverter
 			}
 
 			int solutionId;
-			if (!isRunningLocally && !int.TryParse(options.Solution, out solutionId))
+			if (!isRunningLocally && !int.TryParse(options.Solution, NumberStyles.Integer, CultureInfo.InvariantCulture, out solutionId))
 			{
 				throw new FormatException("Argument Solution is not an integer");
 			}
@@ -235,7 +235,7 @@ namespace MeshEditor.FormatConverter
 						}
 						else
 						{
-							solutionId = int.Parse(options.Solution);
+							solutionId = int.Parse(options.Solution, CultureInfo.InvariantCulture);
 						}
 						return SolutionHub.OpenRemote(solutionId, logger);
 					}
@@ -268,7 +268,7 @@ namespace MeshEditor.FormatConverter
 				Console.Write("Index = ");
 				string input = Console.ReadLine();
 				int index;
-				if (!int.TryParse(input, out index))
+				if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out index))
 				{
 					Console.WriteLine("Please insert valid integer value.");
 					continue;
@@ -308,7 +308,7 @@ namespace MeshEditor.FormatConverter
 			// taken from: http://ascii.co.uk/art/excavator
 			string[] excavators = {
 @"
-     --.
+	 --.
   ._// <>
   |_|_
  (o___o)",
@@ -318,8 +318,8 @@ namespace MeshEditor.FormatConverter
   _L  ((|_L_| 
  (/\)(__(____)",
 @"
-     __
-    //\\`'-.___
+	 __
+	//\\`'-.___
    //  \\  _(=()__
    Y    \\//~//.--|
    :    /\\~~//_  |
