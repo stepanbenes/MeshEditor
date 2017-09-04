@@ -90,6 +90,12 @@
     <Compile Include="UI\ColorScaleControlPointSetter.Designer.cs">
       <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\CompressionParamsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\CompressionParamsControl.Designer.cs">
+      <DependentUpon>CompressionParamsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ContentViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -171,6 +177,9 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\ColorScaleControlPointSetter.resx">
       <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\CompressionParamsControl.resx">
+      <DependentUpon>CompressionParamsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\DataSelectionControl.resx">
       <DependentUpon>DataSelectionControl.cs</DependentUpon>
