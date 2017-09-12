@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -12,15 +13,15 @@ namespace MeshEditor.WinUI
 	/// </summary>
 	public partial class AboutDialog : Form
 	{
-		private Assembly assemblyWithInfo;
-
 		public AboutDialog()
 		{
 			InitializeComponent();
-			assemblyWithInfo = getAssemblyWithInfo();
+
+			AssemblyWithInfo = getAssemblyWithInfo();
+
 			this.Text = String.Format("About {0}", AssemblyTitle);
 			this.labelProductName.Text = AssemblyProduct;
-			this.labelVersion.Text = String.Format("Version {0}", AssemblyVersion);
+			this.labelVersion.Text = String.Format("Version {0}", FileVersion);
 			this.labelCopyright.Text = AssemblyCopyright;
 			this.labelCompanyName.Text = AssemblyCompany;
 			this.textBoxDescription.Text = AssemblyDescription;
@@ -39,10 +40,7 @@ namespace MeshEditor.WinUI
 
 		#region Assembly Attribute Accessors
 
-		public Assembly AssemblyWithInfo
-		{
-			get	{ return assemblyWithInfo; }
-		}
+		public Assembly AssemblyWithInfo { get; }
 
 		public string AssemblyTitle
 		{
@@ -66,6 +64,15 @@ namespace MeshEditor.WinUI
 			get
 			{
 				return AssemblyWithInfo.GetName().Version.ToString();
+			}
+		}
+
+		public string FileVersion
+		{
+			get
+			{
+				FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(AssemblyWithInfo.Location);
+				return fileVersionInfo.FileVersion;
 			}
 		}
 
@@ -120,6 +127,7 @@ namespace MeshEditor.WinUI
 				return ((AssemblyCompanyAttribute)attributes[0]).Company;
 			}
 		}
+
 		#endregion
 	}
 }
