@@ -7,24 +7,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MeshEditor.SolutionManager;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 using MeshEditor.Common.Extensions;
 using System.IO;
-using MeshEditor.DataVisualizer.Services;
 using MeshEditor.LayerManager.Import;
+using MeshEditor.CoreInterface;
 
 namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ImportFEMResultsForm : Form
 	{
 		bool isImportOperationRunning;
+		readonly LongOpNotifier longOpNotifier;
 
-		public ImportFEMResultsForm()
+		public ImportFEMResultsForm(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
-			comboBoxCompressionMethod.SelectedIndex = 0;
-			radioButtonQuality.Checked = true;
-			trackBarCompressionFactor.Value = 95;
+			this.longOpNotifier = longOpNotifier;
 			comboBoxGaussPointExtrapolationStrategy.SelectedIndex = 0;
 			textBoxLocation.Text = SolutionHub.GetLocalStorageDefaultDirectory();
 
@@ -66,15 +65,19 @@ namespace MeshEditor.DataVisualizer.UI
 				{
 					solutionDirectory = location;
 				}
-				string solutionFileName = createNewSolution(solutionDirectory, analysisResults, projectName, logger);
 
-				var success = await importResultFilesAsync(solutionFileName, buildCompressionParameters(), buildKeyTimeSteps(), buildGaussPointsExtrapolationStrategyName());
+				var keyTimeSteps = compressionParamsControl.GetKeyTimeSteps();
+				var compressionParameters = compressionParamsControl.GetCompressionParameters();
+				var gaussPointsExtrapolationStrategyName = buildGaussPointsExtrapolationStrategyName();
 
-				if (success)
+				using (longOpNotifier.Begin("Importing FEM results", isCancellable: false, logger: logger))
 				{
-					SolutionFileName = solutionFileName;
-					DialogResult = DialogResult.OK; // close dialog
+					var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+					await Task.Run(() => solutionHub.Import(keyTimeSteps, compressionParameters, gaussPointsExtrapolationStrategyName));
+					SolutionFileName = solutionHub.GetSolutionDescription().Location;
 				}
+
+				DialogResult = DialogResult.OK; // close dialog
 			}
 			catch (Exception ex)
 			{
@@ -87,90 +90,20 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private IEnumerable<string> buildCompressionParameters()
-		{
-			List<string> parameters = new List<string>();
-			if (comboBoxCompressionMethod.SelectedIndex > 0)
-			{
-				parameters.Add((string)comboBoxCompressionMethod.SelectedItem);
-
-				// add compression factor parameters
-				if (radioButtonQuality.Checked)
-				{
-					parameters.Add("quality");
-					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
-				}
-				else if (radioButtonSize.Checked)
-				{
-					parameters.Add("size");
-					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
-				}
-				if (checkBoxSVDParameterRandomized.Checked)
-				{
-					parameters.Add("randomized");
-				}
-			}
-			return parameters;
-		}
-
-		private IEnumerable<string> buildKeyTimeSteps()
-		{
-			if (checkBoxMergeTimeSteps.Checked)
-			{
-				string[] keyTimes = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-				if (!keyTimes.Any())
-					return Enumerable.Repeat("Infinity", 1);
-				return keyTimes;
-			}
-			else
-			{
-				return Enumerable.Empty<string>();
-			}
-		}
-
 		private string buildGaussPointsExtrapolationStrategyName()
 		{
 			return comboBoxGaussPointExtrapolationStrategy.SelectedItem as string;
 		}
 
-		private static string createNewSolution(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName, ILogger logger)
-		{
-			var solutionHub = SolutionHub.CreateEmptyLocal(solutionDirectory, logger: logger);
-			var solutionFileName = solutionHub.Create(analysisResults, projectName);
-			return solutionFileName;
-		}
-
-		private static async Task<bool> importResultFilesAsync(string solutionFileName, IEnumerable<string> compressionParameters, IEnumerable<string> keyTimeSteps, string gaussPointsExtrapolationStrategyName)
-		{
-			StringBuilder arguments = new StringBuilder();
-
-			arguments.Append("import");
-			arguments.Append(" --solution " + solutionFileName.QuoteIfContainsWhiteSpace());
-			if (compressionParameters.Any())
-			{
-				arguments.Append(" -c " + string.Join(" ", compressionParameters));
-			}
-			if (keyTimeSteps.Any())
-			{
-				arguments.Append(" -k " + string.Join(" ", keyTimeSteps));
-			}
-			if (gaussPointsExtrapolationStrategyName != null)
-			{
-				arguments.Append(" --gpextrapolation " + gaussPointsExtrapolationStrategyName);
-			}
-			arguments.Append(" --verbose");
-			arguments.Append(" --pressanykey");
-
-			var exitCode = await LayerManagerProcessInvokeService.Invoke(arguments.ToString());
-			return exitCode == 0;
-		}
-
 		private void buttonChooseMeshFile_Click(object sender, EventArgs e)
 		{
-			OpenFileDialog openFileDialog = new OpenFileDialog();
-			openFileDialog.Filter = MeshEditor.CoreInterface.SceneFacade.ImportMeshFileFormatFilter;
-			openFileDialog.FilterIndex = 0;
-			openFileDialog.Multiselect = false;
+			OpenFileDialog openFileDialog = new OpenFileDialog
+			{
+				Filter = SceneFacade.ImportMeshFileFormatFilter,
+				FilterIndex = 0,
+				Multiselect = false
+			};
+
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				textBoxMeshFile.Text = openFileDialog.FileName.QuoteIfContainsWhiteSpace();
@@ -179,31 +112,22 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void buttonChooseResultFiles_Click(object sender, EventArgs e)
 		{
-			OpenFileDialog openFileDialog = new OpenFileDialog();
-			openFileDialog.Filter = MeshEditor.CoreInterface.SceneFacade.ImportDataFileFormatFilter;
-			openFileDialog.FilterIndex = 0;
-			openFileDialog.Multiselect = true;
+			var openFileDialog = new OpenFileDialog
+			{
+				Filter = SceneFacade.ImportDataFileFormatFilter,
+				FilterIndex = 0,
+				Multiselect = true
+			};
+
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				textBoxResultFiles.Text = string.Join(" ", openFileDialog.FileNames.Select(filename => filename.QuoteIfContainsWhiteSpace()));
 			}
 		}
 
-		private void comboBoxCompressionMethod_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			checkBoxMergeTimeSteps.Checked = comboBoxCompressionMethod.SelectedIndex > 0;
-			updateUI();
-		}
-
-		private void checkBoxMergeTimeSteps_CheckedChanged(object sender, EventArgs e)
-		{
-			updateUI();
-		}
-
 		private void textBoxMeshFile_TextChanged(object sender, EventArgs e)
 		{
 			textBoxProjectName.Text = Path.GetFileNameWithoutExtension(textBoxMeshFile.Text).MakeAlphanumeric();
-			//updateUI();
 		}
 
 		private void textBoxProjectName_TextChanged(object sender, EventArgs e)
@@ -216,24 +140,19 @@ namespace MeshEditor.DataVisualizer.UI
 			updateUI();
 		}
 
-		private void trackBarCompressionFactor_ValueChanged(object sender, EventArgs e)
-		{
-			labelCompressionFactor.Text = $"Compression factor: {trackBarCompressionFactor.Value} %";
-			updateUI();
-		}
-
 		private void updateUI()
 		{
-			groupBoxSVDCompressionParameters.Enabled = comboBoxCompressionMethod.SelectedIndex > 0;
-			textBoxKeyTimeSteps.Enabled = checkBoxMergeTimeSteps.Checked;
 			buttonImport.Enabled = !isImportOperationRunning && !string.IsNullOrWhiteSpace(textBoxMeshFile.Text) && !string.IsNullOrWhiteSpace(textBoxProjectName.Text) && !string.IsNullOrWhiteSpace(textBoxLocation.Text);
 			tabControl.Enabled = !isImportOperationRunning;
 		}
 
 		private void buttonChooseSolutionDirectory_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-			folderBrowserDialog.SelectedPath = SolutionHub.GetLocalStorageDefaultDirectory().Replace('/', '\\');
+			var folderBrowserDialog = new FolderBrowserDialog
+			{
+				SelectedPath = SolutionHub.GetLocalStorageDefaultDirectory().Replace('/', '\\')
+			};
+
 			if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
 			{
 				textBoxLocation.Text = folderBrowserDialog.SelectedPath;

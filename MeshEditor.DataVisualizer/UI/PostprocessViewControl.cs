@@ -9,8 +9,9 @@ using System.Diagnostics;
 using MeshEditor.LayerManager.Data;
 using System.Threading;
 using MeshEditor.DataVisualizer.Data;
-using MeshEditor.DataVisualizer.Services;
 using MeshEditor.SolutionManager.IO;
+using MeshEditor.Common.Logging;
+using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -44,7 +45,9 @@ namespace MeshEditor.DataVisualizer.UI
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;
 			layersTreeView.LayerUnchecked += layersTreeView_LayerUnchecked;
-			layersTreeView.ReloadLayerRequested += layersTreeView_ReloadLayerRequested;
+			layersTreeView.LayerReloadRequested += layersTreeView_LayerReloadRequested;
+			layersTreeView.LayerFilterRequested += layersTreeView_LayerFilterRequested;
+			layersTreeView.LayerDeleteRequested += layersTreeView_LayerDeleteRequested;
 
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
 			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
@@ -90,15 +93,15 @@ namespace MeshEditor.DataVisualizer.UI
 		public async Task LoadLocalSolutionAsync(string solutionFileFullPath)
 		{
 			logger = new MemoryLogger();
-			solutionHub = SolutionHub.CreateLocal(solutionFileFullPath, logger);
-			await loadSolutionWithErrorHandlingAsync();
+			solutionHub = SolutionHub.OpenLocal(solutionFileFullPath, logger);
+			_ = await loadSolutionWithErrorHandlingAsync();
 		}
 
 		public async Task LoadRemoteSolutionAsync(int solutionId)
 		{
 			logger = new MemoryLogger();
-			solutionHub = SolutionHub.CreateRemote(solutionId, logger);
-			await loadSolutionWithErrorHandlingAsync();
+			solutionHub = SolutionHub.OpenRemote(solutionId, logger);
+			_ = await loadSolutionWithErrorHandlingAsync();
 		}
 
 		#endregion
@@ -155,10 +158,102 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(!visibleLayerIds.Contains(e.Layer.Id));
 		}
 
-		private async void layersTreeView_ReloadLayerRequested(object sender, LayerSelectionEventArgs e)
+		private async void layersTreeView_LayerReloadRequested(object sender, LayerSelectionEventArgs e)
 		{
 			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromAllUncheckedLayers();
 			await loadLayerWithErrorHandlingAsync(e.Layer, ActiveScene);
+		}
+
+		private async void layersTreeView_LayerFilterRequested(object sender, LayerFilterEventArgs e)
+		{
+			FilterParamsForm filterParamsForm;
+			bool modal;
+			switch (e.FilterType)
+			{
+				case FilterType.Deformation:
+					var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, shoul run synchronously and return layer summary from cache
+					filterParamsForm = new DeformationFilterParamsForm(
+						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count == 3).Select(pair => pair.Key)
+					);
+					modal = true;
+					break;
+				case FilterType.Slice:
+					filterParamsForm = new SliceFilterParamsForm(ActiveScene);
+					modal = false;
+					break;
+				default:
+					throw new NotSupportedException($"Filter type '{e.FilterType}' is not supported in UI");
+			}
+
+			filterParamsForm.Owner = this.ParentForm;
+
+			if (await filterParamsForm.ShowAsync(modal) == DialogResult.OK)
+			{
+				var filterParams = filterParamsForm.FilterParams;
+
+				// TODO: extract method
+
+				const string taskName = "Generating filter layer";
+				try
+				{
+					LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+					try
+					{
+						var cancellationToken = currentOperationCancellationTokenSource.Token;
+						var parentLayerIdentifier = e.Layer.Id.ToString();
+
+						var filterLayerInfo = await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: parentLayerIdentifier, filterTypeName: e.FilterType.ToString(), filterParameters: filterParams.FilterParameters, keyTimeSteps: filterParams.KeyTimeSteps, compressionParameters: filterParams.CompressionParameters, fieldName: filterParams.ConstraintFieldName, newLayerName: filterParams.LayerName), cancellationToken);
+
+						layersTreeView.SetCheckedFlagOfLayer(e.Layer.Id, true);
+						ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);
+						layersTreeView.AddNewLayer(e.Layer.Id, filterLayerInfo, selectNewLayer: true);
+
+						cancellationToken.ThrowIfCancellationRequested();
+					}
+					finally
+					{
+						endLongOperation(operationToken);
+					}
+				}
+				catch (OperationCanceledException)
+				{
+					// probably because of close solution command, do nothing
+				}
+				catch (Exception ex)
+				{
+					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+				}
+			}
+		}
+
+		private async void layersTreeView_LayerDeleteRequested(object sender, LayerSelectionEventArgs e)
+		{
+			// TODO: add confirmation dialog
+
+			const string taskName = "Deleting layer";
+			try
+			{
+				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				try
+				{
+					var cancellationToken = currentOperationCancellationTokenSource.Token;
+					await solutionHub.DeleteAsync(e.Layer.Id.ToString(), cancellationToken: cancellationToken);
+					layersTreeView.RemoveLayer(e.Layer.Id, selectParentLayer: true);
+					cancellationToken.ThrowIfCancellationRequested();
+				}
+				finally
+				{
+					endLongOperation(operationToken);
+				}
+			}
+			catch (OperationCanceledException)
+			{
+				// probably because of close solution command, do nothing
+			}
+			catch (Exception ex)
+			{
+				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
+			}
 		}
 
 		private async void dataSelectionControl_DataSelectionChanged(object sender, DataSelectionEventArgs e)
@@ -219,7 +314,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		#region Solution data loading
 
-		private async Task loadSolutionWithErrorHandlingAsync()
+		private async Task<ISolutionDescription> loadSolutionWithErrorHandlingAsync()
 		{
 			ISolutionDescription solutionDescription = null;
 			const string taskName = "Loading solution";
@@ -245,11 +340,8 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 			}
-
-			if (solutionDescription != null && solutionDescription.Layers.Count > 0) // load first layer
-			{
-				layersTreeView.SetSelectedLayer(solutionDescription.Layers[0].Id);
-			}
+			layersTreeView.SetSelectedLayer(solutionDescription?.Layers.FirstOrDefault()?.Id); // select first layer
+			return solutionDescription;
 		}
 
 		private async Task<ISolutionDescription> loadSolutionAsync(LongOpNotifier.Token operationToken, CancellationToken cancellationToken)
@@ -279,10 +371,11 @@ namespace MeshEditor.DataVisualizer.UI
 			longOpNotifier.UpdateState(operationToken, "Loading layer summary");
 			var summary = await getSummaryFileForLayerAsync(layerInfo.Id, cancellationToken);
 			var firstMesh = summary.Meshes.FirstOrDefault();
+			DataSelection dataSelection = null;
 			if (firstMesh != null)
 			{
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				var dataSelection = new DataSelection(firstMesh);
+				dataSelection = new DataSelection(timeStep: firstMesh.TimeSteps.First(), mesh: firstMesh);
 				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
@@ -290,8 +383,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 				visualizerSettingsControl.Settings = dataVisualizerController?.Settings;
 			}
-
-			dataSelectionControl.UpdateDataSource(summary, null);
+			dataSelectionControl.UpdateDataSource(summary, dataSelection);
 		}
 
 		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo, SceneFacade targetScene)
@@ -384,13 +476,13 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private LongOpNotifier.Token beginLongOperation(string taskName)
 		{
-			//mainSplitContainer.Panel1.Enabled = false;
 			if (currentOperationCancellationTokenSource != null)
 			{
 				currentOperationCancellationTokenSource.Cancel();
 				currentOperationCancellationTokenSource.Dispose();
 			}
-			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true);
+			logger.ClearHistory(); // clear records from previous operation
+			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true, logger: logger);
 			currentOperationCancellationTokenSource = new CancellationTokenSource();
 			return operationToken;
 		}
@@ -403,7 +495,6 @@ namespace MeshEditor.DataVisualizer.UI
 				currentOperationCancellationTokenSource.Dispose();
 				currentOperationCancellationTokenSource = null;
 			}
-			//mainSplitContainer.Panel1.Enabled = true;
 		}
 
 		#endregion

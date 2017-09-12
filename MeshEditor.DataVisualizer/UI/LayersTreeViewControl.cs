@@ -10,13 +10,14 @@ using System.Windows.Forms;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.DataVisualizer.Data;
 using System.Diagnostics;
+using MeshEditor.LayerManager.Filters;
 
 namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class LayersTreeViewControl : UserControl
 	{
-		Dictionary<Guid, TreeNode> layerIdTreeNodeMap;
-		bool checkingTreeNodes;
+		readonly Dictionary<Guid, TreeNode> layerIdTreeNodeMap;
+		bool checkingTreeNodesFlag;
 
 		public LayersTreeViewControl()
 		{
@@ -30,7 +31,9 @@ namespace MeshEditor.DataVisualizer.UI
 		public event EventHandler<LayerSelectionEventArgs> LayerSelected;
 		public event EventHandler<LayerSelectionEventArgs> LayerChecked;
 		public event EventHandler<LayerSelectionEventArgs> LayerUnchecked;
-		public event EventHandler<LayerSelectionEventArgs> ReloadLayerRequested;
+		public event EventHandler<LayerSelectionEventArgs> LayerReloadRequested;
+		public event EventHandler<LayerSelectionEventArgs> LayerDeleteRequested;
+		public event EventHandler<LayerFilterEventArgs> LayerFilterRequested;
 
 		public ILayerInfo GetSelectedLayer() => treeViewLayers.SelectedNode?.Tag as ILayerInfo;
 		public bool IsLayerSelected(Guid layerId) => layerIdTreeNodeMap.ContainsKey(layerId) && layerIdTreeNodeMap[layerId].IsSelected;
@@ -38,9 +41,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public void SetSelectedLayer(Guid? layerId)
 		{
-			//checkAllNodes(treeViewLayers.Nodes, false);
-			TreeNode treeNode;
-			if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out treeNode))
+			if (layerId.HasValue && layerIdTreeNodeMap.TryGetValue(layerId.Value, out TreeNode treeNode))
 			{
 				treeViewLayers.SelectedNode = treeNode;
 			}
@@ -50,11 +51,22 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
+		public bool SetCheckedFlagOfLayer(Guid layerId, bool check)
+		{
+			bool wasChecked = layerIdTreeNodeMap[layerId].Checked;
+			if (wasChecked != check)
+			{
+				layerIdTreeNodeMap[layerId].Checked = check;
+				return true;
+			}
+			return false; ;
+		}
+
 		public void SetCheckedLayers(IEnumerable<Guid> layerIds)
 		{
 			try
 			{
-				checkingTreeNodes = true;
+				checkingTreeNodesFlag = true;
 
 				checkAllNodes(treeViewLayers.Nodes, isChecked: false); // uncheck all
 
@@ -66,7 +78,7 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 			finally
 			{
-				checkingTreeNodes = false;
+				checkingTreeNodesFlag = false;
 			}
 		}
 
@@ -81,6 +93,32 @@ namespace MeshEditor.DataVisualizer.UI
 			treeViewLayers.ExpandAll();
 		}
 
+		public void AddNewLayer(Guid parentLayerId, ILayerInfo layer, bool selectNewLayer)
+		{
+			TreeNode parentTreeNode = layerIdTreeNodeMap[parentLayerId];
+			TreeNode newTreeNode = createTreeNode(layer);
+			parentTreeNode.Nodes.Add(newTreeNode);
+			if (selectNewLayer)
+			{
+				treeViewLayers.SelectedNode = newTreeNode;
+			}
+		}
+
+		public void RemoveLayer(Guid layerId, bool selectParentLayer)
+		{
+			TreeNode treeNodeToRemove = layerIdTreeNodeMap[layerId];
+			if (IsLayerChecked(layerId)) // uncheck layer if checked
+			{
+				LayerUnchecked?.Invoke(this, new LayerSelectionEventArgs((ILayerInfo)treeNodeToRemove.Tag));
+			}
+			TreeNode parentTreeNode = treeNodeToRemove.Parent;
+			treeNodeToRemove.Remove();
+			if (selectParentLayer)
+			{
+				treeViewLayers.SelectedNode = parentTreeNode;
+			}
+		}
+
 		private void treeViewLayers_AfterSelect(object sender, TreeViewEventArgs e)
 		{
 			var layerInfo = (ILayerInfo)e.Node.Tag;
@@ -89,7 +127,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void treeViewLayers_BeforeCheck(object sender, TreeViewCancelEventArgs e)
 		{
-			if (checkingTreeNodes)
+			if (checkingTreeNodesFlag)
 				return;
 
 			if (!e.Node.IsSelected) // it must be selected before checking/unchecking
@@ -98,7 +136,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void treeViewLayers_AfterCheck(object sender, TreeViewEventArgs e)
 		{
-			if (checkingTreeNodes)
+			if (checkingTreeNodesFlag)
 				return;
 
 			var layerInfo = (ILayerInfo)e.Node.Tag;
@@ -143,9 +181,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void reloadLayerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Debug.Assert(treeViewLayers.SelectedNode != null);
 			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
-			ReloadLayerRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+			LayerReloadRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
 		}
 
 		private void treeViewLayers_MouseUp(object sender, MouseEventArgs e)
@@ -163,6 +200,40 @@ namespace MeshEditor.DataVisualizer.UI
 					contextMenuStrip.Show(treeViewLayers, p);
 				}
 			}
+		}
+
+		private void deformationToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerFilterRequested?.Invoke(this, new LayerFilterEventArgs(layerInfo, FilterType.Deformation));
+		}
+
+		private void sliceToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerFilterRequested?.Invoke(this, new LayerFilterEventArgs(layerInfo, FilterType.Slice));
+		}
+
+		private void deleteLayerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			LayerDeleteRequested?.Invoke(this, new LayerSelectionEventArgs(layerInfo));
+		}
+
+		private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+		{
+			var layerInfo = (ILayerInfo)treeViewLayers.SelectedNode.Tag;
+			deleteLayerToolStripMenuItem.Enabled = !isMasterLayer(layerInfo);
+		}
+
+		private bool isMasterLayer(ILayerInfo layerInfo)
+		{
+			foreach (TreeNode node in treeViewLayers.Nodes)
+			{
+				if (layerInfo.Equals(node.Tag))
+					return true;
+			}
+			return false;
 		}
 	}
 }

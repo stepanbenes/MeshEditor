@@ -15,7 +15,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 	/// </summary>
 	internal class MeshSliceCreator : IMeshFilterCreator
 	{
-		private SliceFilter sliceFilter;
+		readonly SliceFilter sliceFilter;
 
 		public MeshSliceCreator(SliceFilter sliceFilter)
 		{
@@ -23,7 +23,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.sliceFilter = sliceFilter;
 		}
 
-		public GeometryDescription Create(GeometryDescription geometry)
+		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
 		{
 			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents);
 
@@ -33,9 +33,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			// TODO: share intersections between neighboring cells
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				List<EdgeIntersection> intersectionInfoList;
-				Vector3[] intersections;
-				if (!getIntersectionsWithElement(geometry, cellIndex, planeNormal, sliceFilter.Offset, out intersectionInfoList, out intersections))
+				if (!getIntersectionsWithElement(geometry, cellIndex, planeNormal, sliceFilter.Offset, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections))
 					continue;
 
 				Debug.Assert(intersectionInfoList.Count == intersections.Length);
@@ -71,7 +69,6 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				for (int i = 1; i < intersections.Length; i++)
 				{
 					Vector3 secondVector = intersections[i] - pivot;
-					//Debug.Assert(secondVector != Vector3.Zero);
 					if (secondVector == Vector3.Zero) // TODO: vyresit nulovy vektor nebo blizky nule
 						continue;
 					secondVector.Normalize();
@@ -107,7 +104,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			} // end of element loop
 
 			GeometryDescription slice = geometryBuilder.Build();
-			return slice;
+
+			return new[] { (slice, timeSteps.ToList()) };
 		}
 
 		#region Private methods
@@ -118,22 +116,14 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			int currentOffset = geometry.CellOffsets[cellIndex];
 			for (int offset = previousOffset; offset < currentOffset; offset++)
 			{
-				yield return getPointCoordinates(geometry, geometry.CellConnectivity[offset]);
+				yield return MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[offset]);
 			}
-		}
-
-		private static Vector3 getPointCoordinates(GeometryDescription geometry, int pointIndex)
-		{
-			float x = geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 0];
-			float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 1] : 0f;
-			float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[pointIndex * geometry.NumberOfCoordinateComponents + 2] : 0f;
-			return new Vector3(x, y, z);
 		}
 
 		private static Vector3 getIntersectionPoint(GeometryDescription geometry, EdgeIntersection edgeIntersection)
 		{
-			Vector3 v1 = getPointCoordinates(geometry, edgeIntersection.FirstPointId);
-			Vector3 v2 = getPointCoordinates(geometry, edgeIntersection.SecondPointId);
+			Vector3 v1 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.FirstPointId);
+			Vector3 v2 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.SecondPointId);
 			Vector3 result;
 			Vector3.Subtract(ref v2, ref v1, out result);
 			Vector3.Multiply(ref result, edgeIntersection.Coordinate, out result);
@@ -142,22 +132,22 @@ namespace MeshEditor.LayerManager.MeshFiltering
 		}
 
 		private static readonly Dictionary<CellType, int[]> edgePointIndexMap = new Dictionary<CellType, int[]>
-			{
-				// TODO: handle better edges of quadratic elements
-				[CellType.Point] = new int[] { },
-				[CellType.LineLinear] = new int[] { 0, 1 },
-				[CellType.LineQuadratic] = new int[] { 0, 1 },
-				[CellType.TriangleLinear] = new int[] { 0, 1, 1, 2, 2, 0 },
-				[CellType.TriangleQuadratic] = new int[] { 0, 1, 1, 2, 2, 0 },
-				[CellType.QuadLinear] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0 },
-				[CellType.QuadQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0 },
-				[CellType.TetraLinear] = new int[] { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 },
-				[CellType.TetraQuadratic] = new int[] { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 },
-				[CellType.WedgeLinear] = new int[] { 0, 1, 1, 2, 2, 0, 3, 4, 4, 5, 5, 3, 0, 3, 1, 4, 2, 5 },
-				[CellType.WedgeQuadratic] = new int[] { 0, 1, 1, 2, 2, 0, 3, 4, 4, 5, 5, 3, 0, 3, 1, 4, 2, 5 },
-				[CellType.HexaLinear] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
-				[CellType.HexaQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
-			};
+		{
+			// TODO: handle better edges of quadratic elements
+			[CellType.Point] = new int[] { },
+			[CellType.LineLinear] = new int[] { 0, 1 },
+			[CellType.LineQuadratic] = new int[] { 0, 1 },
+			[CellType.TriangleLinear] = new int[] { 0, 1, 1, 2, 2, 0 },
+			[CellType.TriangleQuadratic] = new int[] { 0, 1, 1, 2, 2, 0 },
+			[CellType.QuadLinear] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0 },
+			[CellType.QuadQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0 },
+			[CellType.TetraLinear] = new int[] { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 },
+			[CellType.TetraQuadratic] = new int[] { 0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3 },
+			[CellType.WedgeLinear] = new int[] { 0, 1, 1, 2, 2, 0, 3, 4, 4, 5, 5, 3, 0, 3, 1, 4, 2, 5 },
+			[CellType.WedgeQuadratic] = new int[] { 0, 1, 1, 2, 2, 0, 3, 4, 4, 5, 5, 3, 0, 3, 1, 4, 2, 5 },
+			[CellType.HexaLinear] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
+			[CellType.HexaQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
+		};
 
 		private static IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, Vector3 planeNormal, float planeOffset)
 		{
@@ -167,10 +157,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			{
 				int firstIndex = baseOffset + edgePointIndexArray[i];
 				int secondIndex = baseOffset + edgePointIndexArray[i + 1];
-				Vector3 firstPoint = getPointCoordinates(geometry, geometry.CellConnectivity[firstIndex]);
-				Vector3 secondPoint = getPointCoordinates(geometry, geometry.CellConnectivity[secondIndex]);
-				float intersection;
-				if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref planeNormal, planeOffset, out intersection))
+				Vector3 firstPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[firstIndex]);
+				Vector3 secondPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[secondIndex]);
+				if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref planeNormal, planeOffset, out float intersection))
 				{
 					yield return new EdgeIntersection(firstIndex, secondIndex, intersection);
 				}

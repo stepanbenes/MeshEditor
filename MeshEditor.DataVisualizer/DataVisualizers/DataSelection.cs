@@ -10,8 +10,8 @@ namespace MeshEditor.DataVisualizer
 {
 	public class DataSelection
 	{
-		public DataSelection(IMeshFileDescriptor mesh)
-			: this(null, null, 0.0, null, mesh)
+		public DataSelection(double timeStep, IMeshFileDescriptor mesh)
+			: this(null, null, timeStep, null, mesh)
 		{ }
 
 		public DataSelection(string fieldName, string componentName, double timeStep, int? dataIndex, IMeshFileDescriptor mesh)

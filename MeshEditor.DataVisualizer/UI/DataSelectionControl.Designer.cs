@@ -40,9 +40,10 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(3, 22);
+			this.label1.Location = new System.Drawing.Point(4, 76);
+			this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(29, 13);
+			this.label1.Size = new System.Drawing.Size(38, 17);
 			this.label1.TabIndex = 0;
 			this.label1.Text = "Field";
 			// 
@@ -52,18 +53,20 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBoxField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxField.FormattingEnabled = true;
-			this.comboBoxField.Location = new System.Drawing.Point(3, 38);
+			this.comboBoxField.Location = new System.Drawing.Point(4, 96);
+			this.comboBoxField.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.comboBoxField.Name = "comboBoxField";
-			this.comboBoxField.Size = new System.Drawing.Size(214, 21);
+			this.comboBoxField.Size = new System.Drawing.Size(284, 24);
 			this.comboBoxField.TabIndex = 1;
 			this.comboBoxField.SelectedIndexChanged += new System.EventHandler(this.comboBoxField_SelectedIndexChanged);
 			// 
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(3, 62);
+			this.label2.Location = new System.Drawing.Point(4, 125);
+			this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(61, 13);
+			this.label2.Size = new System.Drawing.Size(80, 17);
 			this.label2.TabIndex = 2;
 			this.label2.Text = "Component";
 			// 
@@ -73,18 +76,20 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBoxComponent.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxComponent.FormattingEnabled = true;
-			this.comboBoxComponent.Location = new System.Drawing.Point(3, 78);
+			this.comboBoxComponent.Location = new System.Drawing.Point(4, 145);
+			this.comboBoxComponent.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.comboBoxComponent.Name = "comboBoxComponent";
-			this.comboBoxComponent.Size = new System.Drawing.Size(214, 21);
+			this.comboBoxComponent.Size = new System.Drawing.Size(284, 24);
 			this.comboBoxComponent.TabIndex = 3;
 			this.comboBoxComponent.SelectedIndexChanged += new System.EventHandler(this.comboBoxComponent_SelectedIndexChanged);
 			// 
 			// label3
 			// 
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(3, 102);
+			this.label3.Location = new System.Drawing.Point(4, 28);
+			this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(53, 13);
+			this.label3.Size = new System.Drawing.Size(70, 17);
 			this.label3.TabIndex = 4;
 			this.label3.Text = "Time step";
 			// 
@@ -94,9 +99,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBoxTimeStep.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxTimeStep.FormattingEnabled = true;
-			this.comboBoxTimeStep.Location = new System.Drawing.Point(3, 118);
+			this.comboBoxTimeStep.Location = new System.Drawing.Point(4, 47);
+			this.comboBoxTimeStep.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.comboBoxTimeStep.Name = "comboBoxTimeStep";
-			this.comboBoxTimeStep.Size = new System.Drawing.Size(214, 21);
+			this.comboBoxTimeStep.Size = new System.Drawing.Size(284, 24);
 			this.comboBoxTimeStep.TabIndex = 5;
 			this.comboBoxTimeStep.SelectedIndexChanged += new System.EventHandler(this.comboBoxTimeStep_SelectedIndexChanged);
 			// 
@@ -105,14 +111,15 @@
 			this.labelCaption.AutoSize = true;
 			this.labelCaption.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.labelCaption.Location = new System.Drawing.Point(0, 0);
+			this.labelCaption.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.labelCaption.Name = "labelCaption";
-			this.labelCaption.Size = new System.Drawing.Size(89, 13);
+			this.labelCaption.Size = new System.Drawing.Size(112, 17);
 			this.labelCaption.TabIndex = 6;
 			this.labelCaption.Text = "Data selection";
 			// 
 			// DataSelectionControl
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.labelCaption);
 			this.Controls.Add(this.comboBoxTimeStep);
@@ -121,8 +128,9 @@
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.comboBoxField);
 			this.Controls.Add(this.label1);
+			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.Name = "DataSelectionControl";
-			this.Size = new System.Drawing.Size(220, 298);
+			this.Size = new System.Drawing.Size(293, 367);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

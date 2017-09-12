@@ -13,6 +13,7 @@ namespace MeshEditor.LayerManager.Filters
 	[EnumValueTypeSelector(FilterType.AttributeSelection, typeof(AttributeSelectionFilter), enumPropertyName: nameof(Type))]
 	[EnumValueTypeSelector(FilterType.Slice, typeof(SliceFilter), enumPropertyName: nameof(Type))]
 	[EnumValueTypeSelector(FilterType.TimeCompression, typeof(TimeCompressionFilter), enumPropertyName: nameof(Type))]
+	[EnumValueTypeSelector(FilterType.Deformation, typeof(DeformationFilter), enumPropertyName: nameof(Type))]
 	public abstract class Filter
 	{
 		[JsonConverter(typeof(StringEnumConverter))]

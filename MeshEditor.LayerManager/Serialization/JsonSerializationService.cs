@@ -14,44 +14,61 @@ namespace MeshEditor.LayerManager.Serialization
 	{
 		public string FileExtension => ".json";
 
+		const int bufferSize = 81920; // https://github.com/dotnet/coreclr/issues/2223
+
 		public void Serialize<T>(T obj, Stream stream)
 		{
-			using (StreamWriter writer = new StreamWriter(stream))
-			using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+			using (var streamWriter = new StreamWriter(stream))
+			using (var jsonWriter = new JsonTextWriter(streamWriter))
 			{
-				JsonSerializer jsonSerializer = new JsonSerializer();
-				jsonSerializer.Formatting = Formatting.Indented;
-				jsonSerializer.Converters.Add(new NotIndentedArrayJsonConverter());
-				jsonSerializer.Serialize(jsonWriter, obj);
+				serializeToJson(jsonWriter, obj);
 			}
+		}
+
+		public async Task SerializeAsync<T>(T obj, Stream stream, CancellationToken cancellationToken)
+		{
+			// implementation taken from: https://stackoverflow.com/questions/15631448/json-net-async-when-writing-to-file
+			var memoryStream = new MemoryStream(); // stream is disposed insite StreamWriter's Dispose method
+			using (var streamWriter = new StreamWriter(memoryStream))
+			using (var jsonWriter = new JsonTextWriter(streamWriter))
+			{
+				serializeToJson(jsonWriter, obj);
+				await streamWriter.FlushAsync().ConfigureAwait(false);
+				memoryStream.Position = 0;
+				await memoryStream.CopyToAsync(stream, bufferSize, cancellationToken).ConfigureAwait(false);
+			}
+			await stream.FlushAsync().ConfigureAwait(false);
 		}
 
 		public T Deserialize<T>(Stream stream)
 		{
-			using (StreamReader reader = new StreamReader(stream))
-			using (JsonTextReader jsonReader = new JsonTextReader(reader))
+			using (var reader = new StreamReader(stream))
+			using (var jsonReader = new JsonTextReader(reader))
 			{
-				JsonSerializer jsonSerializer = new JsonSerializer();
-				//jsonSerializer.Converters.Add(new KnownTypeConverter());
-				jsonSerializer.Converters.Add(new EnumValueTypeSelectorJsonConverter());
+				var jsonSerializer = new JsonSerializer
+				{
+					Converters = { /*new KnownTypeConverter(),*/ new EnumValueTypeSelectorJsonConverter() }
+				};
 				return jsonSerializer.Deserialize<T>(jsonReader);
 			}
 		}
 
-		public Task SerializeAsync<T>(T obj, Stream stream)
-		{
-			throw new NotImplementedException();
-		}
-
 		public async Task<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken)
 		{
-			const int bufferSize = 81920;
-			using (var memoryStream = new MemoryStream())
+			var memoryStream = new MemoryStream(); // stream is disposed insite StreamReader's Dispose method
+			await stream.CopyToAsync(memoryStream, bufferSize, cancellationToken).ConfigureAwait(false);
+			memoryStream.Position = 0;
+			return Deserialize<T>(memoryStream);
+		}
+
+		private static void serializeToJson(JsonWriter jsonWriter, object obj)
+		{
+			var jsonSerializer = new JsonSerializer
 			{
-				await stream.CopyToAsync(memoryStream, bufferSize, cancellationToken);
-				memoryStream.Position = 0;
-				return Deserialize<T>(memoryStream);
-			}
+				Formatting = Formatting.Indented,
+				Converters = { new NotIndentedArrayJsonConverter() }
+			};
+			jsonSerializer.Serialize(jsonWriter, obj);
 		}
 	}
 }

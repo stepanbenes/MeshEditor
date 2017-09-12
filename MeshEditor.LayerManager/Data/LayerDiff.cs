@@ -63,7 +63,7 @@ namespace MeshEditor.LayerManager.Data
 
 	public class ComponentDiff
 	{
-		public static ComponentDiff CreateFrom(IEnumerable<Tuple<ComponentDataDescription, ComponentDataDescription>> timeStepSequence)
+		public static ComponentDiff CreateFrom(IEnumerable<(ComponentDataDescription first, ComponentDataDescription second)> timeStepSequence)
 		{
 			int numberOfDataValues = 0;
 			double? minValue = double.MaxValue;
@@ -73,25 +73,25 @@ namespace MeshEditor.LayerManager.Data
 			double squareErrorSum = 0.0;
 			string fieldAndComponentName = null;
 
-			foreach (var timeStepPair in timeStepSequence)
+			foreach (var (first, second) in timeStepSequence)
 			{
 				if (fieldAndComponentName == null)
 				{
-					fieldAndComponentName = $"{timeStepPair.Item1.FieldName}/{timeStepPair.Item1.ComponentName}";
+					fieldAndComponentName = $"{first.FieldName}/{second.ComponentName}";
 				}
 
-				var aValues = timeStepPair.Item1.Values;
-				var bValues = timeStepPair.Item2.Values;
+				var firstValues = first.Values;
+				var secondValues = second.Values;
 
-				Debug.Assert(aValues.Length == bValues.Length);
+				Debug.Assert(firstValues.Length == secondValues.Length);
 
-				for (int i = 0; i < aValues.Length; i++)
+				for (int i = 0; i < firstValues.Length; i++)
 				{
-					if (double.IsNaN(aValues[i]) || double.IsNaN(bValues[i]))
+					if (double.IsNaN(firstValues[i]) || double.IsNaN(secondValues[i]))
 						continue;
-					minValue = Math.Min(minValue ?? double.MaxValue, Math.Min(aValues[i], bValues[i]));
-					maxValue = Math.Max(maxValue ?? double.MinValue, Math.Max(aValues[i], bValues[i]));
-					double error = Math.Abs(aValues[i] - bValues[i]);
+					minValue = Math.Min(minValue ?? double.MaxValue, Math.Min(firstValues[i], secondValues[i]));
+					maxValue = Math.Max(maxValue ?? double.MinValue, Math.Max(firstValues[i], secondValues[i]));
+					double error = Math.Abs(firstValues[i] - secondValues[i]);
 					maxError = Math.Max(maxError ?? double.MinValue, error);
 					errorSum += error;
 					squareErrorSum += error * error;

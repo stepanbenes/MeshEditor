@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
+using System.Globalization;
 
 namespace MeshEditor.LayerManager.Compression
 {
@@ -60,7 +61,7 @@ namespace MeshEditor.LayerManager.Compression
 							{
 								randomized = true;
 							}
-							else if (double.TryParse(parameter, out testValue))
+							else if (double.TryParse(parameter, NumberStyles.Float, CultureInfo.InvariantCulture, out testValue))
 							{
 								value = testValue;
 							}

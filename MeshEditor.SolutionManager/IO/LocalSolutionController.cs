@@ -183,7 +183,7 @@ namespace MeshEditor.SolutionManager.IO
 			string solutionFile = solution.Location;
 			using (Stream stream = localStorage.Save(solutionFile))
 			{
-				await serializer.SerializeAsync(updatedSolution, stream);
+				await serializer.SerializeAsync(updatedSolution, stream, cancellationToken);
 			}
 			updatedSolution.Location = solutionFile;
 			return updatedSolution;

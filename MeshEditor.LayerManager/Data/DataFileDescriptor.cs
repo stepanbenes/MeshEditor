@@ -17,11 +17,8 @@ namespace MeshEditor.LayerManager.Data
 		DataLocationType Location { get; }
 	}
 
-	public class DataFileDescriptor : IDataDescription
+	public class DataFileDescriptor : IDataDescription, IEquatable<IDataDescription>
 	{
-		public DataFileDescriptor()
-		{ }
-
 		internal static DataFileDescriptor CreateFrom(IDataDescription source)
 		{
 			return new DataFileDescriptor
@@ -43,5 +40,16 @@ namespace MeshEditor.LayerManager.Data
 
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataLocationType Location { get; set; }
+
+		public override int GetHashCode() => Index.GetHashCode();
+
+		public override bool Equals(object obj) => Equals(obj as IDataDescription);
+
+		public bool Equals(IDataDescription other)
+		{
+			if (other == null)
+				return false;
+			return this.Index == other.Index && this.FieldName == other.FieldName && this.ComponentName == other.ComponentName;
+		}
 	}
 }

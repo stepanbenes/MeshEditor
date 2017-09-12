@@ -15,5 +15,6 @@ namespace MeshEditor.LayerManager.Filters
 		StreamLines,
 		AttributeSelection, // e.g. elements with specific property
 		TimeCompression,
+		Deformation,
 	}
 }

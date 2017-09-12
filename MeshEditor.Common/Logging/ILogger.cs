@@ -4,18 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.Common
+namespace MeshEditor.Common.Logging
 {
-	public enum LogVerbosityLevel
-	{
-		Nothing = 0,
-		Error = 1,
-		Warning = 2,
-		Message = 3,
-		OperationProgress = 4,
-		All = 5
-	}
-
 	public interface ILogger
 	{
 		LogVerbosityLevel VerbosityLevel { get; set; }

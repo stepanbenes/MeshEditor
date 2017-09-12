@@ -21,7 +21,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Static members
 
-		public static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
+		protected static readonly char[] DataArrayValueDelimiters = new[] { ' ', '\t', '\n', '\r' };
 
 		protected static DataArrayFormat? TryParseDataArrayFormat(string text)
 		{

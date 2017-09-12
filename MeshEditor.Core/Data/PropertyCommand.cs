@@ -144,7 +144,7 @@ namespace MeshEditor.Data
 			if (string.IsNullOrEmpty(inputLine))
 				return null;
 
-			char[] separators = new char[] { ' ', '\t', '[', ']', '{', '}' };
+			char[] separators = { ' ', '\t', '[', ']', '{', '}' };
 
 			string[] inputWords = inputLine.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries);
 
@@ -342,6 +342,7 @@ namespace MeshEditor.Data
 				switch (partTrimmed[0])
 				{
 					case '[':
+					case '{':
 						{
 							string s = partTrimmed.Substring(1); // remove starting '['
 							if (s.StartsWith("%"))
@@ -364,14 +365,6 @@ namespace MeshEditor.Data
 						}
 						if (allPresent)
 							blocks.Peek().Append(optionalBlock); // insert back to string
-						break;
-					case '{':
-						{
-							string s = partTrimmed.Substring(1); // remove starting '{'
-							if (s.StartsWith("%"))
-								allVariablesInText.Add(s.Substring(1));  // remove starting '%'
-							blocks.Push(new StringBuilder(s + " "));							
-						}
 						break;
 					case '}':
 						Debug.Assert(blocks.Count > 0);

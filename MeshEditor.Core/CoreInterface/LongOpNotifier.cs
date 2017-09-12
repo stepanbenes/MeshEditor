@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MeshEditor.Common.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -12,16 +13,14 @@ namespace MeshEditor.CoreInterface
 	{
 		public struct Token : IDisposable
 		{
-			private static int tokenCounter = 0;
+			private static int tokenCounter;
 
-			public static Token None = default(Token);
+			public static readonly Token None;
 
-			public static Token CreateNew(LongOpNotifier source)
-			{
-				return new Token(source);
-			}
+			public static Token CreateNew(LongOpNotifier source) => new Token(source);
 
-			private LongOpNotifier source;
+			readonly LongOpNotifier source;
+
 			private Token(LongOpNotifier source)
 			{
 				Debug.Assert(source != null);
@@ -37,17 +36,8 @@ namespace MeshEditor.CoreInterface
 				source?.End(this);
 			}
 
-			public override int GetHashCode()
-			{
-				return LongOpId.GetHashCode();
-			}
-
-			public override bool Equals(object obj)
-			{
-				if (!(obj is Token))
-					return false;
-				return this.LongOpId == ((Token)obj).LongOpId;
-			}
+			public override int GetHashCode() => LongOpId.GetHashCode();
+			public override bool Equals(object obj) => obj is Token other && this.LongOpId == other.LongOpId;
 
 			public static bool operator ==(Token a, Token b) => a.Equals(b);
 			public static bool operator !=(Token a, Token b) => !a.Equals(b);
@@ -55,7 +45,7 @@ namespace MeshEditor.CoreInterface
 
 		public struct State
 		{
-			public static readonly State Empty = default(State);
+			public static readonly State Empty;
 
 			public string TaskName { get; }
 			public string OperationName { get; }
@@ -99,15 +89,20 @@ namespace MeshEditor.CoreInterface
 
 		public event Action<Token> ProgressChanged;
 
-		HashSet<Token> runningOperations = new HashSet<Token>();
-		Dictionary<Token, State> operationStateMap = new Dictionary<Token, State>();
+		readonly HashSet<Token> runningOperations = new HashSet<Token>();
+		readonly Dictionary<Token, State> operationStateMap = new Dictionary<Token, State>();
+		readonly Dictionary<Token, IMemoryLogger> operationLoggersMap = new Dictionary<Token, IMemoryLogger>();
 
-		public Token Begin(string taskName, bool isCancellable = false)
+		public Token Begin(string taskName, bool isCancellable = false, IMemoryLogger logger = null)
 		{
 			var token = Token.CreateNew(this);
 			Debug.Assert(!runningOperations.Contains(token));
 			runningOperations.Add(token);
 			operationStateMap[token] = new State(taskName);
+			if (logger != null)
+			{
+				operationLoggersMap[token] = logger;
+			}
 			HasBegun?.Invoke(token, isCancellable);
 			return token;
 		}
@@ -116,6 +111,9 @@ namespace MeshEditor.CoreInterface
 		{
 			if (runningOperations.Remove(operationToken))
 			{
+				operationStateMap.Remove(operationToken);
+				operationLoggersMap.Remove(operationToken);
+
 				HasEnded?.Invoke(operationToken);
 			}
 		}
@@ -125,12 +123,9 @@ namespace MeshEditor.CoreInterface
 			CancellationRequested?.Invoke(operationToken);
 		}
 
-		public State GetState(Token operationToken)
-		{
-			if (!IsRunning(operationToken))
-				return State.Empty;
-			return operationStateMap[operationToken];
-		}
+		public State GetState(Token operationToken) => operationStateMap.TryGetValue(operationToken, out var state) ? state : State.Empty;
+
+		public IMemoryLogger GetLogger(Token operationToken) => operationLoggersMap.TryGetValue(operationToken, out var logger) ? logger : null;
 
 		public void UpdateState(Token operationToken, string operationName, int percentDone = -1)
 		{
@@ -141,9 +136,6 @@ namespace MeshEditor.CoreInterface
 			ProgressChanged?.Invoke(operationToken);
 		}
 
-		public bool IsRunning(Token token)
-		{
-			return runningOperations.Contains(token);
-		}
+		public bool IsRunning(Token token) => runningOperations.Contains(token);
 	}
 }

@@ -7,7 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Serialization;
 using RestSharp;

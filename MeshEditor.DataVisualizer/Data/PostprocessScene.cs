@@ -28,7 +28,7 @@ namespace MeshEditor.DataVisualizer.Data
 
 		private Guid? selectedLayer;
 		private Scene currentScene;
-		
+
 		private Vector3? positionOffset;
 		private float? resizeFactor;
 
@@ -170,7 +170,7 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			Debug.Assert(emptyScene.Mesh == null);
 
-			foreach (var layerScene in enumerateAllScenesWithMesh()) // TODO: sort layer scenes: write outlines at the end because of blending
+			foreach (var layerScene in enumerateAllScenesWithMeshOrdered())
 			{
 				layerScene.Draw(optimizeForMoving, optimizeForSelecting, drawDecorations: layerScene == currentScene);
 			}
@@ -332,6 +332,11 @@ namespace MeshEditor.DataVisualizer.Data
 		private IEnumerable<Scene> enumerateAllScenesWithMesh() => layerSceneMap.Values.Where(scene => scene.Mesh != null);
 
 		private IEnumerable<Mesh> enumerateAllMeshes() => enumerateAllScenesWithMesh().Select(scene => scene.Mesh);
+
+		/// <summary>
+		/// Order layer scenes: write outlines at the end because of blending.
+		/// </summary>
+		private IEnumerable<Scene> enumerateAllScenesWithMeshOrdered() => enumerateAllScenesWithMesh().OrderBy(scene => scene.RenderMode == RenderMode.AllLines || scene.RenderMode == RenderMode.BorderLines);
 
 		#endregion
 

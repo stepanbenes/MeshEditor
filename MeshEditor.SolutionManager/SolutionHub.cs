@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager;
 using MeshEditor.Common;
+using MeshEditor.Common.Logging;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
@@ -50,31 +51,38 @@ namespace MeshEditor.SolutionManager
 			ConfigurationManager.WriteConfigurationObject("LocalStorage", localStorageConfiguration);
 		}
 
-		public static SolutionHub CreateEmptyLocal(string solutionDirectory, ILogger logger = null)
+		public static SolutionHub CreateNewLocal(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName = null, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
 
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
+
+			Solution createdSolution = controller.CreateNew(/*solutionLocator*/ null, analysisResults, projectName);
+			logger?.LogMessage($"Created at '{createdSolution.Location}'");
+
 			return new SolutionHub(
-				solutionLocator: null,
-				solutionController: solutionController,
+				solutionLocator: createdSolution.Location,
+				solutionController: controller,
 				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
 				logger: logger
-			);
+			)
+			{
+				Solution = createdSolution
+			};
 		}
 
-		public static SolutionHub CreateLocal(string solutionFileName, ILogger logger = null)
+		public static SolutionHub OpenLocal(string solutionFileName, ILogger logger = null)
 		{
 			Debug.Assert(solutionFileName != null);
 			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
-			var solutionController = new LocalSolutionController(solutionDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
 
 			IStorageService localStorage = new LocalFileSystemStorageService(solutionDirectory);
 			return new SolutionHub(
 				solutionLocator: solutionFileName,
-				solutionController: solutionController,
+				solutionController: controller,
 				importStorage: localStorage,
 				layerSourceStorage: localStorage,
 				layerDestinationStorage: localStorage,
@@ -82,7 +90,7 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static SolutionHub CreateRemote(int solutionId, ILogger logger = null)
+		public static SolutionHub OpenRemote(int solutionId, ILogger logger = null)
 		{
 			return new SolutionHub(
 				solutionLocator: solutionId,
@@ -96,36 +104,39 @@ namespace MeshEditor.SolutionManager
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, bool includeOneSubDirectory, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
-			return solutionController.GetAll(includeOneSubDirectory);
+			var controller = new LocalSolutionController(solutionDirectory);
+			return controller.GetAll(includeOneSubDirectory);
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllLocalSolutionsAsync(string solutionDirectory, bool includeOneSubDirectory, CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var solutionController = new LocalSolutionController(solutionDirectory);
-			return await solutionController.GetAllAsync(includeOneSubDirectory, cancellationToken);
+			var controller = new LocalSolutionController(solutionDirectory);
+			return await controller.GetAllAsync(includeOneSubDirectory, cancellationToken);
 		}
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
-			return solutionController.GetAll();
+			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			return controller.GetAll();
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var solutionController = new RestApiSolutionController(restApiConfiguration.Uri, logger);
-			return await solutionController.GetAllAsync(cancellationToken);
+			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			return await controller.GetAllAsync(cancellationToken);
 		}
 
 		#endregion
 
 		#region Fields, Constructors
 
-		object solutionLocator;
-		ISolutionController solutionController;
-		IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
-		ILogger logger;
+		readonly object solutionLocator;
+		readonly ISolutionController solutionController;
+		readonly IStorageService importStorage, layerSourceStorage, layerDestinationStorage;
+		readonly ILogger logger;
+
+		Solution _solution;
+		readonly Dictionary<Guid, SummaryFile> layerSummaryCache;
 
 		private SolutionHub(object solutionLocator, ISolutionController solutionController, IStorageService importStorage, IStorageService layerSourceStorage, IStorageService layerDestinationStorage, ILogger logger = null)
 		{
@@ -135,59 +146,71 @@ namespace MeshEditor.SolutionManager
 			this.layerSourceStorage = layerSourceStorage;
 			this.layerDestinationStorage = layerDestinationStorage;
 			this.logger = logger;
+
+			this.layerSummaryCache = new Dictionary<Guid, SummaryFile>();
+		}
+
+		#endregion
+
+		#region Private Properties
+
+		private Solution Solution
+		{
+			get => _solution ?? (_solution = solutionController.Get(solutionLocator));
+			set => _solution = value;
 		}
 
 		#endregion
 
 		#region Commands (SolutionManager's public interface)
 
-		public ISolutionDescription GetSolutionDescription()
-		{
-			return solutionController.Get(solutionLocator);
-		}
+		public ISolutionDescription GetSolutionDescription() => Solution;
 
 		public async Task<ISolutionDescription> GetSolutionDescriptionAsync(CancellationToken cancellationToken)
 		{
-			return await solutionController.GetAsync(solutionLocator, cancellationToken);
+			if (_solution == null)
+			{
+				Solution = await solutionController.GetAsync(solutionLocator, cancellationToken);
+			}
+			return Solution;
 		}
 
-		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
+		public async Task<GeometryDescription> LoadGeometryAsync(Guid layerId, int meshIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadGeometryAsync(layerId, meshIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadGeometryAsync(layerId, layerSummary.MeshFallbackLayerId, meshIndex, cancellationToken);
 		}
 
-		public Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
+		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadDataAsync(layerId, dataIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
 		}
 
-		public Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
+		public async Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadAttributeAsync(layerId, attributeIndex, cancellationToken);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			return await layerGenerator.LoadAttributeAsync(layerId, layerSummary.AttributeFallbackLayerId, attributeIndex, cancellationToken);
 		}
 
-		public Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
+		public async Task<SummaryFile> LoadLayerSummaryAsync(Guid layerId, CancellationToken cancellationToken)
 		{
-			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
-			return layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
+			if (!layerSummaryCache.TryGetValue(layerId, out var layerSummary))
+			{
+				var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
+				layerSummary = await layerGenerator.LoadLayerSummaryAsync(layerId, cancellationToken);
+				layerSummaryCache[layerId] = layerSummary; // cache it
+			}
+			return layerSummary;
 		}
 
-		public string Create(IEnumerable<AnalysisResult> analysisResults, string projectName = null)
+		public ILayerInfo Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
-			Solution solution = solutionController.CreateNew(solutionLocator, analysisResults, projectName);
-			solutionLocator = solution.Location;
-			logger?.LogMessage($"Created at '{solution.Location}'");
-			return solution.Location;
-		}
+			var analysisResultImportServices = Solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 
-		public void Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
-		{
-			Solution solution = solutionController.Get(solutionLocator);
-			var analysisResultImportServices = solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
-			
 			var layerGenerator = new LayerGenerator(
 										sourceStorage: layerSourceStorage,
 										destinationStorage: layerDestinationStorage,
@@ -196,13 +219,12 @@ namespace MeshEditor.SolutionManager
 
 			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
 
-			addLayer(masterLayerSummaryFile, parentLayer: null);
+			return addLayer(masterLayerSummaryFile, parentLayer: null);
 		}
 
-		public void Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
-			FilterType filterType;
-			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out filterType))
+			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out FilterType filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
 
 			var parentLayer = findLayer(parentLayerIdOrName);
@@ -217,10 +239,10 @@ namespace MeshEditor.SolutionManager
 			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName);
 
 			// convert filter layer to layer record and append it to parent layer's children
-			addLayer(filterLayerSummaryFile, parentLayer);
+			return addLayer(filterLayerSummaryFile, parentLayer);
 		}
 
-		public void Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			var parentLayer = findLayer(parentLayerIdOrName);
 
@@ -233,24 +255,24 @@ namespace MeshEditor.SolutionManager
 			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName);
 
 			// convert filter layer to layer record and append it to parent layer's children
-			addLayer(compressedLayerSummaryFile, parentLayer);
+			return addLayer(compressedLayerSummaryFile, parentLayer);
 		}
 
 		public void Delete(string layerIdOrName, bool deleteAll = false)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
-			
+
 			if (deleteAll)
 			{
 				solutionController.Delete(solutionLocator); // delete solution itself
 			}
 			else
 			{
-				var updatedSolution = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
+				Solution = solutionController.DeleteLayer(solutionLocator, findLayer(layerIdOrName));
 			}
 		}
 
-		public async Task DeleteAsync(CancellationToken cancellationToken, string layerIdOrName, bool deleteAll = false)
+		public async Task DeleteAsync(string layerIdOrName, bool deleteAll = false, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
 
@@ -260,7 +282,7 @@ namespace MeshEditor.SolutionManager
 			}
 			else
 			{
-				var updatedSolution = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
+				Solution = await solutionController.DeleteLayerAsync(solutionLocator, findLayer(layerIdOrName), cancellationToken);
 			}
 		}
 
@@ -290,11 +312,12 @@ namespace MeshEditor.SolutionManager
 			return newLayerRecord;
 		}
 
-		private void addLayer(SummaryFile layerSummary, Solution.Layer parentLayer)
+		private Solution.Layer addLayer(SummaryFile layerSummary, Solution.Layer parentLayer)
 		{
 			var newLayer = createLayerRecordFromLayerSummaryFile(layerSummary);
 			logNewLayer(newLayer);
-			Solution updatedSolution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+			Solution = solutionController.AddLayer(solutionLocator, parentLayer, newLayer);
+			return newLayer;
 		}
 
 		private Solution.Layer findLayer(string layerIdentifier)
@@ -302,45 +325,42 @@ namespace MeshEditor.SolutionManager
 			if (layerIdentifier == null)
 				throw new ArgumentNullException(nameof(layerIdentifier));
 
-			Solution solution = solutionController.Get(solutionLocator);
-
 			// find layer according to either provided layer guid or layer name
-			Solution.Layer layer;
-			Guid guid;
-			if (Guid.TryParse(layerIdentifier, out guid))
+			Solution.Layer result;
+			if (Guid.TryParse(layerIdentifier, out Guid guid))
 			{
-				layer = findLayer(solution.Layers, l => l.Id == guid);
+				result = findLayer(Solution.Layers, l => l.Id == guid);
 			}
 			else
 			{
-				layer = findLayer(solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
+				result = findLayer(Solution.Layers, l => string.Equals(l.Name, layerIdentifier, StringComparison.InvariantCultureIgnoreCase));
 			}
 
-			if (layer == null)
+			if (result == null)
 			{
-				throw new Exception($"Layer '{layerIdentifier}' not found.");
+				throw new ArgumentException($"Layer '{layerIdentifier}' not found.");
 			}
 
-			return layer;
-		}
+			return result;
 
-		private static Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
-		{
-			if (layers != null)
+			Solution.Layer findLayer(IEnumerable<Solution.Layer> layers, Func<Solution.Layer, bool> predicate)
 			{
-				foreach (var layer in layers)
+				if (layers != null)
 				{
-					if (predicate(layer))
-						return layer;
+					foreach (var layer in layers)
+					{
+						if (predicate(layer))
+							return layer;
+					}
+					foreach (var layer in layers)
+					{
+						var hit = findLayer(layer.Children, predicate);
+						if (hit != null)
+							return hit;
+					}
 				}
-				foreach (var layer in layers)
-				{
-					var hit = findLayer(layer.Children, predicate);
-					if (hit != null)
-						return hit;
-				}
+				return null;
 			}
-			return null;
 		}
 
 		private void logNewLayer(ILayerInfo layerInfo)
