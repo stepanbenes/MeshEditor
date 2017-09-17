@@ -93,7 +93,7 @@ namespace MeshEditor.DataVisualizer.UI
 			TimeStepDescriptor timeStepDescriptor = selectedComponentComboBoxItem?.Value.TimeSteps.SingleOrDefault(timeStepPair => timeStepPair.Key == timeStep).Value;
 			int? dataIndex = timeStepDescriptor?.DataIndex;
 
-			return new DataSelection(fieldName, componentName, timeStep, dataIndex, mesh);
+			return new DataSelection(fieldName, componentName, timeStep, dataIndex, null /**/, mesh);
 		}
 
 		private void comboBoxTimeStep_SelectedIndexChanged(object sender, EventArgs e)

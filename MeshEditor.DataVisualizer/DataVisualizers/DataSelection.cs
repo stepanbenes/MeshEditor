@@ -11,15 +11,15 @@ namespace MeshEditor.DataVisualizer
 	public class DataSelection
 	{
 		public DataSelection(double timeStep, IMeshFileDescriptor mesh)
-			: this(null, null, timeStep, null, mesh)
+			: this(null, null, timeStep, null, null, mesh)
 		{ }
 
-		public DataSelection(string fieldName, string componentName, double timeStep, int? dataIndex, IMeshFileDescriptor mesh)
+		public DataSelection(string fieldName, string componentName, double timeStep, int? scalarDataIndex, VectorIndex? vectorDataIndex, IMeshFileDescriptor mesh)
 		{
 			FieldName = fieldName;
 			ComponentName = componentName;
 			TimeStep = timeStep;
-			DataIndex = dataIndex;
+			ScalarDataIndex = scalarDataIndex;
 			Mesh = mesh;
 		}
 
@@ -27,7 +27,8 @@ namespace MeshEditor.DataVisualizer
 		public string ComponentName { get; }
 		public double TimeStep { get; }
 
-		public int? DataIndex { get; }
+		public int? ScalarDataIndex { get; }
+		public VectorIndex? VectorDataIndex { get; }
 
 		public IMeshFileDescriptor Mesh { get; }
 	}

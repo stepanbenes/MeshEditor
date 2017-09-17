@@ -96,16 +96,16 @@ namespace MeshEditor.DataVisualizer.Data
 
 			Dictionary<double, ComponentDataDescription> dataComponentTimeStepMap = null;
 
-			if (dataVisualizer.DataSelection?.DataIndex != newDataSelection.DataIndex)
+			if (dataVisualizer.DataSelection?.ScalarDataIndex != newDataSelection.ScalarDataIndex)
 			{
-				if (!newDataSelection.DataIndex.HasValue)
+				if (!newDataSelection.ScalarDataIndex.HasValue)
 				{
 					dataComponentTimeStepMap = new Dictionary<double, ComponentDataDescription>();
 				}
 				else
 				{
 					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
-					var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.DataIndex.Value, cancellationToken);
+					var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.ScalarDataIndex.Value, cancellationToken);
 					dataComponentTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
 				}
 			}
