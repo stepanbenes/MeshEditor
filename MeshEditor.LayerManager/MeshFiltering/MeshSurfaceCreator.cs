@@ -118,7 +118,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Public methods
 
-		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
 			Dictionary<TriangleFace, int> surfaceTriangles = new Dictionary<TriangleFace, int>();
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)

@@ -75,7 +75,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 			FilterParams = new FilterParams(
 				filterParameters: new[] { normal.X, normal.Y, normal.Z, offset }.Select(p => p.ToString(CultureInfo.InvariantCulture)).ToArray(),
-				keyTimeSteps: new double[0], /**/
+				keyTimeSteps: new decimal[0], /**/
 				compressionParameters: new string[0], /**/
 				layerName: string.IsNullOrWhiteSpace(layerNameText) ? null : layerNameText,
 				constraintFieldName: null

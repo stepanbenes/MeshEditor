@@ -13,15 +13,15 @@ namespace MeshEditor.LayerManager.MeshFiltering
 	internal class DeformedMeshCreator : IMeshFilterCreator
 	{
 		readonly DeformationFilter deformationFilter;
-		readonly IDictionary<double, List<ComponentDataDescription>> deformationData;
+		readonly IDictionary<decimal, List<ComponentDataDescription>> deformationData;
 
-		public DeformedMeshCreator(DeformationFilter deformationFilter, IDictionary<double, List<ComponentDataDescription>> deformationData)
+		public DeformedMeshCreator(DeformationFilter deformationFilter, IDictionary<decimal, List<ComponentDataDescription>> deformationData)
 		{
 			this.deformationFilter = deformationFilter;
 			this.deformationData = deformationData;
 		}
 
-		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription source, IEnumerable<double> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps)
 		{
 			double[] maxValues = calculateMaxAbsoluteValues(source.NumberOfCoordinateComponents);
 			int maxValueComponentIndex = maxValues.IndicesOfMaxElements().First();
@@ -29,14 +29,14 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			double relativeScale = deformationFilter.RelativeScale ?? 1.0;
 			double absoluteScale = (maxValues[maxValueComponentIndex] > 0.0) ? (maxDimensions[maxValueComponentIndex] / maxValues[maxValueComponentIndex]) * relativeScale : 0.0;
 
-			foreach (double timeStep in timeSteps)
+			foreach (decimal timeStep in timeSteps)
 			{
 				GeometryDescription geometry = buildDeformedGeometry(source, timeStep, absoluteScale);
-				yield return (geometry, new List<double> { timeStep });
+				yield return (geometry, new List<decimal> { timeStep });
 			}
 		}
 
-		private GeometryDescription buildDeformedGeometry(GeometryDescription sourceGeometry, double timeStep, double scale)
+		private GeometryDescription buildDeformedGeometry(GeometryDescription sourceGeometry, decimal timeStep, double scale)
 		{
 			var dataComponents = deformationData[timeStep];
 

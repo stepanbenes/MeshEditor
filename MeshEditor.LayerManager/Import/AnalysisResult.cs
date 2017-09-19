@@ -10,7 +10,7 @@ namespace MeshEditor.LayerManager.Import
 	public class AnalysisResult
 	{
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public double? TimeStep { get; set; }
+		public decimal? TimeStep { get; set; }
 		public IEnumerable<string> MeshRecordNames { get; set; }
 		public IEnumerable<string> DataRecordNames { get; set; }
 	}

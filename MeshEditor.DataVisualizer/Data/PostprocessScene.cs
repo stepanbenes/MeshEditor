@@ -94,14 +94,14 @@ namespace MeshEditor.DataVisualizer.Data
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
 
-			Dictionary<double, ComponentDataDescription> scalarComponentsTimeStepMap = null;
+			Dictionary<decimal, ComponentDataDescription> scalarComponentsTimeStepMap = null;
 			// scalars
 			{
 				if (dataVisualizer.DataSelection?.ScalarDataIndex != newDataSelection.ScalarDataIndex)
 				{
 					if (!newDataSelection.ScalarDataIndex.HasValue)
 					{
-						scalarComponentsTimeStepMap = new Dictionary<double, ComponentDataDescription>();
+						scalarComponentsTimeStepMap = new Dictionary<decimal, ComponentDataDescription>();
 					}
 					else
 					{
@@ -112,7 +112,7 @@ namespace MeshEditor.DataVisualizer.Data
 				}
 			}
 
-			ILookup<double, ComponentDataDescription> vectorComponentsTimeStepMap = null;
+			ILookup<decimal, ComponentDataDescription> vectorComponentsTimeStepMap = null;
 			// vectors
 			{
 				if (dataVisualizer.DataSelection?.VectorDataIndex != newDataSelection.VectorDataIndex)

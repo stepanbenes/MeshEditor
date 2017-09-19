@@ -48,7 +48,7 @@ namespace MeshEditor.DataVisualizer.UI
 			// build filter params
 			FilterParams = new FilterParams(
 				filterParameters: new[] { selectedDeformationField, getScaleValue().ToString() },
-				keyTimeSteps: new double[0], // ignored for deformation filter
+				keyTimeSteps: new decimal[0], // ignored for deformation filter
 				compressionParameters: new string[0], // ignored for deformation filter
 				layerName: string.IsNullOrWhiteSpace(layerNameText) ? null : layerNameText,
 				constraintFieldName: null

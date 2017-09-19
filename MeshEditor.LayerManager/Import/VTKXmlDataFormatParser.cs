@@ -14,10 +14,10 @@ namespace MeshEditor.LayerManager.Import
 	class VTKXmlDataFormatParser : VTKXmlFormatParserBase, IDataImportService
 	{
 		IReadStorageService storageService;
-		double timeStep;
+		decimal timeStep;
 		IEnumerable<string> recordNames;
 
-		public VTKXmlDataFormatParser(IReadStorageService storageService, double timeStep, IEnumerable<string> recordNames)
+		public VTKXmlDataFormatParser(IReadStorageService storageService, decimal timeStep, IEnumerable<string> recordNames)
 		{
 			this.storageService = storageService;
 			this.timeStep = timeStep;
@@ -62,7 +62,7 @@ namespace MeshEditor.LayerManager.Import
 
 		#region Private methods
 
-		private static IEnumerable<FieldDataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, double timeStep)
+		private static IEnumerable<FieldDataDescription> parseDataArraysInLocation(XmlReader input, DataLocationType location, decimal timeStep)
 		{
 			Dictionary<string, FieldType> fieldNameTypeMap;
 			readToDataElement(input, location, out fieldNameTypeMap);

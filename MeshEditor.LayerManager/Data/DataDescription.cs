@@ -10,7 +10,7 @@ namespace MeshEditor.LayerManager.Data
 	public abstract class DataDescription
 	{
 		public string FieldName { get; set; }
-		public double TimeStep { get; set; }
+		public decimal TimeStep { get; set; }
 		public DataLocationType Location { get; set; }
 		public double[] Values { get; set; }
 

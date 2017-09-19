@@ -13,7 +13,7 @@ namespace MeshEditor.LayerManager.Data
 
 	public class ComponentDescriptor
 	{
-		public Dictionary<double, TimeStepDescriptor> TimeSteps { get; set; }
+		public Dictionary<decimal, TimeStepDescriptor> TimeSteps { get; set; }
 	}
 
 	public class TimeStepDescriptor

@@ -16,7 +16,7 @@ namespace MeshEditor.DataVisualizer
 		#region Fields, constructor
 
 		readonly GeometryDescription geometry;
-		Dictionary<double, ComponentDataDescription> data;
+		Dictionary<decimal, ComponentDataDescription> data;
 
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
@@ -26,7 +26,7 @@ namespace MeshEditor.DataVisualizer
 		{
 			Debug.Assert(geometry != null);
 			this.geometry = geometry;
-			data = new Dictionary<double, ComponentDataDescription>();
+			data = new Dictionary<decimal, ComponentDataDescription>();
 		}
 
 		#endregion
@@ -41,7 +41,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateDataSelection(DataSelection newDataSelection, Dictionary<double, ComponentDataDescription> scalarComponentsTimeStepMap, ILookup<double, ComponentDataDescription> vectorComponentsTimeStepMap)
+		public void UpdateDataSelection(DataSelection newDataSelection, Dictionary<decimal, ComponentDataDescription> scalarComponentsTimeStepMap, ILookup<decimal, ComponentDataDescription> vectorComponentsTimeStepMap)
 		{
 			Debug.Assert(data != null || scalarComponentsTimeStepMap != null);
 

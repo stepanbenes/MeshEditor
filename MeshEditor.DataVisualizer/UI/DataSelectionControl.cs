@@ -65,7 +65,7 @@ namespace MeshEditor.DataVisualizer.UI
 						setupComponents(dataSelection.FieldName);
 						setupVectorFields(dataSelection.TimeStep);
 
-						comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.OfType<ComboBoxItem<double, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
+						comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.OfType<ComboBoxItem<decimal, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
 						comboBoxField.SelectedItem = comboBoxField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.FieldName) ?? (object)NoneItem;
 						comboBoxComponent.SelectedItem = comboBoxComponent.Items.OfType<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.ComponentName);
 						comboBoxVectorField.SelectedItem = comboBoxVectorField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.VectorFieldName) ?? (object)NoneItem;
@@ -93,7 +93,7 @@ namespace MeshEditor.DataVisualizer.UI
 					updatingDataSource = true;
 					string selectedFieldName = (comboBoxField.SelectedItem as ComboBoxItem<string, FieldDescriptor>)?.Key;
 					string selectedComponentName = (comboBoxComponent.SelectedItem as ComboBoxItem<string, ComponentDescriptor>)?.Key;
-					double? selectedTimeStep = (comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>)?.Key;
+					decimal? selectedTimeStep = (comboBoxTimeStep.SelectedItem as ComboBoxItem<decimal, IMeshFileDescriptor>)?.Key;
 					string selectedVectorFieldName = (comboBoxVectorField.SelectedItem as ComboBoxItem<string, FieldDescriptor>)?.Key;
 
 					setupFields(selectedTimeStep);
@@ -150,7 +150,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private DataSelection getDataSelection()
 		{
-			var selectedTimeStepComboBoxItem = comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>;
+			var selectedTimeStepComboBoxItem = comboBoxTimeStep.SelectedItem as ComboBoxItem<decimal, IMeshFileDescriptor>;
 			if (selectedTimeStepComboBoxItem == null)
 				return null;
 
@@ -158,7 +158,7 @@ namespace MeshEditor.DataVisualizer.UI
 			var selectedComponentComboBoxItem = comboBoxComponent.SelectedItem as ComboBoxItem<string, ComponentDescriptor>;
 			var selectedVectorFieldComboBoxItem = comboBoxVectorField.SelectedItem as ComboBoxItem<string, FieldDescriptor>;
 
-			double timeStep = selectedTimeStepComboBoxItem.Key;
+			decimal timeStep = selectedTimeStepComboBoxItem.Key;
 			IMeshFileDescriptor mesh = selectedTimeStepComboBoxItem.Value;
 			string fieldName = selectedFieldComboBoxItem?.Key;
 			string componentName = selectedComponentComboBoxItem?.Key;
@@ -177,10 +177,10 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			Debug.Assert(layerSummary != null);
 			comboBoxTimeStep.Items.Clear();
-			comboBoxTimeStep.Items.AddRange(layerSummary.Meshes.SelectMany(mesh => mesh.TimeSteps.Select(timeStep => new ComboBoxItem<double, IMeshFileDescriptor>(timeStep, mesh))).ToArray());
+			comboBoxTimeStep.Items.AddRange(layerSummary.Meshes.SelectMany(mesh => mesh.TimeSteps.Select(timeStep => new ComboBoxItem<decimal, IMeshFileDescriptor>(timeStep, mesh))).ToArray());
 		}
 
-		private void setupFields(double? selectedTimeStep)
+		private void setupFields(decimal? selectedTimeStep)
 		{
 			Debug.Assert(layerSummary != null);
 			comboBoxField.Items.Clear();
@@ -191,7 +191,7 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private void setupVectorFields(double? selectedTimeStep)
+		private void setupVectorFields(decimal? selectedTimeStep)
 		{
 			Debug.Assert(layerSummary != null);
 			comboBoxVectorField.Items.Clear();
@@ -218,7 +218,7 @@ namespace MeshEditor.DataVisualizer.UI
 			DataSelectionChanged?.Invoke(this, new DataSelectionEventArgs(layerSummary.Id, layerSummary.Name, getDataSelection()));
 		}
 
-		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableFields(double selectedTimeStep)
+		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableFields(decimal selectedTimeStep)
 		{
 			Debug.Assert(layerSummary != null);
 
@@ -229,7 +229,7 @@ namespace MeshEditor.DataVisualizer.UI
 				   select (fieldPair.Key, fieldPair.Value);
 		}
 
-		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableVectorFields(double selectedTimeStep)
+		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableVectorFields(decimal selectedTimeStep)
 		{
 			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count == 3); // TODO: is this condition enough?
 		}

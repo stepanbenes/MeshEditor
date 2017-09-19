@@ -13,7 +13,7 @@ namespace MeshEditor.LayerManager.Data
 		string FieldName { get; }
 		string ComponentName { get; }
 		int Index { get; }
-		double[] TimeSteps { get; }
+		decimal[] TimeSteps { get; }
 		DataLocationType Location { get; }
 	}
 
@@ -36,7 +36,7 @@ namespace MeshEditor.LayerManager.Data
 		public int Index { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public double[] TimeSteps { get; set; }
+		public decimal[] TimeSteps { get; set; }
 
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataLocationType Location { get; set; }

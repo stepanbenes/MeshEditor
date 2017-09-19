@@ -9,17 +9,17 @@ namespace MeshEditor.LayerManager.Data
 	public interface IMeshFileDescriptor
 	{
 		int Index { get; }
-		IReadOnlyList<double> TimeSteps { get; }
+		IReadOnlyList<decimal> TimeSteps { get; }
 		IReadOnlyList<IDataDescription> Attributes { get; }
 	}
 
 	public class MeshFileDescriptor : IMeshFileDescriptor
 	{
 		public int Index { get; set; }
-		public double[] TimeSteps { get; set; }
+		public decimal[] TimeSteps { get; set; }
 		public DataFileDescriptor[] Attributes { get; set; }
 
-		IReadOnlyList<double> IMeshFileDescriptor.TimeSteps => TimeSteps;
+		IReadOnlyList<decimal> IMeshFileDescriptor.TimeSteps => TimeSteps;
 		IReadOnlyList<IDataDescription> IMeshFileDescriptor.Attributes => Attributes;
 	}
 }

@@ -51,6 +51,16 @@ namespace MeshEditor.LayerManager.Import
 			return result;
 		}
 
+		protected static decimal ParseDecimal(string text)
+		{
+			decimal result;
+			if (!decimal.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
+			{
+				throw new FormatException($"Decimal number expected instead of '{text}'");
+			}
+			return result;
+		}
+
 		#endregion
 	}
 }

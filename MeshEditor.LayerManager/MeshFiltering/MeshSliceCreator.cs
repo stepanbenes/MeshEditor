@@ -23,7 +23,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.sliceFilter = sliceFilter;
 		}
 
-		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
 			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents);
 

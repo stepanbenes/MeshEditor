@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.attribute = attribute;
 		}
 
-		public IEnumerable<(GeometryDescription geometry, List<double> timeSteps)> Create(GeometryDescription geometry, IEnumerable<double> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
 			// TODO: use GeometryBuilder
 

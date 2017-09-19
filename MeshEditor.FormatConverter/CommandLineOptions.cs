@@ -28,7 +28,7 @@ namespace MeshEditor.FormatConverter
 	abstract class LayerProducerOptions : Options
 	{
 		[Option('k', "keytimes", Required = false, HelpText = "Key time steps")]
-		public IEnumerable<double> KeyTimeSteps { get; set; }
+		public IEnumerable<decimal> KeyTimeSteps { get; set; }
 
 		[Option("field", Required = false, HelpText = "Name of field to compress")]
 		public string FieldName { get; set; }

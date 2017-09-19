@@ -9,7 +9,7 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public class FilterParams
 	{
-		public FilterParams(IReadOnlyCollection<string> filterParameters, IReadOnlyCollection<double> keyTimeSteps, IReadOnlyCollection<string> compressionParameters, string layerName, string constraintFieldName)
+		public FilterParams(IReadOnlyCollection<string> filterParameters, IReadOnlyCollection<decimal> keyTimeSteps, IReadOnlyCollection<string> compressionParameters, string layerName, string constraintFieldName)
 		{
 			FilterParameters = filterParameters;
 			KeyTimeSteps = keyTimeSteps;
@@ -19,7 +19,7 @@ namespace MeshEditor.DataVisualizer.UI
 		}
 
 		public IReadOnlyCollection<string> FilterParameters { get; }
-		public IReadOnlyCollection<double> KeyTimeSteps { get; }
+		public IReadOnlyCollection<decimal> KeyTimeSteps { get; }
 		public IReadOnlyCollection<string> CompressionParameters { get; }
 		public string LayerName { get; }
 		public string ConstraintFieldName { get; }

@@ -48,7 +48,7 @@ namespace MeshEditor.LayerManager.Import
 
 			public string FieldName { get; set; }
 
-			public double TimeStep { get; set; }
+			public decimal TimeStep { get; set; }
 
 			public int NumberOfComponents => ComponentNames?.Length ?? 0;
 
@@ -213,7 +213,7 @@ namespace MeshEditor.LayerManager.Import
 									{
 										newParsedField.FieldName = tokens[1];
 										// "analysis name": ignored
-										newParsedField.TimeStep = ParseFloat64(tokens[3]);
+										newParsedField.TimeStep = ParseDecimal(tokens[3]);
 										newParsedField.ResultTypeString = tokens[4];
 										newParsedField.ComponentNames = createGenericComponentNames(tokens[4]);
 										newParsedField.Location = convertLocationStringToDataLocation(tokens[5]);

@@ -223,7 +223,7 @@ namespace MeshEditor.SolutionManager
 			return layerSummary;
 		}
 
-		public ILayerInfo Import(IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
+		public ILayerInfo Import(IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
 		{
 			var analysisResultImportServices = Solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 
@@ -238,7 +238,7 @@ namespace MeshEditor.SolutionManager
 			return addLayer(masterLayerSummaryFile, parentLayer: null);
 		}
 
-		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out FilterType filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
@@ -258,7 +258,7 @@ namespace MeshEditor.SolutionManager
 			return addLayer(filterLayerSummaryFile, parentLayer);
 		}
 
-		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<double> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
 		{
 			var parentLayer = findLayer(parentLayerIdOrName);
 

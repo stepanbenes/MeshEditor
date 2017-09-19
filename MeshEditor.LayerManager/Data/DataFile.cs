@@ -25,7 +25,7 @@ namespace MeshEditor.LayerManager.Data
 		public string ComponentName { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-		public double[] TimeSteps { get; set; }
+		public decimal[] TimeSteps { get; set; }
 
 		[JsonConverter(typeof(StringEnumConverter))]
 		public DataLocationType Location { get; set; }

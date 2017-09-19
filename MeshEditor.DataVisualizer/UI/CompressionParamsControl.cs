@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -70,18 +71,18 @@ namespace MeshEditor.DataVisualizer.UI
 			return parameters;
 		}
 
-		public IEnumerable<double> GetKeyTimeSteps()
+		public IEnumerable<decimal> GetKeyTimeSteps()
 		{
 			if (checkBoxMergeTimeSteps.Checked)
 			{
 				string[] tokens = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 				if (!tokens.Any())
-					return Enumerable.Repeat(double.PositiveInfinity, 1);
-				return tokens.Select(token => double.Parse(token)); // TODO: handle parsing errors
+					return Enumerable.Repeat(decimal.MaxValue, 1); /**/ // was double.PositiveInfinity, but decimal does not have infinity
+				return tokens.Select(token => decimal.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture)); // TODO: handle parsing errors better
 			}
 			else
 			{
-				return Enumerable.Empty<double>();
+				return Enumerable.Empty<decimal>();
 			}
 		}
 	}
