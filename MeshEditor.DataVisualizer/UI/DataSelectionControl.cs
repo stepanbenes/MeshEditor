@@ -27,6 +27,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		#region Fields, constructor
 
+		private static readonly string NoneItem = "[None]";
+
 		SummaryFile layerSummary;
 		bool updatingDataSource;
 
@@ -51,6 +53,7 @@ namespace MeshEditor.DataVisualizer.UI
 				comboBoxTimeStep.Items.Clear();
 				comboBoxField.Items.Clear();
 				comboBoxComponent.Items.Clear();
+				comboBoxVectorField.Items.Clear();
 
 				if (layerSummary != null)
 				{
@@ -60,10 +63,12 @@ namespace MeshEditor.DataVisualizer.UI
 					{
 						setupFields(dataSelection.TimeStep);
 						setupComponents(dataSelection.FieldName);
+						setupVectorFields(dataSelection.TimeStep);
 
-						comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.Cast<ComboBoxItem<double, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
-						comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.FieldName);
-						comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.ComponentName);
+						comboBoxTimeStep.SelectedItem = comboBoxTimeStep.Items.OfType<ComboBoxItem<double, IMeshFileDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.TimeStep);
+						comboBoxField.SelectedItem = comboBoxField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.FieldName) ?? (object)NoneItem;
+						comboBoxComponent.SelectedItem = comboBoxComponent.Items.OfType<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.ComponentName);
+						comboBoxVectorField.SelectedItem = comboBoxVectorField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.VectorFieldName) ?? (object)NoneItem;
 					}
 				}
 			}
@@ -77,24 +82,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		#region Private methods
 
-		private DataSelection getDataSelection()
-		{
-			var selectedTimeStepComboBoxItem = comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>;
-			if (selectedTimeStepComboBoxItem == null)
-				return null;
-
-			var selectedFieldComboBoxItem = comboBoxField.SelectedItem as ComboBoxItem<string, FieldDescriptor>;
-			var selectedComponentComboBoxItem = comboBoxComponent.SelectedItem as ComboBoxItem<string, ComponentDescriptor>;
-
-			double timeStep = selectedTimeStepComboBoxItem.Key;
-			IMeshFileDescriptor mesh = selectedTimeStepComboBoxItem.Value;
-			string fieldName = selectedFieldComboBoxItem?.Key;
-			string componentName = selectedComponentComboBoxItem?.Key;
-			TimeStepDescriptor timeStepDescriptor = selectedComponentComboBoxItem?.Value.TimeSteps.SingleOrDefault(timeStepPair => timeStepPair.Key == timeStep).Value;
-			int? dataIndex = timeStepDescriptor?.DataIndex;
-
-			return new DataSelection(fieldName, componentName, timeStep, dataIndex, null /**/, mesh);
-		}
+		#region Event handlers
 
 		private void comboBoxTimeStep_SelectedIndexChanged(object sender, EventArgs e)
 		{
@@ -105,11 +93,15 @@ namespace MeshEditor.DataVisualizer.UI
 					updatingDataSource = true;
 					string selectedFieldName = (comboBoxField.SelectedItem as ComboBoxItem<string, FieldDescriptor>)?.Key;
 					string selectedComponentName = (comboBoxComponent.SelectedItem as ComboBoxItem<string, ComponentDescriptor>)?.Key;
+					double? selectedTimeStep = (comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>)?.Key;
+					string selectedVectorFieldName = (comboBoxVectorField.SelectedItem as ComboBoxItem<string, FieldDescriptor>)?.Key;
 
-					setupFields(selectedTimeStep: (comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>)?.Key);
+					setupFields(selectedTimeStep);
+					setupVectorFields(selectedTimeStep);
 
-					comboBoxField.SelectedItem = comboBoxField.Items.Cast<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == selectedFieldName);
-					comboBoxComponent.SelectedItem = comboBoxComponent.Items.Cast<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == selectedComponentName);
+					comboBoxField.SelectedItem = comboBoxField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == selectedFieldName) ?? (object)NoneItem;
+					comboBoxComponent.SelectedItem = comboBoxComponent.Items.OfType<ComboBoxItem<string, ComponentDescriptor>>().SingleOrDefault(item => item.Key == selectedComponentName);
+					comboBoxVectorField.SelectedItem = comboBoxVectorField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == selectedVectorFieldName) ?? (object)NoneItem;
 				}
 				finally
 				{
@@ -125,7 +117,16 @@ namespace MeshEditor.DataVisualizer.UI
 			// select first component
 			if (comboBoxComponent.Items.Count > 0)
 			{
+				comboBoxComponent.Enabled = true;
 				comboBoxComponent.SelectedIndex = 0;
+			}
+			else
+			{
+				comboBoxComponent.Enabled = false;
+				if (!updatingDataSource)
+				{
+					notifyDataSelectionChanged();
+				}
 			}
 		}
 
@@ -135,6 +136,41 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				notifyDataSelectionChanged();
 			}
+		}
+
+		private void comboBoxVectorField_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (!updatingDataSource)
+			{
+				notifyDataSelectionChanged();
+			}
+		}
+
+		#endregion
+
+		private DataSelection getDataSelection()
+		{
+			var selectedTimeStepComboBoxItem = comboBoxTimeStep.SelectedItem as ComboBoxItem<double, IMeshFileDescriptor>;
+			if (selectedTimeStepComboBoxItem == null)
+				return null;
+
+			var selectedFieldComboBoxItem = comboBoxField.SelectedItem as ComboBoxItem<string, FieldDescriptor>;
+			var selectedComponentComboBoxItem = comboBoxComponent.SelectedItem as ComboBoxItem<string, ComponentDescriptor>;
+			var selectedVectorFieldComboBoxItem = comboBoxVectorField.SelectedItem as ComboBoxItem<string, FieldDescriptor>;
+
+			double timeStep = selectedTimeStepComboBoxItem.Key;
+			IMeshFileDescriptor mesh = selectedTimeStepComboBoxItem.Value;
+			string fieldName = selectedFieldComboBoxItem?.Key;
+			string componentName = selectedComponentComboBoxItem?.Key;
+			TimeStepDescriptor timeStepDescriptor = selectedComponentComboBoxItem?.Value.TimeSteps.SingleOrDefault(timeStepPair => timeStepPair.Key == timeStep).Value;
+			int? dataIndex = timeStepDescriptor?.DataIndex;
+			string vectorFieldName = selectedVectorFieldComboBoxItem?.Key;
+
+			var vectorTimeStepDescriptors = selectedVectorFieldComboBoxItem?.Value.Components.OrderBy(componentPair => componentPair.Key).Select(componentPair => componentPair.Value).SelectMany(c => c.TimeSteps).Where(timeStepPair => timeStepPair.Key == timeStep).Select(timeStepPair => timeStepPair.Value).ToList();
+			Debug.Assert(vectorTimeStepDescriptors == null || vectorTimeStepDescriptors.Count == 3);
+			VectorIndex? vectorIndex = vectorTimeStepDescriptors != null ? new VectorIndex(vectorTimeStepDescriptors[0].DataIndex, vectorTimeStepDescriptors[1].DataIndex, vectorTimeStepDescriptors[2].DataIndex) : (VectorIndex?)null;
+
+			return new DataSelection(fieldName, componentName, timeStep, dataIndex, vectorFieldName, vectorIndex, mesh);
 		}
 
 		private void setupTimeSteps()
@@ -150,7 +186,19 @@ namespace MeshEditor.DataVisualizer.UI
 			comboBoxField.Items.Clear();
 			if (selectedTimeStep.HasValue)
 			{
+				comboBoxField.Items.Add(NoneItem);
 				comboBoxField.Items.AddRange(getAvailableFields(selectedTimeStep.Value).Select(pair => new ComboBoxItem<string, FieldDescriptor>(pair.fieldName, pair.fieldDescriptor)).ToArray());
+			}
+		}
+
+		private void setupVectorFields(double? selectedTimeStep)
+		{
+			Debug.Assert(layerSummary != null);
+			comboBoxVectorField.Items.Clear();
+			if (selectedTimeStep.HasValue)
+			{
+				comboBoxVectorField.Items.Add(NoneItem);
+				comboBoxVectorField.Items.AddRange(getAvailableVectorFields(selectedTimeStep.Value).Select(pair => new ComboBoxItem<string, FieldDescriptor>(pair.fieldName, pair.fieldDescriptor)).ToArray());
 			}
 		}
 
@@ -179,6 +227,11 @@ namespace MeshEditor.DataVisualizer.UI
 						  from timeStepPair in componentPair.Value.TimeSteps
 						  select timeStepPair.Key).Any(timeStep => timeStep == selectedTimeStep)
 				   select (fieldPair.Key, fieldPair.Value);
+		}
+
+		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableVectorFields(double selectedTimeStep)
+		{
+			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count == 3); // TODO: is this condition enough?
 		}
 
 		#endregion

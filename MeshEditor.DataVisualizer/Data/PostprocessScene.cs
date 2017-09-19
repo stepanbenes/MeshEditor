@@ -94,23 +94,43 @@ namespace MeshEditor.DataVisualizer.Data
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
 
-			Dictionary<double, ComponentDataDescription> dataComponentTimeStepMap = null;
-
-			if (dataVisualizer.DataSelection?.ScalarDataIndex != newDataSelection.ScalarDataIndex)
+			Dictionary<double, ComponentDataDescription> scalarComponentsTimeStepMap = null;
+			// scalars
 			{
-				if (!newDataSelection.ScalarDataIndex.HasValue)
+				if (dataVisualizer.DataSelection?.ScalarDataIndex != newDataSelection.ScalarDataIndex)
 				{
-					dataComponentTimeStepMap = new Dictionary<double, ComponentDataDescription>();
-				}
-				else
-				{
-					progressReport?.Invoke($"Loading {newDataSelection.FieldName} component", -1);
-					var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.ScalarDataIndex.Value, cancellationToken);
-					dataComponentTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
+					if (!newDataSelection.ScalarDataIndex.HasValue)
+					{
+						scalarComponentsTimeStepMap = new Dictionary<double, ComponentDataDescription>();
+					}
+					else
+					{
+						progressReport?.Invoke($"Loading {newDataSelection.FieldName}/{newDataSelection.ComponentName}", -1);
+						var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.ScalarDataIndex.Value, cancellationToken);
+						scalarComponentsTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
+					}
 				}
 			}
 
-			dataVisualizer.UpdateDataSelection(newDataSelection, dataComponentTimeStepMap);
+			ILookup<double, ComponentDataDescription> vectorComponentsTimeStepMap = null;
+			// vectors
+			{
+				if (dataVisualizer.DataSelection?.VectorDataIndex != newDataSelection.VectorDataIndex)
+				{
+					if (!newDataSelection.VectorDataIndex.HasValue)
+					{
+						vectorComponentsTimeStepMap = Enumerable.Empty<ComponentDataDescription>().ToLookup(c => c.TimeStep);
+					}
+					else
+					{
+						progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
+						var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.VectorDataIndex.Value.AllIndices(), cancellationToken);
+						vectorComponentsTimeStepMap = componentList.ToLookup(d => d.TimeStep);
+					}
+				}
+			}
+
+			dataVisualizer.UpdateDataSelection(newDataSelection, scalarComponentsTimeStepMap, vectorComponentsTimeStepMap);
 
 			return dataVisualizer;
 		}

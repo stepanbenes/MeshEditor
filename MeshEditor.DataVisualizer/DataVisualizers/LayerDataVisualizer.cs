@@ -41,15 +41,14 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateDataSelection(DataSelection newDataSelection, Dictionary<double, ComponentDataDescription> dataComponentTimeStepMap = null)
+		public void UpdateDataSelection(DataSelection newDataSelection, Dictionary<double, ComponentDataDescription> scalarComponentsTimeStepMap, ILookup<double, ComponentDataDescription> vectorComponentsTimeStepMap)
 		{
-			Debug.Assert(newDataSelection != null);
-			Debug.Assert(data != null || dataComponentTimeStepMap != null);
+			Debug.Assert(data != null || scalarComponentsTimeStepMap != null);
 
 			dataSelection = newDataSelection;
-			if (dataComponentTimeStepMap != null)
+			if (scalarComponentsTimeStepMap != null)
 			{
-				data = dataComponentTimeStepMap;
+				data = scalarComponentsTimeStepMap;
 			}
 
 			if (!data.TryGetValue(dataSelection.TimeStep, out currentDataComponent))
@@ -59,6 +58,10 @@ namespace MeshEditor.DataVisualizer
 
 			setupColorScale();
 			buildDataDescription();
+
+			// TODO: build vector arrows vbo from vectorComponents
+			// TODO: check if Location is in nodes, otherwise it is not supported
+			// TODO: if vectorDataIndex is null, clear vector arrows vbo; vectorComponents should be empty
 		}
 
 		public override double GetDataValue(Node node)

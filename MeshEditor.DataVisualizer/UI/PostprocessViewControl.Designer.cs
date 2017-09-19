@@ -76,7 +76,7 @@
 			this.visualizerSettingsControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.visualizerSettingsControl.Enabled = false;
-			this.visualizerSettingsControl.Location = new System.Drawing.Point(3, 159);
+			this.visualizerSettingsControl.Location = new System.Drawing.Point(3, 189);
 			this.visualizerSettingsControl.Name = "visualizerSettingsControl";
 			this.visualizerSettingsControl.Settings = null;
 			this.visualizerSettingsControl.Size = new System.Drawing.Size(357, 128);
@@ -88,7 +88,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.dataSelectionControl.Location = new System.Drawing.Point(3, 3);
 			this.dataSelectionControl.Name = "dataSelectionControl";
-			this.dataSelectionControl.Size = new System.Drawing.Size(357, 150);
+			this.dataSelectionControl.Size = new System.Drawing.Size(357, 180);
 			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl

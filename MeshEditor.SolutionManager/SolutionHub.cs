@@ -189,6 +189,19 @@ namespace MeshEditor.SolutionManager
 			return await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
 		}
 
+		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, IEnumerable<int> dataIndices, CancellationToken cancellationToken)
+		{
+			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
+			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			var result = new List<ComponentDataDescription>();
+			foreach (var dataIndex in dataIndices)
+			{
+				var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
+				result.AddRange(components);
+			}
+			return result;
+		}
+
 		public async Task<AttributeDescription> LoadAttributeAsync(Guid layerId, int attributeIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
