@@ -4,24 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
-using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.DataVisualizer
 {
 	public class DataSelection
 	{
 		public DataSelection(decimal timeStep, IMeshFileDescriptor mesh)
-			: this(null, null, timeStep, null, null, null, mesh)
+			: this(timeStep, null, null, null, mesh)
 		{ }
 
-		public DataSelection(string fieldName, string componentName, decimal timeStep, int? scalarDataIndex, string vectorFieldName, VectorIndex? vectorDataIndex, IMeshFileDescriptor mesh)
+		public DataSelection(decimal timeStep, string fieldName, string componentName, string vectorFieldName, IMeshFileDescriptor mesh)
 		{
 			FieldName = fieldName;
 			ComponentName = componentName;
 			TimeStep = timeStep;
-			ScalarDataIndex = scalarDataIndex;
 			Mesh = mesh;
-			VectorDataIndex = vectorDataIndex;
 			VectorFieldName = vectorFieldName;
 		}
 
@@ -29,12 +26,26 @@ namespace MeshEditor.DataVisualizer
 		public string ComponentName { get; }
 		public decimal TimeStep { get; }
 
-		public int? ScalarDataIndex { get; }
-
 		public string VectorFieldName { get; }
 
-		public VectorIndex? VectorDataIndex { get; }
-
 		public IMeshFileDescriptor Mesh { get; }
+
+		public bool HasScalarSelection => ComponentName != null;
+
+		public bool HasVectorSelection => VectorFieldName != null;
+
+		public bool HasDifferentScalarSelectionThan(DataSelection other)
+		{
+			if (other == null)
+				return HasScalarSelection;
+			return TimeStep != other.TimeStep || FieldName != other.FieldName || ComponentName != other.ComponentName;
+		}
+
+		public bool HasDifferentVectorSelectionThan(DataSelection other)
+		{
+			if (other == null)
+				return HasVectorSelection;
+			return TimeStep != other.TimeStep || VectorFieldName != other.VectorFieldName;
+		}
 	}
 }

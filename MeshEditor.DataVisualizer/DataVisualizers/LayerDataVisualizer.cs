@@ -16,7 +16,6 @@ namespace MeshEditor.DataVisualizer
 		#region Fields, constructor
 
 		readonly GeometryDescription geometry;
-		Dictionary<decimal, ComponentDataDescription> data;
 
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
@@ -26,14 +25,24 @@ namespace MeshEditor.DataVisualizer
 		{
 			Debug.Assert(geometry != null);
 			this.geometry = geometry;
-			data = new Dictionary<decimal, ComponentDataDescription>();
 		}
 
 		#endregion
 
 		#region Properties
 
-		public DataSelection DataSelection => dataSelection;
+		public DataSelection DataSelection
+		{
+			get => dataSelection;
+			set
+			{
+				if (dataSelection != value)
+				{
+					dataSelection = value;
+					buildDataDescription();
+				}
+			}
+		}
 
 		public override bool DisplayColors => base.DisplayColors && currentDataComponent != null;
 
@@ -41,24 +50,14 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateDataSelection(DataSelection newDataSelection, Dictionary<decimal, ComponentDataDescription> scalarComponentsTimeStepMap, ILookup<decimal, ComponentDataDescription> vectorComponentsTimeStepMap)
+		public void UpdateScalarData(ComponentDataDescription scalarData /*null if no change*/)
 		{
-			Debug.Assert(data != null || scalarComponentsTimeStepMap != null);
-
-			dataSelection = newDataSelection;
-			if (scalarComponentsTimeStepMap != null)
-			{
-				data = scalarComponentsTimeStepMap;
-			}
-
-			if (!data.TryGetValue(dataSelection.TimeStep, out currentDataComponent))
-			{
-				currentDataComponent = null;
-			}
-
+			currentDataComponent = scalarData;
 			setupColorScale();
-			buildDataDescription();
+		}
 
+		public void UpdateVectorData((ComponentDataDescription x, ComponentDataDescription y, ComponentDataDescription z)? vectorComponents /*null if no change*/)
+		{
 			// TODO: build vector arrows vbo from vectorComponents
 			// TODO: check if Location is in nodes, otherwise it is not supported
 			// TODO: if vectorDataIndex is null, clear vector arrows vbo; vectorComponents should be empty

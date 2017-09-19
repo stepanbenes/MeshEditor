@@ -182,25 +182,30 @@ namespace MeshEditor.SolutionManager
 			return await layerGenerator.LoadGeometryAsync(layerId, layerSummary.MeshFallbackLayerId, meshIndex, cancellationToken);
 		}
 
-		//public async Task<IEnumerable<ComponentDataDescription>> LoadDataFieldAsync(Guid layerId, decimal timeStep, string fieldName, CancellationToken cancellationToken) => throw new NotImplementedException();
-		//public async Task<ComponentDataDescription> LoadDataComponentAsync(Guid layerId, decimal timeStep, string fieldName, string componentName, CancellationToken cancellationToken) => throw new NotImplementedException();
-
-		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
+		public async Task<ComponentDataDescription> LoadDataComponentAsync(Guid layerId, decimal timeStep, string fieldName, string componentName, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
-			return await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
+			var timeStepDescriptor = layerSummary.Fields[fieldName].Components[componentName].TimeSteps[timeStep];
+
+			var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, cancellationToken);
+			// TODO: cache components if there is more than one
+			return components.Single(c => c.TimeStep == timeStep);
 		}
 
-		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, IEnumerable<int> dataIndices, CancellationToken cancellationToken)
+		public async Task<IEnumerable<ComponentDataDescription>> LoadDataFieldAsync(Guid layerId, decimal timeStep, string fieldName, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
+			var timeStepDescriptors = layerSummary.Fields[fieldName].Components.Values.Select(c => c.TimeSteps[timeStep]);
+
 			var result = new List<ComponentDataDescription>();
-			foreach (var dataIndex in dataIndices)
+			foreach (var timeStepDescriptor in timeStepDescriptors)
 			{
-				var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, dataIndex, cancellationToken);
-				result.AddRange(components);
+				var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, cancellationToken);
+				// TODO: cache components if there is more than one
+				var component = components.Single(c => c.TimeStep == timeStep);
+				result.Add(component);
 			}
 			return result;
 		}

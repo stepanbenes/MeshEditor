@@ -94,43 +94,38 @@ namespace MeshEditor.DataVisualizer.Data
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
 
-			Dictionary<decimal, ComponentDataDescription> scalarComponentsTimeStepMap = null;
 			// scalars
+			if (newDataSelection.HasDifferentScalarSelectionThan(dataVisualizer.DataSelection))
 			{
-				if (dataVisualizer.DataSelection?.ScalarDataIndex != newDataSelection.ScalarDataIndex)
+				if (newDataSelection.HasScalarSelection)
 				{
-					if (!newDataSelection.ScalarDataIndex.HasValue)
-					{
-						scalarComponentsTimeStepMap = new Dictionary<decimal, ComponentDataDescription>();
-					}
-					else
-					{
-						progressReport?.Invoke($"Loading {newDataSelection.FieldName}/{newDataSelection.ComponentName}", -1);
-						var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.ScalarDataIndex.Value, cancellationToken);
-						scalarComponentsTimeStepMap = componentList.ToDictionary(d => d.TimeStep);
-					}
+					progressReport?.Invoke($"Loading {newDataSelection.FieldName}/{newDataSelection.ComponentName}", -1);
+					var scalarComponent = await solutionHub.LoadDataComponentAsync(layerId, newDataSelection.TimeStep, newDataSelection.FieldName, newDataSelection.ComponentName, cancellationToken);
+					dataVisualizer.UpdateScalarData(scalarComponent);
+				}
+				else
+				{
+					dataVisualizer.UpdateScalarData(scalarData: null);
 				}
 			}
 
-			ILookup<decimal, ComponentDataDescription> vectorComponentsTimeStepMap = null;
 			// vectors
+			if (newDataSelection.HasDifferentVectorSelectionThan(dataVisualizer.DataSelection))
 			{
-				if (dataVisualizer.DataSelection?.VectorDataIndex != newDataSelection.VectorDataIndex)
+				if (newDataSelection.HasVectorSelection)
 				{
-					if (!newDataSelection.VectorDataIndex.HasValue)
-					{
-						vectorComponentsTimeStepMap = Enumerable.Empty<ComponentDataDescription>().ToLookup(c => c.TimeStep);
-					}
-					else
-					{
-						progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
-						var componentList = await solutionHub.LoadDataAsync(layerId, newDataSelection.VectorDataIndex.Value.AllIndices(), cancellationToken);
-						vectorComponentsTimeStepMap = componentList.ToLookup(d => d.TimeStep);
-					}
+					progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
+					var vectorComponentsList = (await solutionHub.LoadDataFieldAsync(layerId, newDataSelection.TimeStep, newDataSelection.VectorFieldName, cancellationToken)).ToList();
+					var vectorComponents = (x: vectorComponentsList[0], y: vectorComponentsList[1], z: vectorComponentsList[2]); // WARNING: I expect 3 returned elements, what if I got different count?
+					dataVisualizer.UpdateVectorData(vectorComponents);
+				}
+				else
+				{
+					dataVisualizer.UpdateVectorData(vectorComponents: null);
 				}
 			}
 
-			dataVisualizer.UpdateDataSelection(newDataSelection, scalarComponentsTimeStepMap, vectorComponentsTimeStepMap);
+			dataVisualizer.DataSelection = newDataSelection;
 
 			return dataVisualizer;
 		}

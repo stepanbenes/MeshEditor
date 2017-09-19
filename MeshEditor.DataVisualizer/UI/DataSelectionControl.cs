@@ -159,18 +159,12 @@ namespace MeshEditor.DataVisualizer.UI
 			var selectedVectorFieldComboBoxItem = comboBoxVectorField.SelectedItem as ComboBoxItem<string, FieldDescriptor>;
 
 			decimal timeStep = selectedTimeStepComboBoxItem.Key;
-			IMeshFileDescriptor mesh = selectedTimeStepComboBoxItem.Value;
 			string fieldName = selectedFieldComboBoxItem?.Key;
 			string componentName = selectedComponentComboBoxItem?.Key;
-			TimeStepDescriptor timeStepDescriptor = selectedComponentComboBoxItem?.Value.TimeSteps.SingleOrDefault(timeStepPair => timeStepPair.Key == timeStep).Value;
-			int? dataIndex = timeStepDescriptor?.DataIndex;
 			string vectorFieldName = selectedVectorFieldComboBoxItem?.Key;
+			IMeshFileDescriptor mesh = selectedTimeStepComboBoxItem.Value;
 
-			var vectorTimeStepDescriptors = selectedVectorFieldComboBoxItem?.Value.Components.OrderBy(componentPair => componentPair.Key).Select(componentPair => componentPair.Value).SelectMany(c => c.TimeSteps).Where(timeStepPair => timeStepPair.Key == timeStep).Select(timeStepPair => timeStepPair.Value).ToList();
-			Debug.Assert(vectorTimeStepDescriptors == null || vectorTimeStepDescriptors.Count == 3);
-			VectorIndex? vectorIndex = vectorTimeStepDescriptors != null ? new VectorIndex(vectorTimeStepDescriptors[0].DataIndex, vectorTimeStepDescriptors[1].DataIndex, vectorTimeStepDescriptors[2].DataIndex) : (VectorIndex?)null;
-
-			return new DataSelection(fieldName, componentName, timeStep, dataIndex, vectorFieldName, vectorIndex, mesh);
+			return new DataSelection(timeStep, fieldName, componentName, vectorFieldName, mesh);
 		}
 
 		private void setupTimeSteps()
