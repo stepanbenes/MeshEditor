@@ -397,17 +397,17 @@ namespace MeshEditor.LayerManager
 			using (Stream stream = sourceStorage.Load(record))
 			{
 				DataFile layerResult = serializationService.Deserialize<DataFile>(stream);
-				return createDataDescriptionFromLayerResult(layerResult);
+				return createDataDescriptionsFromLayerResultForAllTimeSteps(layerResult);
 			}
 		}
 
-		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, Guid? fallbackLayerId, int dataIndex, CancellationToken cancellationToken)
+		public async Task<ComponentDataDescription> LoadDataForSingleTimeStepAsync(Guid layerId, Guid? fallbackLayerId, int dataIndex, decimal timeStep, CancellationToken cancellationToken)
 		{
 			string record = getLayerResultRecordName(fallbackLayerId ?? layerId, dataIndex);
 			using (Stream stream = sourceStorage.Load(record))
 			{
 				DataFile layerResult = await serializationService.DeserializeAsync<DataFile>(stream, cancellationToken);
-				return createDataDescriptionFromLayerResult(layerResult);
+				return createDataDescriptionFromLayerResultForSingleTimeStep(layerResult, timeStep);
 			}
 		}
 
@@ -852,7 +852,7 @@ namespace MeshEditor.LayerManager
 				Dictionary<string, FieldDescriptor> createFieldsFrom(Dictionary<string, FieldDescriptor> sourceFields)
 				{
 					var fields = new Dictionary<string, FieldDescriptor>();
-					foreach(var (fieldName, fieldDescriptor) in sourceFields)
+					foreach (var (fieldName, fieldDescriptor) in sourceFields)
 					{
 						fields.Add(fieldName, createFieldFrom(fieldDescriptor));
 					}
@@ -869,7 +869,7 @@ namespace MeshEditor.LayerManager
 
 						ComponentDescriptor createComponentFrom(ComponentDescriptor sourceComponent)
 						{
-							var component = new ComponentDescriptor	{ TimeSteps = new Dictionary<decimal, TimeStepDescriptor>() };
+							var component = new ComponentDescriptor { TimeSteps = new Dictionary<decimal, TimeStepDescriptor>() };
 							foreach (var (timeStep, timeStepDescriptor) in sourceComponent.TimeSteps)
 							{
 								var newTimeStepDescriptor = new TimeStepDescriptor
@@ -1013,10 +1013,10 @@ namespace MeshEditor.LayerManager
 			}
 		}
 
-		private IEnumerable<ComponentDataDescription> createDataDescriptionFromLayerResult(DataFile layerResult)
+		private IEnumerable<ComponentDataDescription> createDataDescriptionsFromLayerResultForAllTimeSteps(DataFile layerResult)
 		{
 			int timeStepIndex = 0;
-			foreach (double[] decompressedData in decodeAndDecompressData(layerResult.Data, layerResult.Encoding, layerResult.Compression))
+			foreach (double[] decompressedData in decodeAndDecompressAllRows(layerResult.Data, layerResult.Encoding, layerResult.Compression))
 			{
 				ComponentDataDescription data = new ComponentDataDescription
 				{
@@ -1028,6 +1028,22 @@ namespace MeshEditor.LayerManager
 				};
 				yield return data;
 			}
+		}
+
+		private ComponentDataDescription createDataDescriptionFromLayerResultForSingleTimeStep(DataFile layerResult, decimal timeStep)
+		{
+			int timeStepIndex = Array.IndexOf(layerResult.TimeSteps, timeStep);
+			Debug.Assert(timeStepIndex >= 0);
+			double[] decompressedData = decodeAndDecompressSingleRow(layerResult.Data, timeStepIndex, layerResult.Encoding, layerResult.Compression);
+			var result = new ComponentDataDescription
+			{
+				FieldName = layerResult.FieldName,
+				TimeStep = timeStep,
+				ComponentName = layerResult.ComponentName,
+				Location = layerResult.Location,
+				Values = decompressedData
+			};
+			return result;
 		}
 
 		private AttributeDescription createAttributeDescriptionFromDataLayerAttribute(DataFile layerAttributes)
@@ -1056,12 +1072,18 @@ namespace MeshEditor.LayerManager
 			return encodingService.Encode(compressedValues, TrimOptions.BeginEnd, out encodingParameters);
 		}
 
-		private IEnumerable<double[]> decodeAndDecompressData(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
+		private IEnumerable<double[]> decodeAndDecompressAllRows(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
 			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method, logger);
-			IEnumerable<double[]> originalDataValues = selectedCompressionService.Decompress(compressedValues, compressionParameters);
-			return originalDataValues;
+			return selectedCompressionService.Decompress(compressedValues, compressionParameters);
+		}
+
+		private double[] decodeAndDecompressSingleRow(string data, int rowIndex, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
+		{
+			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
+			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method, logger);
+			return selectedCompressionService.Decompress(compressedValues, rowIndex, compressionParameters);
 		}
 
 		private string encodeAttributes(int[] attributes, out EncodingParameters encodingParameters)

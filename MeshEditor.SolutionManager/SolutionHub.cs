@@ -188,12 +188,11 @@ namespace MeshEditor.SolutionManager
 			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
 			var timeStepDescriptor = layerSummary.Fields[fieldName].Components[componentName].TimeSteps[timeStep];
 
-			var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, cancellationToken);
-			// TODO: cache components if there is more than one
-			return components.Single(c => c.TimeStep == timeStep);
+			var component = await layerGenerator.LoadDataForSingleTimeStepAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, timeStep, cancellationToken);
+			return component;
 		}
 
-		public async Task<IEnumerable<ComponentDataDescription>> LoadDataFieldAsync(Guid layerId, decimal timeStep, string fieldName, CancellationToken cancellationToken)
+		public async Task<IReadOnlyList<ComponentDataDescription>> LoadDataFieldAsync(Guid layerId, decimal timeStep, string fieldName, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
 			var layerSummary = await LoadLayerSummaryAsync(layerId, cancellationToken);
@@ -202,9 +201,7 @@ namespace MeshEditor.SolutionManager
 			var result = new List<ComponentDataDescription>();
 			foreach (var timeStepDescriptor in timeStepDescriptors)
 			{
-				var components = await layerGenerator.LoadDataAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, cancellationToken);
-				// TODO: cache components if there is more than one
-				var component = components.Single(c => c.TimeStep == timeStep);
+				var component = await layerGenerator.LoadDataForSingleTimeStepAsync(layerId, layerSummary.DataFallbackLayerId, timeStepDescriptor.DataIndex, timeStep, cancellationToken);
 				result.Add(component);
 			}
 			return result;

@@ -115,8 +115,8 @@ namespace MeshEditor.DataVisualizer.Data
 				if (newDataSelection.HasVectorSelection)
 				{
 					progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
-					var vectorComponentsList = (await solutionHub.LoadDataFieldAsync(layerId, newDataSelection.TimeStep, newDataSelection.VectorFieldName, cancellationToken)).ToList();
-					var vectorComponents = (x: vectorComponentsList[0], y: vectorComponentsList[1], z: vectorComponentsList[2]); // WARNING: I expect 3 returned elements, what if I got different count?
+					var vectorComponents = await solutionHub.LoadDataFieldAsync(layerId, newDataSelection.TimeStep, newDataSelection.VectorFieldName, cancellationToken);
+					// WARNING: I expect 3 returned elements, what if I got different count?
 					dataVisualizer.UpdateVectorData(vectorComponents);
 				}
 				else

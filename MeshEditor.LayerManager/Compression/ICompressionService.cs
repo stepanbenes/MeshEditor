@@ -11,5 +11,6 @@ namespace MeshEditor.LayerManager.Compression
 	{
 		double[] Compress(IEnumerable<double[]> dataValues, int rows, int columns, out CompressionParameters parameters);
 		IEnumerable<double[]> Decompress(double[] compressedData, CompressionParameters parameters);
+		double[] Decompress(double[] compressedData, int rowIndex, CompressionParameters parameters);
 	}
 }

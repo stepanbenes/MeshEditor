@@ -65,6 +65,11 @@ namespace MeshEditor.LayerManager.Compression
 			}
 		}
 
+		public double[] Decompress(double[] compressedData, int rowIndex, CompressionParameters parameters)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion
 
 		#region Wavelet transform

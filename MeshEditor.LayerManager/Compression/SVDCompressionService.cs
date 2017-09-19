@@ -165,6 +165,21 @@ namespace MeshEditor.LayerManager.Compression
 			return multiplyUSandVTandEnumerateRowsOfResultMatrix(compressedData, svdParameters.Rows, svdParameters.Columns, svdParameters.Rank);
 		}
 
+		public double[] Decompress(double[] compressedData, int rowIndex, CompressionParameters parameters)
+		{
+			Debug.Assert(parameters is SVDCompressionParameters);
+			Debug.Assert(parameters.Method == CompressionMethod.SVD);
+			SVDCompressionParameters svdParameters = (SVDCompressionParameters)parameters;
+			Debug.Assert(rowIndex >= 0 && rowIndex < svdParameters.Rows);
+
+			if (svdParameters.Rank == 0) // if rank is zero, return row full of zeroes
+			{
+				return new double[svdParameters.Columns]; /*array full of zeroes*/
+			}
+
+			return multiplyUSandVT_singleRow(compressedData, svdParameters.Rows, svdParameters.Columns, svdParameters.Rank, rowIndex);
+		}
+
 		#endregion
 
 		#region Private methods
@@ -286,6 +301,25 @@ namespace MeshEditor.LayerManager.Compression
 				}
 				yield return A_approx_row;
 			}
+		}
+
+		private static double[] multiplyUSandVT_singleRow(double[] US_VT_columnwise, int rows, int columns, int rank, int rowIndex)
+		{
+			Debug.Assert(US_VT_columnwise.Length == rows * rank + rank * columns);
+
+			int U_length = rows * rank;
+
+			double[] A_approx_row = new double[columns];
+			for (int j = 0; j < columns; j++)
+			{
+				for (int k = 0; k < rank; k++)
+				{
+					double US_value = US_VT_columnwise[k * rows + rowIndex];
+					double VT_value = US_VT_columnwise[U_length + j * rank + k];
+					A_approx_row[j] += US_value * VT_value;
+				}
+			}
+			return A_approx_row;
 		}
 
 		private int calculateRankFromSizeFactor(int rows, int columns)

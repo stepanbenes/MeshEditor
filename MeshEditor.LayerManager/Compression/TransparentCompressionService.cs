@@ -38,7 +38,7 @@ namespace MeshEditor.LayerManager.Compression
 			if (rows == 1) // optimize for single row
 			{
 				Debug.Assert(linearizedDataValues.Length == columns);
-				return Enumerable.Repeat(linearizedDataValues, 1); // return original array
+				return Enumerable.Repeat(linearizedDataValues, 1); // return the input array
 			}
 			return splitToChunks(linearizedDataValues, columns);
 		}
@@ -64,6 +64,21 @@ namespace MeshEditor.LayerManager.Compression
 			return EnumerateDataRows(compressedData, parameters.Rows, parameters.Columns);
 		}
 
+		public double[] Decompress(double[] compressedData, int rowIndex, CompressionParameters parameters)
+		{
+			Debug.Assert(parameters != null);
+			Debug.Assert(parameters.Method == CompressionMethod.Transparent);
+			Debug.Assert(rowIndex >= 0 && rowIndex < parameters.Rows);
+
+			if (parameters.Rows == 1) // optimize for single row
+			{
+				Debug.Assert(rowIndex == 0);
+				return compressedData; // return the input array
+			}
+
+			return createChunk(compressedData, chunkOffset: rowIndex * parameters.Columns, chunkLength: parameters.Columns);
+		}
+
 		#endregion
 
 		#region Private methods
@@ -72,12 +87,17 @@ namespace MeshEditor.LayerManager.Compression
 		{
 			Debug.Assert(chunkLength <= array.Length);
 			Debug.Assert(array.Length % chunkLength == 0);
-			for (int i = 0; i < array.Length; i += chunkLength)
+			for (int chunkOffset = 0; chunkOffset < array.Length; chunkOffset += chunkLength)
 			{
-				double[] chunk = new double[chunkLength];
-				Array.Copy(array, i, chunk, 0, chunkLength);
-				yield return chunk;
+				yield return createChunk(array, chunkOffset, chunkLength);
 			}
+		}
+
+		private static double[] createChunk(double[] array, int chunkOffset, int chunkLength)
+		{
+			double[] chunk = new double[chunkLength];
+			Array.Copy(array, chunkOffset, chunk, 0, chunkLength);
+			return chunk;
 		}
 
 		#endregion

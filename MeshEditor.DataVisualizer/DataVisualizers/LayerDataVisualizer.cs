@@ -50,14 +50,15 @@ namespace MeshEditor.DataVisualizer
 
 		#region Public methods
 
-		public void UpdateScalarData(ComponentDataDescription scalarData /*null if no change*/)
+		public void UpdateScalarData(ComponentDataDescription scalarData)
 		{
 			currentDataComponent = scalarData;
 			setupColorScale();
 		}
 
-		public void UpdateVectorData((ComponentDataDescription x, ComponentDataDescription y, ComponentDataDescription z)? vectorComponents /*null if no change*/)
+		public void UpdateVectorData(IReadOnlyList<ComponentDataDescription> vectorComponents)
 		{
+			Debug.Assert(vectorComponents == null || vectorComponents.Count == 3);
 			// TODO: build vector arrows vbo from vectorComponents
 			// TODO: check if Location is in nodes, otherwise it is not supported
 			// TODO: if vectorDataIndex is null, clear vector arrows vbo; vectorComponents should be empty
