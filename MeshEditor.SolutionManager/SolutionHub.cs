@@ -182,6 +182,9 @@ namespace MeshEditor.SolutionManager
 			return await layerGenerator.LoadGeometryAsync(layerId, layerSummary.MeshFallbackLayerId, meshIndex, cancellationToken);
 		}
 
+		//public async Task<IEnumerable<ComponentDataDescription>> LoadDataFieldAsync(Guid layerId, decimal timeStep, string fieldName, CancellationToken cancellationToken) => throw new NotImplementedException();
+		//public async Task<ComponentDataDescription> LoadDataComponentAsync(Guid layerId, decimal timeStep, string fieldName, string componentName, CancellationToken cancellationToken) => throw new NotImplementedException();
+
 		public async Task<IEnumerable<ComponentDataDescription>> LoadDataAsync(Guid layerId, int dataIndex, CancellationToken cancellationToken)
 		{
 			var layerGenerator = new LayerGenerator(layerSourceStorage, destinationStorage: null, logger: logger);
