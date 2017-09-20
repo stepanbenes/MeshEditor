@@ -21,7 +21,7 @@ namespace MeshEditor.DataVisualizer
 
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
-		
+
 		public LayerDataVisualizer(GeometryDescription geometry, IVisualizerSettings settings)
 			: base(settings)
 		{
@@ -218,12 +218,13 @@ namespace MeshEditor.DataVisualizer
 
 			double maxAbsValue = Math.Max(Math.Max(xRange.GetMaxAbsValue(), yRange.GetMaxAbsValue()), zRange.GetMaxAbsValue());
 
-			float resizeFactor = 0f;
 			const double epsilon = 1e-20;
-			if (maxAbsValue > epsilon)
+			if (maxAbsValue < epsilon)
 			{
-				resizeFactor = (float)(/*Settings.VectorLengthFactor*/ 0.1 / maxAbsValue);
+				return null; // do not construct vector field if max value is too small
 			}
+
+			float resizeFactor = (float)(/*Settings.VectorLengthFactor*/ 0.1 / maxAbsValue);
 
 			return new VectorField(positions, vectors, resizeFactor, moveEndOfArrowsToNodes: false);
 		}
