@@ -89,10 +89,11 @@ namespace MeshEditor.DataVisualizer.Data
 			if (dataVisualizer == null || newDataSelection.Mesh.Index != dataVisualizer.DataSelection?.Mesh.Index)
 			{
 				var geometry = await reloadMeshAsync(scene, solutionHub, layerId, layerName, newDataSelection, progressReport, cancellationToken);
-				Debug.Assert(scene.Mesh != null);
 				dataVisualizer = new LayerDataVisualizer(geometry, dataVisualizer?.Settings);
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
+
+			Debug.Assert(scene.Mesh != null);
 
 			// scalars
 			if (newDataSelection.HasDifferentScalarSelectionThan(dataVisualizer.DataSelection))
@@ -117,11 +118,11 @@ namespace MeshEditor.DataVisualizer.Data
 					progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
 					var vectorComponents = await solutionHub.LoadDataFieldAsync(layerId, newDataSelection.TimeStep, newDataSelection.VectorFieldName, cancellationToken);
 					// WARNING: I expect 3 returned elements, what if I got different count?
-					dataVisualizer.UpdateVectorData(vectorComponents);
+					dataVisualizer.UpdateVectorData(vectorComponents, scene.Mesh);
 				}
 				else
 				{
-					dataVisualizer.UpdateVectorData(vectorComponents: null);
+					dataVisualizer.UpdateVectorData(vectorComponents: null, mesh: scene.Mesh);
 				}
 			}
 

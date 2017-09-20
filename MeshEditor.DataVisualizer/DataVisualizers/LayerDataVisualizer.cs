@@ -8,6 +8,8 @@ using MeshEditor.Data;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.Common.Extensions;
 using MeshEditor.DataVisualizer.Data;
+using MeshEditor.DataVisualizer.Graphics;
+using OpenTK;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -19,7 +21,7 @@ namespace MeshEditor.DataVisualizer
 
 		DataSelection dataSelection;
 		ComponentDataDescription currentDataComponent;
-
+		
 		public LayerDataVisualizer(GeometryDescription geometry, IVisualizerSettings settings)
 			: base(settings)
 		{
@@ -56,12 +58,15 @@ namespace MeshEditor.DataVisualizer
 			setupColorScale();
 		}
 
-		public void UpdateVectorData(IReadOnlyList<ComponentDataDescription> vectorComponents)
+		public void UpdateVectorData(IReadOnlyList<ComponentDataDescription> vectorComponents, Mesh mesh)
 		{
 			Debug.Assert(vectorComponents == null || vectorComponents.Count == 3);
-			// TODO: build vector arrows vbo from vectorComponents
-			// TODO: check if Location is in nodes, otherwise it is not supported
-			// TODO: if vectorDataIndex is null, clear vector arrows vbo; vectorComponents should be empty
+
+			if (vectorComponents != null)
+			{
+				// build vector arrows vbo from vectorComponents
+				setVectorField(createVectorField(vectorComponents, mesh));
+			}
 		}
 
 		public override double GetDataValue(Node node)
@@ -164,33 +169,10 @@ namespace MeshEditor.DataVisualizer
 			return Enumerable.Range(startOffset, endOffset - startOffset);
 		}
 
-		//private async Task reloadMeshAsync(SolutionHub solutionHub, DataSelection newDataSelection, CancellationToken cancellationToken, SceneFacade scene, Action<string, int> progressReport)
-		//{
-		//	progressReport?.Invoke("Loading geometry", -1);
-		//	var geometry = await solutionHub.LoadGeometryAsync(newDataSelection.LayerId, newDataSelection.MeshIndex, cancellationToken);
-		//	AttributeDescription elementPropertiesAttribute = null;
-		//	if (newDataSelection.ElementPropertyAttributeIndex.HasValue)
-		//	{
-		//		elementPropertiesAttribute = await solutionHub.LoadAttributeAsync(newDataSelection.LayerId, newDataSelection.ElementPropertyAttributeIndex.Value, cancellationToken);
-		//	}
-
-		//	var meshFileParser = new LayerMeshFileParser(solutionDescriptionText, geometry, elementPropertiesAttribute);
-		//	await scene.ReloadMeshInLayerAsync(newDataSelection.LayerId, meshFileParser, cancellationToken, progressReport);
-
-		//	currentGeometry = geometry;
-		//}
-
 		private void setupColorScale()
 		{
 			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
 		}
-
-		//private void clearData()
-		//{
-		//	data = null;
-		//	dataSelection = null;
-		//	currentDataComponent = null;
-		//}
 
 		private void buildDataDescription()
 		{
@@ -198,6 +180,52 @@ namespace MeshEditor.DataVisualizer
 				ScalarDataDescription = "";
 			else
 				ScalarDataDescription = dataSelection.FieldName + Environment.NewLine + dataSelection.ComponentName + Environment.NewLine + "t = " + dataSelection.TimeStep;
+		}
+
+		private VectorField createVectorField(IReadOnlyList<ComponentDataDescription> vectorComponents, Mesh mesh)
+		{
+			if (!vectorComponents.All(c => c.Location == DataLocationType.Points))
+			{
+				throw new NotSupportedException("The only supported data location for vector field is Points");
+			}
+
+			var xComponent = vectorComponents[0];
+			var yComponent = vectorComponents[1];
+			var zComponent = vectorComponents[2];
+
+			IntervalD xRange = IntervalD.InvertedMaxMin;
+			IntervalD yRange = IntervalD.InvertedMaxMin;
+			IntervalD zRange = IntervalD.InvertedMaxMin;
+
+			Vector3[] positions = new Vector3[mesh.NodesEdgesIncidence.Count];
+			Vector3[] vectors = new Vector3[mesh.NodesEdgesIncidence.Count];
+
+			int index = 0;
+			foreach (Node node in mesh.NodesEdgesIncidence.Keys)
+			{
+				double x = xComponent.Values[node.ID];
+				double y = yComponent.Values[node.ID];
+				double z = zComponent.Values[node.ID];
+
+				xRange.MergeWith(x);
+				yRange.MergeWith(y);
+				zRange.MergeWith(z);
+
+				positions[index] = node.Position;
+				vectors[index] = new Vector3((float)x, (float)y, (float)z);
+				index += 1;
+			}
+
+			double maxAbsValue = Math.Max(Math.Max(xRange.GetMaxAbsValue(), yRange.GetMaxAbsValue()), zRange.GetMaxAbsValue());
+
+			float resizeFactor = 0f;
+			const double epsilon = 1e-20;
+			if (maxAbsValue > epsilon)
+			{
+				resizeFactor = (float)(/*Settings.VectorLengthFactor*/ 0.1 / maxAbsValue);
+			}
+
+			return new VectorField(positions, vectors, resizeFactor, moveEndOfArrowsToNodes: false);
 		}
 
 		#endregion

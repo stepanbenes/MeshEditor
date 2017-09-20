@@ -13,7 +13,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text; 
+using System.Text;
 
 namespace MeshEditor.DataVisualizer
 {
@@ -21,7 +21,8 @@ namespace MeshEditor.DataVisualizer
 	{
 		#region Fields, constructor
 
-		private IsoAreasShader isoAreasShader;
+		IsoAreasShader isoAreasShader;
+		VectorField vectorField;
 
 		protected DataVisualizerBase(IVisualizerSettings settings)
 		{
@@ -57,6 +58,12 @@ namespace MeshEditor.DataVisualizer
 
 		public void DrawDecorations(PropertyColorsMode propertyColorsMode)
 		{
+			// DRAW VECTORS AS ARROWS
+			if (vectorField != null)
+			{
+				vectorField.Draw();
+			}
+
 			// DRAW COLOR SCALE LEGEND
 			if (Settings.ShowColorScaleLegend && DisplayColors && (propertyColorsMode & (PropertyColorsMode.Elements | PropertyColorsMode.Faces)) == 0)
 			{
@@ -93,6 +100,21 @@ namespace MeshEditor.DataVisualizer
 		public abstract double GetMaximumDataValue();
 
 		public abstract double GetMinimumDataValue();
+
+		#endregion
+
+		#region Protected methods
+
+		protected void setVectorField(VectorField newVectorField)
+		{
+			if (vectorField != null)
+			{
+				vectorField.Dispose();
+				vectorField = null;
+			}
+
+			vectorField = newVectorField;
+		}
 
 		#endregion
 
@@ -275,14 +297,21 @@ namespace MeshEditor.DataVisualizer
 			if (disposing)
 			{
 				// managed resources
+
+				if (isoAreasShader != null)
+				{
+					isoAreasShader.Dispose();
+					isoAreasShader = null;
+				}
+
+				if (vectorField != null)
+				{
+					vectorField.Dispose();
+					vectorField = null;
+				}
 			}
 
 			// unmanaged resources
-			if (isoAreasShader != null)
-			{
-				isoAreasShader.Dispose();
-				isoAreasShader = null;
-			}
 		}
 
 		#endregion

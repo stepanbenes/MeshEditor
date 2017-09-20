@@ -82,6 +82,7 @@
     <Compile Include="Data\VisualizerSettings.cs" />
     <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
     <Compile Include="Graphics\IsoAreasShader.cs" />
+    <Compile Include="Graphics\VectorField.cs" />
     <Compile Include="IO\LayerMeshFileParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\ColorScaleControlPointSetter.cs">
