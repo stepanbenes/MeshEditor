@@ -105,7 +105,7 @@ namespace MeshEditor.DataVisualizer
 
 		#region Protected methods
 
-		protected void setVectorField(VectorField newVectorField)
+		protected void SetVectorField(VectorField newVectorField)
 		{
 			if (vectorField != null)
 			{

@@ -62,11 +62,8 @@ namespace MeshEditor.DataVisualizer
 		{
 			Debug.Assert(vectorComponents == null || vectorComponents.Count == 3);
 
-			if (vectorComponents != null)
-			{
-				// build vector arrows vbo from vectorComponents
-				setVectorField(createVectorField(vectorComponents, mesh));
-			}
+			// build vector arrows vbo from vectorComponents
+			SetVectorField(createVectorField(vectorComponents, mesh));
 		}
 
 		public override double GetDataValue(Node node)
@@ -184,6 +181,16 @@ namespace MeshEditor.DataVisualizer
 
 		private VectorField createVectorField(IReadOnlyList<ComponentDataDescription> vectorComponents, Mesh mesh)
 		{
+			if (vectorComponents == null)
+			{
+				return null;
+			}
+
+			if (vectorComponents.Count != 3)
+			{
+				throw new InvalidOperationException($"Three vector components expected. Got {vectorComponents.Count} instead.");
+			}
+
 			if (!vectorComponents.All(c => c.Location == DataLocationType.Points))
 			{
 				throw new NotSupportedException("The only supported data location for vector field is Points");
