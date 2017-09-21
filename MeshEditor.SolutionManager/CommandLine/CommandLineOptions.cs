@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CommandLine;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.SolutionManager.CommandLine
 {
+	using global::CommandLine;
 	abstract class Options
 	{
 		// Omitting long name, default --verbose

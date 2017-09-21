@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Common;
+using System.Diagnostics;
 
 namespace MeshEditor.Common.Logging
 {
@@ -12,7 +13,7 @@ namespace MeshEditor.Common.Logging
 	{
 		readonly List<LogRecord> recordHistory = new List<LogRecord>();
 
-		public LogVerbosityLevel VerbosityLevel { get; set; } = LogVerbosityLevel.All;
+		public TraceLevel Level { get; set; } = TraceLevel.Verbose;
 
 		public event EventHandler<LogRecordEventArgs> LogRecordReported;
 
@@ -22,7 +23,7 @@ namespace MeshEditor.Common.Logging
 
 		public void LogOperationProgress(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.OperationProgress)
+			if (Level >= TraceLevel.Verbose)
 			{
 				logRecord(new LogRecord(RecordType.OperationProgress, message));
 			}
@@ -30,7 +31,7 @@ namespace MeshEditor.Common.Logging
 
 		public void LogMessage(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Message)
+			if (Level >= TraceLevel.Info)
 			{
 				logRecord(new LogRecord(RecordType.Message, message));
 			}
@@ -38,7 +39,7 @@ namespace MeshEditor.Common.Logging
 
 		public void LogWarning(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Warning)
+			if (Level >= TraceLevel.Warning)
 			{
 				logRecord(new LogRecord(RecordType.Warning, message));
 			}
@@ -46,7 +47,7 @@ namespace MeshEditor.Common.Logging
 
 		public void LogError(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Error)
+			if (Level >= TraceLevel.Error)
 			{
 				logRecord(new LogRecord(RecordType.Error, message));
 			}

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.SolutionManager.CommandLine
 {
-	struct ConsoleBrush : IDisposable
+	public struct ConsoleBrush : IDisposable
 	{
 		readonly ConsoleColor colorToRestore;
 

@@ -2,26 +2,27 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.Common.Logging;
+using MeshEditor.SolutionManager.CommandLine;
+using System.Diagnostics;
 
-namespace MeshEditor.FormatConverter
+namespace MeshEditor.SolutionManager.Logging
 {
-	class Logger : ILogger
+	public class TextLogger : ILogger
 	{
-		TextWriter log;
+		readonly TextWriter log;
 
-		public LogVerbosityLevel VerbosityLevel { get; set; }
+		public TraceLevel Level { get; set; } = TraceLevel.Info;
 
-		public Logger(TextWriter log)
+		public TextLogger(TextWriter log)
 		{
 			this.log = log;
 		}
 
 		public void LogOperationProgress(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.OperationProgress)
+			if (Level >= TraceLevel.Verbose)
 			{
 				log.WriteLine(message);
 			}
@@ -29,7 +30,7 @@ namespace MeshEditor.FormatConverter
 
 		public void LogMessage(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Message)
+			if (Level >= TraceLevel.Info)
 			{
 				log.WriteLine(message);
 			}
@@ -37,7 +38,7 @@ namespace MeshEditor.FormatConverter
 
 		public void LogWarning(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Warning)
+			if (Level >= TraceLevel.Warning)
 			{
 				log.WriteLine("WARNING: " + message);
 			}
@@ -45,20 +46,20 @@ namespace MeshEditor.FormatConverter
 
 		public void LogError(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Error)
+			if (Level >= TraceLevel.Error)
 			{
 				log.WriteLine("ERROR: " + message);
 			}
 		}
 	}
 
-	class ConsoleLogger : ILogger
+	public class ConsoleLogger : ILogger
 	{
-		public LogVerbosityLevel VerbosityLevel { get; set; }
+		public TraceLevel Level { get; set; } = TraceLevel.Info;
 
 		public void LogOperationProgress(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.OperationProgress)
+			if (Level >= TraceLevel.Verbose)
 			{
 				using (new ConsoleBrush(ConsoleColor.Gray))
 				{
@@ -69,7 +70,7 @@ namespace MeshEditor.FormatConverter
 
 		public void LogMessage(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Message)
+			if (Level >= TraceLevel.Info)
 			{
 				Console.WriteLine(message);
 			}
@@ -77,7 +78,7 @@ namespace MeshEditor.FormatConverter
 
 		public void LogWarning(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Warning)
+			if (Level >= TraceLevel.Warning)
 			{
 				using (new ConsoleBrush(ConsoleColor.Yellow))
 				{
@@ -88,7 +89,7 @@ namespace MeshEditor.FormatConverter
 
 		public void LogError(string message)
 		{
-			if (VerbosityLevel >= LogVerbosityLevel.Error)
+			if (Level >= TraceLevel.Error)
 			{
 				using (new ConsoleBrush(ConsoleColor.Red))
 				{

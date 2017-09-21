@@ -72,7 +72,6 @@
     <Compile Include="Logging\IMemoryLogger.cs" />
     <Compile Include="Logging\LogRecord.cs" />
     <Compile Include="Logging\LogRecordEventArgs.cs" />
-    <Compile Include="Logging\LogVerbosityLevel.cs" />
     <Compile Include="Logging\MemoryLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
