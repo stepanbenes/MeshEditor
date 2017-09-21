@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Forms", "MeshEdi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.OpenTKCompatibility", "MeshEditor.OpenTKCompatibility\MeshEditor.OpenTKCompatibility.csproj", "{3ED73469-9212-4EC7-B450-EC243B344A39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.FormatConverter", "MeshEditor.FormatConverter\MeshEditor.FormatConverter.csproj", "{469F9E5D-1EE2-4219-A9AA-890E2923D26B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.FormatConverter.Console", "MeshEditor.FormatConverter.Console\MeshEditor.FormatConverter.Console.csproj", "{469F9E5D-1EE2-4219-A9AA-890E2923D26B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.DataVisualizer", "MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj", "{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}"
 EndProject
@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.SolutionManager"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Common", "MeshEditor.Common\MeshEditor.Common.csproj", "{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.FormatConverter.FunctionApp", "MeshEditor.FormatConverter.FunctionApp\MeshEditor.FormatConverter.FunctionApp.csproj", "{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MeshEditor.FormatConverter.FunctionApp", "MeshEditor.FormatConverter.FunctionApp\MeshEditor.FormatConverter.FunctionApp.csproj", "{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -124,7 +124,7 @@ Global
 		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		VisualSVNWorkingCopyRoot = .
 		SolutionGuid = {62A78C12-34E0-4FDD-A164-E732BB9CD79B}
+		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal
