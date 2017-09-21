@@ -28,7 +28,7 @@ namespace MeshEditor.SolutionManager
 
 		static LocalStorageConfiguration LocalStorageConfiguration => localStorageConfiguration ?? (localStorageConfiguration = ConfigurationManager.GetConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration());
 		static AzureBlobStorageConfiguration AzureBlobStorageConfiguration => azureBlobStorageConfiguration ?? (azureBlobStorageConfiguration = ConfigurationManager.GetConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration());
-		static RestApiConfiguration RestApiConfiguration => restApiConfiguration ?? (ConfigurationManager.GetConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration());
+		static RestApiConfiguration RestApiConfiguration => restApiConfiguration ?? (restApiConfiguration = ConfigurationManager.GetConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration());
 
 		readonly static string DefaultMasterLayerName = "master";
 
