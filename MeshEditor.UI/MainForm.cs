@@ -61,6 +61,8 @@ namespace MeshEditor.WinUI
 		{
 			Toolkit.Init();
 
+			ConfigurationManager.LoadConfiguration();
+
 			InitializeComponent();
 
 			SceneFacade.EditorModeChanged += new EventHandler(editorModeChanged);
@@ -1420,7 +1422,7 @@ namespace MeshEditor.WinUI
 
 		private MainWindowSettings loadMainWindowSettings()
 		{
-			var mainFormSettings = ConfigurationManager.ReadConfigurationObject<MainWindowSettings>("MainWindowSettings") ?? new MainWindowSettings();
+			var mainFormSettings = ConfigurationManager.GetConfigurationObject<MainWindowSettings>("MainWindowSettings") ?? new MainWindowSettings();
 			if (mainFormSettings.State == FormWindowState.Normal)
 			{
 				this.Width = mainFormSettings.Width;
@@ -1444,7 +1446,7 @@ namespace MeshEditor.WinUI
 				mainWindowSettings.PositionTop = this.Top;
 			}
 			mainWindowSettings.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
-			ConfigurationManager.WriteConfigurationObject("MainWindowSettings", mainWindowSettings);
+			ConfigurationManager.SetConfigurationObject("MainWindowSettings", mainWindowSettings);
 		}
 
 		private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)

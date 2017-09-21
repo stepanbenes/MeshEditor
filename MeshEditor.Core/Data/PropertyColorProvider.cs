@@ -147,7 +147,7 @@ namespace MeshEditor.Data
 
 		public static void LoadPropertyColors()
 		{
-			var propertyColorsMap = ConfigurationManager.ReadConfigurationObject<Dictionary<string, string>>("PropertyColors");
+			var propertyColorsMap = ConfigurationManager.GetConfigurationObject<Dictionary<string, string>>("PropertyColors");
 			if (propertyColorsMap != null)
 			{
 				foreach (var pair in propertyColorsMap)
@@ -168,7 +168,7 @@ namespace MeshEditor.Data
 			{
 				propertyColorsMap.Add(property.Value.ToString(), colorPalette[property].ToString("X8"));
 			}
-			ConfigurationManager.WriteConfigurationObject("PropertyColors", propertyColorsMap);
+			ConfigurationManager.SetConfigurationObject("PropertyColors", propertyColorsMap);
 		}
 
 		public static void ResetToDefaults()

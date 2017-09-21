@@ -87,7 +87,7 @@ namespace MeshEditor.CoreInterface
 
 		public static void SaveToConfigurationFile()
 		{
-			ConfigurationManager.WriteConfigurationObject("SceneSettings", Instance);
+			ConfigurationManager.SetConfigurationObject("SceneSettings", Instance);
 
 //			// serializace do souboru
 //			FileStream stream = null;
@@ -111,7 +111,7 @@ namespace MeshEditor.CoreInterface
 
 		public static void LoadFromConfigurationFile()
 		{
-			instance = ConfigurationManager.ReadConfigurationObject<SceneSettings>("SceneSettings") ?? new SceneSettings();
+			instance = ConfigurationManager.GetConfigurationObject<SceneSettings>("SceneSettings") ?? new SceneSettings();
 			instance.update();
 
 //			if (!File.Exists(filename))

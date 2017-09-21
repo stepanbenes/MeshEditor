@@ -4,6 +4,7 @@ using System.Threading;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
+using MeshEditor.Common;
 using MeshEditor.SolutionManager.CommandLine;
 using MeshEditor.SolutionManager.Logging;
 
@@ -14,6 +15,8 @@ namespace MeshEditor.FormatConverter
 		public static int Main(string[] args)
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+			ConfigurationManager.LoadConfiguration();
 
 			if (args == null || args.Length == 0)
 			{

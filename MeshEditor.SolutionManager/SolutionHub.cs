@@ -22,18 +22,15 @@ namespace MeshEditor.SolutionManager
 	{
 		#region Static fields, static constructor
 
-		readonly static LocalStorageConfiguration localStorageConfiguration;
-		readonly static AzureBlobStorageConfiguration azureBlobStorageConfiguration;
-		readonly static RestApiConfiguration restApiConfiguration;
+		static LocalStorageConfiguration localStorageConfiguration;
+		static AzureBlobStorageConfiguration azureBlobStorageConfiguration;
+		static RestApiConfiguration restApiConfiguration;
+
+		static LocalStorageConfiguration LocalStorageConfiguration => localStorageConfiguration ?? (localStorageConfiguration = ConfigurationManager.GetConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration());
+		static AzureBlobStorageConfiguration AzureBlobStorageConfiguration => azureBlobStorageConfiguration ?? (azureBlobStorageConfiguration = ConfigurationManager.GetConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration());
+		static RestApiConfiguration RestApiConfiguration => restApiConfiguration ?? (ConfigurationManager.GetConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration());
 
 		readonly static string DefaultMasterLayerName = "master";
-
-		static SolutionHub()
-		{
-			localStorageConfiguration = ConfigurationManager.ReadConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration();
-			azureBlobStorageConfiguration = ConfigurationManager.ReadConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration();
-			restApiConfiguration = ConfigurationManager.ReadConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration();
-		}
 
 		#endregion
 
@@ -41,14 +38,14 @@ namespace MeshEditor.SolutionManager
 
 		public static string GetLocalStorageDefaultDirectory()
 		{
-			var folder = localStorageConfiguration.Directory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			var folder = LocalStorageConfiguration.Directory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			return folder;
 		}
 
 		public static void SetLocalStorageDefaultDirectory(string directoryPath)
 		{
-			localStorageConfiguration.Directory = directoryPath;
-			ConfigurationManager.WriteConfigurationObject("LocalStorage", localStorageConfiguration);
+			LocalStorageConfiguration.Directory = directoryPath;
+			ConfigurationManager.SetConfigurationObject("LocalStorage", LocalStorageConfiguration);
 		}
 
 		public static SolutionHub CreateNewLocal(string solutionDirectory, IEnumerable<AnalysisResult> analysisResults, string projectName = null, ILogger logger = null)
@@ -94,10 +91,10 @@ namespace MeshEditor.SolutionManager
 		{
 			return new SolutionHub(
 				solutionLocator: solutionId,
-				solutionController: new RestApiSolutionController(restApiConfiguration.Uri, logger),
-				importStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.ResultsBlobContainerName),
-				layerSourceStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
-				layerDestinationStorage: new AzureBlobStorageService(azureBlobStorageConfiguration.ConnectionString, azureBlobStorageConfiguration.LayersBlobContainerName),
+				solutionController: new RestApiSolutionController(RestApiConfiguration.Uri, logger),
+				importStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.ResultsBlobContainerName),
+				layerSourceStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.LayersBlobContainerName),
+				layerDestinationStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.LayersBlobContainerName),
 				logger: logger
 			);
 		}
@@ -116,13 +113,13 @@ namespace MeshEditor.SolutionManager
 
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			var controller = new RestApiSolutionController(RestApiConfiguration.Uri, logger);
 			return controller.GetAll();
 		}
 
 		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
 		{
-			var controller = new RestApiSolutionController(restApiConfiguration.Uri, logger);
+			var controller = new RestApiSolutionController(RestApiConfiguration.Uri, logger);
 			return await controller.GetAllAsync(cancellationToken);
 		}
 
