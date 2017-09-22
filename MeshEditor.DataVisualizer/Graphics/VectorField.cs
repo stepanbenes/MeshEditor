@@ -11,19 +11,27 @@ namespace MeshEditor.DataVisualizer.Graphics
 {
 	public class VectorField : IDisposable
 	{
-		VBO linesVBO;
-		VBO arrowsVBO;
+		readonly VBO linesVBO;
+		readonly VBO arrowsVBO;
 
-		public VectorField(Vector3[] positions, Vector3[] vectors, float resizeFactor, bool moveEndOfArrowsToNodes)
+		public decimal LengthFactor { get; }
+		public bool InvertVectorArrows { get; }
+
+		public VectorField(Vector3[] positions, Vector3[] vectors, double maxAbsValue, decimal lengthFactor, bool invertVectorArrows)
 		{
 			Debug.Assert(positions != null && vectors != null);
 			Debug.Assert(positions.Length == vectors.Length);
-			Debug.Assert(resizeFactor > 0f);
+			Debug.Assert(maxAbsValue > 0.0);
+			Debug.Assert(lengthFactor > 0m);
 
-			createBuffers(positions, vectors, resizeFactor, moveEndOfArrowsToNodes);
+			LengthFactor = lengthFactor;
+			InvertVectorArrows = invertVectorArrows;
+
+			float resizeFactor = (float)((double)lengthFactor / maxAbsValue);
+			createBuffers(positions, vectors, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
 		}
 
-		private void createBuffers(Vector3[] positions, Vector3[] vectors, float resizeFactor, bool moveEndOfArrowsToNodes)
+		private static void createBuffers(Vector3[] positions, Vector3[] vectors, float resizeFactor, bool moveEndOfArrowsToNodes, out VBO linesVBO, out VBO arrowsVBO)
 		{
 			Vector3[] vertices = new Vector3[positions.Length * 2];
 			Vector3[] arrowVertices = new Vector3[positions.Length * 4 * 3];
@@ -55,7 +63,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 			arrowsVBO = new VBO(BeginMode.Triangles, arrowVertices);
 		}
 
-		private Vector3[] getArrowCap(ref Vector3 from, ref Vector3 to)
+		private static Vector3[] getArrowCap(ref Vector3 from, ref Vector3 to)
 		{
 			Vector3[] arrowCap = new Vector3[4];
 
@@ -105,16 +113,8 @@ namespace MeshEditor.DataVisualizer.Graphics
 
 		public void Dispose()
 		{
-			if (linesVBO != null)
-			{
-				linesVBO.Dispose();
-				linesVBO = null;
-			}
-			if (arrowsVBO != null)
-			{
-				arrowsVBO.Dispose();
-				arrowsVBO = null;
-			}
+			linesVBO.Dispose();
+			arrowsVBO.Dispose();
 		}
 	}
 }

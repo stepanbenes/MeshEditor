@@ -9,24 +9,14 @@ namespace MeshEditor.DataVisualizer.Data
 	public interface IVisualizerSettings
 	{
 		/// <summary>
-		/// Flag that turns on or off data visualization of scalar values as colors on mesh surface.
-		/// </summary>
-		bool ShowScalars { get; set; }
-
-		/// <summary>
-		/// Flag that turns on or off data visualization of vector values as arrows in nodes.
-		/// </summary>
-		//bool ShowVectors { get; set; }
-
-		/// <summary>
 		/// Gets or Sets multiplier factor of vector arrows lengths.
 		/// </summary>
-		//double VectorLengthFactor { get; set; }
+		decimal ArrowLengthFactor { get; set; }
 
 		/// <summary>
 		/// Gets or Sets flag indicating whether to invert vector arrows.
 		/// </summary>
-		//bool MoveEndOfArrowsToNodes { get; set; }
+		bool InvertVectorArrows { get; set; }
 
 		/// <summary>
 		/// Gets or Sets flag indicating whether to draw legend of color scale in the window border.
@@ -55,10 +45,11 @@ namespace MeshEditor.DataVisualizer.Data
 		public VisualizerSettings()
 		{
 			ColorScale = new ColorScale(ColorScale.Types.LightSpectrum);
-			ShowScalars = true;
 			ShowColorScaleLegend = true;
 			DrawIsoAreas = false;
 			IsoAreasSubIntervalNumber = 5;
+			ArrowLengthFactor = 0.1m;
+			InvertVectorArrows = false;
 		}
 
 		public ColorScale ColorScale { get; set; }
@@ -69,6 +60,8 @@ namespace MeshEditor.DataVisualizer.Data
 
 		public bool ShowColorScaleLegend { get; set; }
 
-		public bool ShowScalars { get; set; }
+		public decimal ArrowLengthFactor { get; set; }
+
+		public bool InvertVectorArrows { get; set; }
 	}
 }

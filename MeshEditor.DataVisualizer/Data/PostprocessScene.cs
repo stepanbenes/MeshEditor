@@ -106,7 +106,7 @@ namespace MeshEditor.DataVisualizer.Data
 				}
 				else
 				{
-					dataVisualizer.UpdateScalarData(scalarData: null);
+					dataVisualizer.UpdateScalarData(scalarComponent: null);
 				}
 			}
 
@@ -118,11 +118,11 @@ namespace MeshEditor.DataVisualizer.Data
 					progressReport?.Invoke($"Loading {newDataSelection.VectorFieldName}", -1);
 					var vectorComponents = await solutionHub.LoadDataFieldAsync(layerId, newDataSelection.TimeStep, newDataSelection.VectorFieldName, cancellationToken);
 					// WARNING: I expect 3 returned elements, what if I got different count?
-					dataVisualizer.UpdateVectorData(vectorComponents, scene.Mesh);
+					dataVisualizer.UpdateVectorData(vectorComponents);
 				}
 				else
 				{
-					dataVisualizer.UpdateVectorData(vectorComponents: null, mesh: scene.Mesh);
+					dataVisualizer.UpdateVectorData(vectorComponents: null);
 				}
 			}
 

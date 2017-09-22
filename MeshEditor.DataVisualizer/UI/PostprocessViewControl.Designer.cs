@@ -79,7 +79,7 @@
 			this.visualizerSettingsControl.Location = new System.Drawing.Point(3, 189);
 			this.visualizerSettingsControl.Name = "visualizerSettingsControl";
 			this.visualizerSettingsControl.Settings = null;
-			this.visualizerSettingsControl.Size = new System.Drawing.Size(357, 128);
+			this.visualizerSettingsControl.Size = new System.Drawing.Size(357, 180);
 			this.visualizerSettingsControl.TabIndex = 1;
 			// 
 			// dataSelectionControl

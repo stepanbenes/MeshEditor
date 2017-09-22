@@ -51,12 +51,19 @@ namespace MeshEditor.DataVisualizer.UI
 				updatingView = true;
 				checkBoxShowIsoAreas.Checked = settings.DrawIsoAreas;
 				comboBoxNumberOfSubIntervals.SelectedItem = settings.IsoAreasSubIntervalNumber;
-				
+				checkBoxInvertVectorArrows.Checked = settings.InvertVectorArrows;
+				trackBarVectorLengthFactor.Value = (int)(settings.ArrowLengthFactor * 100);
+				updateLabelArrowLengthFactor();
 			}
 			finally
 			{
 				updatingView = false;
 			}
+		}
+
+		private void updateLabelArrowLengthFactor()
+		{
+			labelArrowLengthFactor.Text = $"Arrow length factor: {settings.ArrowLengthFactor}";
 		}
 
 		private void checkBoxShowIsoAreas_CheckedChanged(object sender, EventArgs e)
@@ -87,6 +94,23 @@ namespace MeshEditor.DataVisualizer.UI
 				Settings.ColorScale = editColorScaleForm.ColorScale;
 				SettingsChanged?.Invoke(this, EventArgs.Empty);
 			}
+		}
+
+		private void checkBoxInvertVectorArrows_CheckedChanged(object sender, EventArgs e)
+		{
+			if (updatingView)
+				return;
+			Settings.InvertVectorArrows = checkBoxInvertVectorArrows.Checked;
+			SettingsChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void trackBarVectorLengthFactor_ValueChanged(object sender, EventArgs e)
+		{
+			if (updatingView)
+				return;
+			Settings.ArrowLengthFactor = trackBarVectorLengthFactor.Value * 0.01m;
+			updateLabelArrowLengthFactor();
+			SettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 	}
 }
