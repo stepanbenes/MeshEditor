@@ -1,6 +1,6 @@
 ﻿{
   "AzureBlobStorage": {
-      "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=EJnBFq5sdcf/ZIFUve8/iLdV8LGVmoz3WcSWmyNh2vrJEnE+IvjYYr1oxwSUYI6m+aSkRFMOwygfEMtRyqWmdA==",
+      "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=w+rJLFGo1Fn17z78+1xz3MgZDsGOux9rIRGjwzijKESXfvd8uhCmIv6IFl6XfFpyylOsKpqOoqXn76Od53IKjA==;EndpointSuffix=core.windows.net",
       "ResultsBlobContainerName": "fea-results",
       "LayersBlobContainerName": "fea-layers"
   },
