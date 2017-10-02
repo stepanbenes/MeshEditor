@@ -261,9 +261,9 @@ namespace MeshEditor.DataVisualizer
 				var yComponent = currentVectorComponents[1];
 				var zComponent = currentVectorComponents[2];
 
-				IntervalD xRange = IntervalD.InvertedMaxMin;
-				IntervalD yRange = IntervalD.InvertedMaxMin;
-				IntervalD zRange = IntervalD.InvertedMaxMin;
+				IntervalD xRange = IntervalD.Zero;
+				IntervalD yRange = IntervalD.Zero;
+				IntervalD zRange = IntervalD.Zero;
 
 				Vector3[] positions = new Vector3[mesh.NodesEdgesIncidence.Count];
 				Vector3[] vectors = new Vector3[mesh.NodesEdgesIncidence.Count];
@@ -274,6 +274,11 @@ namespace MeshEditor.DataVisualizer
 					double x = xComponent.Values[node.ID];
 					double y = yComponent.Values[node.ID];
 					double z = zComponent.Values[node.ID];
+
+					if (double.IsNaN(x) || double.IsNaN(y) || double.IsNaN(z))
+					{
+						continue;
+					}
 
 					xRange.MergeWith(x);
 					yRange.MergeWith(y);
