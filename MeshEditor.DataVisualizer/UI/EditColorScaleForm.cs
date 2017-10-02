@@ -68,10 +68,12 @@ namespace MeshEditor.DataVisualizer.UI
 			if (ColorScale != null)
 			{
 				int controlTop = 2;
-				foreach (var controlPoint in ColorScale.ControlPoints)
+				foreach (var controlPoint in ColorScale.ControlPoints.Reverse())
 				{
-					var controlPointSetter = new ColorScaleControlPointSetter(controlPoint);
-					controlPointSetter.Top = controlTop;
+					var controlPointSetter = new ColorScaleControlPointSetter(controlPoint)
+					{
+						Top = controlTop
+					};
 					controlPointsPanel.Controls.Add(controlPointSetter);
 					controlTop += controlPointSetter.Height;
 				}
