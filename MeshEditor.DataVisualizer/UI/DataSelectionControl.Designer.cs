@@ -151,7 +151,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.trackBarVectorLengthFactor.LargeChange = 10;
 			this.trackBarVectorLengthFactor.Location = new System.Drawing.Point(7, 287);
-			this.trackBarVectorLengthFactor.Maximum = 100;
+			this.trackBarVectorLengthFactor.Maximum = 200;
 			this.trackBarVectorLengthFactor.Minimum = 1;
 			this.trackBarVectorLengthFactor.Name = "trackBarVectorLengthFactor";
 			this.trackBarVectorLengthFactor.Size = new System.Drawing.Size(282, 56);

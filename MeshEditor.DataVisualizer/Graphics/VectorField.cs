@@ -17,7 +17,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 		public decimal LengthFactor { get; }
 		public bool InvertVectorArrows { get; }
 
-		public VectorField(Vector3[] positions, Vector3[] vectors, double scale, decimal lengthFactor, bool invertVectorArrows)
+		public VectorField(Vector3[] positions, Vector3[] vectors, float minDistanceBetweenPoints, double scale, decimal lengthFactor, bool invertVectorArrows)
 		{
 			Debug.Assert(positions != null && vectors != null);
 			Debug.Assert(positions.Length == vectors.Length);
@@ -28,10 +28,10 @@ namespace MeshEditor.DataVisualizer.Graphics
 			InvertVectorArrows = invertVectorArrows;
 
 			float resizeFactor = (float)((double)lengthFactor * scale);
-			createBuffers(positions, vectors, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
+			createBuffers(positions, vectors, minDistanceBetweenPoints, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
 		}
 
-		private static void createBuffers(Vector3[] positions, Vector3[] vectors, float resizeFactor, bool moveEndOfArrowsToNodes, out VBO linesVBO, out VBO arrowsVBO)
+		private static void createBuffers(Vector3[] positions, Vector3[] vectors, float minDistanceBetweenPoints, float resizeFactor, bool moveEndOfArrowsToNodes, out VBO linesVBO, out VBO arrowsVBO)
 		{
 			Vector3[] vertices = new Vector3[positions.Length * 2];
 			Vector3[] arrowVertices = new Vector3[positions.Length * 4 * 3];
@@ -49,7 +49,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 					vertices[i * 2 + 1] = positions[i] + vectors[i] * resizeFactor;
 				}
 
-				Vector3[] arrowCap = getArrowCap(ref vertices[i * 2], ref vertices[i * 2 + 1]);
+				Vector3[] arrowCap = getArrowCap(minDistanceBetweenPoints, ref vertices[i * 2], ref vertices[i * 2 + 1]);
 				Debug.Assert(arrowCap.Length == 4);
 				for (int ai = 0; ai < 4; ai++)
 				{
@@ -63,7 +63,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 			arrowsVBO = new VBO(BeginMode.Triangles, arrowVertices);
 		}
 
-		private static Vector3[] getArrowCap(ref Vector3 from, ref Vector3 to)
+		private static Vector3[] getArrowCap(float minDistanceBetweenPoints, ref Vector3 from, ref Vector3 to)
 		{
 			Vector3[] arrowCap = new Vector3[4];
 
@@ -79,14 +79,17 @@ namespace MeshEditor.DataVisualizer.Graphics
 			Vector3 c;
 			Vector3.Cross(ref a, ref b, out c);
 
-			b *= vLength * 0.02f;
-			c *= vLength * 0.02f;
-			Vector3 endArrow = from + a * (vLength * 0.95f);
+			float arrowCapLength = vLength * 0.2f;
+			float arrowCapWidth = arrowCapLength * 0.4f;
 
-			arrowCap[0] = endArrow + b;
-			arrowCap[1] = endArrow + c;
-			arrowCap[2] = endArrow - b;
-			arrowCap[3] = endArrow - c;
+			b *= arrowCapWidth;
+			c *= arrowCapWidth;
+			Vector3 endOfArrowCap = to - a * arrowCapLength;
+
+			arrowCap[0] = endOfArrowCap + b;
+			arrowCap[1] = endOfArrowCap + c;
+			arrowCap[2] = endOfArrowCap - b;
+			arrowCap[3] = endOfArrowCap - c;
 
 			return arrowCap;
 		}
@@ -97,7 +100,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 
 			GL.Disable(EnableCap.Lighting);
 
-			GL.LineWidth(1f);
+			GL.LineWidth(2f);
 			GL.Enable(EnableCap.Blend);
 			GL.Enable(EnableCap.LineSmooth);
 

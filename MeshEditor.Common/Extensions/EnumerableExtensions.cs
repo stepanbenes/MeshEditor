@@ -135,6 +135,30 @@ namespace MeshEditor.Common.Extensions
 			return indicesOfExtremeElements(source, +1);
 		}
 
+		public static float Median(this IEnumerable<float> source)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			var data = source.OrderBy(n => n).ToArray();
+			if (data.Length == 0)
+				throw new InvalidOperationException("Sequence cannot be empty to be able to calculate median.");
+			if (data.Length % 2 == 0)
+				return (data[data.Length / 2 - 1] + data[data.Length / 2]) / 2.0f;
+			return data[data.Length / 2];
+		}
+
+		public static double Median(this IEnumerable<double> source)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			var data = source.OrderBy(n => n).ToArray();
+			if (data.Length == 0)
+				throw new InvalidOperationException("Sequence cannot be empty to be able to calculate median.");
+			if (data.Length % 2 == 0)
+				return (data[data.Length / 2 - 1] + data[data.Length / 2]) / 2.0;
+			return data[data.Length / 2];
+		}
+
 		#region Private members
 
 		private static T? extremeWithIgnore<T>(this IEnumerable<T> source, T ignore, int extremeSign) where T : struct, IComparable<T>

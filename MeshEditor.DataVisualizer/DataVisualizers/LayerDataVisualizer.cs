@@ -333,24 +333,26 @@ namespace MeshEditor.DataVisualizer
 					return null; // do not construct vector field if max value is too small
 				}
 
-				Vector3 meshDimensions = mesh.UpperBound - mesh.LowerBound;
+				Vector3 largestElementDimensions = mesh.Edges.Aggregate(Vector3.Zero, (max, edge) => accumulateMaxDimension(max, edge.EndNode.Position - edge.BeginNode.Position));
 				double scale;
 				if (xMaxValue == maxAbsValue)
 				{
-					scale = meshDimensions.X / xMaxValue;
+					scale = largestElementDimensions.X / xMaxValue;
 				}
 				else if (yMaxValue == maxAbsValue)
 				{
-					scale = meshDimensions.Y / yMaxValue;
+					scale = largestElementDimensions.Y / yMaxValue;
 				}
 				else
 				{
-					scale = meshDimensions.Z / zMaxValue;
+					scale = largestElementDimensions.Z / zMaxValue;
 				}
 
-				return new VectorField(positions, vectors, scale, Settings.ArrowLengthFactor, Settings.InvertVectorArrows);
+				return new VectorField(positions, vectors, mesh.MinimalElementRadius, scale, Settings.ArrowLengthFactor, Settings.InvertVectorArrows);
 			}
 		}
+
+		private static Vector3 accumulateMaxDimension(Vector3 max, Vector3 v) => new Vector3(Math.Max(max.X, v.X), Math.Max(max.Y, v.Y), Math.Max(max.Z, v.Z));
 
 		#endregion
 	}
