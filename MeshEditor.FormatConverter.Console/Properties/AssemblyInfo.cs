@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Mesh Editor - FEM format converter")]
+[assembly: AssemblyTitle("MeshEditor - FEM format converter")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
-[assembly: AssemblyProduct("Mesh Editor - FEM format converter")]
+[assembly: AssemblyProduct("MeshEditor - FEM format converter")]
 [assembly: AssemblyCopyright("Copyright © 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

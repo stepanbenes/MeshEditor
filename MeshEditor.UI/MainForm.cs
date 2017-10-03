@@ -1397,7 +1397,7 @@ namespace MeshEditor.WinUI
 
 		private void updateCaption()
 		{
-			string caption = "Mesh Editor"; /**/
+			string caption = "MeshEditor"; /**/
 			if (activeControl != null)
 			{
 				string sceneTitle = activeControl.SceneFacade.Title;

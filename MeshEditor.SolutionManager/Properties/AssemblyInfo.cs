@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
-[assembly: AssemblyProduct("Mesh Editor - FEM format converter")]
+[assembly: AssemblyProduct("MeshEditor - FEM format converter")]
 [assembly: AssemblyCopyright("Copyright © 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

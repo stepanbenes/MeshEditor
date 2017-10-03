@@ -10,7 +10,7 @@ using System.Resources;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
-[assembly: AssemblyProduct("Mesh Editor")]
+[assembly: AssemblyProduct("MeshEditor")]
 [assembly: AssemblyCopyright("Copyright © 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

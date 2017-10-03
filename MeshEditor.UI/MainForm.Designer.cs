@@ -1570,7 +1570,7 @@
 			this.MainMenuStrip = this.menuStrip;
 			this.Margin = new System.Windows.Forms.Padding(2);
 			this.Name = "MainForm";
-			this.Text = "Mesh Editor";
+			this.Text = "MeshEditor";
 			this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
 			this.menuStrip.ResumeLayout(false);
 			this.menuStrip.PerformLayout();
