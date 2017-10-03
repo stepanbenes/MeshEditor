@@ -97,7 +97,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 
 			GL.Disable(EnableCap.Lighting);
 
-			GL.LineWidth(0.5f);
+			GL.LineWidth(1f);
 			GL.Enable(EnableCap.Blend);
 			GL.Enable(EnableCap.LineSmooth);
 
