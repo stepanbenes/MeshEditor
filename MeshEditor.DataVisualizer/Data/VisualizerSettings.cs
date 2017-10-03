@@ -48,7 +48,7 @@ namespace MeshEditor.DataVisualizer.Data
 			ShowColorScaleLegend = true;
 			DrawIsoAreas = false;
 			IsoAreasSubIntervalNumber = 5;
-			ArrowLengthFactor = 0.7m;
+			ArrowLengthFactor = 0.1m;
 			InvertVectorArrows = false;
 		}
 
