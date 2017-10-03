@@ -82,16 +82,16 @@ namespace MeshEditor.DataVisualizer.UI
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs ea)
 		{
-			EditColorScaleForm editColorScaleForm = new EditColorScaleForm
+			ColorScaleSettingsForm editColorScaleForm = new ColorScaleSettingsForm(Settings)
 			{
 				Owner = Application.OpenForms?[0],
-				ColorScale = new ColorScale(Settings.ColorScale)
 			};
+			editColorScaleForm.SettingsChanged += (s, e) => SettingsChanged?.Invoke(s, e);
+
 			if (editColorScaleForm.ShowDialog() == DialogResult.OK)
 			{
-				Settings.ColorScale = editColorScaleForm.ColorScale;
 				SettingsChanged?.Invoke(this, EventArgs.Empty);
 			}
 		}

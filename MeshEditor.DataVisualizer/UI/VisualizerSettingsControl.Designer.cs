@@ -89,10 +89,10 @@
 			this.linkLabelEditColorScale.Location = new System.Drawing.Point(4, 81);
 			this.linkLabelEditColorScale.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.linkLabelEditColorScale.Name = "linkLabelEditColorScale";
-			this.linkLabelEditColorScale.Size = new System.Drawing.Size(104, 17);
+			this.linkLabelEditColorScale.Size = new System.Drawing.Size(131, 17);
 			this.linkLabelEditColorScale.TabIndex = 7;
 			this.linkLabelEditColorScale.TabStop = true;
-			this.linkLabelEditColorScale.Text = "Edit color scale";
+			this.linkLabelEditColorScale.Text = "Color scale settings";
 			this.linkLabelEditColorScale.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelEditColorScale_LinkClicked);
 			// 
 			// checkBoxInvertVectorArrows

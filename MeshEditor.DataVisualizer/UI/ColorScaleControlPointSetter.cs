@@ -29,24 +29,22 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void pictureBoxPropertyColor_Click(object sender, EventArgs e)
 		{
-			var pictureBox = sender as PictureBox;
-			if (pictureBox != null)
+			var pictureBox = (PictureBox)sender;
+			var colorPicker = new ColorDialog
 			{
-				var colorPicker = new ColorDialog();
-				colorPicker.Color = pictureBox.BackColor;
-				colorPicker.FullOpen = true;
-				if (colorPicker.ShowDialog() == DialogResult.OK)
-				{
-					pictureBox.BackColor = colorPicker.Color;
-					controlPoint.Color = Utilities.Functions.ColorToRgba32(colorPicker.Color);
-				}
+				Color = pictureBox.BackColor,
+				FullOpen = true
+			};
+			if (colorPicker.ShowDialog() == DialogResult.OK)
+			{
+				pictureBox.BackColor = colorPicker.Color;
+				controlPoint.Color = Utilities.Functions.ColorToRgba32(colorPicker.Color);
 			}
 		}
 
 		private void textBoxValue_TextChanged(object sender, EventArgs e)
 		{
-			double value;
-			if (double.TryParse(textBoxValue.Text, out value))
+			if (double.TryParse(textBoxValue.Text, out double value))
 			{
 				controlPoint.Value = value;
 			}
