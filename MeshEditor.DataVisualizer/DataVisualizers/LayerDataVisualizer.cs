@@ -96,14 +96,18 @@ namespace MeshEditor.DataVisualizer
 
 		public override double GetDataValue(Node node)
 		{
-			if (currentScalarComponent == null)
-				return double.NaN;
-
-			if (currentScalarComponent.Location == DataLocationType.Points)
+			if (currentScalarComponent != null)
 			{
-				return currentScalarComponent.Values[node.ID];
+				if (currentScalarComponent.Location == DataLocationType.Points)
+				{
+					return currentScalarComponent.Values[node.ID];
+				}
+				Debug.Assert(currentScalarComponent.Location == DataLocationType.CellPoints || currentScalarComponent.Location == DataLocationType.Cells);
 			}
-			Debug.Assert(currentScalarComponent.Location == DataLocationType.CellPoints || currentScalarComponent.Location == DataLocationType.Cells);
+			else if (currentVectorComponents != null)
+			{
+				return getVectorMagnitude(node.ID);
+			}
 			return double.NaN;
 		}
 
@@ -205,14 +209,20 @@ namespace MeshEditor.DataVisualizer
 
 		#region Private methods
 
+		private double getVectorMagnitude(int index)
+		{
+			Debug.Assert(currentVectorComponents != null);
+			Vector3d v = new Vector3d(currentVectorComponents[0].Values[index], currentVectorComponents[1].Values[index], currentVectorComponents[2].Values[index]);
+			return v.Length;
+		}
+
 		private IEnumerable<double> enumerateVectorMagnitudes()
 		{
 			Debug.Assert(currentVectorComponents != null);
 			int length = currentVectorComponents[0].Values.Length;
 			for (int i = 0; i < length; i++)
 			{
-				Vector3d v = new Vector3d(currentVectorComponents[0].Values[i], currentVectorComponents[1].Values[i], currentVectorComponents[2].Values[i]);
-				yield return v.Length;
+				yield return getVectorMagnitude(i);
 			}
 		}
 
