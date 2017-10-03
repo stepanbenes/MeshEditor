@@ -1615,7 +1615,7 @@ namespace MeshEditor.WinUI
 		private void postprocessToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
 		{
 			closeSolutionToolStripMenuItem.Enabled = LayoutMode == LayoutMode.Postprocessor;
-			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayColors ?? false;
+			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayData ?? false;
 		}
 
 		private async void importFEMResultsToolStripMenuItem_Click(object sender, EventArgs e)

@@ -32,6 +32,8 @@ namespace MeshEditor.DataVisualizer
 
 		#region Properties
 
+		public abstract bool DisplayData { get; }
+
 		public abstract bool DisplayColors { get; }
 
 		public IVisualizerSettings Settings { get; }

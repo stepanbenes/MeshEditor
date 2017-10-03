@@ -51,6 +51,8 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
+		public override bool DisplayData => currentScalarComponent != null || currentVectorComponents != null;
+
 		public override bool DisplayColors => currentScalarComponent != null;
 
 		#endregion
@@ -132,39 +134,50 @@ namespace MeshEditor.DataVisualizer
 
 		public override int[] GetIDsOfNodesWithMaximumDataValue()
 		{
-			if (currentScalarComponent == null)
-				return new int[0]; //Array.Empty<int>();
-
-			switch (currentScalarComponent.Location)
+			if (currentScalarComponent != null)
 			{
-				case DataLocationType.Points:
-					return currentScalarComponent.Values.IndicesOfMaxElements().ToArray();
-				case DataLocationType.CellPoints:
-					return currentScalarComponent.Values.IndicesOfMaxElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
-				case DataLocationType.Cells:
-					return currentScalarComponent.Values.IndicesOfMaxElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
-				default:
-					throw new NotSupportedException();
+				switch (currentScalarComponent.Location)
+				{
+					case DataLocationType.Points:
+						return currentScalarComponent.Values.IndicesOfMaxElements().ToArray();
+					case DataLocationType.CellPoints:
+						return currentScalarComponent.Values.IndicesOfMaxElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
+					case DataLocationType.Cells:
+						return currentScalarComponent.Values.IndicesOfMaxElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
+					default:
+						throw new NotSupportedException();
+				}
 			}
+			else if (currentVectorComponents != null)
+			{
+				return enumerateVectorMagnitudes().IndicesOfMaxElements().ToArray();
+			}
+			return new int[0]; //Array.Empty<int>();
 		}
 
 		public override int[] GetIDsOfNodesWithMinimumDataValue()
 		{
-			if (currentScalarComponent == null)
-				return new int[0]; //Array.Empty<int>();
-
-			switch (currentScalarComponent.Location)
+			if (currentScalarComponent != null)
 			{
-				case DataLocationType.Points:
-					return currentScalarComponent.Values.IndicesOfMinElements().ToArray();
-				case DataLocationType.CellPoints:
-					return currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
-				case DataLocationType.Cells:
-					return currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
-				default:
-					throw new NotSupportedException();
+				switch (currentScalarComponent.Location)
+				{
+					case DataLocationType.Points:
+						return currentScalarComponent.Values.IndicesOfMinElements().ToArray();
+					case DataLocationType.CellPoints:
+						return currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
+					case DataLocationType.Cells:
+						return currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
+					default:
+						throw new NotSupportedException();
+				}
 			}
+			else if (currentVectorComponents != null)
+			{
+				return enumerateVectorMagnitudes().IndicesOfMinElements().ToArray();
+			}
+			return new int[0]; //Array.Empty<int>();
 		}
+
 
 		public override double GetMaximumDataValue() => currentScalarComponent?.Values.Max(ignore: double.NaN) ?? double.NaN;
 
@@ -191,6 +204,17 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Private methods
+
+		private IEnumerable<double> enumerateVectorMagnitudes()
+		{
+			Debug.Assert(currentVectorComponents != null);
+			int length = currentVectorComponents[0].Values.Length;
+			for (int i = 0; i < length; i++)
+			{
+				Vector3d v = new Vector3d(currentVectorComponents[0].Values[i], currentVectorComponents[1].Values[i], currentVectorComponents[2].Values[i]);
+				yield return v.Length;
+			}
+		}
 
 		private IEnumerable<int> getCellPointIndicesForCell(int cellIndex)
 		{

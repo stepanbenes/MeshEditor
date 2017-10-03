@@ -23,6 +23,12 @@ namespace MeshEditor.CoreInterface
 		void Initialize(Mesh mesh);
 
 		/// <summary>
+		/// Returns True if showing of scalars or vectors is enabled.
+		/// Returns False if drawing colors or vectors on mesh surface is turned off.
+		/// </summary>
+		bool DisplayData { get; }
+
+		/// <summary>
 		/// Returns True if showing of scalars is enabled - that means drawing of data values as colors on mesh surface can be performed.
 		/// Returns False if drawing colors on mesh surface is not allowed.
 		/// </summary>
