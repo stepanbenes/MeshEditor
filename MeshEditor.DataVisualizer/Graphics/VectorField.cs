@@ -17,17 +17,17 @@ namespace MeshEditor.DataVisualizer.Graphics
 		public decimal LengthFactor { get; }
 		public bool InvertVectorArrows { get; }
 
-		public VectorField(Vector3[] positions, Vector3[] vectors, double maxAbsValue, decimal lengthFactor, bool invertVectorArrows)
+		public VectorField(Vector3[] positions, Vector3[] vectors, double scale, decimal lengthFactor, bool invertVectorArrows)
 		{
 			Debug.Assert(positions != null && vectors != null);
 			Debug.Assert(positions.Length == vectors.Length);
-			Debug.Assert(maxAbsValue > 0.0);
+			Debug.Assert(scale > 0.0);
 			Debug.Assert(lengthFactor > 0m);
 
 			LengthFactor = lengthFactor;
 			InvertVectorArrows = invertVectorArrows;
 
-			float resizeFactor = (float)((double)lengthFactor / maxAbsValue);
+			float resizeFactor = (float)((double)lengthFactor * scale);
 			createBuffers(positions, vectors, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
 		}
 

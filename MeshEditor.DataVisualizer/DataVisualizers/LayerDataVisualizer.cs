@@ -287,7 +287,11 @@ namespace MeshEditor.DataVisualizer
 					index += 1;
 				}
 
-				double maxAbsValue = Math.Max(Math.Max(xRange.GetMaxAbsValue(), yRange.GetMaxAbsValue()), zRange.GetMaxAbsValue());
+				double xMaxValue = xRange.GetMaxAbsValue();
+				double yMaxValue = yRange.GetMaxAbsValue();
+				double zMaxValue = zRange.GetMaxAbsValue();
+
+				double maxAbsValue = Math.Max(Math.Max(xMaxValue, yMaxValue), zMaxValue);
 
 				const double epsilon = 1e-20;
 				if (maxAbsValue < epsilon)
@@ -295,7 +299,22 @@ namespace MeshEditor.DataVisualizer
 					return null; // do not construct vector field if max value is too small
 				}
 
-				return new VectorField(positions, vectors, maxAbsValue, Settings.ArrowLengthFactor, Settings.InvertVectorArrows);
+				Vector3 meshDimensions = mesh.UpperBound - mesh.LowerBound;
+				double scale;
+				if (xMaxValue == maxAbsValue)
+				{
+					scale = meshDimensions.X / xMaxValue;
+				}
+				else if (yMaxValue == maxAbsValue)
+				{
+					scale = meshDimensions.Y / yMaxValue;
+				}
+				else
+				{
+					scale = meshDimensions.Z / zMaxValue;
+				}
+
+				return new VectorField(positions, vectors, scale, Settings.ArrowLengthFactor, Settings.InvertVectorArrows);
 			}
 		}
 
