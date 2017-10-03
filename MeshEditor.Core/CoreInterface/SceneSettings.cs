@@ -159,6 +159,7 @@ namespace MeshEditor.CoreInterface
 		private bool showOpenGLLowVersionMessage;
 		private float defaultFirstBorderAngleLimit, defaultSecondBorderAngleLimit;
 		private ColorScaleLegendPosition legendPosition;
+		private Color vectorArrowsColor;
 
 		private void update()
 		{
@@ -197,6 +198,7 @@ namespace MeshEditor.CoreInterface
 			DefaultSecondBorderAngleLimit = defaultSecondBorderAngleLimit;
 
 			LegendPosition = legendPosition;
+			VectorArrowsColor = vectorArrowsColor;
 		}
 
 		/// <summary>
@@ -240,6 +242,7 @@ namespace MeshEditor.CoreInterface
 			defaultSecondBorderAngleLimit = DefaultSecondBorderAngleLimit;
 
 			legendPosition = LegendPosition;
+			vectorArrowsColor = VectorArrowsColor;
 		}
 
 		#endregion
@@ -539,6 +542,13 @@ namespace MeshEditor.CoreInterface
 		{
 			get { return Scene.ColorScaleLegendPosition; }
 			set { legendPosition = Scene.ColorScaleLegendPosition = value; }
+		}
+
+		[Category("Postprocessing"), DisplayName("Vector arrows color")]
+		public Color VectorArrowsColor
+		{
+			get { return Scene.VectorArrowsColor; }
+			set { vectorArrowsColor = Scene.VectorArrowsColor = value; }
 		}
 
 		#endregion

@@ -149,6 +149,7 @@ namespace MeshEditor.Data
 
 		// POSTPROCESSING ---------------
 		public static ColorScaleLegendPosition ColorScaleLegendPosition;
+		public static Color VectorArrowsColor;
 		// ------------------------------
 
 		static Scene()
@@ -165,8 +166,6 @@ namespace MeshEditor.Data
 			NODE_SELECTION_TOLERANCE_DISTANCE = 20;
 			EDGE_SELECTION_TOLERANCE_DISTANCE = 20;
 			LIMIT_ANGLE_FOR_POINT_INSIDE_FACE_DECISION = 10f; /**/
-
-			ColorScaleLegendPosition = ColorScaleLegendPosition.RightTop;
 
 			// ===================================================
 
@@ -225,6 +224,9 @@ namespace MeshEditor.Data
 			UndoOperationsMaxCount = 20;
 
 			MeshShadingModel = ShadingModel.Smooth;
+
+			ColorScaleLegendPosition = ColorScaleLegendPosition.RightTop;
+			VectorArrowsColor = Color.FromArgb(159, 100, 164);
 		}
 
 		public static void ExtractMatrices(out int[] viewport, out double[] modelview, out double[] projection)

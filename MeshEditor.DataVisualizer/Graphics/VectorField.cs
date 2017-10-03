@@ -93,7 +93,7 @@ namespace MeshEditor.DataVisualizer.Graphics
 
 		public void Draw()
 		{
-			GL.Color3(1f, 0f, 0f); // red
+			GL.Color3(MeshEditor.Data.Scene.VectorArrowsColor);
 
 			GL.Disable(EnableCap.Lighting);
 
