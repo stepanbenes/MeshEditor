@@ -50,7 +50,7 @@ namespace MeshEditor.DataVisualizer.UI
 			layersTreeView.LayerDeleteRequested += layersTreeView_LayerDeleteRequested;
 
 			dataSelectionControl.DataSelectionChanged += dataSelectionControl_DataSelectionChanged;
-			visualizerSettingsControl.SettingsChanged += visualizerSettingsControl_SettingsChanged;
+			dataSelectionControl.VisualizerSettingsChanged += dataSelectionControl_VisualizerSettingsChanged;
 		}
 
 		#endregion
@@ -290,7 +290,7 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		private void visualizerSettingsControl_SettingsChanged(object sender, EventArgs e)
+		private void dataSelectionControl_VisualizerSettingsChanged(object sender, EventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
@@ -372,6 +372,7 @@ namespace MeshEditor.DataVisualizer.UI
 			var summary = await getSummaryFileForLayerAsync(layerInfo.Id, cancellationToken);
 			var firstMesh = summary.Meshes.FirstOrDefault();
 			DataSelection dataSelection = null;
+			IVisualizerSettings visualizerSettings = null;
 			if (firstMesh != null)
 			{
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
@@ -381,9 +382,9 @@ namespace MeshEditor.DataVisualizer.UI
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...
 				targetScene.PerformAction(AvailableAction.Refresh);
 
-				visualizerSettingsControl.Settings = dataVisualizerController?.Settings;
+				visualizerSettings = dataVisualizerController?.Settings;
 			}
-			dataSelectionControl.UpdateDataSource(summary, dataSelection);
+			dataSelectionControl.UpdateDataSource(summary, dataSelection, visualizerSettings);
 		}
 
 		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo, SceneFacade targetScene)
@@ -433,11 +434,11 @@ namespace MeshEditor.DataVisualizer.UI
 						if (ActiveScene != targetScene) // active scene changed during operation
 							return;
 						cancellationToken.ThrowIfCancellationRequested();
-						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection);
+						dataSelectionControl.UpdateDataSource(summary, layerDataVisualizer.DataSelection, layerDataVisualizer.Settings);
 					}
 					catch (OperationCanceledException)
 					{
-						dataSelectionControl.UpdateDataSource(null, null);
+						dataSelectionControl.UpdateDataSource(null, null, layerDataVisualizer.Settings);
 					}
 					finally
 					{
@@ -446,16 +447,13 @@ namespace MeshEditor.DataVisualizer.UI
 				}
 				catch (Exception ex)
 				{
-					dataSelectionControl.UpdateDataSource(null, null);
+					dataSelectionControl.UpdateDataSource(null, null, layerDataVisualizer.Settings);
 					new ExceptionReportForm(taskName, ex, logger).ShowDialog();
 				}
-
-				visualizerSettingsControl.Settings = layerDataVisualizer.Settings;
 			}
 			else
 			{
-				dataSelectionControl.UpdateDataSource(null, null);
-				visualizerSettingsControl.Settings = null;
+				dataSelectionControl.UpdateDataSource(null, null, null);
 			}
 
 			try

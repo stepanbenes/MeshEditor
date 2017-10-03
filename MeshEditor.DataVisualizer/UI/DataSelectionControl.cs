@@ -31,6 +31,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		SummaryFile layerSummary;
 		bool updatingDataSource;
+		IVisualizerSettings visualizerSettings;
 
 		public DataSelectionControl()
 		{
@@ -42,13 +43,15 @@ namespace MeshEditor.DataVisualizer.UI
 		#region Public members
 
 		public event EventHandler<DataSelectionEventArgs> DataSelectionChanged;
+		public event EventHandler VisualizerSettingsChanged;
 
-		public void UpdateDataSource(SummaryFile layerSummary, DataSelection dataSelection)
+		public void UpdateDataSource(SummaryFile layerSummary, DataSelection dataSelection, IVisualizerSettings visualizerSettings)
 		{
 			try
 			{
 				updatingDataSource = true;
 				this.layerSummary = layerSummary;
+				this.visualizerSettings = visualizerSettings;
 
 				comboBoxTimeStep.Items.Clear();
 				comboBoxField.Items.Clear();
@@ -71,6 +74,12 @@ namespace MeshEditor.DataVisualizer.UI
 						comboBoxVectorField.SelectedItem = comboBoxVectorField.Items.OfType<ComboBoxItem<string, FieldDescriptor>>().SingleOrDefault(item => item.Key == dataSelection.VectorFieldName) ?? (object)NoneItem;
 					}
 				}
+
+				linkLabelEditColorScale.Enabled = (visualizerSettings != null && dataSelection?.HasScalarSelection == true);
+				checkBoxInvertVectorArrows.Enabled = labelArrowLengthFactor.Enabled = trackBarVectorLengthFactor.Enabled = (visualizerSettings != null && dataSelection?.HasVectorSelection == true);
+				checkBoxInvertVectorArrows.Checked = visualizerSettings?.InvertVectorArrows ?? false;
+				trackBarVectorLengthFactor.Value = (int?)(visualizerSettings?.ArrowLengthFactor * 100m) ?? trackBarVectorLengthFactor.Minimum;
+				updateLabelArrowLengthFactor();
 			}
 			finally
 			{
@@ -209,7 +218,10 @@ namespace MeshEditor.DataVisualizer.UI
 		private void notifyDataSelectionChanged()
 		{
 			Debug.Assert(layerSummary != null);
-			DataSelectionChanged?.Invoke(this, new DataSelectionEventArgs(layerSummary.Id, layerSummary.Name, getDataSelection()));
+			var dataSelection = getDataSelection();
+			linkLabelEditColorScale.Enabled = dataSelection.HasScalarSelection;
+			checkBoxInvertVectorArrows.Enabled = labelArrowLengthFactor.Enabled = trackBarVectorLengthFactor.Enabled = dataSelection.HasVectorSelection;
+			DataSelectionChanged?.Invoke(this, new DataSelectionEventArgs(layerSummary.Id, layerSummary.Name, dataSelection));
 		}
 
 		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableFields(decimal selectedTimeStep)
@@ -226,6 +238,45 @@ namespace MeshEditor.DataVisualizer.UI
 		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableVectorFields(decimal selectedTimeStep)
 		{
 			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count == 3); // TODO: is this condition enough?
+		}
+
+		private void updateLabelArrowLengthFactor()
+		{
+			labelArrowLengthFactor.Text = $"Arrow length factor: {visualizerSettings?.ArrowLengthFactor}";
+		}
+
+		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs ea)
+		{
+			Debug.Assert(visualizerSettings != null);
+			ColorScaleSettingsForm editColorScaleForm = new ColorScaleSettingsForm(visualizerSettings)
+			{
+				Owner = Application.OpenForms?[0],
+			};
+			editColorScaleForm.SettingsChanged += (s, e) => VisualizerSettingsChanged?.Invoke(s, e);
+
+			if (editColorScaleForm.ShowDialog() == DialogResult.OK)
+			{
+				VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
+			}
+		}
+
+		private void checkBoxInvertVectorArrows_CheckedChanged(object sender, EventArgs e)
+		{
+			if (updatingDataSource)
+				return;
+			Debug.Assert(visualizerSettings != null);
+			visualizerSettings.InvertVectorArrows = checkBoxInvertVectorArrows.Checked;
+			VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void trackBarVectorLengthFactor_ValueChanged(object sender, EventArgs e)
+		{
+			if (updatingDataSource)
+				return;
+			Debug.Assert(visualizerSettings != null);
+			visualizerSettings.ArrowLengthFactor = trackBarVectorLengthFactor.Value * 0.01m;
+			updateLabelArrowLengthFactor();
+			VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		#endregion

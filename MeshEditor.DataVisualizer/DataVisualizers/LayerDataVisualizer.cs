@@ -64,7 +64,6 @@ namespace MeshEditor.DataVisualizer
 
 		public override void DrawDecorations(PropertyColorsMode propertyColorsMode)
 		{
-
 			// DRAW VECTORS AS ARROWS
 			if (vectorField != null)
 			{
@@ -73,7 +72,6 @@ namespace MeshEditor.DataVisualizer
 				{
 					setupVectorField();
 				}
-
 				vectorField.Draw();
 			}
 

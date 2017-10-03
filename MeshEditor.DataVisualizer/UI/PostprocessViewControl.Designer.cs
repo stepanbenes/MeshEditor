@@ -18,7 +18,6 @@
 			this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.leftSplitContainer = new System.Windows.Forms.SplitContainer();
 			this.layersTreeView = new MeshEditor.DataVisualizer.UI.LayersTreeViewControl();
-			this.visualizerSettingsControl = new MeshEditor.DataVisualizer.UI.VisualizerSettingsControl();
 			this.dataSelectionControl = new MeshEditor.DataVisualizer.UI.DataSelectionControl();
 			((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
 			this.mainSplitContainer.Panel1.SuspendLayout();
@@ -55,7 +54,6 @@
 			// 
 			// leftSplitContainer.Panel2
 			// 
-			this.leftSplitContainer.Panel2.Controls.Add(this.visualizerSettingsControl);
 			this.leftSplitContainer.Panel2.Controls.Add(this.dataSelectionControl);
 			this.leftSplitContainer.Size = new System.Drawing.Size(363, 861);
 			this.leftSplitContainer.SplitterDistance = 198;
@@ -63,32 +61,21 @@
 			// 
 			// layersTreeView
 			// 
-			this.layersTreeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.layersTreeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+			| System.Windows.Forms.AnchorStyles.Left)
+			| System.Windows.Forms.AnchorStyles.Right)));
 			this.layersTreeView.Location = new System.Drawing.Point(3, 3);
 			this.layersTreeView.Name = "layersTreeView";
 			this.layersTreeView.Size = new System.Drawing.Size(357, 192);
 			this.layersTreeView.TabIndex = 1;
 			// 
-			// visualizerSettingsControl
-			// 
-			this.visualizerSettingsControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.visualizerSettingsControl.Enabled = false;
-			this.visualizerSettingsControl.Location = new System.Drawing.Point(3, 189);
-			this.visualizerSettingsControl.Name = "visualizerSettingsControl";
-			this.visualizerSettingsControl.Settings = null;
-			this.visualizerSettingsControl.Size = new System.Drawing.Size(357, 180);
-			this.visualizerSettingsControl.TabIndex = 1;
-			// 
 			// dataSelectionControl
 			// 
-			this.dataSelectionControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.dataSelectionControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			| System.Windows.Forms.AnchorStyles.Right)));
 			this.dataSelectionControl.Location = new System.Drawing.Point(3, 3);
 			this.dataSelectionControl.Name = "dataSelectionControl";
-			this.dataSelectionControl.Size = new System.Drawing.Size(357, 180);
+			this.dataSelectionControl.Size = new System.Drawing.Size(357, 340);
 			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl
@@ -115,6 +102,5 @@
 		private MeshEditor.DataVisualizer.UI.LayersTreeViewControl layersTreeView;
 		private System.Windows.Forms.SplitContainer leftSplitContainer;
 		private MeshEditor.DataVisualizer.UI.DataSelectionControl dataSelectionControl;
-		private DataVisualizer.UI.VisualizerSettingsControl visualizerSettingsControl;
 	}
 }
