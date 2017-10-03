@@ -67,7 +67,7 @@
 			this.tabControl.Margin = new System.Windows.Forms.Padding(4);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
-			this.tabControl.Size = new System.Drawing.Size(598, 365);
+			this.tabControl.Size = new System.Drawing.Size(598, 422);
 			this.tabControl.TabIndex = 0;
 			// 
 			// tabPageResultFiles
@@ -88,7 +88,7 @@
 			this.tabPageResultFiles.Margin = new System.Windows.Forms.Padding(4);
 			this.tabPageResultFiles.Name = "tabPageResultFiles";
 			this.tabPageResultFiles.Padding = new System.Windows.Forms.Padding(4);
-			this.tabPageResultFiles.Size = new System.Drawing.Size(599, 338);
+			this.tabPageResultFiles.Size = new System.Drawing.Size(590, 393);
 			this.tabPageResultFiles.TabIndex = 0;
 			this.tabPageResultFiles.Text = "Result files";
 			this.tabPageResultFiles.UseVisualStyleBackColor = true;
@@ -109,7 +109,7 @@
 			// buttonChooseSolutionDirectory
 			// 
 			this.buttonChooseSolutionDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonChooseSolutionDirectory.Location = new System.Drawing.Point(531, 231);
+			this.buttonChooseSolutionDirectory.Location = new System.Drawing.Point(525, 231);
 			this.buttonChooseSolutionDirectory.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonChooseSolutionDirectory.Name = "buttonChooseSolutionDirectory";
 			this.buttonChooseSolutionDirectory.Size = new System.Drawing.Size(57, 28);
@@ -125,7 +125,7 @@
 			this.textBoxLocation.Location = new System.Drawing.Point(12, 234);
 			this.textBoxLocation.Margin = new System.Windows.Forms.Padding(4);
 			this.textBoxLocation.Name = "textBoxLocation";
-			this.textBoxLocation.Size = new System.Drawing.Size(509, 22);
+			this.textBoxLocation.Size = new System.Drawing.Size(505, 22);
 			this.textBoxLocation.TabIndex = 9;
 			this.textBoxLocation.TextChanged += new System.EventHandler(this.textBoxLocation_TextChanged);
 			// 
@@ -142,7 +142,7 @@
 			// buttonChooseResultFiles
 			// 
 			this.buttonChooseResultFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonChooseResultFiles.Location = new System.Drawing.Point(531, 87);
+			this.buttonChooseResultFiles.Location = new System.Drawing.Point(525, 87);
 			this.buttonChooseResultFiles.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonChooseResultFiles.Name = "buttonChooseResultFiles";
 			this.buttonChooseResultFiles.Size = new System.Drawing.Size(57, 28);
@@ -154,7 +154,7 @@
 			// buttonChooseMeshFile
 			// 
 			this.buttonChooseMeshFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonChooseMeshFile.Location = new System.Drawing.Point(531, 39);
+			this.buttonChooseMeshFile.Location = new System.Drawing.Point(525, 39);
 			this.buttonChooseMeshFile.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonChooseMeshFile.Name = "buttonChooseMeshFile";
 			this.buttonChooseMeshFile.Size = new System.Drawing.Size(57, 28);
@@ -170,7 +170,7 @@
 			this.textBoxResultFiles.Location = new System.Drawing.Point(12, 90);
 			this.textBoxResultFiles.Margin = new System.Windows.Forms.Padding(4);
 			this.textBoxResultFiles.Name = "textBoxResultFiles";
-			this.textBoxResultFiles.Size = new System.Drawing.Size(509, 22);
+			this.textBoxResultFiles.Size = new System.Drawing.Size(505, 22);
 			this.textBoxResultFiles.TabIndex = 5;
 			// 
 			// textBoxMeshFile
@@ -180,7 +180,7 @@
 			this.textBoxMeshFile.Location = new System.Drawing.Point(12, 42);
 			this.textBoxMeshFile.Margin = new System.Windows.Forms.Padding(4);
 			this.textBoxMeshFile.Name = "textBoxMeshFile";
-			this.textBoxMeshFile.Size = new System.Drawing.Size(509, 22);
+			this.textBoxMeshFile.Size = new System.Drawing.Size(505, 22);
 			this.textBoxMeshFile.TabIndex = 4;
 			this.textBoxMeshFile.TextChanged += new System.EventHandler(this.textBoxMeshFile_TextChanged);
 			// 
@@ -230,7 +230,7 @@
 			this.tabPageCompression.Margin = new System.Windows.Forms.Padding(4);
 			this.tabPageCompression.Name = "tabPageCompression";
 			this.tabPageCompression.Padding = new System.Windows.Forms.Padding(4);
-			this.tabPageCompression.Size = new System.Drawing.Size(590, 336);
+			this.tabPageCompression.Size = new System.Drawing.Size(590, 393);
 			this.tabPageCompression.TabIndex = 1;
 			this.tabPageCompression.Text = "Compression";
 			this.tabPageCompression.UseVisualStyleBackColor = true;
@@ -242,7 +242,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.compressionParamsControl.Location = new System.Drawing.Point(9, 12);
 			this.compressionParamsControl.Name = "compressionParamsControl";
-			this.compressionParamsControl.Size = new System.Drawing.Size(571, 312);
+			this.compressionParamsControl.Size = new System.Drawing.Size(571, 369);
 			this.compressionParamsControl.TabIndex = 10;
 			// 
 			// tabPageGaussPointsExtrapolation
@@ -253,7 +253,7 @@
 			this.tabPageGaussPointsExtrapolation.Margin = new System.Windows.Forms.Padding(4);
 			this.tabPageGaussPointsExtrapolation.Name = "tabPageGaussPointsExtrapolation";
 			this.tabPageGaussPointsExtrapolation.Padding = new System.Windows.Forms.Padding(4);
-			this.tabPageGaussPointsExtrapolation.Size = new System.Drawing.Size(599, 338);
+			this.tabPageGaussPointsExtrapolation.Size = new System.Drawing.Size(590, 336);
 			this.tabPageGaussPointsExtrapolation.TabIndex = 2;
 			this.tabPageGaussPointsExtrapolation.Text = "Gauss points extrapolation";
 			this.tabPageGaussPointsExtrapolation.UseVisualStyleBackColor = true;
@@ -283,7 +283,7 @@
 			// buttonImport
 			// 
 			this.buttonImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonImport.Location = new System.Drawing.Point(374, 372);
+			this.buttonImport.Location = new System.Drawing.Point(374, 429);
 			this.buttonImport.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonImport.Name = "buttonImport";
 			this.buttonImport.Size = new System.Drawing.Size(100, 28);
@@ -296,7 +296,7 @@
 			// 
 			this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.buttonClose.Location = new System.Drawing.Point(482, 372);
+			this.buttonClose.Location = new System.Drawing.Point(482, 429);
 			this.buttonClose.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonClose.Name = "buttonClose";
 			this.buttonClose.Size = new System.Drawing.Size(100, 28);
@@ -310,7 +310,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonClose;
-			this.ClientSize = new System.Drawing.Size(598, 415);
+			this.ClientSize = new System.Drawing.Size(598, 472);
 			this.Controls.Add(this.buttonClose);
 			this.Controls.Add(this.buttonImport);
 			this.Controls.Add(this.tabControl);

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,8 +14,9 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			InitializeComponent();
 			comboBoxCompressionMethod.SelectedIndex = 0;
-			radioButtonQuality.Checked = true;
-			trackBarCompressionFactor.Value = 95;
+			radioButtonError.Checked = true;
+			textBoxNRMSD.Text = 1.0E-4.ToString("0.0E0");
+			trackBarCompressionFactor.Value = 10;
 			updateUI();
 		}
 
@@ -43,6 +41,8 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			groupBoxSVDCompressionParameters.Enabled = comboBoxCompressionMethod.SelectedIndex > 0;
 			textBoxKeyTimeSteps.Enabled = checkBoxMergeTimeSteps.Checked;
+			labelCompressionFactor.Enabled = trackBarCompressionFactor.Enabled = radioButtonSize.Checked;
+			labelNRMSD.Enabled = textBoxNRMSD.Enabled = radioButtonError.Checked;
 		}
 
 		public IEnumerable<string> GetCompressionParameters()
@@ -53,10 +53,10 @@ namespace MeshEditor.DataVisualizer.UI
 				parameters.Add((string)comboBoxCompressionMethod.SelectedItem);
 
 				// add compression factor parameters
-				if (radioButtonQuality.Checked)
+				if (radioButtonError.Checked)
 				{
 					parameters.Add("error");
-					parameters.Add((trackBarCompressionFactor.Value * 0.01).ToString());
+					parameters.Add(textBoxNRMSD.Text);
 				}
 				else if (radioButtonSize.Checked)
 				{
@@ -84,6 +84,11 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				return Enumerable.Empty<decimal>();
 			}
+		}
+
+		private void radioButtonPreference_CheckedChanged(object sender, EventArgs e)
+		{
+			updateUI();
 		}
 	}
 }
