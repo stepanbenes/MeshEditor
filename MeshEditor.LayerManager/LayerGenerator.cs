@@ -109,6 +109,7 @@ namespace MeshEditor.LayerManager
 
 			Guid newLayerId = Guid.NewGuid();
 			int attributeIndex = 1;
+			int resultIndex = 1;
 			var meshDescriptors = new List<MeshFileDescriptor>();
 			var fieldDescriptors = new Dictionary<string, FieldDescriptor>();
 			foreach (var analysisResultImportService in analysisResultImportServices)
@@ -139,12 +140,9 @@ namespace MeshEditor.LayerManager
 				var meshDescriptor = generateMeshFileAndAttributeFiles(meshDescriptors.Count + 1, newLayerId, geometry, attributeDescriptions, /*timeSteps:*/ null, ref attributeIndex);
 
 				Func<decimal, int> meshIndexFromTimeStepProvider = _ => meshDescriptor.Index;
-				var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, dataDescriptionGroups: dataGroups);
+				var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, dataGroups, ref resultIndex);
 				var fieldsMap = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
-				foreach (var (fn, fd) in fieldsMap)
-				{
-					fieldDescriptors.Add(fn, fd);
-				}
+				mergeFieldDescriptors(fieldDescriptors, fieldsMap);
 
 				meshDescriptor.TimeSteps = findAllTimeStepsSorted(resultDescriptors).ToArray();
 				meshDescriptors.Add(meshDescriptor);
@@ -163,6 +161,7 @@ namespace MeshEditor.LayerManager
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
 			int meshIndex = 1;
 			int attributeIndex = 1;
+			int resultIndex = 1;
 			var filteredGeometryMap = new Dictionary<decimal, GeometryDescription>();
 
 			foreach (var parentMesh in parentLayer.Meshes)
@@ -207,7 +206,7 @@ namespace MeshEditor.LayerManager
 			}
 
 			Func<decimal, int> meshIndexFromTimeStepProvider = createMeshIndexFromTimeStepProvider(meshFileDescriptors);
-			var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, filteredDataDescriptionsChunks);
+			var resultDescriptors = generateDataFilesForFields(newLayerId, meshIndexFromTimeStepProvider, filteredDataDescriptionsChunks, ref resultIndex);
 			var fieldDescriptors = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
 
 			return generateSummaryFile(filterLayerName, parentLayer, newLayerId, filter, meshFileDescriptors, fieldDescriptors);
@@ -284,6 +283,7 @@ namespace MeshEditor.LayerManager
 			Guid compressedLayerId = Guid.NewGuid();
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
 			int attributeIndex = 1;
+			int resultIndex = 1;
 			foreach (var mesh in layerSummary.Meshes)
 			{
 				GeometryDescription geometry = LoadGeometry(layerId, layerSummary.MeshFallbackLayerId, mesh.Index);
@@ -295,7 +295,7 @@ namespace MeshEditor.LayerManager
 										from list in createDataDescriptionGroups(g.SelectMany(index => LoadData(layerId, layerSummary.DataFallbackLayerId, index)), keyTimeSteps)
 										select list;
 			Func<decimal, int> meshIndexFromTimeStepProvider = createMeshIndexFromTimeStepProvider(meshFileDescriptors);
-			var resultDescriptors = generateDataFilesForFields(compressedLayerId, meshIndexFromTimeStepProvider, dataDescriptionGroups);
+			var resultDescriptors = generateDataFilesForFields(compressedLayerId, meshIndexFromTimeStepProvider, dataDescriptionGroups, ref resultIndex);
 			var fieldDescriptors = convertDataFileDescriptorsToFieldDescriptors(resultDescriptors, meshIndexFromTimeStepProvider);
 			return generateSummaryFile(layerName ?? "time compression", layerSummary, compressedLayerId, new TimeCompressionFilter { FieldName = fieldName }, meshFileDescriptors, fieldDescriptors);
 		}
@@ -720,10 +720,8 @@ namespace MeshEditor.LayerManager
 			return meshFileDescriptor;
 		}
 
-		private IEnumerable<DataFileDescriptor> generateDataFilesForFields(Guid layerId, Func<decimal, int> meshIndexFromTimeStepProvider, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups)
+		private IEnumerable<DataFileDescriptor> generateDataFilesForFields(Guid layerId, Func<decimal, int> meshIndexFromTimeStepProvider, IEnumerable<IReadOnlyList<DataDescription>> dataDescriptionGroups, ref int resultIndex)
 		{
-			int resultIndex = 1;
-
 			// process results
 			var resultDescriptors = new List<DataFileDescriptor>();
 			var compressionCounter = new CompressionCounter();
@@ -779,6 +777,44 @@ namespace MeshEditor.LayerManager
 				}
 			}
 			return fields;
+		}
+
+		private static void mergeFieldDescriptors(Dictionary<string, FieldDescriptor> baseFields, Dictionary<string, FieldDescriptor> mergeWithFields)
+		{
+			foreach (var (k, d) in mergeWithFields)
+			{
+				if (baseFields.TryGetValue(k, out var field))
+				{
+					mergeComponentDescriptors(field.Components, d.Components);
+				}
+				else
+				{
+					baseFields.Add(k, d);
+				}
+			}
+
+			void mergeComponentDescriptors(Dictionary<string, ComponentDescriptor> baseComponents, Dictionary<string, ComponentDescriptor> mergeWithComponents)
+			{
+				foreach (var (k, d) in mergeWithComponents)
+				{
+					if (baseComponents.TryGetValue(k, out var component))
+					{
+						mergeTimeStepDescriptors(component.TimeSteps, d.TimeSteps);
+					}
+					else
+					{
+						baseComponents.Add(k, d);
+					}
+				}
+
+				void mergeTimeStepDescriptors(Dictionary<decimal, TimeStepDescriptor> baseTimeSteps, Dictionary<decimal, TimeStepDescriptor> mergeWithTimeSteps)
+				{
+					foreach (var (k, d) in mergeWithTimeSteps)
+					{
+						baseTimeSteps.Add(k, d); // no conflict expected
+					}
+				}
+			}
 		}
 
 		private SummaryFile generateSummaryFile(string layerName, SummaryFile parentLayer, Guid newLayerId, Filter filter, IEnumerable<MeshFileDescriptor> meshFileDescriptors, Dictionary<string, FieldDescriptor> fieldDescriptors)
