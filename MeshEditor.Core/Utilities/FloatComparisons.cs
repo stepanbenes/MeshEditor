@@ -12,15 +12,11 @@ namespace MeshEditor.DataVisualizer.Mathematics
 
 		public static bool IsAlmostZero(this float x)
 		{
-			if (x == 0f)
-				return true;
 			return Math.Abs(x) < EpsilonF;
 		}
 
 		public static bool IsAlmostZero(this double x)
 		{
-			if (x == 0.0)
-				return true;
 			return Math.Abs(x) < Epsilon;
 		}
 

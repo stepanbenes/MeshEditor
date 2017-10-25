@@ -9,6 +9,7 @@ using MeshEditor.LayerManager.Data;
 using MeshEditor.Common.Extensions;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Graphics;
+using MeshEditor.DataVisualizer.Mathematics;
 using OpenTK;
 using MeshEditor.Graphics;
 
@@ -297,17 +298,21 @@ namespace MeshEditor.DataVisualizer
 				IntervalD yRange = IntervalD.Zero;
 				IntervalD zRange = IntervalD.Zero;
 
-				Vector3[] positions = new Vector3[mesh.NodesEdgesIncidence.Count];
-				Vector3[] vectors = new Vector3[mesh.NodesEdgesIncidence.Count];
+				var positions = new List<Vector3>(mesh.NodesEdgesIncidence.Count);
+				var vectors = new List<Vector3>(mesh.NodesEdgesIncidence.Count);
 
-				int index = 0;
 				foreach (Node node in mesh.NodesEdgesIncidence.Keys)
 				{
 					double x = xComponent.Values[node.ID];
 					double y = yComponent.Values[node.ID];
 					double z = zComponent.Values[node.ID];
 
-					if (double.IsNaN(x) || double.IsNaN(y) || double.IsNaN(z))
+					if (double.IsNaN(x) || double.IsNaN(y) || double.IsNaN(z)) // continue if values are missing
+					{
+						continue;
+					}
+
+					if (x.IsAlmostZero() && y.IsAlmostZero() && z.IsAlmostZero()) // continue if vector is almost zero
 					{
 						continue;
 					}
@@ -316,9 +321,8 @@ namespace MeshEditor.DataVisualizer
 					yRange.MergeWith(y);
 					zRange.MergeWith(z);
 
-					positions[index] = node.Position;
-					vectors[index] = new Vector3((float)x, (float)y, (float)z);
-					index += 1;
+					positions.Add(node.Position);
+					vectors.Add(new Vector3((float)x, (float)y, (float)z));
 				}
 
 				double xMaxValue = xRange.GetMaxAbsValue();
@@ -327,8 +331,7 @@ namespace MeshEditor.DataVisualizer
 
 				double maxAbsValue = Math.Max(Math.Max(xMaxValue, yMaxValue), zMaxValue);
 
-				const double epsilon = 1e-20;
-				if (maxAbsValue < epsilon)
+				if (maxAbsValue.IsAlmostZero())
 				{
 					return null; // do not construct vector field if max value is too small
 				}
@@ -352,7 +355,7 @@ namespace MeshEditor.DataVisualizer
 			}
 		}
 
-		private static Vector3 accumulateMaxDimension(Vector3 max, Vector3 v) => new Vector3(Math.Max(max.X, v.X), Math.Max(max.Y, v.Y), Math.Max(max.Z, v.Z));
+		private static Vector3 accumulateMaxDimension(Vector3 max, Vector3 v) => new Vector3(Math.Max(max.X, Math.Abs(v.X)), Math.Max(max.Y, Math.Abs(v.Y)), Math.Max(max.Z, Math.Abs(v.Z)));
 
 		#endregion
 	}

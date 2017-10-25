@@ -17,10 +17,10 @@ namespace MeshEditor.DataVisualizer.Graphics
 		public decimal LengthFactor { get; }
 		public bool InvertVectorArrows { get; }
 
-		public VectorField(Vector3[] positions, Vector3[] vectors, float minDistanceBetweenPoints, double scale, decimal lengthFactor, bool invertVectorArrows)
+		public VectorField(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> vectors, float minDistanceBetweenPoints, double scale, decimal lengthFactor, bool invertVectorArrows)
 		{
 			Debug.Assert(positions != null && vectors != null);
-			Debug.Assert(positions.Length == vectors.Length);
+			Debug.Assert(positions.Count == vectors.Count);
 			Debug.Assert(scale > 0.0);
 			Debug.Assert(lengthFactor > 0m);
 
@@ -31,12 +31,12 @@ namespace MeshEditor.DataVisualizer.Graphics
 			createBuffers(positions, vectors, minDistanceBetweenPoints, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
 		}
 
-		private static void createBuffers(Vector3[] positions, Vector3[] vectors, float minDistanceBetweenPoints, float resizeFactor, bool moveEndOfArrowsToNodes, out VBO linesVBO, out VBO arrowsVBO)
+		private static void createBuffers(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> vectors, float minDistanceBetweenPoints, float resizeFactor, bool moveEndOfArrowsToNodes, out VBO linesVBO, out VBO arrowsVBO)
 		{
-			Vector3[] vertices = new Vector3[positions.Length * 2];
-			Vector3[] arrowVertices = new Vector3[positions.Length * 4 * 3];
+			Vector3[] vertices = new Vector3[positions.Count * 2];
+			Vector3[] arrowVertices = new Vector3[positions.Count * 4 * 3];
 
-			for (int i = 0; i < positions.Length; i++)
+			for (int i = 0; i < positions.Count; i++)
 			{
 				if (moveEndOfArrowsToNodes)
 				{
@@ -70,8 +70,11 @@ namespace MeshEditor.DataVisualizer.Graphics
 			Vector3 a = to - from;
 			float vLength = a.Length;
 
-			a.Normalize();
-			Vector3 axis = (a.Y.IsAlmostZero() && a.Z.IsAlmostZero()) ? Vector3.UnitY : Vector3.UnitX;
+			Debug.Assert(!vLength.IsAlmostZero());
+
+			a = a / vLength; // normalize
+
+			Vector3 axis = getSuitableAxisToComputeCrossProductForVector(ref a);
 
 			Vector3 b;
 			Vector3.Cross(ref a, ref axis, out b);
@@ -92,6 +95,21 @@ namespace MeshEditor.DataVisualizer.Graphics
 			arrowCap[3] = endOfArrowCap - c;
 
 			return arrowCap;
+
+			Vector3 getSuitableAxisToComputeCrossProductForVector(ref Vector3 v)
+			{
+				float absX = Math.Abs(v.X);
+				float absY = Math.Abs(v.Y);
+				float absZ = Math.Abs(v.Z);
+				if (absX >= absY && absX >= absZ) // X is dominant
+				{
+					return Vector3.UnitY;
+				}
+				else // Y or Z is dominant
+				{
+					return Vector3.UnitX;
+				}
+			}
 		}
 
 		public void Draw()
