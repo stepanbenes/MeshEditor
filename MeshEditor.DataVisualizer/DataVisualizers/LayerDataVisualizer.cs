@@ -25,6 +25,7 @@ namespace MeshEditor.DataVisualizer
 		DataSelection dataSelection;
 		ComponentDataDescription currentScalarComponent;
 		IReadOnlyList<ComponentDataDescription> currentVectorComponents;
+		HashSet<int> elementsWithUndefinedNodeValues;
 
 		VectorField vectorField;
 
@@ -84,6 +85,7 @@ namespace MeshEditor.DataVisualizer
 		public void UpdateScalarData(ComponentDataDescription scalarComponent)
 		{
 			currentScalarComponent = scalarComponent;
+			elementsWithUndefinedNodeValues = null;
 			setupColorScale();
 		}
 
@@ -120,18 +122,23 @@ namespace MeshEditor.DataVisualizer
 			switch (currentScalarComponent.Location)
 			{
 				case DataLocationType.Points:
-					return currentScalarComponent.Values[node.ID];
+					{
+						if (hasElementSomeUndefinedNodeValues(element.ID))
+							return double.NaN; // avoid interpolation of undefined color with regular color
+						return currentScalarComponent.Values[node.ID];
+					}
 				case DataLocationType.CellPoints:
-
-					Debug.Assert(geometry != null);
-					int cellOffset = (element.ID > 0) ? geometry.CellOffsets[element.ID - 1] : 0;
-					int? nodeIndex = element.GetIndexOfNode_IncludingMiddleNodes(node);
-					Debug.Assert(nodeIndex.HasValue); // node has to be contained in element
-					double value = currentScalarComponent.Values[cellOffset + nodeIndex.Value]; // WARNING: correct node ordering is supposed
-					return value;
-
+					{
+						Debug.Assert(geometry != null);
+						int cellOffset = (element.ID > 0) ? geometry.CellOffsets[element.ID - 1] : 0;
+						int? nodeIndex = element.GetIndexOfNode_IncludingMiddleNodes(node);
+						Debug.Assert(nodeIndex.HasValue); // node has to be contained in element
+						return currentScalarComponent.Values[cellOffset + nodeIndex.Value]; // WARNING: correct node ordering is supposed
+					}
 				case DataLocationType.Cells:
-					return currentScalarComponent.Values[element.ID];
+					{
+						return currentScalarComponent.Values[element.ID];
+					}
 				default:
 					throw new NotSupportedException();
 			}
@@ -209,6 +216,33 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Private methods
+
+		private bool hasElementSomeUndefinedNodeValues(int elementId)
+		{
+			if (elementsWithUndefinedNodeValues == null)
+			{
+				// build cache
+				elementsWithUndefinedNodeValues = new HashSet<int>(getElementsWithUndefinedNodeValues());
+
+				IEnumerable<int> getElementsWithUndefinedNodeValues()
+				{
+					foreach (var element in mesh.Elements)
+					{
+						foreach (var node in element.IterateThroughAllNodes())
+						{
+							double value = GetDataValue(node);
+							if (double.IsNaN(value))
+							{
+								yield return element.ID;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			return elementsWithUndefinedNodeValues.Contains(elementId);
+		}
 
 		private double getVectorMagnitude(int index)
 		{
