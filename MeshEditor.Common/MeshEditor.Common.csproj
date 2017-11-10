@@ -68,6 +68,10 @@
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\KeyValuePairExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="GeometryMarkers\EdgeMark.cs" />
+    <Compile Include="GeometryMarkers\QuadMark.cs" />
+    <Compile Include="GeometryMarkers\TriangleMark.cs" />
+    <Compile Include="HelperFunctions.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\IMemoryLogger.cs" />
     <Compile Include="Logging\LogRecord.cs" />

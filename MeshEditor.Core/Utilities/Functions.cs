@@ -46,341 +46,9 @@ namespace MeshEditor.Utilities
 
 		#region Helper functions
 
-		/// <summary>
-		/// Find out whether array contains item.
-		/// </summary>
-		/// <param name="array">Array of items</param>
-		/// <param name="item">Item to search for</param>
-		/// <returns>True if array contains item, otherwise false.</returns>
-		public static bool ArrayContains<T>(T[] array, T item)
-		{
-			if (array == null)
-				return false;
-			foreach (T i in array)
-			{
-				if (i.Equals(item)) // using object.Equals() method
-					return true;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Return new array that is sub-array of array.
-		/// </summary>
-		/// <param name="array">Original array</param>
-		/// <param name="index">Start index of segment</param>
-		/// <param name="length">Length of segment to copy</param>
-		/// <returns></returns>
-		public static T[] GetSliceOfArray<T>(T[] array, int index, int length)
-		{
-			T[] result = new T[length];
-			Array.Copy(array, index, result, 0, length);
-			return result;
-		}
-
-		/// <summary>
-		/// Swaps values of two arguments.
-		/// </summary>
-		/// <param name="a">first argument</param>
-		/// <param name="b">second argument</param>
-		public static void Swap<T>(ref T a, ref T b)
-		{
-			T temp = a;
-			a = b;
-			b = temp;
-		}
-
-		/// <summary>
-		/// Creates and returns shallow copy of specified array
-		/// </summary>
-		/// <typeparam name="T">type of array members</typeparam>
-		/// <param name="source">array to copy</param>
-		/// <returns>shallow copy of specified array</returns>
-		public static T[] CloneArray<T>(T[] source)
-		{
-			if (source == null)
-				return null;
-			T[] copy = new T[source.Length];
-			Array.Copy(source, copy, source.Length);
-			return copy;
-		}
-
-		/// <summary>
-		/// Creates shallow copy of specified array with length increased by one.
-		/// It then put specified item to the end of the array.
-		/// </summary>
-		/// <typeparam name="T">type of array element</typeparam>
-		/// <param name="array">array to enlarge</param>
-		/// <param name="item">item to bu added</param>
-		/// <returns>new array with old items copied plus the new one</returns>
-		public static void AddItemToArray<T>(ref T[] array, T item)
-		{
-			int oldLength = array.Length;
-			Array.Resize<T>(ref array, oldLength + 1);
-			array[oldLength] = item;
-		}
-
-		/// <summary>
-		/// Returns true if array is ascendingly ordered.
-		/// </summary>
-		public static bool CheckIfArrayIsSorted<T>(T[] array) where T : IComparable<T>
-		{
-			if (array == null)
-				return true;
-			for (int i = 1; i < array.Length; i++)
-			{
-				if (array[i - 1].CompareTo(array[i]) > 0)
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Returns true if values in array create strictly increasing ordered set.
-		/// </summary>
-		public static bool CheckIfArrayIsStrictlyIncreasing<T>(T[] array) where T : IComparable<T>
-		{
-			if (array == null)
-				return true;
-			for (int i = 1; i < array.Length; i++)
-			{
-				if (array[i - 1].CompareTo(array[i]) >= 0)
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Get vector of values which are absolute values of component of original vector.
-		/// </summary>
-		public static Vector3 Abs(Vector3 vector)
-		{
-			return new Vector3(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));
-		}
-		
-		/// <summary>
-		/// Sort already sorted list of items. Mantain previous order.
-		/// </summary>
-		/// <param name="comparison">comparing function</param>
-		/// <param name="list">list of items to sort</param>
-		public static void ThenSortBy<T>(Comparison<T> comparison, List<T> list)
-		{
-			for (int i = 1; i < list.Count; i++)
-			{
-				T insItem = list[i]; //vkládaný prvek
-				int j = i;
-				while (j > 0 && comparison(list[j - 1], insItem) > 0)
-				{
-					list[j] = list[j - 1]; //posouvám prvky,
-					//dělám prostor pro vkládaný prvek
-					j--;
-				}
-				//vložím vkládaný prvek:
-				list[j] = insItem;
-			}
-		}
-
-		public static T DeepCopyOf<T>(T ofWhat)
-		{
-			BinaryFormatter bf = new BinaryFormatter();
-			MemoryStream ms = new MemoryStream();
-			T result;
-			try
-			{
-				bf.Serialize(ms, ofWhat);
-				ms.Position = 0;
-				result = (T)bf.Deserialize(ms);
-			}
-			finally
-			{
-				ms.Close();
-			}
-			return result;
-		}
-
-		public static bool XOR(bool x, bool y)
-		{
-			return (x && !y) || (!x && y);
-		}
-
 		public static float SQR(float n)
 		{
 			return n * n;
-		}
-
-		public static double Deg2Rad(double angleInDeg)
-		{
-			return angleInDeg * PI_DIVIDED_BY_180;
-		}
-
-		public static double Rad2Deg(double angleInRad)
-		{
-			return angleInRad * _180_DIVIDED_BY_PI;
-		}
-
-		public static void MMM(double[] a, double[] b, out Matrix4d result)
-		{
-		    //result = new Matrix4d();
-			result.Row0 = new Vector4d(a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12], a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13], a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14], a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15]);
-			result.Row1 = new Vector4d(a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12], a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13], a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14], a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15]);
-			result.Row2 = new Vector4d(a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12], a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13], a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14], a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15]);
-			result.Row3 = new Vector4d(a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12], a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13], a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14], a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]);
-		}
-
-		public static void MVM(ref Matrix4d m, ref Vector3 v, out Vector3d result)
-		{
-			double x = m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z + m.M14;
-			double y = m.M21 * v.X + m.M22 * v.Y + m.M23 * v.Z + m.M24;
-			double z = m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z + m.M34;
-			result = new Vector3d(x, y, z);
-		}
-
-		public static void MVM(double[] matrix4, ref Vector4d input, out Vector4d output)
-		{
-			output.X = input.X * matrix4[0] + input.Y * matrix4[4] + input.Z * matrix4[8] + input.W * matrix4[12];
-			output.Y = input.X * matrix4[1] + input.Y * matrix4[5] + input.Z * matrix4[9] + input.W * matrix4[13];
-			output.Z = input.X * matrix4[2] + input.Y * matrix4[6] + input.Z * matrix4[10] + input.W * matrix4[14];
-			output.W = input.X * matrix4[3] + input.Y * matrix4[7] + input.Z * matrix4[11] + input.W * matrix4[15];
-		}
-
-		public static void MMM(double[] a, double[] b, double[] r)
-		{
-			int i, j;
-
-			for (i = 0; i < 4; i++)
-			{
-				for (j = 0; j < 4; j++)
-				{
-					r[i * 4 + j] =
-					a[i * 4] * b[0 + j] +
-					a[i * 4 + 1] * b[4 + j] +
-					a[i * 4 + 2] * b[8 + j] +
-					a[i * 4 + 3] * b[12 + j];
-				}
-			}
-		}
-
-		public static bool InvertMatrix(double[] m, double[] invOut)
-		{
-			double[] inv = new double[16];
-
-			inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
-					 + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-			inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
-					 - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-			inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
-					 + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-			inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
-					 - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-			inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
-					 - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-			inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
-					 + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-			inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
-					 - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-			inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
-					 + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-			inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
-					 + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-			inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
-					 - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
-			inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
-					 + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-			inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
-					 - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-			inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
-					 - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
-			inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
-					 + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-			inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
-					 - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
-			inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
-					 + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-			double det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-			if (det == 0)
-				return false;
-
-			det = 1.0 / det;
-
-			for (int i = 0; i < 16; i++)
-				invOut[i] = inv[i] * det;
-
-			return true;
-		}
-
-		public static string GetVector3StringRepresentation(ref Vector3 position)
-		{
-			StringBuilder text = new StringBuilder();
-			text.Append("[");
-			text.Append(position.X.ToString(EnglishCulture));
-			text.Append("; ");
-			text.Append(position.Y.ToString(EnglishCulture));
-			text.Append("; ");
-			text.Append(position.Z.ToString(EnglishCulture));
-			text.Append("]");
-			return text.ToString();
-		}
-
-		public static byte[] ConvertStructureToByteArray<T>(T str) where T : struct
-		{
-			int len = Marshal.SizeOf(str);
-			byte[] arr = new byte[len];
-			IntPtr ptr = Marshal.AllocHGlobal(len);
-			Marshal.StructureToPtr(str, ptr, true);
-			Marshal.Copy(ptr, arr, 0, len);
-			Marshal.FreeHGlobal(ptr);
-			return arr;
-		}
-
-		public static void ConvertByteArrayToStructure<T>(byte[] byteArray, ref T str) where T : struct
-		{
-			int len = Marshal.SizeOf(str);
-			IntPtr i = Marshal.AllocHGlobal(len);
-			Marshal.Copy(byteArray, 0, i, len);
-			str = (T)Marshal.PtrToStructure(i, str.GetType());
-			Marshal.FreeHGlobal(i);
-		}
-
-		public static bool EnumTryParse<TEnum>(string strEnumValue, out TEnum result) where TEnum: struct
-		{
-			Type type = typeof(TEnum);
-			if (!Enum.IsDefined(type, strEnumValue))
-			{
-				result = default(TEnum);
-				return false;
-			}
-
-			result = (TEnum)Enum.Parse(type, strEnumValue);
-			return true;
-		}
-
-		public static bool EnumTryParseIgnoreCase<TEnum>(string strType, out TEnum result, ref string[] namesCache) where TEnum : struct
-		{
-			string strTypeFixed = strType.Replace(' ', '_');
-			if (Enum.IsDefined(typeof(TEnum), strTypeFixed))
-			{
-				result = (TEnum)Enum.Parse(typeof(TEnum), strTypeFixed, true);
-				return true;
-			}
-			else
-			{
-				if (namesCache == null)
-				{
-					namesCache = Enum.GetNames(typeof(TEnum));
-				}
-
-				foreach (string value in namesCache)
-				{
-					if (value.Equals(strTypeFixed, StringComparison.OrdinalIgnoreCase))
-					{
-						result = (TEnum)Enum.Parse(typeof(TEnum), value);
-						return true;
-					}
-				}
-				result = default(TEnum);
-				return false;
-			}
 		}
 
 		public static string BuildErrorMessage(Exception ex)
@@ -610,7 +278,38 @@ namespace MeshEditor.Utilities
 
 		#endregion
 
-		#region Geometric features
+		#region Vector operations
+
+		public static double Deg2Rad(double angleInDeg)
+		{
+			return angleInDeg * PI_DIVIDED_BY_180;
+		}
+
+		public static double Rad2Deg(double angleInRad)
+		{
+			return angleInRad * _180_DIVIDED_BY_PI;
+		}
+
+		public static string GetVector3StringRepresentation(ref Vector3 position)
+		{
+			StringBuilder text = new StringBuilder();
+			text.Append("[");
+			text.Append(position.X.ToString(EnglishCulture));
+			text.Append("; ");
+			text.Append(position.Y.ToString(EnglishCulture));
+			text.Append("; ");
+			text.Append(position.Z.ToString(EnglishCulture));
+			text.Append("]");
+			return text.ToString();
+		}
+
+		/// <summary>
+		/// Get vector of values which are absolute values of component of original vector.
+		/// </summary>
+		public static Vector3 Abs(Vector3 vector)
+		{
+			return new Vector3(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));
+		}
 
 		public static Vector3 GetCenterOfLineSegment(Vector3 a, Vector3 b)
 		{
@@ -694,6 +393,8 @@ namespace MeshEditor.Utilities
 				return true;
 			}
 			return false;
+
+			bool XOR(bool x, bool y) => (x && !y) || (!x && y);
 		}
 
 		public static bool LinePlaneIntersection(Vector3 lineA, Vector3 lineB, ref Vector3 planePoint, ref Vector3 planeNormal, out Vector3 intersection)
@@ -1186,6 +887,97 @@ namespace MeshEditor.Utilities
 
 			Matrix4 m = Matrix4.LookAt(eye, center, up);
 			GL.MultMatrix(ref m);
+		}
+
+		public static void MMM(double[] a, double[] b, out Matrix4d result)
+		{
+			//result = new Matrix4d();
+			result.Row0 = new Vector4d(a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12], a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13], a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14], a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15]);
+			result.Row1 = new Vector4d(a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12], a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13], a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14], a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15]);
+			result.Row2 = new Vector4d(a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12], a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13], a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14], a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15]);
+			result.Row3 = new Vector4d(a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12], a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13], a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14], a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]);
+		}
+
+		public static void MVM(ref Matrix4d m, ref Vector3 v, out Vector3d result)
+		{
+			double x = m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z + m.M14;
+			double y = m.M21 * v.X + m.M22 * v.Y + m.M23 * v.Z + m.M24;
+			double z = m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z + m.M34;
+			result = new Vector3d(x, y, z);
+		}
+
+		public static void MVM(double[] matrix4, ref Vector4d input, out Vector4d output)
+		{
+			output.X = input.X * matrix4[0] + input.Y * matrix4[4] + input.Z * matrix4[8] + input.W * matrix4[12];
+			output.Y = input.X * matrix4[1] + input.Y * matrix4[5] + input.Z * matrix4[9] + input.W * matrix4[13];
+			output.Z = input.X * matrix4[2] + input.Y * matrix4[6] + input.Z * matrix4[10] + input.W * matrix4[14];
+			output.W = input.X * matrix4[3] + input.Y * matrix4[7] + input.Z * matrix4[11] + input.W * matrix4[15];
+		}
+
+		public static void MMM(double[] a, double[] b, double[] r)
+		{
+			int i, j;
+
+			for (i = 0; i < 4; i++)
+			{
+				for (j = 0; j < 4; j++)
+				{
+					r[i * 4 + j] =
+					a[i * 4] * b[0 + j] +
+					a[i * 4 + 1] * b[4 + j] +
+					a[i * 4 + 2] * b[8 + j] +
+					a[i * 4 + 3] * b[12 + j];
+				}
+			}
+		}
+
+		public static bool InvertMatrix(double[] m, double[] invOut)
+		{
+			double[] inv = new double[16];
+
+			inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
+					 + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+			inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
+					 - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+			inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
+					 + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+			inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
+					 - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+			inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
+					 - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+			inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
+					 + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+			inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
+					 - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+			inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
+					 + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+			inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
+					 + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+			inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
+					 - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+			inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
+					 + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+			inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
+					 - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+			inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
+					 - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+			inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
+					 + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+			inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
+					 - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+			inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
+					 + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+			double det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+			if (det == 0)
+				return false;
+
+			det = 1.0 / det;
+
+			for (int i = 0; i < 16; i++)
+				invOut[i] = inv[i] * det;
+
+			return true;
 		}
 
 		#endregion

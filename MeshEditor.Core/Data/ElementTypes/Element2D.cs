@@ -5,6 +5,7 @@ using OpenTK;
 using MeshEditor.Cuts;
 using System.Diagnostics;
 using System.Linq;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.Data
 {
@@ -210,7 +211,7 @@ namespace MeshEditor.Data
 						break;
 					}
 				}
-				Debug.Assert(Utilities.Functions.CheckIfArrayIsStrictlyIncreasing(newArray));
+				Debug.Assert(newArray.IsStrictlyIncreasing());
 				twinElements = newArray;
 			}
 		}
@@ -247,9 +248,9 @@ namespace MeshEditor.Data
 				{
 					Array.Copy(twinElements, index + 1, newArray, index, twinElements.Length - index - 1);
 				}
-				Debug.Assert(Utilities.Functions.CheckIfArrayIsStrictlyIncreasing(newArray));
+				Debug.Assert(newArray.IsStrictlyIncreasing());
 				twinElements = newArray;
-            }
+			}
 
 			return true;
 		}

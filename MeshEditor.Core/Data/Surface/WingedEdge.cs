@@ -6,6 +6,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 using MeshEditor.Graphics;
+using System.Diagnostics;
 
 namespace MeshEditor.Data
 {
@@ -149,9 +150,14 @@ namespace MeshEditor.Data
 		public void ComputeFeatureAngle()
 		{
 			if (face1 == null || face2 == null) // nema jednu/obe plochy => je to hranicni hrana
+			{
 				featureAngle = float.MaxValue;
+			}
 			else
+			{
 				featureAngle = MeshEditor.Utilities.Functions.GetAngleInDegreesBetweenUnitVectors(face1.NormalVector, face2.NormalVector);
+				Debug.Assert(!float.IsNaN(featureAngle));
+			}
 		}
 
 		public override string ToString()

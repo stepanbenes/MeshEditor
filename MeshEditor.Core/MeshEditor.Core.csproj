@@ -94,7 +94,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Construction\EdgeMark.cs" />
     <Compile Include="CoreInterface\SceneSettings.cs" />
     <Compile Include="CoreInterface\AvailableAction.cs" />
     <Compile Include="CoreInterface\AvailableValue.cs" />
@@ -139,8 +138,6 @@
     <Compile Include="IO\MeshIOInterfaces.cs" />
     <Compile Include="Construction\MeshConstructingException.cs" />
     <Compile Include="Construction\MeshConstructor.cs" />
-    <Compile Include="Construction\QuadMark.cs" />
-    <Compile Include="Construction\TriangleMark.cs" />
     <Compile Include="Data\IItemWithSignificantPoint.cs" />
     <Compile Include="Data\Surface\IFaceOfElement3D.cs" />
     <Compile Include="Data\Surface\QuadraticEdge.cs" />

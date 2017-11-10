@@ -149,16 +149,14 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			Dictionary<int, int> oldToNewPointMap = new Dictionary<int, int>();
 
-			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents);
-			int newPointId = 0;
+			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents, mergeOverlappingPoints: false);
 			foreach (int oldPointId in pointSet)
 			{
 				float x = (geometry.NumberOfCoordinateComponents > 0) ? geometry.PointCoordinates[oldPointId * geometry.NumberOfCoordinateComponents + 0] : 0f;
 				float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[oldPointId * geometry.NumberOfCoordinateComponents + 1] : 0f;
 				float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[oldPointId * geometry.NumberOfCoordinateComponents + 2] : 0f;
-				geometryBuilder.AddPoint(new Vector3(x, y, z), oldPointId);
+				int newPointId = geometryBuilder.AddPoint(new Vector3(x, y, z), oldPointId);
 				oldToNewPointMap.Add(oldPointId, newPointId);
-				newPointId += 1;
 			}
 
 			foreach (var pair in surfaceTriangles)

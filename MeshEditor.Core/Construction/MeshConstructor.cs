@@ -14,6 +14,7 @@ using System.Diagnostics;
 using MeshEditor.Cuts;
 using System.IO;
 using System.Linq;
+using MeshEditor.Common.GeometryMarkers;
 
 namespace MeshEditor.Construction
 {

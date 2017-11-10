@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MeshEditor.Construction
+namespace MeshEditor.Common.GeometryMarkers
 {
 	/// <summary>
 	/// trida pro reprezentaci informaci o hrane; pouzije se pri nacitani hran ze souboru
 	/// </summary>
-	public struct EdgeMark
+	public struct EdgeMark : IEquatable<EdgeMark>
 	{
 		private int node1ID, node2ID;
 
@@ -40,12 +40,7 @@ namespace MeshEditor.Construction
 			return (this.Node2ID == value.Node2ID && this.Node1ID == value.Node1ID);
 		}
 
-		public override bool Equals(object obj)
-		{
-			if (!(obj is EdgeMark))
-				return false;
-			return this.Equals((EdgeMark)obj);
-		}
+		public override bool Equals(object obj) => obj is EdgeMark e && this.Equals(e);
 
 		public override int GetHashCode()
 		{
@@ -61,6 +56,6 @@ namespace MeshEditor.Construction
 		public static bool operator ==(EdgeMark a, EdgeMark b) => a.Equals(b);
 		public static bool operator !=(EdgeMark a, EdgeMark b) => !a.Equals(b);
 
-		public override string ToString() => Node1ID.ToString() + " " + Node2ID;
+		public override string ToString() => $"{Node1ID} {Node2ID}";
 	}
 }

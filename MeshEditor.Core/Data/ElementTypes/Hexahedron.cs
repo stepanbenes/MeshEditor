@@ -4,6 +4,7 @@ using System.Text;
 using OpenTK;
 using MeshEditor.Cuts;
 using MeshEditor.Construction;
+using MeshEditor.Common.GeometryMarkers;
 
 namespace MeshEditor.Data
 {

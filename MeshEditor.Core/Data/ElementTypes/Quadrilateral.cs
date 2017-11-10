@@ -5,6 +5,7 @@ using System.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Cuts;
+using static MeshEditor.Common.HelperFunctions;
 
 namespace MeshEditor.Data
 {
@@ -155,8 +156,8 @@ namespace MeshEditor.Data
 
 		public override void ReverseNodeOrder()
 		{
-			Utilities.Functions.Swap(ref node2, ref node4);
-			Utilities.Functions.Swap(ref edge2, ref edge4);
+			Swap(ref node2, ref node4);
+			Swap(ref edge2, ref edge4);
 		}
 
 		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues)

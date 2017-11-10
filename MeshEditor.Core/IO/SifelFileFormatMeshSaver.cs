@@ -8,6 +8,7 @@ using MeshEditor.Construction;
 using MeshEditor.CoreInterface;
 using MeshEditor.Data;
 using OpenTK;
+using MeshEditor.Common.GeometryMarkers;
 using Utils = MeshEditor.Utilities.Functions;
 
 namespace MeshEditor.IO
@@ -188,7 +189,7 @@ namespace MeshEditor.IO
 			PropertyCommand.CommandType[] nodeSectionCommands = { PropertyCommand.CommandType.ndofn, PropertyCommand.CommandType.bocon, PropertyCommand.CommandType.dof_coupl, PropertyCommand.CommandType.nod_tfunc, PropertyCommand.CommandType.nod_crsec, PropertyCommand.CommandType.nod_spring, PropertyCommand.CommandType.nod_lcs, PropertyCommand.CommandType.nod_load, PropertyCommand.CommandType.nod_tdload, PropertyCommand.CommandType.nod_inicond, PropertyCommand.CommandType.nod_temper };
 			PropertyCommand.CommandType[] elementSectionCommands = { PropertyCommand.CommandType.el_type, PropertyCommand.CommandType.el_mat, PropertyCommand.CommandType.el_crsec, PropertyCommand.CommandType.el_lcs, PropertyCommand.CommandType.el_load, PropertyCommand.CommandType.edge_load, PropertyCommand.CommandType.surf_load, PropertyCommand.CommandType.volume_load, PropertyCommand.CommandType.el_tfunc };
 
-			if (Utils.ArrayContains(nodeSectionCommands, commandType)) // Node sections
+			if (nodeSectionCommands.Contains(commandType)) // Node sections
 			{
 				switch (entity)
 				{
@@ -206,7 +207,7 @@ namespace MeshEditor.IO
 						return PreprocessorSections.Unknown;
 				}
 			}
-			else if (Utils.ArrayContains(elementSectionCommands, commandType)) // Element sections
+			else if (elementSectionCommands.Contains(commandType)) // Element sections
 			{
 				switch (entity)
 				{
@@ -471,7 +472,7 @@ namespace MeshEditor.IO
 						else
 						{
 							found = edgeFacePropertySet.QuadProperties.TryGetValue(quadMark, out property);
-                        }
+						}
 					}
 
 					if (found)

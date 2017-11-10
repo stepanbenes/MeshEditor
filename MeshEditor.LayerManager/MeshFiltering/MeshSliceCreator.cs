@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
+using MeshEditor.Common.GeometryMarkers;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
@@ -25,7 +26,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
-			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents);
+			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents, mergeOverlappingPoints: true);
 
 			Vector3 planeNormal = new Vector3(sliceFilter.NormalX, sliceFilter.NormalY, sliceFilter.NormalZ);
 			planeNormal.Normalize();
@@ -151,14 +152,26 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		private static IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, Vector3 planeNormal, float planeOffset)
 		{
+			var processedEdges = new HashSet<EdgeMark>(); // TODO: use EdgeMark struct in Core assembly
 			int[] edgePointIndexArray = edgePointIndexMap[geometry.CellTypes[cellIndex]];
 			int baseOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 			for (int i = 0; i < edgePointIndexArray.Length; i += 2)
 			{
 				int firstIndex = baseOffset + edgePointIndexArray[i];
 				int secondIndex = baseOffset + edgePointIndexArray[i + 1];
-				Vector3 firstPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[firstIndex]);
-				Vector3 secondPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, geometry.CellConnectivity[secondIndex]);
+				int firstPointId = geometry.CellConnectivity[firstIndex];
+				int secondPointId = geometry.CellConnectivity[secondIndex];
+				var edgeMark = new EdgeMark(firstPointId, secondPointId);
+				if (processedEdges.Contains(edgeMark))
+				{
+					continue;
+				}
+				else
+				{
+					processedEdges.Add(edgeMark);
+				}
+				Vector3 firstPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, firstPointId);
+				Vector3 secondPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, secondPointId);
 				if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref planeNormal, planeOffset, out float intersection))
 				{
 					yield return new EdgeIntersection(firstIndex, secondIndex, intersection);
@@ -199,26 +212,11 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				return false;
 			}
 
-			HashSet<Vector3> hashTest = new HashSet<Vector3>();
 			intersections = new Vector3[intersectionInfoList.Count];
-			int uniqueCount = 0;
 			for (int i = 0; i < intersectionInfoList.Count; i++)
 			{
 				EdgeIntersection edgeIntersection = convertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[i]);
-				Vector3 temp = getIntersectionPoint(geometry, edgeIntersection);
-				if (hashTest.Add(temp)) // check if already exists
-				{
-					intersections[uniqueCount++] = temp;
-				}
-				else // if exists, remove duplicate
-				{
-					intersectionInfoList.RemoveAt(i--);
-				}
-			}
-
-			if (uniqueCount != intersections.Length)
-			{
-				Array.Resize(ref intersections, uniqueCount); // trim excess
+				intersections[i] = getIntersectionPoint(geometry, edgeIntersection);
 			}
 
 			if (intersections.Length < 2)

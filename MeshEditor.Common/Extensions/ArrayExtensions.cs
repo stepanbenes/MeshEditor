@@ -10,6 +10,36 @@ namespace MeshEditor.Common.Extensions
 	public static class ArrayExtensions
 	{
 		/// <summary>
+		/// Returns true if array is ascendingly ordered.
+		/// </summary>
+		public static bool IsSorted<T>(this T[] array) where T : IComparable<T>
+		{
+			if (array == null)
+				return true;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (array[i - 1].CompareTo(array[i]) > 0)
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Returns true if values in array create strictly increasing ordered set.
+		/// </summary>
+		public static bool IsStrictlyIncreasing<T>(this T[] array) where T : IComparable<T>
+		{
+			if (array == null)
+				return true;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (array[i - 1].CompareTo(array[i]) >= 0)
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
 		/// Return new array that is sub-array of array.
 		/// </summary>
 		/// <param name="array">Original array</param>

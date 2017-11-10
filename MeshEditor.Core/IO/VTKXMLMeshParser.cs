@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using MeshEditor.Data;
-using MeshEditor.Utilities;
+using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.IO
 {
@@ -190,7 +190,7 @@ namespace MeshEditor.IO
 				ElementType? elementType = MapVTKCellTypeToElementType((VTKCellType)types[elementIndex]);
 				if (elementType.HasValue) // ignore unsupported cell types (skip them)
 				{
-					int[] nodeIds = Functions.GetSliceOfArray(connectivity, connectivityIndex, numberOfNodes);
+					int[] nodeIds = connectivity.CreateSlice(connectivityIndex, numberOfNodes);
 					Debug.Assert(nodeIds.Length == Element.MapElementTypeToNodeCount(elementType.Value));
 					yield return new ElementDraft { ID = elementIndex, Type = elementType.Value, NodeIDs = nodeIds };
 				}

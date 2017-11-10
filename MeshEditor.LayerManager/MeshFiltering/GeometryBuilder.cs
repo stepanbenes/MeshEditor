@@ -14,12 +14,14 @@ namespace MeshEditor.LayerManager.MeshFiltering
 		readonly List<int> cellOffsets;
 		readonly List<CellType> cellTypes;
 		readonly int numberOfCoordinateComponents;
-
 		readonly FilterGeometryEntityMapping mapping;
 
 		private int pointCounter;
 
-		public GeometryBuilder(int numberOfCoordinateComponents)
+		readonly bool mergeOverlappingPoints;
+		readonly Dictionary<EdgeIntersection, int> intersectionCache;
+
+		public GeometryBuilder(int numberOfCoordinateComponents, bool mergeOverlappingPoints)
 		{
 			if (numberOfCoordinateComponents < 1)
 				throw new ArgumentOutOfRangeException(nameof(numberOfCoordinateComponents));
@@ -30,34 +32,13 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			cellTypes = new List<CellType>();
 			this.numberOfCoordinateComponents = numberOfCoordinateComponents;
 			mapping = new FilterGeometryEntityMapping();
+
+			this.mergeOverlappingPoints = mergeOverlappingPoints;
+			if (this.mergeOverlappingPoints)
+			{
+				intersectionCache = new Dictionary<EdgeIntersection, int>();
+			}
 		}
-
-		//public int AddPoint(float xCoordinate)
-		//{
-		//	if (numberOfCoordinateComponents != 1)
-		//		throw new InvalidOperationException();
-		//	pointCoordinates.Add(xCoordinate);
-		//	return pointCounter++;
-		//}
-
-		//public int AddPoint(float xCoordinate, float yCoordinate)
-		//{
-		//	if (numberOfCoordinateComponents != 2)
-		//		throw new InvalidOperationException();
-		//	pointCoordinates.Add(xCoordinate);
-		//	pointCoordinates.Add(yCoordinate);
-		//	return pointCounter++;
-		//}
-
-		//public int AddPoint(float xCoordinate, float yCoordinate, float zCoordinate)
-		//{
-		//	if (numberOfCoordinateComponents != 3)
-		//		throw new InvalidOperationException();
-		//	pointCoordinates.Add(xCoordinate);
-		//	pointCoordinates.Add(yCoordinate);
-		//	pointCoordinates.Add(zCoordinate);
-		//	return pointCounter++;
-		//}
 
 		public int AddPoint(Vector3 coordinates, int oldPointId)
 		{
@@ -76,6 +57,15 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		public int AddPoint(Vector3 coordinates, EdgeIntersection edgeIntersection)
 		{
+			if (mergeOverlappingPoints)
+			{
+				if (intersectionCache.TryGetValue(edgeIntersection, out int pointIndex))
+				{
+					return pointIndex;
+				}
+				intersectionCache.Add(edgeIntersection, pointCounter);
+			}
+
 			pointCoordinates.Add(coordinates.X);
 			if (numberOfCoordinateComponents > 1)
 			{
@@ -112,6 +102,13 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			if (connectivity.Length != numberOfPoints)
 				throw new ArgumentException(nameof(connectivity));
 
+			if (checkIsDegeneratedTriangle())
+			{
+				return; // ignore degenerated triangles
+			}
+
+			// check for other degenerated shapes is not necessary. Maybe quadrilateral degenerated into single line?
+
 			mapping.AddCellMapping(cellTypes.Count, oldCellId);
 			for (int i = 0; i < connectivity.Length; i++)
 			{
@@ -121,10 +118,23 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			cellTypes.Add(cellType);
 			cellOffsets.Add(numberOfPoints);
 			cellConnectivity.AddRange(connectivity);
+
+			bool checkIsDegeneratedTriangle()
+			{
+				if (cellType == CellType.TriangleLinear)
+				{
+					if (connectivity[0] == connectivity[1] || connectivity[1] == connectivity[2] || connectivity[2] == connectivity[0])
+						return true;
+				}
+				return false;
+			}
 		}
 
 		public void AddEdge(int point1, int point2, float faceAngle)
 		{
+			if (point1 == point2)
+				return; // ignore degenerated edges
+
 			// TODO: add implementation
 		}
 

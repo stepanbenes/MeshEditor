@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using static MeshEditor.Utilities.Functions;
+using MeshEditor.Common.Extensions;
+using static MeshEditor.Common.HelperFunctions;
 
-namespace MeshEditor.Construction
+namespace MeshEditor.Common.GeometryMarkers
 {
 	/// <summary>
 	/// trida pro reprezentaci informaci o ctyruhelnikove plose; pouzije se pri nacitani plochy ze souboru
 	/// </summary>
-	public struct QuadMark
+	public struct QuadMark : IEquatable<QuadMark>
 	{
 		#region Fields, Constructor
 
@@ -36,8 +37,8 @@ namespace MeshEditor.Construction
 			node3ID = n3;
 			node4ID = n4;
 
-			Debug.Assert(CheckIfArrayIsSorted(new[] { node1ID, node2ID, node3ID, node4ID }));
-        }
+			Debug.Assert(new[] { node1ID, node2ID, node3ID, node4ID }.IsSorted());
+		}
 
 		#endregion
 
@@ -52,27 +53,14 @@ namespace MeshEditor.Construction
 
 		#region Comparison members
 
-		public static bool operator ==(QuadMark a, QuadMark b)
-		{
-			return a.node1ID == b.node1ID && a.node2ID == b.node2ID && a.node3ID == b.node3ID && a.node4ID == b.node4ID;
-		}
+		public static bool operator ==(QuadMark a, QuadMark b) => a.Equals(b);
 
-		public static bool operator !=(QuadMark a, QuadMark b)
-		{
-			return !(a == b);
-		}
+		public static bool operator !=(QuadMark a, QuadMark b) => !a.Equals(b);
 
 		public bool Equals(QuadMark other)
-		{
-			return this == other;
-		}
+			=> this.node1ID == other.node1ID && this.node2ID == other.node2ID && this.node3ID == other.node3ID && this.node4ID == other.node4ID;
 
-		public override bool Equals(object obj)
-		{
-			if (!(obj is QuadMark))
-				return false;
-			return this == (QuadMark)obj;
-		}
+		public override bool Equals(object obj) => obj is QuadMark q && this.Equals(q);
 
 		public override int GetHashCode()
 		{
@@ -112,10 +100,7 @@ namespace MeshEditor.Construction
 
 		#region ToString
 
-		public override string ToString()
-		{
-			return "4 " + node1ID + " " + node2ID + " " + node3ID + " " + node4ID;
-		}
+		public override string ToString() => $"4 {node1ID} {node2ID} {node3ID} {node4ID}";
 
 		#endregion
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Construction;
 using MeshEditor.Utilities;
+using MeshEditor.Common.GeometryMarkers;
 
 namespace MeshEditor.Data
 {

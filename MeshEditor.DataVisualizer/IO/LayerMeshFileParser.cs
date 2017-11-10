@@ -53,7 +53,7 @@ namespace MeshEditor.DataVisualizer.IO
 			{
 				int nextOffset = geometry.CellOffsets[index];
 
-				int[] nodeIDs = Utilities.Functions.GetSliceOfArray(geometry.CellConnectivity, offset, nextOffset - offset);
+				int[] nodeIDs = geometry.CellConnectivity.CreateSlice(offset, nextOffset - offset);
 
 				var cellType = geometry.CellTypes[index];
 

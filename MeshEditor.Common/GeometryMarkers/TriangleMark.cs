@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using static MeshEditor.Utilities.Functions;
+using MeshEditor.Common.Extensions;
+using static MeshEditor.Common.HelperFunctions;
 
-namespace MeshEditor.Construction
+namespace MeshEditor.Common.GeometryMarkers
 {
 	/// <summary>
 	/// trida pro reprezentaci informaci o trojuhelnikove plose; pouzije se pri nacitani plochy ze souboru
 	/// </summary>
-	public struct TriangleMark
+	public struct TriangleMark : IEquatable<TriangleMark>
 	{
 
 		#region Fields, Constructor
@@ -30,7 +31,7 @@ namespace MeshEditor.Construction
 			node2ID = n2;
 			node3ID = n3;
 
-			Debug.Assert(CheckIfArrayIsSorted(new[] { node1ID, node2ID, node3ID }));
+			Debug.Assert(new[] { node1ID, node2ID, node3ID }.IsSorted());
 		}
 
 		#endregion
@@ -45,27 +46,13 @@ namespace MeshEditor.Construction
 
 		#region Comparison members
 
-		public static bool operator ==(TriangleMark a, TriangleMark b)
-		{
-			return a.node1ID == b.node1ID && a.node2ID == b.node2ID && a.node3ID == b.node3ID;
-		}
+		public static bool operator ==(TriangleMark a, TriangleMark b) => a.Equals(b);
 
-		public static bool operator !=(TriangleMark a, TriangleMark b)
-		{
-			return !(a == b);
-		}
+		public static bool operator !=(TriangleMark a, TriangleMark b) => !a.Equals(b);
 
-		public bool Equals(TriangleMark other)
-		{
-			return this == other;
-		}
+		public bool Equals(TriangleMark other) => this.node1ID == other.node1ID && this.node2ID == other.node2ID && this.node3ID == other.node3ID;
 
-		public override bool Equals(object obj)
-		{
-			if (!(obj is TriangleMark))
-				return false;
-			return this == (TriangleMark)obj;
-		}
+		public override bool Equals(object obj) => obj is TriangleMark t && this.Equals(t);
 
 		public override int GetHashCode()
 		{
@@ -83,10 +70,7 @@ namespace MeshEditor.Construction
 
 		#region ToString
 
-		public override string ToString()
-		{
-			return "3 " + node1ID + " " + node2ID + " " + node3ID;
-		}
+		public override string ToString() => $"3 {node1ID} {node2ID} {node3ID}";
 
 		#endregion
 	}
