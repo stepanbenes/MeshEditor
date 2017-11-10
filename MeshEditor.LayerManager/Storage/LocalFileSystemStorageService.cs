@@ -37,12 +37,19 @@ namespace MeshEditor.LayerManager.Storage
 
 		public void Delete(string record)
 		{
-			File.Delete(combineWithBasePath(record));
+			File.Delete(combineWithBasePath(record)); // If the file to be deleted does not exist, no exception is thrown.
 		}
 
 		public void DeleteDirectory(string name)
 		{
-			Directory.Delete(combineWithBasePath(name), recursive: true);
+			try
+			{
+				Directory.Delete(combineWithBasePath(name), recursive: true);
+			}
+			catch (DirectoryNotFoundException)
+			{
+				// Ignore if directory does not exist, match the behavior of File.Delete
+			}
 		}
 
 		private string combineWithBasePath(string path)
