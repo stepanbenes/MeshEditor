@@ -123,16 +123,6 @@ namespace MeshEditor.Data
 			return base.ToString();
 		}
 
-		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset)
-		{
-			foreach (WingedEdge edge in IterateThroughAllEdges())
-			{
-				float intersection;
-				if (Utilities.Functions.LinePlaneIntersection(edge.BeginNode.Position, edge.EndNode.Position, ref planeNormal, planeOffset, out intersection))
-					yield return new EdgeIntersection(edge.BeginNode, edge.EndNode, intersection);
-			}
-		}
-
 		#region Twin elements operations
 
 		public bool HasTwinElements

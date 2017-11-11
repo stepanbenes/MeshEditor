@@ -238,6 +238,13 @@ namespace MeshEditor.LayerManager
 														   group d by d.TimeStep;
 							return new DeformedMeshCreator(deformationFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.OrderBy(d => d.ComponentName).ToList()));
 						}
+					case IsoSurfaceFilter isoSurfaceFilter:
+						{
+							var dataComponentDescriptors = from index in getResultIndicesGroupedByTimeStep(parentLayer, isoSurfaceFilter.FieldName).SelectMany(g => g)
+														   from d in LoadData(parentLayerId, parentLayer.DataFallbackLayerId, index)
+														   group d by d.TimeStep;
+							return new MeshIsoSurfaceCreator(isoSurfaceFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.OrderBy(d => d.ComponentName).ToList()));
+						}
 					default:
 						throw new NotSupportedException();
 				}

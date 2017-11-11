@@ -78,6 +78,7 @@
     <Compile Include="Data\LayerDiff.cs" />
     <Compile Include="Data\MeshFileDescriptor.cs" />
     <Compile Include="Filters\DeformationFilter.cs" />
+    <Compile Include="Filters\IsoSurfaceFilter.cs" />
     <Compile Include="Filters\SurfaceFilter.cs" />
     <Compile Include="Filters\TimeCompressionFilter.cs" />
     <Compile Include="Import\AnalysisResult.cs" />
@@ -126,7 +127,9 @@
     <Compile Include="LayerGenerator.cs" />
     <Compile Include="MeshFiltering\IMeshFilterCreator.cs" />
     <Compile Include="MeshFiltering\MeshFilterCreatorHelper.cs" />
+    <Compile Include="MeshFiltering\MeshIsoSurfaceCreator.cs" />
     <Compile Include="MeshFiltering\MeshPartitionCreator.cs" />
+    <Compile Include="MeshFiltering\MeshSectionCreatorBase.cs" />
     <Compile Include="MeshFiltering\Vector3.cs" />
     <Compile Include="MeshFiltering\MeshSliceCreator.cs" />
     <Compile Include="MeshFiltering\MeshSurfaceCreator.cs" />

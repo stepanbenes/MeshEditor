@@ -72,10 +72,6 @@ namespace MeshEditor.Data
 
 		#region Public methods
 
-		public abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset);
-
-		public abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues);
-
 		public abstract IEnumerable<Node> IterateThroughAllNodes();
 		public abstract IEnumerable<Node> IterateThroughAllNodesIncludingEdgeMiddleNodes();
 

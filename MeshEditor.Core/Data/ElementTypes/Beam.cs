@@ -55,19 +55,5 @@ namespace MeshEditor.Data
 		{
 			return "Beam ID: " + id + " | (Nodes: " + beginNode.ID + ", " + endNode.ID + ")" + (ApproximationIsQuadratic ? (" | Approximation: " + ApproximationString) : string.Empty) + " | Property: " + Property;
 		}
-
-		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset)
-		{
-			float intersection;
-			if (Utilities.Functions.LinePlaneIntersection(beginNode.Position, endNode.Position, ref planeNormal, planeOffset, out intersection))
-				yield return new EdgeIntersection(beginNode, endNode, intersection);
-		}
-
-		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues)
-		{
-			float intersection;
-			if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[0], nodeValues[1], out intersection))
-				yield return new EdgeIntersection(beginNode, endNode, intersection);
-		}
 	}
 }

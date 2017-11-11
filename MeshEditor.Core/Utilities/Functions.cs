@@ -453,23 +453,6 @@ namespace MeshEditor.Utilities
 			return true;
 		}
 
-		public static bool ValueIsInInterval(double value, double a, double b, out float parameter)
-		{
-			double range = b - a;
-			if (range == 0.0)
-			{
-				parameter = 0.0f;
-				return false; /**/ // check whether value is equal to min?
-			}
-			parameter = (float)((value - a) / range);
-			return value.CompareTo(a) != value.CompareTo(b);
-		}
-
-		public static bool ValueIsInInterval(double value, double a, double b)
-		{
-			return value.CompareTo(a) != value.CompareTo(b);
-		}
-
 		private static bool tryComputeParametresOfLinePlaneIntersection(Vector3 a, Vector3 b, Vector3 planeA, Vector3 planeB, Vector3 planeC, out Vector3 parametres)
 		{
 			Matrix3x3 set = new Matrix3x3();

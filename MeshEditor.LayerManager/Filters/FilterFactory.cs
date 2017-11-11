@@ -32,10 +32,6 @@ namespace MeshEditor.LayerManager.Filters
 					{
 						EdgeAngleLimits = parameters.Select(p => float.Parse(p, NumberStyles.Float, CultureInfo.InvariantCulture)).ToArray()
 					};
-				case FilterType.Clip:
-				case FilterType.IsoSurface:
-				case FilterType.StreamLines:
-					throw new NotImplementedException();
 				case FilterType.TimeCompression:
 					return new TimeCompressionFilter
 					{
@@ -52,6 +48,16 @@ namespace MeshEditor.LayerManager.Filters
 						deformationFilter.RelativeScale = double.Parse(scaleParameter, NumberStyles.Float, CultureInfo.InvariantCulture);
 					}
 					return deformationFilter;
+				case FilterType.IsoSurface:
+					var isoSurfaceFilter = new IsoSurfaceFilter
+					{
+						FieldName = parameters.ElementAt(0),
+						Value = double.Parse(parameters.ElementAt(1), NumberStyles.Float, CultureInfo.InvariantCulture)
+					};
+					return isoSurfaceFilter;
+				case FilterType.Clip:
+				case FilterType.StreamLines:
+					throw new NotImplementedException();
 				default:
 					throw new NotSupportedException();
 			}

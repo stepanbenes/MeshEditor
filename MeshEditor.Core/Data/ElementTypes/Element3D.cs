@@ -86,31 +86,5 @@ namespace MeshEditor.Data
 		}
 
 		protected abstract int[] NodeEdgeIndexArray { get; }
-
-		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesWithPlane(Vector3 planeNormal, float planeOffset)
-		{
-			for (int i = 0; i < NodeEdgeIndexArray.Length; )
-			{
-				Node node1 = nodes[NodeEdgeIndexArray[i++]];
-				Node node2 = nodes[NodeEdgeIndexArray[i++]];
-				float intersection;
-				if (Utilities.Functions.LinePlaneIntersection(node1.Position, node2.Position, ref planeNormal, planeOffset, out intersection))
-					yield return new EdgeIntersection(node1, node2, intersection);
-			}
-		}
-
-		public override IEnumerable<EdgeIntersection> GetAllIntersectionsOfEdgesDataIsoSurface(double dataValue, double[] nodeValues)
-		{
-			for (int i = 0; i < NodeEdgeIndexArray.Length; )
-			{
-				int index1 = NodeEdgeIndexArray[i++];
-				int index2 = NodeEdgeIndexArray[i++];
-				Node node1 = nodes[index1];
-				Node node2 = nodes[index2];
-				float intersection;
-				if (Utilities.Functions.ValueIsInInterval(dataValue, nodeValues[index1], nodeValues[index2], out intersection))
-					yield return new EdgeIntersection(node1, node2, intersection);
-			}
-		}
 	}
 }
