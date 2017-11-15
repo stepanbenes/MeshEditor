@@ -21,7 +21,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.deformationData = deformationData;
 		}
 
-		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps)
 		{
 			double[] maxValues = calculateMaxAbsoluteValues(source.NumberOfCoordinateComponents);
 			int maxValueComponentIndex = maxValues.IndicesOfMaxElements().First();
@@ -32,7 +32,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			foreach (decimal timeStep in timeSteps)
 			{
 				GeometryDescription geometry = buildDeformedGeometry(source, timeStep, absoluteScale);
-				yield return (geometry, new List<decimal> { timeStep });
+				yield return (geometry, new [] { timeStep });
 			}
 		}
 

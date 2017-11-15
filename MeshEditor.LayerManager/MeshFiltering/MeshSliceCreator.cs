@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 	/// Planar cross-section generator
 	/// Based on implementation in MeshEditor.DataVisualizer.Layers.CrossSection.updateGeometry()
 	/// </summary>
-	internal class MeshSliceCreator : MeshSectionCreatorBase
+	internal class MeshSliceCreator : MeshSectionCreatorBase, IMeshFilterCreator
 	{
 		readonly SliceFilter sliceFilter;
 
@@ -24,19 +24,25 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.sliceFilter = sliceFilter;
 		}
 
+		public IEnumerable<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps)
+		{
+			GeometryDescription slice = CreateForTimeStep(source, timeStep: 0m /*ignore timeSteps*/);
+			return Enumerable.Repeat<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)>((geometry: slice, timeSteps: timeSteps.ToList()), 1);
+		}
+
 		#region Overrides
 
-		protected override IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, out Vector3 intersectionPlaneNormal)
+		protected override IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3? planeNormal)
 		{
 			float planeOffset = sliceFilter.Offset;
-			Vector3 planeNormal = new Vector3(sliceFilter.NormalX, sliceFilter.NormalY, sliceFilter.NormalZ);
-			planeNormal.Normalize();
-			intersectionPlaneNormal = planeNormal;
+			Vector3 normal = new Vector3(sliceFilter.NormalX, sliceFilter.NormalY, sliceFilter.NormalZ);
+			normal.Normalize();
+			planeNormal = normal;
 
 			float minDistance = float.MaxValue, maxDistance = float.MinValue;
 			foreach (Vector3 cellPoint in EnumerateCellPoints(geometry, cellIndex))
 			{
-				float distance = Vector3.Dot(cellPoint, planeNormal);
+				float distance = Vector3.Dot(cellPoint, normal);
 				minDistance = Math.Min(minDistance, distance);
 				maxDistance = Math.Max(maxDistance, distance);
 			}
@@ -46,11 +52,11 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				return Enumerable.Empty<EdgeIntersection>();
 			}
 
-			return getAllIntersectionsOfCellEdgesWithPlane(planeNormal, planeOffset);
+			return getAllIntersectionsOfCellEdgesWithPlane(normal, planeOffset);
 
-			IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane(Vector3 normal, float offset)
+			IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane(Vector3 n, float offset)
 			{
-				var processedEdges = new HashSet<EdgeMark>(); // TODO: use EdgeMark struct in Core assembly
+				var processedEdges = new HashSet<EdgeMark>();
 				int[] edgePointIndexArray = EdgePointIndexMap[geometry.CellTypes[cellIndex]];
 				int baseOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
 				for (int i = 0; i < edgePointIndexArray.Length; i += 2)
@@ -70,7 +76,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					}
 					Vector3 firstPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, firstPointId);
 					Vector3 secondPoint = MeshFilterCreatorHelper.GetPointCoordinates(geometry, secondPointId);
-					if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref normal, offset, out float intersection))
+					if (ComputationalGeometryMath.LinePlaneIntersection(firstPoint, secondPoint, ref n, offset, out float intersection))
 					{
 						yield return new EdgeIntersection(firstIndex, secondIndex, intersection);
 					}

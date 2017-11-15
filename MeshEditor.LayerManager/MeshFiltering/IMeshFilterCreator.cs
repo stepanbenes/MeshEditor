@@ -9,6 +9,6 @@ namespace MeshEditor.LayerManager.MeshFiltering
 {
 	interface IMeshFilterCreator
 	{
-		IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps);
+		IEnumerable<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)> Create(GeometryDescription source, IEnumerable<decimal> timeSteps);
 	}
 }

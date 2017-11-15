@@ -240,10 +240,10 @@ namespace MeshEditor.LayerManager
 						}
 					case IsoSurfaceFilter isoSurfaceFilter:
 						{
-							var dataComponentDescriptors = from index in getResultIndicesGroupedByTimeStep(parentLayer, isoSurfaceFilter.FieldName).SelectMany(g => g)
+							var dataComponentDescriptors = from index in getResultIndicesGroupedByTimeStep(parentLayer, isoSurfaceFilter.FieldName, isoSurfaceFilter.ComponentName).SelectMany(g => g)
 														   from d in LoadData(parentLayerId, parentLayer.DataFallbackLayerId, index)
 														   group d by d.TimeStep;
-							return new MeshIsoSurfaceCreator(isoSurfaceFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.OrderBy(d => d.ComponentName).ToList()));
+							return new MeshIsoSurfaceCreator(isoSurfaceFilter, dataComponentDescriptors.ToDictionary(g => g.Key, g => g.Single()));
 						}
 					default:
 						throw new NotSupportedException();
@@ -261,7 +261,9 @@ namespace MeshEditor.LayerManager
 					case AttributeSelectionFilter attributeSelectionFilter:
 						return layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
 					case DeformationFilter deformationFilter:
-						return layerName ?? $"deformation (scale: {deformationFilter.RelativeScale?.ToString(CultureInfo.InvariantCulture)})".TrimEnd(); // TODO: use FormattableString.Invariant
+						return layerName ?? $"deformation (scale: {deformationFilter.RelativeScale?.ToString(CultureInfo.InvariantCulture)})"; // TODO: use FormattableString.Invariant
+					case IsoSurfaceFilter isoSurfaceFilter:
+						return layerName ?? $"isosurface (value: {isoSurfaceFilter.Value.ToString(CultureInfo.InvariantCulture)})";
 					default:
 						throw new NotSupportedException();
 				}
@@ -612,7 +614,7 @@ namespace MeshEditor.LayerManager
 		}
 
 
-		private IEnumerable<IEnumerable<int>> getResultIndicesGroupedByTimeStep(SummaryFile summaryFile, string fieldName = null)
+		private IEnumerable<IEnumerable<int>> getResultIndicesGroupedByTimeStep(SummaryFile summaryFile, string fieldName = null, string componentName = null)
 		{
 			//from result in results
 			//where (fieldName == null || fieldName == result.FieldName)
@@ -624,13 +626,16 @@ namespace MeshEditor.LayerManager
 				{
 					foreach (var component in summaryFile.Fields[field].Components.Keys)
 					{
-						yield return groupIterator().Distinct().ToList();
-
-						IEnumerable<int> groupIterator()
+						if (componentName == null || componentName == component)
 						{
-							foreach (var time in summaryFile.Fields[field].Components[component].TimeSteps)
+							yield return groupIterator().Distinct().ToList();
+
+							IEnumerable<int> groupIterator()
 							{
-								yield return time.Value.DataIndex;
+								foreach (var time in summaryFile.Fields[field].Components[component].TimeSteps)
+								{
+									yield return time.Value.DataIndex;
+								}
 							}
 						}
 					}

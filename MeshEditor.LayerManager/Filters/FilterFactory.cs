@@ -52,7 +52,8 @@ namespace MeshEditor.LayerManager.Filters
 					var isoSurfaceFilter = new IsoSurfaceFilter
 					{
 						FieldName = parameters.ElementAt(0),
-						Value = double.Parse(parameters.ElementAt(1), NumberStyles.Float, CultureInfo.InvariantCulture)
+						ComponentName = parameters.ElementAt(1),
+						Value = double.Parse(parameters.ElementAt(2), NumberStyles.Float, CultureInfo.InvariantCulture)
 					};
 					return isoSurfaceFilter;
 				case FilterType.Clip:

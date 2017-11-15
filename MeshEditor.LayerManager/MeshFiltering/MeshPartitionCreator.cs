@@ -22,7 +22,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			this.attribute = attribute;
 		}
 
-		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
 			// TODO: use GeometryBuilder
 
@@ -91,7 +91,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				Mapping = mapping
 			};
 
-			return new[] { (filteredGeometry, timeSteps.ToList()) };
+			return Enumerable.Repeat<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)>((filteredGeometry, timeSteps.ToList()), 1);
 		}
 	}
 }

@@ -13,6 +13,8 @@ namespace MeshEditor.LayerManager.Filters
 
 		public string FieldName { get; set; }
 
+		public string ComponentName { get; set; }
+
 		public double Value { get; set; }
 	}
 }

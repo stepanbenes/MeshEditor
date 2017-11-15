@@ -118,7 +118,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Public methods
 
-		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
+		public IEnumerable<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
 		{
 			Dictionary<TriangleFace, int> surfaceTriangles = new Dictionary<TriangleFace, int>();
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
@@ -173,7 +173,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			var surface = geometryBuilder.Build();
 
-			return new[] { (surface, timeSteps.ToList()) };
+			return Enumerable.Repeat<(GeometryDescription geometry, IReadOnlyList<decimal> timeSteps)>((surface, timeSteps.ToList()), 1);
 		}
 
 		#endregion

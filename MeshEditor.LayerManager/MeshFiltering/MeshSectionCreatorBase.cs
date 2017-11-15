@@ -8,15 +8,15 @@ using MeshEditor.LayerManager.Data;
 
 namespace MeshEditor.LayerManager.MeshFiltering
 {
-	internal abstract class MeshSectionCreatorBase : IMeshFilterCreator
+	internal abstract class MeshSectionCreatorBase
 	{
-		public IEnumerable<(GeometryDescription geometry, List<decimal> timeSteps)> Create(GeometryDescription geometry, IEnumerable<decimal> timeSteps)
+		protected GeometryDescription CreateForTimeStep(GeometryDescription geometry, decimal timeStep)
 		{
 			GeometryBuilder geometryBuilder = new GeometryBuilder(geometry.NumberOfCoordinateComponents, mergeOverlappingPoints: true);
 
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				if (!getIntersectionsWithElement(geometry, cellIndex, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
+				if (!getIntersectionsWithElement(geometry, cellIndex, timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
 					continue;
 
 				Debug.Assert(intersectionInfoList.Count == intersections.Length);
@@ -87,10 +87,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			} // end of element loop
 
 			GeometryDescription slice = geometryBuilder.Build();
-
-			return new[] { (slice, timeSteps.ToList()) };
+			return slice;
 		}
-		
+
 		protected static readonly Dictionary<CellType, int[]> EdgePointIndexMap = new Dictionary<CellType, int[]>
 		{
 			// TODO: handle better edges of quadratic elements
@@ -109,7 +108,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			[CellType.HexaQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
 		};
 
-		protected abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, out Vector3 intersectionPlaneNormal);
+		protected abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3? planeNormal);
 
 		protected static IEnumerable<Vector3> EnumerateCellPoints(GeometryDescription geometry, int cellIndex)
 		{
@@ -121,9 +120,10 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			}
 		}
 
-		private bool getIntersectionsWithElement(GeometryDescription geometry, int cellIndex, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
+		private bool getIntersectionsWithElement(GeometryDescription geometry, int cellIndex, decimal timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
 		{
-			intersectionInfoList = new List<EdgeIntersection>(GetAllIntersectionsOfCellEdgesWithPlane(geometry, cellIndex, out intersectionPlaneNormal));
+			intersectionInfoList = new List<EdgeIntersection>(GetAllIntersectionsOfCellEdgesWithPlane(geometry, cellIndex, timeStep, out var planeNormal));
+			intersectionPlaneNormal = planeNormal ?? Vector3.UnitZ;
 
 			if (intersectionInfoList.Count < 2)
 			{
@@ -141,6 +141,18 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			if (intersections.Length < 2)
 			{
 				return false;
+			}
+
+			if (!planeNormal.HasValue && intersections.Length > 2) // TODO: calculation of intersectionPlaneNormal is wrong, does not work correctly
+			{
+				var v1 = intersections[2] - intersections[0];
+				var v2 = intersections[1] - intersections[0];
+				Vector3.Cross(ref v1, ref v2, out intersectionPlaneNormal);
+				intersectionPlaneNormal.Normalize();
+				if (Vector3.Dot(intersectionPlaneNormal, new Vector3(1f, 1f, 1f)) < 0f) // this is not perfect
+				{
+					intersectionPlaneNormal = -intersectionPlaneNormal;
+				}
 			}
 
 			return true;
