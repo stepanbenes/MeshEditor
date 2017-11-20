@@ -16,7 +16,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				if (!getIntersectionsWithElement(geometry, cellIndex, timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
+				if (!GetIntersectionsWithElement(geometry, cellIndex, timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
 					continue;
 
 				Debug.Assert(intersectionInfoList.Count == intersections.Length);
@@ -25,8 +25,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				{
 					if (GeometryDescription.GetDimensionOfCellType(geometry.CellTypes[cellIndex]) == 2) // 2D cell
 					{
-						int point1 = geometryBuilder.AddPoint(intersections[0], convertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[0]));
-						int point2 = geometryBuilder.AddPoint(intersections[1], convertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[1]));
+						int point1 = geometryBuilder.AddPoint(intersections[0], ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[0]));
+						int point2 = geometryBuilder.AddPoint(intersections[1], ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[1]));
 						geometryBuilder.AddCell(CellType.LineLinear, cellIndex, new[] { point1, point2 }, new[] { intersectionInfoList[0], intersectionInfoList[1] });
 					}
 					continue;
@@ -72,7 +72,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				int[] connectivityIndices = new int[intersections.Length];
 				for (int i = 0; i < intersectionIndices.Length; i++)
 				{
-					connectivityIndices[i] = geometryBuilder.AddPoint(intersections[intersectionIndices[i]], convertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[intersectionIndices[i]]));
+					connectivityIndices[i] = geometryBuilder.AddPoint(intersections[intersectionIndices[i]], ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[intersectionIndices[i]]));
 				}
 
 				for (int i = 1; i < intersections.Length - 1; i++)
@@ -108,7 +108,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			[CellType.HexaQuadratic] = new int[] { 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 },
 		};
 
-		protected abstract IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3? planeNormal);
+		protected abstract List<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3 planeNormal);
 
 		protected static IEnumerable<Vector3> EnumerateCellPoints(GeometryDescription geometry, int cellIndex)
 		{
@@ -120,10 +120,9 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			}
 		}
 
-		private bool getIntersectionsWithElement(GeometryDescription geometry, int cellIndex, decimal timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
+		protected bool GetIntersectionsWithElement(GeometryDescription geometry, int cellIndex, decimal timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
 		{
-			intersectionInfoList = new List<EdgeIntersection>(GetAllIntersectionsOfCellEdgesWithPlane(geometry, cellIndex, timeStep, out var planeNormal));
-			intersectionPlaneNormal = planeNormal ?? Vector3.UnitZ;
+			intersectionInfoList = GetAllIntersectionsOfCellEdgesWithPlane(geometry, cellIndex, timeStep, out intersectionPlaneNormal);
 
 			if (intersectionInfoList.Count < 2)
 			{
@@ -134,8 +133,8 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			intersections = new Vector3[intersectionInfoList.Count];
 			for (int i = 0; i < intersectionInfoList.Count; i++)
 			{
-				EdgeIntersection edgeIntersection = convertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[i]);
-				intersections[i] = getIntersectionPoint(geometry, edgeIntersection);
+				EdgeIntersection edgeIntersection = ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionInfoList[i]);
+				intersections[i] = GetIntersectionPoint(geometry, edgeIntersection);
 			}
 
 			if (intersections.Length < 2)
@@ -143,22 +142,10 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				return false;
 			}
 
-			if (!planeNormal.HasValue && intersections.Length > 2) // TODO: calculation of intersectionPlaneNormal is wrong, does not work correctly
-			{
-				var v1 = intersections[2] - intersections[0];
-				var v2 = intersections[1] - intersections[0];
-				Vector3.Cross(ref v1, ref v2, out intersectionPlaneNormal);
-				intersectionPlaneNormal.Normalize();
-				if (Vector3.Dot(intersectionPlaneNormal, new Vector3(1f, 1f, 1f)) < 0f) // this is not perfect
-				{
-					intersectionPlaneNormal = -intersectionPlaneNormal;
-				}
-			}
-
 			return true;
 		}
 
-		private static EdgeIntersection convertCellPointsToPointsInEdgeIntersection(GeometryDescription geometry, EdgeIntersection cellPointEdgeIntersection)
+		protected static EdgeIntersection ConvertCellPointsToPointsInEdgeIntersection(GeometryDescription geometry, EdgeIntersection cellPointEdgeIntersection)
 		{
 			return new EdgeIntersection(
 				geometry.CellConnectivity[cellPointEdgeIntersection.FirstPointId],
@@ -166,7 +153,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				cellPointEdgeIntersection.Coordinate);
 		}
 
-		private static Vector3 getIntersectionPoint(GeometryDescription geometry, EdgeIntersection edgeIntersection)
+		protected static Vector3 GetIntersectionPoint(GeometryDescription geometry, EdgeIntersection edgeIntersection)
 		{
 			Vector3 v1 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.FirstPointId);
 			Vector3 v2 = MeshFilterCreatorHelper.GetPointCoordinates(geometry, edgeIntersection.SecondPointId);

@@ -32,7 +32,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 		#region Overrides
 
-		protected override IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3? planeNormal)
+		protected override List<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3 planeNormal)
 		{
 			float planeOffset = sliceFilter.Offset;
 			Vector3 normal = new Vector3(sliceFilter.NormalX, sliceFilter.NormalY, sliceFilter.NormalZ);
@@ -49,12 +49,12 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			if (planeOffset < minDistance || planeOffset > maxDistance)
 			{
-				return Enumerable.Empty<EdgeIntersection>();
+				return new List<EdgeIntersection>(capacity: 0);
 			}
 
-			return getAllIntersectionsOfCellEdgesWithPlane(normal, planeOffset);
+			return intersectionIterator(normal, planeOffset).ToList();
 
-			IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane(Vector3 n, float offset)
+			IEnumerable<EdgeIntersection> intersectionIterator(Vector3 n, float offset)
 			{
 				var processedEdges = new HashSet<EdgeMark>();
 				int[] edgePointIndexArray = EdgePointIndexMap[geometry.CellTypes[cellIndex]];
@@ -66,7 +66,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					int firstPointId = geometry.CellConnectivity[firstIndex];
 					int secondPointId = geometry.CellConnectivity[secondIndex];
 					var edgeMark = new EdgeMark(firstPointId, secondPointId);
-					if (processedEdges.Contains(edgeMark))
+					if (processedEdges.Contains(edgeMark)) // because of degenerated elements (with collapsed edge)
 					{
 						continue;
 					}

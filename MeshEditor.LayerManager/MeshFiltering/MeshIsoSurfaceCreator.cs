@@ -31,14 +31,41 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			}
 		}
 
-		protected override IEnumerable<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3? planeNormal)
+		protected override List<EdgeIntersection> GetAllIntersectionsOfCellEdgesWithPlane(GeometryDescription geometry, int cellIndex, decimal timeStep, out Vector3 planeNormal)
 		{
-			planeNormal = null;
+			double minValue = double.MaxValue, maxValue = double.MinValue;
+			int minValuePointId = -1, maxValuePointId = -1;
+
+			// calculate min and max value
+			{
+				int startOffset = (cellIndex > 0) ? geometry.CellOffsets[cellIndex - 1] : 0;
+				int endOffset = geometry.CellOffsets[cellIndex];
+				for (int offset = startOffset; offset < endOffset; offset++)
+				{
+					int pointId = geometry.CellConnectivity[offset];
+					double value = getDataValue(timeStep, pointId);
+					if (value < minValue)
+					{
+						minValue = value;
+						minValuePointId = pointId;
+					}
+					if (value > maxValue)
+					{
+						maxValue = value;
+						maxValuePointId = pointId;
+					}
+				}
+			}
+
+			var intersectionList = new List<EdgeIntersection>();
+
+			if (!valueIsInInterval(isoSurfaceFilter.Value, minValue, maxValue))
+			{
+				planeNormal = Vector3.Zero;
+				return intersectionList;
+			}
 
 			// iterate through all edges and interpolate values
-			return getAllIntersectionsOfCellEdgesWithPlane();
-
-			IEnumerable<EdgeIntersection> getAllIntersectionsOfCellEdgesWithPlane()
 			{
 				var processedEdges = new HashSet<EdgeMark>();
 				int[] edgePointIndexArray = EdgePointIndexMap[geometry.CellTypes[cellIndex]];
@@ -50,7 +77,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 					int firstPointId = geometry.CellConnectivity[firstIndex];
 					int secondPointId = geometry.CellConnectivity[secondIndex];
 					var edgeMark = new EdgeMark(firstPointId, secondPointId);
-					if (processedEdges.Contains(edgeMark))
+					if (processedEdges.Contains(edgeMark)) // because of degenerated elements (with collapsed edge)
 					{
 						continue;
 					}
@@ -64,10 +91,28 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 					if (valueIsInInterval(isoSurfaceFilter.Value, firstPointValue, secondPointValue, out float intersection))
 					{
-						yield return new EdgeIntersection(firstIndex, secondIndex, intersection);
+						intersectionList.Add(new EdgeIntersection(firstIndex, secondIndex, intersection));
 					}
 				}
 			}
+
+			if (intersectionList.Count > 2 && minValuePointId >= 0 && maxValuePointId >= 0)
+			{
+				Vector3 v1 = GetIntersectionPoint(geometry, ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionList[0]));
+				Vector3 v2 = GetIntersectionPoint(geometry, ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionList[1]));
+				Vector3 v3 = GetIntersectionPoint(geometry, ConvertCellPointsToPointsInEdgeIntersection(geometry, intersectionList[2]));
+				Vector3 n = Vector3.Normalize(Vector3.Cross(v2 - v1, v3 - v1));
+				Vector3 gradient = MeshFilterCreatorHelper.GetPointCoordinates(geometry, maxValuePointId) - MeshFilterCreatorHelper.GetPointCoordinates(geometry, minValuePointId);
+				Vector3.Dot(ref n, ref gradient, out float dotProduct);
+				planeNormal = (dotProduct >= 0f) ? n : -n;
+			}
+			else
+			{
+				planeNormal = Vector3.UnitZ;
+			}
+
+			return intersectionList;
+
 		}
 
 		private double getDataValue(decimal timeStep, int pointId)
