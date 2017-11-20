@@ -16,7 +16,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 
 			for (int cellIndex = 0; cellIndex < geometry.NumberOfCells; cellIndex++)
 			{
-				if (!GetIntersectionsWithElement(geometry, cellIndex, timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
+				if (!getIntersectionsWithElement(geometry, cellIndex, timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal))
 					continue;
 
 				Debug.Assert(intersectionInfoList.Count == intersections.Length);
@@ -120,7 +120,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			}
 		}
 
-		protected bool GetIntersectionsWithElement(GeometryDescription geometry, int cellIndex, decimal timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
+		private bool getIntersectionsWithElement(GeometryDescription geometry, int cellIndex, decimal timeStep, out List<EdgeIntersection> intersectionInfoList, out Vector3[] intersections, out Vector3 intersectionPlaneNormal)
 		{
 			intersectionInfoList = GetAllIntersectionsOfCellEdgesWithPlane(geometry, cellIndex, timeStep, out intersectionPlaneNormal);
 
