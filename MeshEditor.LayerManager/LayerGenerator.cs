@@ -155,7 +155,7 @@ namespace MeshEditor.LayerManager
 			// find parentLayer in storage and download summary
 			SummaryFile parentLayer = LoadLayerSummary(parentLayerId);
 
-			string filterLayerName = constructFilterLayerName();
+			string filterLayerName = layerName ?? getDefaultFilterLayerName();
 
 			Guid newLayerId = Guid.NewGuid();
 			var meshFileDescriptors = new List<MeshFileDescriptor>();
@@ -250,20 +250,21 @@ namespace MeshEditor.LayerManager
 				}
 			}
 
-			string constructFilterLayerName()
+			string getDefaultFilterLayerName()
 			{
+				// TODO: use FormattableString.Invariant istead of ToString(CultureInfo.InvariantCulture) after upgrade to netcoreapp2.0
 				switch (filter)
 				{
 					case SurfaceFilter _:
-						return layerName ?? "surface";
+						return "surface";
 					case SliceFilter sliceFilter:
-						return layerName ?? $"slice {sliceFilter.Offset}";
+						return $"slice (offset: {sliceFilter.Offset.ToString(CultureInfo.InvariantCulture)})";
 					case AttributeSelectionFilter attributeSelectionFilter:
-						return layerName ?? $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
+						return $"{attributeSelectionFilter.AttributeName}: {string.Join(", ", attributeSelectionFilter.AttributeSelection)}";
 					case DeformationFilter deformationFilter:
-						return layerName ?? $"deformation (scale: {deformationFilter.RelativeScale?.ToString(CultureInfo.InvariantCulture)})"; // TODO: use FormattableString.Invariant
+						return $"deformation (scale: {deformationFilter.RelativeScale?.ToString(CultureInfo.InvariantCulture)})";
 					case IsoSurfaceFilter isoSurfaceFilter:
-						return layerName ?? $"isosurface (value: {isoSurfaceFilter.Value.ToString(CultureInfo.InvariantCulture)})";
+						return $"isosurface {isoSurfaceFilter.FieldName}/{isoSurfaceFilter.ComponentName} = {isoSurfaceFilter.Value.ToString(CultureInfo.InvariantCulture)}";
 					default:
 						throw new NotSupportedException();
 				}
