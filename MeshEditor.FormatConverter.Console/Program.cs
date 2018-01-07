@@ -79,7 +79,7 @@ namespace MeshEditor.FormatConverter
 			// taken from: http://ascii.co.uk/art/excavator
 			string[] excavators = {
 @"
-	 --.
+     --.
   ._// <>
   |_|_
  (o___o)",
@@ -89,7 +89,7 @@ namespace MeshEditor.FormatConverter
   _L  ((|_L_| 
  (/\)(__(____)",
 @"
-	 __
+     __
 	//\\`'-.___
    //  \\  _(=()__
    Y    \\//~//.--|
