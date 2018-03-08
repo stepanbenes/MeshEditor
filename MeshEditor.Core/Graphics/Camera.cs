@@ -32,7 +32,7 @@ namespace MeshEditor.Graphics
 		private Vector3 eye, center, up; // center and up vectors are computed from yaw and pitch angles in method updateViewVectors()
 
 		public Camera()
-        {
+		{
 			setIsoView();
 		}
 
@@ -57,13 +57,13 @@ namespace MeshEditor.Graphics
 		#region Properties
 
 		public Vector3 Eye
-        {
-            get { return eye; }
-        }
+		{
+			get { return eye; }
+		}
 
-        public Vector3 Up
-        {
-            get { return up; }
+		public Vector3 Up
+		{
+			get { return up; }
 		}
 
 		#endregion
@@ -112,11 +112,33 @@ namespace MeshEditor.Graphics
 			center += move;
 		}
 
+		public void MoveRight(float distance)
+		{
+			Vector3 move = distance * getVerticalRotationAxis();
+			eye += move;
+			center += move;
+		}
+
+		public void MoveLeft(float distance)
+		{
+			MoveRight(-distance);
+		}
+
+		public void MoveForward(float distance)
+		{
+			Vector3 move = distance * GetDirection();
+			eye += move;
+			center += move;
+		}
+
+		public void MoveBack(float distance)
+		{
+			MoveForward(-distance);
+		}
+
 		public void Orbit(Vector3 centerOfOrbit, float xAngle, float yAngle)
 		{
-			Vector3 direction = Vector3.Normalize(center - eye);
-			Vector3 verticalRotationAxis = Vector3.Cross(direction, up);
-
+			Vector3 verticalRotationAxis = getVerticalRotationAxis();
 			float correctedXAngle = xAngle * Math.Sign(Vector3.Dot(up, globalUpVector));
 
 			eye = RotateVector(eye - centerOfOrbit, correctedXAngle, globalUpVector) + centerOfOrbit;
@@ -242,6 +264,13 @@ namespace MeshEditor.Graphics
 		#endregion
 
 		#region Private methods
+
+		private Vector3 getVerticalRotationAxis()
+		{
+			Vector3 direction = GetDirection();
+			Vector3 verticalRotationAxis = Vector3.Cross(direction, up);
+			return verticalRotationAxis;
+		}
 
 		private void updateViewVectors()
 		{

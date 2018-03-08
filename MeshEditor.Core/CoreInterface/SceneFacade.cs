@@ -1075,6 +1075,36 @@ namespace MeshEditor.CoreInterface
 			RefreshNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
+
+		public void MoveCamera(CameraView direction)
+		{
+			const float distance = 0.03f;
+			cameraChangedTimer.Enabled = false;
+
+			switch (direction)
+			{
+				case CameraView.Front:
+					scene.Camera.MoveForward(distance);
+					break;
+				case CameraView.Back:
+					scene.Camera.MoveBack(distance);
+					break;
+				case CameraView.Left:
+					scene.Camera.MoveLeft(distance);
+					break;
+				case CameraView.Right:
+					scene.Camera.MoveRight(distance);
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+
+			cameraChangedTimer.Start();
+			cameraChangedDirection = true;
+			needToComputeVisibleNodesFlag = true;
+			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
+		}
+
 		public void Initialize()
 		{
 			MakeCurrentNeeded?.Invoke(this, EventArgs.Empty);

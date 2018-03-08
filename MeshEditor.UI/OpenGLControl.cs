@@ -230,6 +230,34 @@ namespace MeshEditor.WinUI
 				ActionPerformed(this, EventArgs.Empty);
 		}
 
+		protected override bool IsInputKey(Keys keyData)
+		{
+			switch (keyData)
+			{
+				case Keys.Right:
+				case Keys.Left:
+				case Keys.Up:
+				case Keys.Down:
+					return true;
+				case Keys.Shift | Keys.Right:
+				case Keys.Shift | Keys.Left:
+				case Keys.Shift | Keys.Up:
+				case Keys.Shift | Keys.Down:
+					return true;
+				case Keys.Control | Keys.Right:
+				case Keys.Control | Keys.Left:
+				case Keys.Control | Keys.Up:
+				case Keys.Control | Keys.Down:
+					return true;
+				case Keys.Alt | Keys.Right:
+				case Keys.Alt | Keys.Left:
+				case Keys.Alt | Keys.Up:
+				case Keys.Alt | Keys.Down:
+					return true;
+			}
+			return base.IsInputKey(keyData);
+		}
+
 		void keyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.ControlKey)
@@ -332,6 +360,19 @@ namespace MeshEditor.WinUI
 					break;
 				case Keys.Return:
 					SetPropertyOfSelectedItems();
+					return;
+
+				case Keys.Left:
+					sceneFacade.MoveCamera(CameraView.Left);
+					return;
+				case Keys.Right:
+					sceneFacade.MoveCamera(CameraView.Right);
+					return;
+				case Keys.Down:
+					sceneFacade.MoveCamera(CameraView.Back);
+					return;
+				case Keys.Up:
+					sceneFacade.MoveCamera(CameraView.Front);
 					return;
 
 				default:
