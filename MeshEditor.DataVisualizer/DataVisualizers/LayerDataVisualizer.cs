@@ -91,7 +91,7 @@ namespace MeshEditor.DataVisualizer
 
 		public void UpdateVectorData(IReadOnlyList<ComponentDataDescription> vectorComponents)
 		{
-			Debug.Assert(vectorComponents == null || vectorComponents.Count == 3);
+			Debug.Assert(vectorComponents == null || (vectorComponents.Count > 0 && vectorComponents.Count <= 3));
 			currentVectorComponents = vectorComponents;
 			// build vector arrows vbo from vectorComponents
 			setupVectorField();
@@ -247,14 +247,14 @@ namespace MeshEditor.DataVisualizer
 		private double getVectorMagnitude(int index)
 		{
 			Debug.Assert(currentVectorComponents != null);
-			Vector3d v = new Vector3d(currentVectorComponents[0].Values[index], currentVectorComponents[1].Values[index], currentVectorComponents[2].Values[index]);
+			Vector3d v = new Vector3d(currentVectorComponents.ElementAtOrDefault(0)?.Values[index] ?? 0.0, currentVectorComponents.ElementAtOrDefault(1)?.Values[index] ?? 0.0, currentVectorComponents.ElementAtOrDefault(2)?.Values[index] ?? 0.0);
 			return v.Length;
 		}
 
 		private IEnumerable<double> enumerateVectorMagnitudes()
 		{
 			Debug.Assert(currentVectorComponents != null);
-			int length = currentVectorComponents[0].Values.Length;
+			int length = currentVectorComponents.ElementAtOrDefault(0)?.Values.Length ?? 0;
 			for (int i = 0; i < length; i++)
 			{
 				yield return getVectorMagnitude(i);
@@ -314,9 +314,9 @@ namespace MeshEditor.DataVisualizer
 					return null;
 				}
 
-				if (currentVectorComponents.Count != 3)
+				if (currentVectorComponents.Count > 3)
 				{
-					throw new InvalidOperationException($"Three vector components expected. Got {currentVectorComponents.Count} instead.");
+					throw new InvalidOperationException($"Three vector components are maximum. Got {currentVectorComponents.Count} components instead.");
 				}
 
 				if (!currentVectorComponents.All(c => c.Location == DataLocationType.Points))
@@ -324,9 +324,9 @@ namespace MeshEditor.DataVisualizer
 					throw new NotSupportedException("The only supported data location for vector field is Points");
 				}
 
-				var xComponent = currentVectorComponents[0];
-				var yComponent = currentVectorComponents[1];
-				var zComponent = currentVectorComponents[2];
+				var xComponent = currentVectorComponents.ElementAtOrDefault(0);
+				var yComponent = currentVectorComponents.ElementAtOrDefault(1);
+				var zComponent = currentVectorComponents.ElementAtOrDefault(2);
 
 				IntervalD xRange = IntervalD.Zero;
 				IntervalD yRange = IntervalD.Zero;
@@ -337,9 +337,9 @@ namespace MeshEditor.DataVisualizer
 
 				foreach (Node node in mesh.NodesEdgesIncidence.Keys)
 				{
-					double x = xComponent.Values[node.ID];
-					double y = yComponent.Values[node.ID];
-					double z = zComponent.Values[node.ID];
+					double x = xComponent?.Values[node.ID] ?? 0.0;
+					double y = yComponent?.Values[node.ID] ?? 0.0;
+					double z = zComponent?.Values[node.ID] ?? 0.0;
 
 					if (double.IsNaN(x) || double.IsNaN(y) || double.IsNaN(z)) // continue if values are missing
 					{

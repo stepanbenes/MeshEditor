@@ -50,7 +50,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 				for (int pointIndex = 0; pointIndex < sourceGeometry.NumberOfPoints; pointIndex++)
 				{
 					int coordinateIndex = pointIndex * sourceGeometry.NumberOfCoordinateComponents + componentIndex;
-					double value = dataComponents[componentIndex].Values[pointIndex];
+					double value = dataComponents.ElementAtOrDefault(componentIndex)?.Values[pointIndex] ?? 0.0;
 					double displacement = double.IsNaN(value) ? 0.0 : scale * value;
 					float deformedPointCoordinate = (float)(sourceGeometry.PointCoordinates[coordinateIndex] + displacement);
 					deformedPointCoordinates[coordinateIndex] = deformedPointCoordinate;
@@ -92,7 +92,7 @@ namespace MeshEditor.LayerManager.MeshFiltering
 			{
 				for (int componentIndex = 0; componentIndex < numberOfCoordinateComponents; componentIndex++)
 				{
-					foreach (double value in dataComponents[componentIndex].Values)
+					foreach (double value in (dataComponents.ElementAtOrDefault(componentIndex)?.Values).EmptyIfNull())
 					{
 						if (!double.IsNaN(value))
 						{

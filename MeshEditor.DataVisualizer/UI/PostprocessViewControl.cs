@@ -173,7 +173,7 @@ namespace MeshEditor.DataVisualizer.UI
 				case FilterType.Deformation:
 					var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, shoul run synchronously and return layer summary from cache
 					filterParamsForm = new DeformationFilterParamsForm(
-						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count == 3).Select(pair => pair.Key)
+						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count <= 3).Select(pair => pair.Key)
 					);
 					modal = true;
 					break;
