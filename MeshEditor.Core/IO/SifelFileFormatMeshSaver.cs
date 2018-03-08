@@ -18,7 +18,7 @@ namespace MeshEditor.IO
 	/// </summary>
 	public class SifelFileFormatMeshSaver : IMeshSaver
 	{
-		
+
 		#region Fields, contructor
 
 		private TextWriter output;
@@ -124,7 +124,7 @@ namespace MeshEditor.IO
 			{
 				destination = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(meshFilename), meshStatistics.PropertyCommandsFile)); // make absolute path
 			}
-			
+
 			using (TextWriter writer = new StreamWriter(destination))
 			{
 				string meshPathToWrite = rooted ? meshFilename : Path.GetFileName(meshFilename); // write absolute or relative according to property command file path
@@ -230,7 +230,7 @@ namespace MeshEditor.IO
 				return PreprocessorSections.Unknown;
 			}
 		}
-		
+
 		private bool saveMesh(Mesh mesh, bool saveWithoutHiddenElements, YesNoQuestion cancelled, bool rewriteNodeCoordinatesFromSource)
 		{
 			generateMaps(mesh, saveWithoutHiddenElements);
@@ -322,7 +322,7 @@ namespace MeshEditor.IO
 			}
 			foreach (Element2D face in mesh.Faces)
 			{
-				if (!face.Property.IsZero)
+				if (face is IFaceOfElement3D && !face.Property.IsZero)
 					edgeFacePropertySet.AddFaceProperty(face);
 			}
 			return edgeFacePropertySet;
@@ -363,7 +363,7 @@ namespace MeshEditor.IO
 		{
 			if (mesh.Statistics.PropertyCommands.Count == 0)
 				return;
-			
+
 			// write Property commands file path
 			if (!string.IsNullOrEmpty(mesh.Statistics.PropertyCommandsFile))
 			{
@@ -450,40 +450,35 @@ namespace MeshEditor.IO
 				}
 			}
 
-			Element3D element3D = element as Element3D;
-			if (element3D != null) // if it is 3D element
+			// save property of all element faces (including single face of 3D element)
+			foreach (object faceMark in Element.GetSequenceOfFaces(element.ElementType, nodeIDs)) // write face properties
 			{
-				foreach (object faceMark in Element.GetSequenceOfFaces(element3D.ElementType, nodeIDs)) // write face properties
+				Property property = Property.Zero;
+				bool found = false;
+				if (faceMark is TriangleMark triangleMark)
 				{
-					Property property = Property.Zero;
-					bool found = false;
-					if (faceMark is TriangleMark)
+					found = edgeFacePropertySet.TriangleProperties.TryGetValue(triangleMark, out property);
+				}
+				else if (faceMark is QuadMark quadMark)
+				{
+					if (quadMark.IsCollapsedToTriangle(out var collapsedTriangleMark))
 					{
-						found = edgeFacePropertySet.TriangleProperties.TryGetValue((TriangleMark)faceMark, out property);
-					}
-					else if (faceMark is QuadMark)
-					{
-						QuadMark quadMark = (QuadMark)faceMark;
-						TriangleMark collapsedTriangleMark;
-						if (quadMark.IsCollapsedToTriangle(out collapsedTriangleMark))
-						{
-							found = edgeFacePropertySet.TriangleProperties.TryGetValue(collapsedTriangleMark, out property);
-						}
-						else
-						{
-							found = edgeFacePropertySet.QuadProperties.TryGetValue(quadMark, out property);
-						}
-					}
-
-					if (found)
-					{
-						text.Append(" ");
-						text.Append(property.ToString());
+						found = edgeFacePropertySet.TriangleProperties.TryGetValue(collapsedTriangleMark, out property);
 					}
 					else
 					{
-						text.Append(" 0");
+						found = edgeFacePropertySet.QuadProperties.TryGetValue(quadMark, out property);
 					}
+				}
+
+				if (found)
+				{
+					text.Append(" ");
+					text.Append(property.ToString());
+				}
+				else
+				{
+					text.Append(" 0");
 				}
 			}
 		}
