@@ -25,7 +25,7 @@ namespace MeshEditor.LayerManager.Data
 		bool TryMapCellPointEdgeIntersection(int cell, out EdgeIntersection edgeIntersection);
 	}
 
-	class GeometryEntityMapping : IGeometryEntityMapping
+	public class GeometryEntityMapping : IGeometryEntityMapping
 	{
 		private readonly Dictionary<int, int> pointMap;
 		private readonly Dictionary<int, int> cellMap;
@@ -43,6 +43,26 @@ namespace MeshEditor.LayerManager.Data
 		public bool TryMapPoint(int from, out int to) => pointMap.TryGetValue(from, out to);
 
 		public bool TryMapCell(int from, out int to) => cellMap.TryGetValue(from, out to);
+
+		public Dictionary<int, int> GenerateReversedPointMapping()
+		{
+			var reversedPointMapping = new Dictionary<int, int>();
+			foreach (var kvp in pointMap)
+			{
+				reversedPointMapping.Add(kvp.Value, kvp.Key);
+			}
+			return reversedPointMapping;
+		}
+
+		public Dictionary<int, int> GenerateReversedCellMapping()
+		{
+			var reversedCellMapping = new Dictionary<int, int>();
+			foreach (var kvp in cellMap)
+			{
+				reversedCellMapping.Add(kvp.Value, kvp.Key);
+			}
+			return reversedCellMapping;
+		}
 	}
 
 	sealed class FilterGeometryEntityMapping : GeometryEntityMapping, IFilterGeometryEntityMapping

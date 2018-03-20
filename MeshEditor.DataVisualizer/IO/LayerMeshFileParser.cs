@@ -17,14 +17,16 @@ namespace MeshEditor.DataVisualizer.IO
 	{
 		readonly GeometryDescription geometry;
 		readonly AttributeDescription elementPropertyAttribute;
+		readonly IGeometryEntityMapping mappingFromGeometryEntityIndicesToIds;
 
-		public LayerMeshFileParser(string layerName, GeometryDescription geometry, AttributeDescription elementPropertyAttribute)
+		public LayerMeshFileParser(string layerName, GeometryDescription geometry, AttributeDescription elementPropertyAttribute, IGeometryEntityMapping mappingFromGeometryEntityIndicesToIds)
 		{
 			Debug.Assert(geometry != null);
 			Debug.Assert(elementPropertyAttribute == null || elementPropertyAttribute.Location == DataLocationType.Cells);
 			Name = layerName;
 			this.geometry = geometry;
 			this.elementPropertyAttribute = elementPropertyAttribute;
+			this.mappingFromGeometryEntityIndicesToIds = mappingFromGeometryEntityIndicesToIds;
 		}
 
 		public string Name { get; }
@@ -41,7 +43,10 @@ namespace MeshEditor.DataVisualizer.IO
 				float y = (geometry.NumberOfCoordinateComponents > 1) ? geometry.PointCoordinates[index * geometry.NumberOfCoordinateComponents + 1] : 0f;
 				float z = (geometry.NumberOfCoordinateComponents > 2) ? geometry.PointCoordinates[index * geometry.NumberOfCoordinateComponents + 2] : 0f;
 
-				Node node = new Node(id: index /* IMPORTANT: index as id is bound to result data, do not change*/, position: new Vector3(x, y, z), properties: null);
+				if (mappingFromGeometryEntityIndicesToIds == null || !mappingFromGeometryEntityIndicesToIds.TryMapPoint(index, out int nodeId))
+					nodeId = index;
+
+				Node node = new Node(id: nodeId, position: new Vector3(x, y, z), properties: null);
 				yield return node;
 			}
 		}
@@ -55,6 +60,14 @@ namespace MeshEditor.DataVisualizer.IO
 
 				int[] nodeIDs = geometry.CellConnectivity.CreateSlice(offset, nextOffset - offset);
 
+				if (mappingFromGeometryEntityIndicesToIds != null)
+				{
+					for (int i = 0; i < nodeIDs.Length; i++)
+					{
+						mappingFromGeometryEntityIndicesToIds.TryMapPoint(nodeIDs[i], out nodeIDs[i]);
+					}
+				}
+
 				var cellType = geometry.CellTypes[index];
 
 				if (cellType == CellType.HexaQuadratic) // numbering is differs between VTK file format and GiD file format, change it
@@ -62,9 +75,12 @@ namespace MeshEditor.DataVisualizer.IO
 					nodeIDs.SwapSegments(firstIndex: 12, secondIndex: 16, length: 4);
 				}
 
+				if (mappingFromGeometryEntityIndicesToIds == null || !mappingFromGeometryEntityIndicesToIds.TryMapCell(index, out int elementId))
+					elementId = index;
+
 				ElementDraft element = new ElementDraft
 				{
-					ID = index, // IMPORTANT: index as id is bound to result data, do not change
+					ID = elementId,
 					NodeIDs = nodeIDs,
 					Type = mapCellTypeToElementType(cellType)
 				};

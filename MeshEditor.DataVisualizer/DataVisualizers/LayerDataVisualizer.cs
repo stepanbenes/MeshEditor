@@ -103,13 +103,13 @@ namespace MeshEditor.DataVisualizer
 			{
 				if (currentScalarComponent.Location == DataLocationType.Points)
 				{
-					return currentScalarComponent.Values[node.ID];
+					return currentScalarComponent.Values[mapNodeIdToPointIndex(node.ID)];
 				}
 				Debug.Assert(currentScalarComponent.Location == DataLocationType.CellPoints || currentScalarComponent.Location == DataLocationType.Cells);
 			}
 			else if (currentVectorComponents != null)
 			{
-				return getVectorMagnitude(node.ID);
+				return getVectorMagnitude(mapNodeIdToPointIndex(node.ID));
 			}
 			return double.NaN;
 		}
@@ -125,19 +125,20 @@ namespace MeshEditor.DataVisualizer
 					{
 						if (hasElementSomeUndefinedNodeValues(element.ID))
 							return double.NaN; // avoid interpolation of undefined color with regular color
-						return currentScalarComponent.Values[node.ID];
+						return currentScalarComponent.Values[mapNodeIdToPointIndex(node.ID)];
 					}
 				case DataLocationType.CellPoints:
 					{
 						Debug.Assert(geometry != null);
-						int cellOffset = (element.ID > 0) ? geometry.CellOffsets[element.ID - 1] : 0;
+						int cellId = mapElementIdToCellIndex(element.ID);
+						int cellOffset = (cellId > 0) ? geometry.CellOffsets[cellId - 1] : 0;
 						int? nodeIndex = element.GetIndexOfNode_IncludingMiddleNodes(node);
 						Debug.Assert(nodeIndex.HasValue); // node has to be contained in element
 						return currentScalarComponent.Values[cellOffset + nodeIndex.Value]; // WARNING: correct node ordering is supposed
 					}
 				case DataLocationType.Cells:
 					{
-						return currentScalarComponent.Values[element.ID];
+						return currentScalarComponent.Values[mapElementIdToCellIndex(element.ID)];
 					}
 				default:
 					throw new NotSupportedException();
@@ -146,48 +147,87 @@ namespace MeshEditor.DataVisualizer
 
 		public override int[] GetIDsOfNodesWithMaximumDataValue()
 		{
+			IEnumerable<int> pointIndices;
+
 			if (currentScalarComponent != null)
 			{
 				switch (currentScalarComponent.Location)
 				{
 					case DataLocationType.Points:
-						return currentScalarComponent.Values.IndicesOfMaxElements().ToArray();
+						pointIndices = currentScalarComponent.Values.IndicesOfMaxElements();
+						break;
 					case DataLocationType.CellPoints:
-						return currentScalarComponent.Values.IndicesOfMaxElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
+						pointIndices = currentScalarComponent.Values.IndicesOfMaxElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]);
+						break;
 					case DataLocationType.Cells:
-						return currentScalarComponent.Values.IndicesOfMaxElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
+						pointIndices = currentScalarComponent.Values.IndicesOfMaxElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]));
+						break;
 					default:
 						throw new NotSupportedException();
 				}
 			}
 			else if (currentVectorComponents != null)
 			{
-				return enumerateVectorMagnitudes().IndicesOfMaxElements().ToArray();
+				pointIndices = enumerateVectorMagnitudes().IndicesOfMaxElements();
 			}
-			return new int[0]; //Array.Empty<int>();
+			else
+			{
+				return new int[0]; //Array.Empty<int>();
+			}
+
+			if (geometry.Mapping == null)
+			{
+				return pointIndices.ToArray();
+			}
+
+			var reversedMapping = (geometry.Mapping as GeometryEntityMapping)?.GenerateReversedPointMapping();
+
+			if (reversedMapping == null)
+			{
+				return pointIndices.ToArray();
+			}
+
+			return pointIndices.Select(pointIndex => reversedMapping[pointIndex]).ToArray();
 		}
 
 		public override int[] GetIDsOfNodesWithMinimumDataValue()
 		{
+			IEnumerable<int> cellIndices;
+
 			if (currentScalarComponent != null)
 			{
 				switch (currentScalarComponent.Location)
 				{
 					case DataLocationType.Points:
-						return currentScalarComponent.Values.IndicesOfMinElements().ToArray();
+						cellIndices = currentScalarComponent.Values.IndicesOfMinElements();
+						break;
 					case DataLocationType.CellPoints:
-						return currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]).ToArray();
+						cellIndices = currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]);
+						break;
 					case DataLocationType.Cells:
-						return currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex])).ToArray();
+						cellIndices = currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]));
+						break;
 					default:
 						throw new NotSupportedException();
 				}
 			}
 			else if (currentVectorComponents != null)
 			{
-				return enumerateVectorMagnitudes().IndicesOfMinElements().ToArray();
+				cellIndices = enumerateVectorMagnitudes().IndicesOfMinElements();
 			}
-			return new int[0]; //Array.Empty<int>();
+			else
+			{
+				return new int[0]; //Array.Empty<int>();
+			}
+
+			var reversedMapping = (geometry.Mapping as GeometryEntityMapping)?.GenerateReversedCellMapping();
+
+			if (reversedMapping == null)
+			{
+				return cellIndices.ToArray();
+			}
+
+			return cellIndices.Select(cellIndex => reversedMapping[cellIndex]).ToArray();
 		}
 
 
@@ -216,6 +256,20 @@ namespace MeshEditor.DataVisualizer
 		#endregion
 
 		#region Private methods
+
+		private int mapNodeIdToPointIndex(int nodeId)
+		{
+			if (geometry.Mapping != null && geometry.Mapping.TryMapPoint(nodeId, out int pointIndex))
+				return pointIndex;
+			return nodeId;
+		}
+
+		private int mapElementIdToCellIndex(int elementId)
+		{
+			if (geometry.Mapping != null && geometry.Mapping.TryMapCell(elementId, out int cellIndex))
+				return cellIndex;
+			return elementId;
+		}
 
 		private bool hasElementSomeUndefinedNodeValues(int elementId)
 		{
@@ -337,9 +391,11 @@ namespace MeshEditor.DataVisualizer
 
 				foreach (Node node in mesh.NodesEdgesIncidence.Keys)
 				{
-					double x = xComponent?.Values[node.ID] ?? 0.0;
-					double y = yComponent?.Values[node.ID] ?? 0.0;
-					double z = zComponent?.Values[node.ID] ?? 0.0;
+					int pointIndex = mapNodeIdToPointIndex(node.ID);
+
+					double x = xComponent?.Values[pointIndex] ?? 0.0;
+					double y = yComponent?.Values[pointIndex] ?? 0.0;
+					double z = zComponent?.Values[pointIndex] ?? 0.0;
 
 					if (double.IsNaN(x) || double.IsNaN(y) || double.IsNaN(z)) // continue if values are missing
 					{

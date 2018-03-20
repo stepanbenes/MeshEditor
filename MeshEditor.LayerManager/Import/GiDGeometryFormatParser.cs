@@ -57,8 +57,8 @@ namespace MeshEditor.LayerManager.Import
 			List<int> cellOffsets = new List<int>();
 			List<CellType> cellTypes = new List<CellType>();
 			List<int> elementProperties = new List<int>();
-			//List<int> elementNumbers = new List<int>();
-			//List<int> nodeNumbers = new List<int>();
+			List<int> elementNumbers = new List<int>();
+			List<int> nodeNumbers = new List<int>();
 
 			int dimension = 0;
 			int currentLineNumber = 0;
@@ -130,7 +130,7 @@ namespace MeshEditor.LayerManager.Import
 									int nodeId = ParseInt32(parts[0]);
 
 									mapping.AddPointMapping(from: nodeId, to: numberOfNodes);
-									//nodeNumbers.Add(nodeId);
+									nodeNumbers.Add(nodeId);
 
 									float positionX = (float)ParseFloat64(parts[1]); // WARNING: possible loss of precision
 									float positionY = (float)ParseFloat64(parts[2]); // WARNING: possible loss of precision
@@ -167,7 +167,7 @@ namespace MeshEditor.LayerManager.Import
 									int elementId = ParseInt32(parts[0]);
 
 									mapping.AddCellMapping(from: elementId, to: numberOfElements);
-									//elementNumbers.Add(elementId);
+									elementNumbers.Add(elementId);
 
 									for (int i = 0; i < nnode; i++)
 									{
@@ -217,8 +217,8 @@ namespace MeshEditor.LayerManager.Import
 
 			attributes = new[]
 			{
-				//new AttributeDescription { Name = AttributeDescription.KnownAttributeNames.NodeNumber, Location = DataLocationType.Points, Values = nodeNumbers.ToArray() },
-				//new AttributeDescription { Name = AttributeDescription.KnownAttributeNames.ElementNumber, Location = DataLocationType.Cells, Values = elementNumbers.ToArray() },
+				new AttributeDescription { Name = AttributeDescription.KnownAttributeNames.NodeNumber, Location = DataLocationType.Points, Values = nodeNumbers.ToArray() },
+				new AttributeDescription { Name = AttributeDescription.KnownAttributeNames.ElementNumber, Location = DataLocationType.Cells, Values = elementNumbers.ToArray() },
 				new AttributeDescription { Name = AttributeDescription.KnownAttributeNames.ElementProperty, Location = DataLocationType.Cells, Values = elementProperties.ToArray() },
 			};
 

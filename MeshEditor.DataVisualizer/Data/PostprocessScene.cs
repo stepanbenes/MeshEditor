@@ -258,6 +258,14 @@ namespace MeshEditor.DataVisualizer.Data
 			var geometry = await solutionHub.LoadGeometryAsync(layerId, newDataSelection.Mesh.Index, cancellationToken);
 
 			AttributeDescription elementPropertyAttribute = await loadAttributeAsync(AttributeDescription.KnownAttributeNames.ElementProperty, newDataSelection.Mesh, solutionHub, layerId, cancellationToken);
+			AttributeDescription nodeNumberAttribute = await loadAttributeAsync(AttributeDescription.KnownAttributeNames.NodeNumber, newDataSelection.Mesh, solutionHub, layerId, cancellationToken);
+			AttributeDescription elementNumberAttribute = await loadAttributeAsync(AttributeDescription.KnownAttributeNames.ElementNumber, newDataSelection.Mesh, solutionHub, layerId, cancellationToken);
+
+			IGeometryEntityMapping mappingFromGeometryEntityIndicesToIds = null;
+			if (nodeNumberAttribute != null || elementNumberAttribute != null)
+			{
+				mappingFromGeometryEntityIndicesToIds = createEntityMapping();
+			}
 
 			{
 				IMeshCreator meshCreator = new MeshConstructor();
@@ -267,7 +275,7 @@ namespace MeshEditor.DataVisualizer.Data
 				}
 
 				Mesh createdMesh;
-				using (var meshFileParser = new LayerMeshFileParser(layerName, geometry, elementPropertyAttribute))
+				using (var meshFileParser = new LayerMeshFileParser(layerName, geometry, elementPropertyAttribute, mappingFromGeometryEntityIndicesToIds))
 				{
 					createdMesh = await Task.Run(() => meshCreator.CreateMesh(meshFileParser, cancelled: () => cancellationToken.IsCancellationRequested, defaultPositionOffset: positionOffset, defaultResizeFactor: resizeFactor));
 					cancellationToken.ThrowIfCancellationRequested();
@@ -280,6 +288,30 @@ namespace MeshEditor.DataVisualizer.Data
 			}
 
 			return geometry;
+
+			IGeometryEntityMapping createEntityMapping()
+			{
+				var forwardMapping = new GeometryEntityMapping();
+				var backwardMapping = new GeometryEntityMapping();
+				if (nodeNumberAttribute != null)
+				{
+					for (int pointIndex = 0; pointIndex < nodeNumberAttribute.Values.Length; pointIndex++)
+					{
+						forwardMapping.AddPointMapping(from: nodeNumberAttribute.Values[pointIndex], to: pointIndex);
+						backwardMapping.AddPointMapping(from: pointIndex, to: nodeNumberAttribute.Values[pointIndex]);
+					}
+				}
+				if (elementNumberAttribute != null)
+				{
+					for (int cellIndex = 0; cellIndex < elementNumberAttribute.Values.Length; cellIndex++)
+					{
+						forwardMapping.AddCellMapping(from: elementNumberAttribute.Values[cellIndex], to: cellIndex);
+						backwardMapping.AddCellMapping(from: cellIndex, to: elementNumberAttribute.Values[cellIndex]);
+					}
+				}
+				geometry.Mapping = forwardMapping;
+				return backwardMapping;
+			}
 		}
 
 		private static async Task<AttributeDescription> loadAttributeAsync(string attributeName, IMeshFileDescriptor mesh, SolutionHub solutionHub, Guid layerId, CancellationToken cancellationToken)
