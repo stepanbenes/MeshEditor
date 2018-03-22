@@ -1048,15 +1048,16 @@ namespace MeshEditor.Data
 			}
 
 			{
+				string statusText;
 				double? minDataValue, maxDataValue;
-				getSelectionGroupDataValueRange(out minDataValue, out maxDataValue);
+				getSelectionGroupDataValueRange(out statusText, out minDataValue, out maxDataValue);
 				Debug.Assert(!(minDataValue.HasValue ^ maxDataValue.HasValue));
 				if (minDataValue.HasValue)
 				{
 					if (minDataValue == maxDataValue)
-						description += $" | Data value: {minDataValue:G4}";
+						description += $" | {statusText ?? "Data value"}: {minDataValue:G4}";
 					else
-						description += $" | Data value range: <{minDataValue:G4}, {maxDataValue:G4}>";
+						description += $" | {statusText ?? "Data value range"}: <{minDataValue:G4}, {maxDataValue:G4}>";
 				}
 			}
 
@@ -1372,8 +1373,9 @@ namespace MeshEditor.Data
 			return text.ToString();
 		}
 
-		private void getSelectionGroupDataValueRange(out double? minDataValue, out double? maxDataValue)
+		private void getSelectionGroupDataValueRange(out string statusText, out double? minDataValue, out double? maxDataValue)
 		{
+			statusText = null;
 			minDataValue = null;
 			maxDataValue = null;
 
@@ -1382,6 +1384,8 @@ namespace MeshEditor.Data
 			{
 				return;
 			}
+
+			statusText = dataVisualizer.StatusText;
 
 			foreach (var selectedItem in mesh.SelectedItems)
 			{

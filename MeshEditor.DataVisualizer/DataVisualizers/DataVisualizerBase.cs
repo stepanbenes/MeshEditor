@@ -38,7 +38,8 @@ namespace MeshEditor.DataVisualizer
 
 		public IVisualizerSettings Settings { get; }
 
-		public string ScalarDataDescription { get; protected set; }
+		public string StatusText { get; protected set; }
+		protected string LegendText { get; set; }
 
 		#endregion
 
@@ -136,7 +137,7 @@ namespace MeshEditor.DataVisualizer
 			// -----------------------------------------------------------------------
 
 			int captionHeight = 0;
-			string description = ScalarDataDescription;
+			string description = LegendText;
 			captionHeight += 60;
 			//if (settings.DisplayMethod == ScalarDataDisplayMethod.ApproximationError)
 			//{

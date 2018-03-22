@@ -90,5 +90,10 @@ namespace MeshEditor.CoreInterface
 		/// Returns ids of nodes (one or more) that have the minimum data value (currently set).
 		/// </summary>
 		int[] GetIDsOfNodesWithMinimumDataValue();
+
+		/// <summary>
+		/// Description of the currently displayed data that ought to be displayed in the status bar.
+		/// </summary>
+		string StatusText { get; }
 	}
 }

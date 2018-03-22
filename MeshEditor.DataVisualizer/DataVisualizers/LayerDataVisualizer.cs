@@ -341,11 +341,16 @@ namespace MeshEditor.DataVisualizer
 		private void buildDataDescription()
 		{
 			if (dataSelection == null)
-				ScalarDataDescription = "";
+			{
+				LegendText = "";
+				StatusText = null;
+			}
 			else
-				ScalarDataDescription = dataSelection.FieldName + Environment.NewLine + dataSelection.ComponentName + Environment.NewLine + "t = " + dataSelection.TimeStep;
+			{
+				LegendText = dataSelection.FieldName + Environment.NewLine + dataSelection.ComponentName + Environment.NewLine + "t = " + dataSelection.TimeStep;
+				StatusText = dataSelection.HasScalarSelection ? $"{dataSelection.FieldName}/{dataSelection.ComponentName}" : dataSelection.HasVectorSelection ? $"{dataSelection.VectorFieldName} vector magnitude" : null;
+			}
 		}
-
 
 		private void setupVectorField()
 		{

@@ -29,8 +29,6 @@ namespace MeshEditor.WinUI
 
 		public async Task<bool> CheckForUpdates()
 		{
-			Debug.Assert(IsUpdateServiceAvailableForThisPlatform);
-
 			ServerVersion = null;
 			PackageFileUri = null;
 
