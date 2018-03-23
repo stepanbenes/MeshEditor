@@ -14,7 +14,7 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ColorScaleSettingsForm : Form
 	{
-		IVisualizerSettings originalSettings, appliedSettings, currentSettings;
+		readonly IVisualizerSettings originalSettings, appliedSettings, currentSettings;
 		bool updatingView;
 
 		public ColorScaleSettingsForm(IVisualizerSettings settings)
@@ -32,6 +32,11 @@ namespace MeshEditor.DataVisualizer.UI
 		}
 
 		public event EventHandler SettingsChanged;
+
+		protected override void OnClosed(EventArgs e)
+		{
+			removeAllControlPointSetters();
+		}
 
 		private void updateView()
 		{
@@ -93,7 +98,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void setupControlPoints()
 		{
-			controlPointsPanel.Controls.Clear();
+			removeAllControlPointSetters();
 			int controlTop = 2;
 			foreach (var controlPoint in currentSettings.ColorScale.ControlPoints.Reverse())
 			{
@@ -105,6 +110,15 @@ namespace MeshEditor.DataVisualizer.UI
 				controlTop += controlPointSetter.Height;
 			}
 			//buttonRemove.Enabled = ColorScale.ControlPoints.Any();
+		}
+
+		private void removeAllControlPointSetters()
+		{
+			foreach(ColorScaleControlPointSetter control in controlPointsPanel.Controls)
+			{
+				control.Detach();
+			}
+			controlPointsPanel.Controls.Clear();
 		}
 
 		private static void copyProperties(IVisualizerSettings source, IVisualizerSettings destination)

@@ -247,7 +247,7 @@ namespace MeshEditor.DataVisualizer.Data
 		public void RemoveControlPoint(ControlPoint controlPoint)
 		{
 			controlPoint.PropertyChanged -= controlPoint_PropertyChanged;
-			
+
 			// remove from array
 			controlPoints = controlPoints.Where(cp => cp != controlPoint).ToArray();
 			updateControlPointValues();
@@ -315,19 +315,15 @@ namespace MeshEditor.DataVisualizer.Data
 
 		private void controlPoint_PropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			ControlPoint controlPoint = sender as ControlPoint;
-			if (controlPoint != null)
+			Debug.Assert(controlPoints.Length > 0);
+			switch (e.PropertyName)
 			{
-				Debug.Assert(controlPoints.Length > 0);
-				switch (e.PropertyName)
-				{
-					case "IsFixed":
-					case "Value":
-						updateControlPointValues();
-						break;
+				case "IsFixed":
+				case "Value":
+					updateControlPointValues();
+					break;
 					//case "Color":
 					//	break;
-				}
 			}
 		}
 

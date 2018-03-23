@@ -13,19 +13,19 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ColorScaleControlPointSetter : UserControl
 	{
-		ColorScale.ControlPoint controlPoint;
+		readonly ColorScale.ControlPoint controlPoint;
 
 		public ColorScaleControlPointSetter(ColorScale.ControlPoint controlPoint)
 		{
 			InitializeComponent();
 
 			this.controlPoint = controlPoint;
+			this.controlPoint.PropertyChanged += controlPoint_PropertyChanged;
 
-			checkBoxIsFixed.Checked = controlPoint.IsFixed;
-			textBoxValue.Text = controlPoint.Value.ToString();
-			textBoxValue.Enabled = controlPoint.IsFixed;
-			pictureBoxColor.BackColor = Utilities.Functions.ColorFromRgba32(controlPoint.Color);
+			updateValues();
 		}
+
+		private void controlPoint_PropertyChanged(object s, PropertyChangedEventArgs e) => updateValues();
 
 		private void pictureBoxPropertyColor_Click(object sender, EventArgs e)
 		{
@@ -54,6 +54,19 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			controlPoint.IsFixed = checkBoxIsFixed.Checked;
 			textBoxValue.Enabled = controlPoint.IsFixed;
+		}
+
+		private void updateValues()
+		{
+			checkBoxIsFixed.Checked = controlPoint.IsFixed;
+			textBoxValue.Text = controlPoint.Value.ToString();
+			textBoxValue.Enabled = controlPoint.IsFixed;
+			pictureBoxColor.BackColor = Utilities.Functions.ColorFromRgba32(controlPoint.Color);
+		}
+
+		public void Detach()
+		{
+			this.controlPoint.PropertyChanged -= controlPoint_PropertyChanged;
 		}
 	}
 }
