@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
+using System.Diagnostics;
 using MeshEditor.CoreInterface;
 using MeshEditor.Cuts;
-using System.Globalization;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -20,6 +21,7 @@ namespace MeshEditor.DataVisualizer.UI
 			this.scene = scene;
 			this.scene.CutPlaneDefinitionPointsChanged += scene_CutPlaneDefinitionPointsChanged;
 			this.FormClosed += form_FormClosed;
+			this.buttonOK.Enabled = false; // enable only after a cut plane is defined
 		}
 
 		private void clearCutPlanesAndPoints()
@@ -46,6 +48,7 @@ namespace MeshEditor.DataVisualizer.UI
 				if (scene.CutPlanes.Count > 0)
 				{
 					textBoxLayerName.Text = "slice " + scene.CutPlanes[0].Offset.ToString("0.00", CultureInfo.InvariantCulture);
+					buttonOK.Enabled = true;
 				}
 			}
 		}
@@ -68,6 +71,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
+			Debug.Assert(scene.CutPlanes.Count == 1);
+
 			CutPlane cutPlane = scene.CutPlanes.Single();
 			var normal = cutPlane.NormalVector;
 			var offset = cutPlane.Offset;
@@ -75,8 +80,8 @@ namespace MeshEditor.DataVisualizer.UI
 
 			FilterParams = new FilterParams(
 				filterParameters: new[] { normal.X, normal.Y, normal.Z, offset }.Select(p => p.ToString(CultureInfo.InvariantCulture)).ToArray(),
-				keyTimeSteps: new decimal[0], /**/
-				compressionParameters: new string[0], /**/
+				keyTimeSteps: new decimal[0], // no key time steps for now
+				compressionParameters: new string[0], // no compression for now
 				layerName: string.IsNullOrWhiteSpace(layerNameText) ? null : layerNameText,
 				constraintFieldName: null
 			);
