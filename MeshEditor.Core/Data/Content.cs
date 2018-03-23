@@ -63,7 +63,7 @@ namespace MeshEditor.Data
 
 		private RichVBO vbo; // main vertex buffer
 		private BeamVBO beamVBO; // vertex buffer for beams only
-		
+
 		private IndexBufferObject facesIBO;
 		private IndexBufferObject ordinaryEdgesIBO;
 		private IndexBufferObject softEdgesIBO;
@@ -72,7 +72,7 @@ namespace MeshEditor.Data
 		private IndexBufferObject middleNodesIBO;
 
 		private IndexBufferObject visibleNodesIBO;
-		
+
 		// ===============================
 
 		private HashSet<Node> visibleNodes;
@@ -153,7 +153,7 @@ namespace MeshEditor.Data
 		{
 			get { return beamNodesNotInFaces; }
 		}
-		
+
 		public bool VisibleNodesReady
 		{
 			get { return (this.visibleNodesIBO != null || this.visibleNodes != null); }
@@ -208,17 +208,17 @@ namespace MeshEditor.Data
 		/// </summary>
 		public bool CreateBuffers(PropertyColorsMode colorMode, float softBorderLimit, float hardBorderLimit)
 		{
-            bool ready = false;
+			bool ready = false;
 			if (RichVBO.IsSupported)
 			{
 #if !DEBUG
 				try
 				{
 #endif
-				
+
 				DeleteBuffers(); // first delete old buffers if exist
 
-				
+
 				Dictionary<Element2D, int[]> faceIndexMap;
 				//Dictionary<Node, int> nodeIndexMap;
 				Dictionary<WingedEdge, int> edgeIndexMap;
@@ -227,12 +227,12 @@ namespace MeshEditor.Data
 				this.vbo = new RichVBO();
 				vbo.CreateFrom(faces, GetAllExternalNodes(), colorMode, softBorderLimit, hardBorderLimit, out faceIndexMap, out edgeIndexMap, out this.nodeIndexMap);
 
-                // create vertex buffer object for beams
+				// create vertex buffer object for beams
 				if (this.beams.Count > 0)
 					createBeamVBO((colorMode & PropertyColorsMode.Beams) != 0);
 
-                // update colors
-                UpdateAllColors(new HashSet<ISelectable>()/**/, colorMode, softBorderLimit, hardBorderLimit);
+				// update colors
+				UpdateAllColors(new HashSet<ISelectable>()/**/, colorMode, softBorderLimit, hardBorderLimit);
 
 				// create index buffers
 				createIndexBuffers(faceIndexMap, edgeIndexMap, this.nodeIndexMap, softBorderLimit, hardBorderLimit);
@@ -246,7 +246,7 @@ namespace MeshEditor.Data
 					this.vbo = null;
 					this.nodeIndexMap = null;
 					Scene.MeshShadingModel = ShadingModel.Flat;
-                    ready = false;
+					ready = false;
 				}
 #endif
 
@@ -256,9 +256,9 @@ namespace MeshEditor.Data
 				this.vbo = null;
 				this.beamVBO = null;
 				Scene.MeshShadingModel = ShadingModel.Flat;
-                ready = false;
+				ready = false;
 			}
-            return ready;
+			return ready;
 		}
 
 		private void createIndexBuffers(Dictionary<Element2D, int[]> faceIndexMap, Dictionary<WingedEdge, int> edgeIndexMap, Dictionary<Node, int> nodeIndexMap, float softBorderLimit, float hardBorderLimit)
@@ -276,7 +276,7 @@ namespace MeshEditor.Data
 			indices = new List<int>(nodesEdgesIncidence.Count);
 			foreach (Node n in GetSimpleExternalNodes())
 				indices.Add(nodeIndexMap[n]);
-			
+
 			if (indices.Count > 0)
 				this.nodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
 			// ------------------------------------
@@ -297,7 +297,7 @@ namespace MeshEditor.Data
 			{
 				bool reversed;
 				int index = RichVBO.DecodeEdgeIndex(edgeIndexMap[e], out reversed);
-				
+
 				int first = nodeIndexMap[(reversed) ? e.EndNode : e.BeginNode];
 				int second = index;
 
@@ -330,7 +330,7 @@ namespace MeshEditor.Data
 
 		private void createBeamVBO(bool beamPropertyColors)
 		{
-			this.beamVBO = new BeamVBO(beams.Count, beams, beamPropertyColors); 
+			this.beamVBO = new BeamVBO(beams.Count, beams, beamPropertyColors);
 		}
 
 		public void DeleteBuffers()
@@ -472,13 +472,13 @@ namespace MeshEditor.Data
 			}
 		}
 
-        public void UpdateAllColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode, float edgeSoftBorderLimit, float edgeHardBorderLimit)
-        {
-            UpdateFaceColors(selected, colorMode);
-            UpdateNodeColors(selected, colorMode);
-            UpdateEdgeColors(selected, colorMode, edgeSoftBorderLimit, edgeHardBorderLimit);
-            UpdateBeamColors(selected, colorMode);
-        }
+		public void UpdateAllColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode, float edgeSoftBorderLimit, float edgeHardBorderLimit)
+		{
+			UpdateFaceColors(selected, colorMode);
+			UpdateNodeColors(selected, colorMode);
+			UpdateEdgeColors(selected, colorMode, edgeSoftBorderLimit, edgeHardBorderLimit);
+			UpdateBeamColors(selected, colorMode);
+		}
 
 		public void UpdateNodeColors(HashSet<ISelectable> selected, PropertyColorsMode colorMode)
 		{
@@ -642,13 +642,26 @@ namespace MeshEditor.Data
 
 					if (drawData)
 					{
+						int startIndex = index;
+						const uint minNormalColorCode = 0xFF000000;
+						uint minColorCode = minNormalColorCode;
 						Element element = faceIs2DElement ? (Element)face : (Element)faceOfElement.ParentElement;
 						foreach (Node node in face.IterateThroughAllNodes())
 						{
 							int dataColor = dataVisualizer.GetDataColor(node, element);
+							minColorCode = Math.Min(minColorCode, unchecked((uint)dataColor));
 							if (containsFace | containsParentElement) // if face is selected, invert color
 								dataColor = Utils.InvertColor(dataColor) & 0x00FFFFFF; // zero alpha byte to mark color to be handled special in iso-areas shader
 							items[index++] = dataColor;
+						}
+
+						// if some color is special, make all special :)
+						if (minColorCode < minNormalColorCode)
+						{
+							for (int i = startIndex; i < index; i++)
+							{
+								items[i] = unchecked((int)minColorCode);
+							}
 						}
 					}
 					else
@@ -697,13 +710,29 @@ namespace MeshEditor.Data
 				{
 					if (drawData)
 					{
+						const uint minNormalColorCode = 0xFF000000;
+
 						int beginColor = dataVisualizer.GetDataColor(beam.BeginNode, beam);
-						int endColor = dataVisualizer.GetDataColor(beam.EndNode, beam);
+						int endColor;
+
+						// if one color is special, make both special
+						if (unchecked((uint)beginColor) < minNormalColorCode)
+						{
+							endColor = beginColor;
+						}
+						else
+						{
+							endColor = dataVisualizer.GetDataColor(beam.EndNode, beam);
+							if (unchecked((uint)endColor) < minNormalColorCode)
+							{
+								beginColor = endColor;
+							}
+						}
 
 						if (selected.Contains(beam))
 						{
-							items[vertexIndex] = Utils.InvertColorSetAlpha(items[vertexIndex], alpha: 252);          // zero alpha byte to mark color to be handled special in iso-areas shader,
-							items[vertexIndex + 1] = Utils.InvertColorSetAlpha(items[vertexIndex + 1], alpha: 252);  // but blending is on, so I can't set alpha to zero, alpha is set almost to ze 1.0, but not entirely to help shader to distinguish selected entity
+							items[vertexIndex] = Utils.InvertColorSetAlpha(beginColor, alpha: 252);          // zero alpha byte to mark color to be handled special in iso-areas shader,
+							items[vertexIndex + 1] = Utils.InvertColorSetAlpha(endColor, alpha: 252);  // but blending is on, so I can't set alpha to zero, alpha is set almost to 1.0, but not entirely to help shader to distinguish selected entity
 						}
 						else
 						{
@@ -777,23 +806,23 @@ namespace MeshEditor.Data
 					// -------------------------------------------
 					// nastaveni barvy
 					IFaceOfElement3D faceOfElement = face as IFaceOfElement3D;
-                    bool containsFace = selectedItems.Contains(face);
-                    bool containsParentElement = false;
-                    bool faceIs2DElement = (faceOfElement == null || faceOfElement.ParentElement == null);
-                    if (!faceIs2DElement)
-                        containsParentElement = selectedItems.Contains(faceOfElement.ParentElement);
+					bool containsFace = selectedItems.Contains(face);
+					bool containsParentElement = false;
+					bool faceIs2DElement = (faceOfElement == null || faceOfElement.ParentElement == null);
+					if (!faceIs2DElement)
+						containsParentElement = selectedItems.Contains(faceOfElement.ParentElement);
 
-                    if (containsParentElement && containsFace)
-                        GL.Color3(Scene.SelectedFaceAndElementColor);
-                    else if (containsParentElement)
-                        GL.Color3(Scene.SelectedElementColor);
-                    else if (containsFace)
-                    {
-                        if (faceIs2DElement)
-                            GL.Color3(Scene.SelectedElementColor);
-                        else
-                            GL.Color3(Scene.SelectedFaceColor);
-                    }
+					if (containsParentElement && containsFace)
+						GL.Color3(Scene.SelectedFaceAndElementColor);
+					else if (containsParentElement)
+						GL.Color3(Scene.SelectedElementColor);
+					else if (containsFace)
+					{
+						if (faceIs2DElement)
+							GL.Color3(Scene.SelectedElementColor);
+						else
+							GL.Color3(Scene.SelectedFaceColor);
+					}
 					else if (elementPropertyColors && faceOfElement != null)
 					{
 						GL.Color3(PropertyColorProvider.Get(faceOfElement.ParentElement.Property));
@@ -806,7 +835,7 @@ namespace MeshEditor.Data
 						GL.Color3(Scene.FaceColor);
 					// ------------------------------------------
 
-                   
+
 					GL.Normal3(face.NormalVector);
 					face.Draw();
 				}
@@ -900,7 +929,7 @@ namespace MeshEditor.Data
 			GL.Vertex3(n.Position);
 		}
 
-        public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors)
+		public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors)
 		{
 			GL.LineWidth(Scene.BeamWidth);
 			if (Scene.LineSmooth)
@@ -919,12 +948,12 @@ namespace MeshEditor.Data
 				GL.Begin(BeginMode.Lines);
 				foreach (Beam beam in beams)
 				{
-                    if (selectedItems.Contains(beam))
-                        GL.Color3(Scene.SelectedBeamColor);
-                    else if (beamPropertyColors)
+					if (selectedItems.Contains(beam))
+						GL.Color3(Scene.SelectedBeamColor);
+					else if (beamPropertyColors)
 						GL.Color3(PropertyColorProvider.Get(beam.Property));
-                    else
-                        GL.Color3(Scene.BeamColor);
+					else
+						GL.Color3(Scene.BeamColor);
 					GL.Vertex3(beam.BeginNode.Position);
 					GL.Vertex3(beam.EndNode.Position);
 				}
@@ -1034,7 +1063,7 @@ namespace MeshEditor.Data
 			Vector3 winPos;
 			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
-			//TextPrinterOptions options = TextPrinterOptions.NoCache; /* !!! */
+								 //TextPrinterOptions options = TextPrinterOptions.NoCache; /* !!! */
 			foreach (Beam beam in beams)
 			{
 				if (!visibleNodes.Contains(beam.BeginNode) && !visibleNodes.Contains(beam.EndNode))
@@ -1055,7 +1084,7 @@ namespace MeshEditor.Data
 
 		private int getRGBA32ColorForFace(Element2D face, Property baseProperty, bool hatchTwinElements)
 		{
-            if (hatchTwinElements && face.HasTwinElements)
+			if (hatchTwinElements && face.HasTwinElements)
 			{
 				//if (baseProperty.IsZero)
 				//{
@@ -1093,7 +1122,7 @@ namespace MeshEditor.Data
 			foreach (var textPosition in textPositions)
 			{
 				Vector2 winPos = textPosition.Value;
-                area.X = winPos.X + 1;
+				area.X = winPos.X + 1;
 				area.Y = windowHeight - winPos.Y + 1;
 				textPrinter.Print(textPosition.Key, textFont, Scene.LabelColor, area);
 			}

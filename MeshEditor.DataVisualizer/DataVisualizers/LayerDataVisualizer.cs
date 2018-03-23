@@ -25,7 +25,6 @@ namespace MeshEditor.DataVisualizer
 		DataSelection dataSelection;
 		ComponentDataDescription currentScalarComponent;
 		IReadOnlyList<ComponentDataDescription> currentVectorComponents;
-		HashSet<int> elementsWithUndefinedNodeValues;
 
 		VectorField vectorField;
 
@@ -85,7 +84,6 @@ namespace MeshEditor.DataVisualizer
 		public void UpdateScalarData(ComponentDataDescription scalarComponent)
 		{
 			currentScalarComponent = scalarComponent;
-			elementsWithUndefinedNodeValues = null;
 			setupColorScale();
 		}
 
@@ -123,9 +121,6 @@ namespace MeshEditor.DataVisualizer
 			{
 				case DataLocationType.Points:
 					{
-						// TODO: WRONG!
-						if (hasElementSomeUndefinedNodeValues(element.ID))
-							return double.NaN; // avoid interpolation of undefined color with regular color
 						return currentScalarComponent.Values[mapNodeIdToPointIndex(node.ID)];
 					}
 				case DataLocationType.CellPoints:
@@ -270,33 +265,6 @@ namespace MeshEditor.DataVisualizer
 			if (geometry.Mapping != null && geometry.Mapping.TryMapCell(elementId, out int cellIndex))
 				return cellIndex;
 			return elementId;
-		}
-
-		private bool hasElementSomeUndefinedNodeValues(int elementId)
-		{
-			if (elementsWithUndefinedNodeValues == null)
-			{
-				// build cache
-				elementsWithUndefinedNodeValues = new HashSet<int>(getElementsWithUndefinedNodeValues());
-
-				IEnumerable<int> getElementsWithUndefinedNodeValues()
-				{
-					foreach (var element in mesh.Elements)
-					{
-						foreach (var node in element.IterateThroughAllNodes())
-						{
-							double value = GetDataValue(node);
-							if (double.IsNaN(value))
-							{
-								yield return element.ID;
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			return elementsWithUndefinedNodeValues.Contains(elementId);
 		}
 
 		private double getVectorMagnitude(int index)
