@@ -76,10 +76,7 @@ namespace MeshEditor.DataVisualizer.UI
 				}
 
 				linkLabelEditColorScale.Enabled = (visualizerSettings != null && dataSelection?.HasScalarSelection == true);
-				checkBoxInvertVectorArrows.Enabled = labelArrowLengthFactor.Enabled = trackBarVectorLengthFactor.Enabled = (visualizerSettings != null && dataSelection?.HasVectorSelection == true);
-				checkBoxInvertVectorArrows.Checked = visualizerSettings?.InvertVectorArrows ?? false;
-				trackBarVectorLengthFactor.Value = (int?)(visualizerSettings?.ArrowLengthFactor * 100m) ?? trackBarVectorLengthFactor.Minimum;
-				updateLabelArrowLengthFactor();
+				linkLabelVectorFieldSettings.Enabled = (visualizerSettings != null && dataSelection?.HasVectorSelection == true);
 			}
 			finally
 			{
@@ -220,7 +217,7 @@ namespace MeshEditor.DataVisualizer.UI
 			Debug.Assert(layerSummary != null);
 			var dataSelection = getDataSelection();
 			linkLabelEditColorScale.Enabled = dataSelection.HasScalarSelection;
-			checkBoxInvertVectorArrows.Enabled = labelArrowLengthFactor.Enabled = trackBarVectorLengthFactor.Enabled = dataSelection.HasVectorSelection;
+			linkLabelVectorFieldSettings.Enabled = dataSelection.HasVectorSelection;
 			DataSelectionChanged?.Invoke(this, new DataSelectionEventArgs(layerSummary.Id, layerSummary.Name, dataSelection));
 		}
 
@@ -240,43 +237,26 @@ namespace MeshEditor.DataVisualizer.UI
 			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count <= 3); // TODO: is this condition enough?
 		}
 
-		private void updateLabelArrowLengthFactor()
-		{
-			labelArrowLengthFactor.Text = $"Arrow length factor: {visualizerSettings?.ArrowLengthFactor}";
-		}
-
 		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs ea)
 		{
 			Debug.Assert(visualizerSettings != null);
-			ColorScaleSettingsForm editColorScaleForm = new ColorScaleSettingsForm(visualizerSettings)
+			var editColorScaleForm = new ColorScaleSettingsForm(visualizerSettings)
 			{
 				Owner = Application.OpenForms?[0],
 			};
 			editColorScaleForm.SettingsChanged += (s, e) => VisualizerSettingsChanged?.Invoke(s, e);
+			editColorScaleForm.ShowDialog();
+		}
 
-			if (editColorScaleForm.ShowDialog() == DialogResult.OK)
+		private void linkLabelVectorFieldSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs ea)
+		{
+			Debug.Assert(visualizerSettings != null);
+			var vectorFieldVisualizationSettingsForm = new VectorFieldVisualizationSettingsForm(visualizerSettings)
 			{
-				VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
-			}
-		}
-
-		private void checkBoxInvertVectorArrows_CheckedChanged(object sender, EventArgs e)
-		{
-			if (updatingDataSource)
-				return;
-			Debug.Assert(visualizerSettings != null);
-			visualizerSettings.InvertVectorArrows = checkBoxInvertVectorArrows.Checked;
-			VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-		private void trackBarVectorLengthFactor_ValueChanged(object sender, EventArgs e)
-		{
-			if (updatingDataSource)
-				return;
-			Debug.Assert(visualizerSettings != null);
-			visualizerSettings.ArrowLengthFactor = trackBarVectorLengthFactor.Value * 0.01m;
-			updateLabelArrowLengthFactor();
-			VisualizerSettingsChanged?.Invoke(this, EventArgs.Empty);
+				Owner = Application.OpenForms?[0],
+			};
+			vectorFieldVisualizationSettingsForm.SettingsChanged += (s, e) => VisualizerSettingsChanged?.Invoke(s, e);
+			vectorFieldVisualizationSettingsForm.ShowDialog();
 		}
 
 		#endregion

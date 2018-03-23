@@ -16,17 +16,16 @@ namespace MeshEditor.DataVisualizer.Graphics
 
 		public decimal LengthFactor { get; }
 		public bool InvertVectorArrows { get; }
+		public bool IsArrowLengthFixed { get; }
 
-		public VectorField(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> vectors, float minDistanceBetweenPoints, double scale, decimal lengthFactor, bool invertVectorArrows)
+		public VectorField(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> vectors, float minDistanceBetweenPoints, double scale, decimal lengthFactor, bool invertVectorArrows, bool isArrowLengthFixed)
 		{
 			Debug.Assert(positions != null && vectors != null);
 			Debug.Assert(positions.Count == vectors.Count);
-			Debug.Assert(scale > 0.0);
-			Debug.Assert(lengthFactor > 0m);
 
 			LengthFactor = lengthFactor;
 			InvertVectorArrows = invertVectorArrows;
-
+			IsArrowLengthFixed = isArrowLengthFixed;
 			float resizeFactor = (float)((double)lengthFactor * scale);
 			createBuffers(positions, vectors, minDistanceBetweenPoints, resizeFactor, invertVectorArrows, out linesVBO, out arrowsVBO);
 		}

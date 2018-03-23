@@ -173,6 +173,12 @@
     <Compile Include="UI\SolutionListView.Designer.cs">
       <DependentUpon>SolutionListView.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\VectorFieldVisualizationSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\VectorFieldVisualizationSettingsForm.Designer.cs">
+      <DependentUpon>VectorFieldVisualizationSettingsForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\ColorScaleControlPointSetter.resx">
@@ -213,6 +219,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\SolutionListView.resx">
       <DependentUpon>SolutionListView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\VectorFieldVisualizationSettingsForm.resx">
+      <DependentUpon>VectorFieldVisualizationSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

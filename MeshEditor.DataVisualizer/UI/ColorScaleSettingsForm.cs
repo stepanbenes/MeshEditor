@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -13,17 +14,20 @@ namespace MeshEditor.DataVisualizer.UI
 {
 	public partial class ColorScaleSettingsForm : Form
 	{
-		IVisualizerSettings originalSettings, currentSettings;
+		IVisualizerSettings originalSettings, appliedSettings, currentSettings;
 		bool updatingView;
 
 		public ColorScaleSettingsForm(IVisualizerSettings settings)
 		{
+			Debug.Assert(settings != null);
 			InitializeComponent();
 			comboBoxColorScaleType.Items.AddRange(Enum.GetValues(typeof(ColorScale.Types)).Cast<object>().ToArray());
 			comboBoxNumberOfSubIntervals.Items.AddRange(Enumerable.Range(1, 5).Cast<object>().ToArray());
-			originalSettings = settings;
+			appliedSettings = settings;
+			originalSettings = new VisualizerSettings();
 			currentSettings = new VisualizerSettings();
-			copyProperties(originalSettings, currentSettings);
+			copyProperties(appliedSettings, originalSettings);
+			copyProperties(appliedSettings, currentSettings);
 			updateView();
 		}
 
@@ -34,9 +38,9 @@ namespace MeshEditor.DataVisualizer.UI
 			try
 			{
 				updatingView = true;
-				checkBoxShowIsoAreas.Checked = originalSettings.DrawIsoAreas;
-				comboBoxNumberOfSubIntervals.SelectedItem = originalSettings.IsoAreasSubIntervalNumber;
-				comboBoxColorScaleType.SelectedItem = originalSettings.ColorScale?.Type;
+				checkBoxShowIsoAreas.Checked = currentSettings.DrawIsoAreas;
+				comboBoxNumberOfSubIntervals.SelectedItem = currentSettings.IsoAreasSubIntervalNumber;
+				comboBoxColorScaleType.SelectedItem = currentSettings.ColorScale?.Type;
 				setupControlPoints();
 			}
 			finally
@@ -69,7 +73,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			copyProperties(currentSettings, originalSettings);
+			copyProperties(currentSettings, appliedSettings);
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
 
 			DialogResult = DialogResult.OK; // closes dialog
@@ -77,7 +81,13 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private void buttonApply_Click(object sender, EventArgs e)
 		{
-			copyProperties(currentSettings, originalSettings);
+			copyProperties(currentSettings, appliedSettings);
+			SettingsChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void buttonCancel_Click(object sender, EventArgs e)
+		{
+			copyProperties(originalSettings, appliedSettings);
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 
@@ -99,7 +109,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private static void copyProperties(IVisualizerSettings source, IVisualizerSettings destination)
 		{
-			destination.ColorScale = source.ColorScale;
+			destination.ColorScale = new ColorScale(source.ColorScale); // clone color scale object
 			destination.DrawIsoAreas = source.DrawIsoAreas;
 			destination.IsoAreasSubIntervalNumber = source.IsoAreasSubIntervalNumber;
 		}

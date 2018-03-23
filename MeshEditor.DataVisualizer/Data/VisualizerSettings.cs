@@ -14,7 +14,12 @@ namespace MeshEditor.DataVisualizer.Data
 		decimal ArrowLengthFactor { get; set; }
 
 		/// <summary>
-		/// Gets or Sets flag indicating whether to invert vector arrows.
+		/// Gets or sets flag indicating wheather to scale arrow length according to data value.
+		/// </summary>
+		bool IsArrowLengthFixed { get; set; }
+
+		/// <summary>
+		/// Gets or Sets flag indicating whether to invert vector arrows (move end of vectors to nodes).
 		/// </summary>
 		bool InvertVectorArrows { get; set; }
 
@@ -49,7 +54,8 @@ namespace MeshEditor.DataVisualizer.Data
 			DrawIsoAreas = false;
 			IsoAreasSubIntervalNumber = 5;
 			ArrowLengthFactor = 1.0m;
-			InvertVectorArrows = false;
+			InvertVectorArrows = true;
+			IsArrowLengthFixed = false;
 		}
 
 		public ColorScale ColorScale { get; set; }
@@ -61,6 +67,8 @@ namespace MeshEditor.DataVisualizer.Data
 		public bool ShowColorScaleLegend { get; set; }
 
 		public decimal ArrowLengthFactor { get; set; }
+
+		public bool IsArrowLengthFixed { get; set; }
 
 		public bool InvertVectorArrows { get; set; }
 	}

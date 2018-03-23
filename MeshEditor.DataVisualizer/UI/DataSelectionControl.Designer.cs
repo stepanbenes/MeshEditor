@@ -36,11 +36,8 @@
 			this.labelCaption = new System.Windows.Forms.Label();
 			this.comboBoxVectorField = new System.Windows.Forms.ComboBox();
 			this.label4 = new System.Windows.Forms.Label();
-			this.labelArrowLengthFactor = new System.Windows.Forms.Label();
-			this.trackBarVectorLengthFactor = new System.Windows.Forms.TrackBar();
-			this.checkBoxInvertVectorArrows = new System.Windows.Forms.CheckBox();
 			this.linkLabelEditColorScale = new System.Windows.Forms.LinkLabel();
-			((System.ComponentModel.ISupportInitialize)(this.trackBarVectorLengthFactor)).BeginInit();
+			this.linkLabelVectorFieldSettings = new System.Windows.Forms.LinkLabel();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -136,41 +133,6 @@
 			this.label4.TabIndex = 7;
 			this.label4.Text = "Vectors";
 			// 
-			// labelArrowLengthFactor
-			// 
-			this.labelArrowLengthFactor.AutoSize = true;
-			this.labelArrowLengthFactor.Location = new System.Drawing.Point(4, 266);
-			this.labelArrowLengthFactor.Name = "labelArrowLengthFactor";
-			this.labelArrowLengthFactor.Size = new System.Drawing.Size(127, 17);
-			this.labelArrowLengthFactor.TabIndex = 13;
-			this.labelArrowLengthFactor.Text = "Arrow length factor";
-			// 
-			// trackBarVectorLengthFactor
-			// 
-			this.trackBarVectorLengthFactor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.trackBarVectorLengthFactor.LargeChange = 10;
-			this.trackBarVectorLengthFactor.Location = new System.Drawing.Point(7, 287);
-			this.trackBarVectorLengthFactor.Maximum = 200;
-			this.trackBarVectorLengthFactor.Minimum = 1;
-			this.trackBarVectorLengthFactor.Name = "trackBarVectorLengthFactor";
-			this.trackBarVectorLengthFactor.Size = new System.Drawing.Size(282, 56);
-			this.trackBarVectorLengthFactor.SmallChange = 5;
-			this.trackBarVectorLengthFactor.TabIndex = 12;
-			this.trackBarVectorLengthFactor.Value = 100;
-			this.trackBarVectorLengthFactor.ValueChanged += new System.EventHandler(this.trackBarVectorLengthFactor_ValueChanged);
-			// 
-			// checkBoxInvertVectorArrows
-			// 
-			this.checkBoxInvertVectorArrows.AutoSize = true;
-			this.checkBoxInvertVectorArrows.Location = new System.Drawing.Point(7, 240);
-			this.checkBoxInvertVectorArrows.Name = "checkBoxInvertVectorArrows";
-			this.checkBoxInvertVectorArrows.Size = new System.Drawing.Size(154, 21);
-			this.checkBoxInvertVectorArrows.TabIndex = 11;
-			this.checkBoxInvertVectorArrows.Text = "Invert vector arrows";
-			this.checkBoxInvertVectorArrows.UseVisualStyleBackColor = true;
-			this.checkBoxInvertVectorArrows.CheckedChanged += new System.EventHandler(this.checkBoxInvertVectorArrows_CheckedChanged);
-			// 
 			// linkLabelEditColorScale
 			// 
 			this.linkLabelEditColorScale.AutoSize = true;
@@ -183,14 +145,23 @@
 			this.linkLabelEditColorScale.Text = "Color scale settings";
 			this.linkLabelEditColorScale.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelEditColorScale_LinkClicked);
 			// 
+			// linkLabelVectorFieldSettings
+			// 
+			this.linkLabelVectorFieldSettings.AutoSize = true;
+			this.linkLabelVectorFieldSettings.Location = new System.Drawing.Point(4, 242);
+			this.linkLabelVectorFieldSettings.Name = "linkLabelVectorFieldSettings";
+			this.linkLabelVectorFieldSettings.Size = new System.Drawing.Size(213, 17);
+			this.linkLabelVectorFieldSettings.TabIndex = 15;
+			this.linkLabelVectorFieldSettings.TabStop = true;
+			this.linkLabelVectorFieldSettings.Text = "Vector field visualization settings";
+			this.linkLabelVectorFieldSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelVectorFieldSettings_LinkClicked);
+			// 
 			// DataSelectionControl
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.Controls.Add(this.linkLabelVectorFieldSettings);
 			this.Controls.Add(this.linkLabelEditColorScale);
-			this.Controls.Add(this.labelArrowLengthFactor);
-			this.Controls.Add(this.trackBarVectorLengthFactor);
-			this.Controls.Add(this.checkBoxInvertVectorArrows);
 			this.Controls.Add(this.comboBoxVectorField);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.labelCaption);
@@ -201,8 +172,7 @@
 			this.Controls.Add(this.label1);
 			this.Margin = new System.Windows.Forms.Padding(4);
 			this.Name = "DataSelectionControl";
-			this.Size = new System.Drawing.Size(293, 367);
-			((System.ComponentModel.ISupportInitialize)(this.trackBarVectorLengthFactor)).EndInit();
+			this.Size = new System.Drawing.Size(293, 274);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -218,9 +188,7 @@
 		private System.Windows.Forms.Label labelCaption;
 		private System.Windows.Forms.ComboBox comboBoxVectorField;
 		private System.Windows.Forms.Label label4;
-		private System.Windows.Forms.Label labelArrowLengthFactor;
-		private System.Windows.Forms.TrackBar trackBarVectorLengthFactor;
-		private System.Windows.Forms.CheckBox checkBoxInvertVectorArrows;
 		private System.Windows.Forms.LinkLabel linkLabelEditColorScale;
+		private System.Windows.Forms.LinkLabel linkLabelVectorFieldSettings;
 	}
 }

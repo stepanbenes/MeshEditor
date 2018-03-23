@@ -72,7 +72,7 @@ namespace MeshEditor.DataVisualizer
 			if (vectorField != null)
 			{
 				// rebuild vectorField if needed
-				if (vectorField.LengthFactor != Settings.ArrowLengthFactor || vectorField.InvertVectorArrows != Settings.InvertVectorArrows)
+				if (vectorField.LengthFactor != Settings.ArrowLengthFactor || vectorField.InvertVectorArrows != Settings.InvertVectorArrows || vectorField.IsArrowLengthFixed != Settings.IsArrowLengthFixed)
 				{
 					setupVectorField();
 				}
@@ -123,6 +123,7 @@ namespace MeshEditor.DataVisualizer
 			{
 				case DataLocationType.Points:
 					{
+						// TODO: WRONG!
 						if (hasElementSomeUndefinedNodeValues(element.ID))
 							return double.NaN; // avoid interpolation of undefined color with regular color
 						return currentScalarComponent.Values[mapNodeIdToPointIndex(node.ID)];
@@ -417,7 +418,12 @@ namespace MeshEditor.DataVisualizer
 					zRange.MergeWith(z);
 
 					positions.Add(node.Position);
-					vectors.Add(new Vector3((float)x, (float)y, (float)z));
+					Vector3 v = new Vector3((float)x, (float)y, (float)z);
+					if (Settings.IsArrowLengthFixed)
+					{
+						v.Normalize();
+					}
+					vectors.Add(v);
 				}
 
 				double xMaxValue = xRange.GetMaxAbsValue();
@@ -435,18 +441,18 @@ namespace MeshEditor.DataVisualizer
 				double scale;
 				if (xMaxValue == maxAbsValue)
 				{
-					scale = largestElementDimensions.X / xMaxValue;
+					scale = Settings.IsArrowLengthFixed ? largestElementDimensions.X : largestElementDimensions.X / xMaxValue;
 				}
 				else if (yMaxValue == maxAbsValue)
 				{
-					scale = largestElementDimensions.Y / yMaxValue;
+					scale = Settings.IsArrowLengthFixed ? largestElementDimensions.Y : largestElementDimensions.Y / yMaxValue;
 				}
 				else
 				{
-					scale = largestElementDimensions.Z / zMaxValue;
+					scale = Settings.IsArrowLengthFixed ? largestElementDimensions.Z : largestElementDimensions.Z / zMaxValue;
 				}
 
-				return new VectorField(positions, vectors, mesh.MinimalElementRadius, scale, Settings.ArrowLengthFactor, Settings.InvertVectorArrows);
+				return new VectorField(positions, vectors, mesh.MinimalElementRadius, scale, Settings.ArrowLengthFactor, Settings.InvertVectorArrows, Settings.IsArrowLengthFixed);
 			}
 		}
 
