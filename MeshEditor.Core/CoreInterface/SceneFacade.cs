@@ -24,7 +24,7 @@ namespace MeshEditor.CoreInterface
 	/// <summary>
 	/// Interface between core and GUI
 	/// </summary>
-	public partial class SceneFacade
+	public class SceneFacade
 	{
 
 		#region Static fields, static constructor
