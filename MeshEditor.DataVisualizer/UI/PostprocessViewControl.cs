@@ -389,7 +389,7 @@ namespace MeshEditor.DataVisualizer.UI
 			if (firstMesh != null)
 			{
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				dataSelection = new DataSelection(timeStep: firstMesh.TimeSteps.First(), mesh: firstMesh);
+				dataSelection = new DataSelection(timeStep: firstMesh.TimeSteps.FirstOrDefault() /* use value zero if no time step is present */, mesh: firstMesh);
 				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 
 				// update colors, repaint mesh in all windows, compute visible nodes, update caption, status, ...

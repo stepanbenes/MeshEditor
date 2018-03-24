@@ -278,10 +278,13 @@ namespace MeshEditor.LayerManager
 				IEnumerable<AttributeDescription> filteredAttributeDescriptions = filterAttributesByGeometry(
 					filteredGeometry,
 					originalLayer: parentLayer,
-					originalAttributeIndices: attributes.Select(a => a.Index)
+					originalAttributeIndices: attributes.Where(a => isAllowedToBeFiltered(a.FieldName)).Select(a => a.Index)
 				);
 
 				return generateMeshFileAndAttributeFiles(meshIndex++, newLayerId, filteredGeometry, filteredAttributeDescriptions, timeSteps, ref attributeIndex);
+
+				// do not filter NodeNumber attribute and ElementNumber attribute, it does not make any sense and causes error when mapping entity numbers
+				bool isAllowedToBeFiltered(string attributeName) => attributeName != AttributeDescription.KnownAttributeNames.NodeNumber && attributeName != AttributeDescription.KnownAttributeNames.ElementNumber;
 			}
 		}
 
@@ -707,7 +710,7 @@ namespace MeshEditor.LayerManager
 
 		private MeshFileDescriptor generateMeshFileAndAttributeFiles(int meshIndex, Guid layerId, GeometryDescription geometry, IEnumerable<AttributeDescription> attributeDescriptions, IReadOnlyList<decimal> timeSteps, ref int attributeIndex)
 		{
-			logger?.LogOperationProgress("Generating mesh file" + buildTimeStepStatusText(timeSteps?.Count ?? 0, timeSteps?[0]));
+			logger?.LogOperationProgress("Generating mesh file" + buildTimeStepStatusText(timeSteps?.Count ?? 0, timeSteps?.Count > 0 ? timeSteps[0] : (decimal?)null));
 			MeshFile layerMesh = createLayerMeshFromGeometry(geometry, layerId, meshIndex);
 			storeLayerFile(layerMesh, getLayerMeshRecordName(layerId, meshIndex));
 
