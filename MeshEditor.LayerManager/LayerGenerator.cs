@@ -252,7 +252,7 @@ namespace MeshEditor.LayerManager
 
 			string getDefaultFilterLayerName()
 			{
-				// TODO: use FormattableString.Invariant istead of ToString(CultureInfo.InvariantCulture) after upgrade to netcoreapp2.0
+				// TODO: use FormattableString.Invariant instead of ToString(CultureInfo.InvariantCulture) after upgrade to netcoreapp2.0
 				switch (filter)
 				{
 					case SurfaceFilter _:

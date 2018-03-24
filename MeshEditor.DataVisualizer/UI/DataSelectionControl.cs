@@ -234,7 +234,7 @@ namespace MeshEditor.DataVisualizer.UI
 
 		private IEnumerable<(string fieldName, FieldDescriptor fieldDescriptor)> getAvailableVectorFields(decimal selectedTimeStep)
 		{
-			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count <= 3); // TODO: is this condition enough?
+			return getAvailableFields(selectedTimeStep).Where(field => field.fieldDescriptor.Components.Count <= 3); // NOTE: is this condition enough?
 		}
 
 		private void linkLabelEditColorScale_LinkClicked(object sender, LinkLabelLinkClickedEventArgs ea)

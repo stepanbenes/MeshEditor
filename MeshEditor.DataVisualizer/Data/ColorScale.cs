@@ -40,7 +40,6 @@ namespace MeshEditor.DataVisualizer.Data
 				this.value = toClone.value;
 			}
 
-			// TODO: while setting fixed values, check for monotony must be done
 			public bool IsFixed
 			{
 				get { return isFixed; }

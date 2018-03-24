@@ -181,14 +181,13 @@ namespace MeshEditor.WinUI
 
 		private DataValueRange getDataValueLimitToShow()
 		{
-			//throw new NotImplementedException(); // TODO: check if min is less than max
 			double? min = null, max = null;
 			if (checkBoxMinimum.Checked)
 				min = double.Parse(textBoxMinimum.Text);
 			if (checkBoxMaximum.Checked)
 				max = double.Parse(textBoxMaximum.Text);
 
-			ensureMonotony(ref min, ref max);
+			ensureMonotony(ref min, ref max); // check if min is less than max
 
 			return (min == null && max == null) ? null : new DataValueRange(min, max, checkBoxInverse.Checked); // return null, if value limit is not set
 		}

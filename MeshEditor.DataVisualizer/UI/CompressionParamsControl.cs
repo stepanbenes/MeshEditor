@@ -77,7 +77,7 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				string[] tokens = textBoxKeyTimeSteps.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 				if (!tokens.Any())
-					return Enumerable.Repeat(decimal.MaxValue, 1); /**/ // was double.PositiveInfinity, but decimal does not have infinity
+					return Enumerable.Repeat(decimal.MaxValue, 1); // NOTE: was double.PositiveInfinity, but decimal does not have infinity
 				return tokens.Select(token => decimal.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture)); // TODO: handle parsing errors better
 			}
 			else

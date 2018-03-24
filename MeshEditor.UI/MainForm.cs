@@ -1124,7 +1124,7 @@ namespace MeshEditor.WinUI
 				if (c.SceneFacade.ContainsMesh && !controls.Contains(c))
 					processedMeshes.Add(c.SceneFacade.ActiveMeshUniqueIdentifier.Value);
 			// ----------------------------------------------------
-			// TODO: iterating only over active meshes, there may be more meshes in each control
+			// NOTE: iterating only over active meshes, there may be more meshes in each control
 			foreach (OpenGLControl control in controls)
 			{
 				if (control.SceneFacade.ContainsMesh && processedMeshes.Add(control.SceneFacade.ActiveMeshUniqueIdentifier.Value))
