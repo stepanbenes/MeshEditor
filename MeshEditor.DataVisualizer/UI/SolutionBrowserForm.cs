@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.Common.Logging;
+using MeshEditor.CoreInterface;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -240,29 +241,35 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
-		//private void buttonBrowseLocalSolutions_Click(object sender, EventArgs e)
-		//{
-		//	OpenFileDialog dialog = new OpenFileDialog();
-		//	dialog.Filter = $"Solution files (*{SceneFacade.SolutionFileExtension})|*{SceneFacade.SolutionFileExtension}|All files (*.*)|*.*";
-		//	dialog.FilterIndex = 0;
-		//	dialog.AutoUpgradeEnabled = true;
-		//	//dialog.InitialDirectory = PostprocessViewControl.GetDefaultSolutionDirectory().Replace('/', '\\'); // TODO: test on mono
-		//	if (dialog.ShowDialog() == DialogResult.OK)
-		//	{
-		//		LocalSolutionFileName = dialog.FileName;
-		//		SolutionLocation = SolutionLocationType.Local;
-		//		DialogResult = DialogResult.OK; // close dialog
-		//	}
-		//}
-
 		private async void buttonChangeDefaultSolutionDirectory_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-			folderBrowserDialog.SelectedPath = SolutionHub.GetLocalStorageDefaultDirectory().Replace('/', '\\');
+			FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+			{
+				SelectedPath = SolutionHub.GetLocalStorageDefaultDirectory()
+			};
+
 			if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
 			{
 				SolutionHub.SetLocalStorageDefaultDirectory(folderBrowserDialog.SelectedPath);
 				await initLocalSolutionListAsync(formClosedCancellationSource.Token);
+			}
+		}
+
+		private void buttonBrowse_Click(object sender, EventArgs e)
+		{
+			OpenFileDialog dialog = new OpenFileDialog
+			{
+				Filter = $"Solution files (*{SceneFacade.SolutionFileExtension})|*{SceneFacade.SolutionFileExtension}|All files (*.*)|*.*",
+				FilterIndex = 0,
+				AutoUpgradeEnabled = true,
+				InitialDirectory = SolutionHub.GetLocalStorageDefaultDirectory()
+			};
+
+			if (dialog.ShowDialog() == DialogResult.OK)
+			{
+				LocalSolutionFileName = dialog.FileName;
+				SolutionLocation = SolutionLocationType.Local;
+				DialogResult = DialogResult.OK; // close dialog
 			}
 		}
 	}
