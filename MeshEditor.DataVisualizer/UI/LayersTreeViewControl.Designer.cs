@@ -76,7 +76,7 @@
             this.toolStripSeparator1,
             this.reloadLayerToolStripMenuItem});
 			this.contextMenuStrip.Name = "contextMenuStrip";
-			this.contextMenuStrip.Size = new System.Drawing.Size(162, 82);
+			this.contextMenuStrip.Size = new System.Drawing.Size(211, 110);
 			this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
 			// 
 			// applyFilterToolStripMenuItem
@@ -86,46 +86,46 @@
             this.sliceToolStripMenuItem,
             this.isosurfaceToolStripMenuItem});
 			this.applyFilterToolStripMenuItem.Name = "applyFilterToolStripMenuItem";
-			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
+			this.applyFilterToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
 			this.applyFilterToolStripMenuItem.Text = "Apply filter...";
 			// 
 			// deformationToolStripMenuItem
 			// 
 			this.deformationToolStripMenuItem.Name = "deformationToolStripMenuItem";
-			this.deformationToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
+			this.deformationToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.deformationToolStripMenuItem.Text = "Deformation...";
 			this.deformationToolStripMenuItem.Click += new System.EventHandler(this.deformationToolStripMenuItem_Click);
 			// 
 			// sliceToolStripMenuItem
 			// 
 			this.sliceToolStripMenuItem.Name = "sliceToolStripMenuItem";
-			this.sliceToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
+			this.sliceToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.sliceToolStripMenuItem.Text = "Slice...";
 			this.sliceToolStripMenuItem.Click += new System.EventHandler(this.sliceToolStripMenuItem_Click);
 			// 
 			// isosurfaceToolStripMenuItem
 			// 
-			this.isosurfaceToolStripMenuItem.Enabled = false;
 			this.isosurfaceToolStripMenuItem.Name = "isosurfaceToolStripMenuItem";
-			this.isosurfaceToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
+			this.isosurfaceToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.isosurfaceToolStripMenuItem.Text = "Iso-surface...";
+			this.isosurfaceToolStripMenuItem.Click += new System.EventHandler(this.isosurfaceToolStripMenuItem_Click);
 			// 
 			// deleteLayerToolStripMenuItem
 			// 
 			this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
-			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
+			this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
 			this.deleteLayerToolStripMenuItem.Text = "Delete layer";
 			this.deleteLayerToolStripMenuItem.Click += new System.EventHandler(this.deleteLayerToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(158, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(207, 6);
 			// 
 			// reloadLayerToolStripMenuItem
 			// 
 			this.reloadLayerToolStripMenuItem.Name = "reloadLayerToolStripMenuItem";
-			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(161, 24);
+			this.reloadLayerToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
 			this.reloadLayerToolStripMenuItem.Text = "Reload layer";
 			this.reloadLayerToolStripMenuItem.Click += new System.EventHandler(this.reloadLayerToolStripMenuItem_Click);
 			// 

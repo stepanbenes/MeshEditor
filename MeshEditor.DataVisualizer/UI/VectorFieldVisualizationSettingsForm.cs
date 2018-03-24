@@ -45,6 +45,8 @@ namespace MeshEditor.DataVisualizer.UI
 		{
 			copyProperties(originalSettings, appliedSettings);
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
+
+			DialogResult = DialogResult.Cancel;
 		}
 
 		private void updateView()

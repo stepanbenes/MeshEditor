@@ -171,15 +171,28 @@ namespace MeshEditor.DataVisualizer.UI
 			switch (e.FilterType)
 			{
 				case FilterType.Deformation:
-					var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, shoul run synchronously and return layer summary from cache
-					filterParamsForm = new DeformationFilterParamsForm(
-						availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count <= 3).Select(pair => pair.Key)
-					);
-					modal = true;
+					{
+						var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, should run synchronously and return layer summary from cache
+						filterParamsForm = new DeformationFilterParamsForm(
+							availableVectorFields: layerSummary.Fields.Where(pair => pair.Value.Components.Count <= 3).Select(pair => pair.Key)
+						);
+						modal = true;
+					}
 					break;
 				case FilterType.Slice:
-					filterParamsForm = new SliceFilterParamsForm(ActiveScene);
-					modal = false;
+					{
+						filterParamsForm = new SliceFilterParamsForm(ActiveScene);
+						modal = false;
+					}
+					break;
+				case FilterType.IsoSurface:
+					{
+						var layerSummary = await getSummaryFileForLayerAsync(e.Layer.Id, CancellationToken.None); // layer should be already loaded, should run synchronously and return layer summary from cache
+						filterParamsForm = new IsoSurfaceFilterParamsForm(
+							availableFieldComponents: layerSummary.Fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Components.Keys.ToList().AsEnumerable())
+						);
+						modal = true;
+					}
 					break;
 				default:
 					throw new NotSupportedException($"Filter type '{e.FilterType}' is not supported in UI");

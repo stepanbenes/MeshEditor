@@ -137,6 +137,12 @@
       <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\LayerSelectionEventArgs.cs" />
+    <Compile Include="UI\IsoSurfaceFilterParamsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\IsoSurfaceFilterParamsForm.Designer.cs">
+      <DependentUpon>IsoSurfaceFilterParamsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\LayersTreeViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -201,6 +207,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ImportFEMResultsForm.resx">
       <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\IsoSurfaceFilterParamsForm.resx">
+      <DependentUpon>IsoSurfaceFilterParamsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\LayersTreeViewControl.resx">
       <DependentUpon>LayersTreeViewControl.cs</DependentUpon>
