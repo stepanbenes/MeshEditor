@@ -202,7 +202,7 @@ namespace MeshEditor.Data
 
 
 			DefaultFirstBorderAngleLimit = 10f;
-			DefaultSecondBorderAngleLimit = 70f;
+			DefaultSecondBorderAngleLimit = 30f;
 
 			IncludeEdgeMiddleNodes = true;
 			LineSmooth = true;
