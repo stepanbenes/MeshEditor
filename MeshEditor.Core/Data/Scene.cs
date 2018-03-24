@@ -201,7 +201,7 @@ namespace MeshEditor.Data
 			NodeNumbersColor = Color.DarkBlue;
 
 
-			DefaultFirstBorderAngleLimit = 1f;
+			DefaultFirstBorderAngleLimit = 10f;
 			DefaultSecondBorderAngleLimit = 70f;
 
 			IncludeEdgeMiddleNodes = true;
