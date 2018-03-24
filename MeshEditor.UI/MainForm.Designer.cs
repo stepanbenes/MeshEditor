@@ -182,6 +182,7 @@
 			this.splitWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.closeWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.centralPanel = new System.Windows.Forms.Panel();
+			this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.toolStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -774,7 +775,7 @@
 			this.elementsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
 			this.elementsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
 			this.elementsToolStripMenuItem1.Name = "elementsToolStripMenuItem1";
-			this.elementsToolStripMenuItem1.Size = new System.Drawing.Size(144, 26);
+			this.elementsToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.elementsToolStripMenuItem1.Text = "&Elements";
 			this.elementsToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
 			// 
@@ -783,7 +784,7 @@
 			this.nodesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
 			this.nodesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
 			this.nodesToolStripMenuItem1.Name = "nodesToolStripMenuItem1";
-			this.nodesToolStripMenuItem1.Size = new System.Drawing.Size(144, 26);
+			this.nodesToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.nodesToolStripMenuItem1.Text = "&Nodes";
 			this.nodesToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
 			// 
@@ -792,7 +793,7 @@
 			this.selectFacesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
 			this.selectFacesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
 			this.selectFacesToolStripMenuItem.Name = "selectFacesToolStripMenuItem";
-			this.selectFacesToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
+			this.selectFacesToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.selectFacesToolStripMenuItem.Text = "&Faces";
 			this.selectFacesToolStripMenuItem.Click += new System.EventHandler(this.selectToolChosen);
 			// 
@@ -801,7 +802,7 @@
 			this.edgesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
 			this.edgesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
 			this.edgesToolStripMenuItem1.Name = "edgesToolStripMenuItem1";
-			this.edgesToolStripMenuItem1.Size = new System.Drawing.Size(144, 26);
+			this.edgesToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.edgesToolStripMenuItem1.Text = "E&dges";
 			this.edgesToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
 			// 
@@ -810,7 +811,7 @@
 			this.beamsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
 			this.beamsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
 			this.beamsToolStripMenuItem1.Name = "beamsToolStripMenuItem1";
-			this.beamsToolStripMenuItem1.Size = new System.Drawing.Size(144, 26);
+			this.beamsToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.beamsToolStripMenuItem1.Text = "&Beams";
 			this.beamsToolStripMenuItem1.Click += new System.EventHandler(this.selectToolChosen);
 			// 
@@ -984,8 +985,9 @@
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.checkForUpdatesToolStripMenuItem,
+            this.userGuideToolStripMenuItem,
             this.toolStripSeparator5,
+            this.checkForUpdatesToolStripMenuItem,
             this.aboutToolStripMenuItem1});
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
 			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(55, 24);
@@ -994,19 +996,19 @@
 			// checkForUpdatesToolStripMenuItem
 			// 
 			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(203, 26);
+			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.checkForUpdatesToolStripMenuItem.Text = "&Check for updates";
 			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator5
 			// 
 			this.toolStripSeparator5.Name = "toolStripSeparator5";
-			this.toolStripSeparator5.Size = new System.Drawing.Size(200, 6);
+			this.toolStripSeparator5.Size = new System.Drawing.Size(213, 6);
 			// 
 			// aboutToolStripMenuItem1
 			// 
 			this.aboutToolStripMenuItem1.Name = "aboutToolStripMenuItem1";
-			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(203, 26);
+			this.aboutToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.aboutToolStripMenuItem1.Text = "&About";
 			this.aboutToolStripMenuItem1.Click += new System.EventHandler(this.aboutToolStripMenuItem1_Click);
 			// 
@@ -1560,6 +1562,14 @@
 			this.centralPanel.Size = new System.Drawing.Size(1421, 780);
 			this.centralPanel.TabIndex = 5;
 			// 
+			// userGuideToolStripMenuItem
+			// 
+			this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
+			this.userGuideToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
+			this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
+			this.userGuideToolStripMenuItem.Text = "&User guide";
+			this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -1741,6 +1751,7 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator22;
 		private System.Windows.Forms.ToolStripMenuItem importFEMResultsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem userGuideToolStripMenuItem;
 	}
 }
 
