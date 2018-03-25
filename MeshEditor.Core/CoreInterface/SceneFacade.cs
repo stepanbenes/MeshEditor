@@ -1101,7 +1101,7 @@ namespace MeshEditor.CoreInterface
 
 			cameraChangedTimer.Start();
 			cameraChangedDirection = true;
-			needToComputeVisibleNodesFlag = true;
+
 			InvalidateNeeded?.Invoke(this, EventArgs.Empty);
 		}
 
