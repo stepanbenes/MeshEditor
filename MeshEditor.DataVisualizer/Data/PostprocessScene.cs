@@ -196,29 +196,41 @@ namespace MeshEditor.DataVisualizer.Data
 
 		void IScene.ComputeVisibleNodes(Size clientWindow)
 		{
-			Action faceDrawer = null;
-
-			foreach (var mesh in enumerateAllMeshes())
+			foreach (var layerScene in enumerateAllScenesWithMesh())
 			{
-				faceDrawer += mesh.DrawFacesOnly;
+				Action faceDrawer = layerScene.Mesh.DrawFacesOnly;
+
+				// prokazdou iteraci vlozit do faceDriver layerScene a vsechny vrstvy, ktere maji zobrazene plochy
+				foreach (var layerSceneToDraw in enumerateAllScenesWithMesh())
+				{
+					if (layerSceneToDraw != layerScene && (layerSceneToDraw.RenderMode & RenderMode.Faces) != 0)
+					{
+						faceDrawer += layerSceneToDraw.Mesh.DrawFacesOnly;
+					}
+				}
+
+				Rectangle window = new Rectangle(Point.Empty, clientWindow);
+
+				layerScene.Mesh.CreateVisibleNodesList(window, layerScene.Camera, /*xRay:*/ false, faceDrawer);
+				layerScene.Mesh.CreateVisibleFacesList(window, layerScene.Camera, faceDrawer);
 			}
+		}
+
+		void IScene.DrawMeshFacesToDepthBuffer()
+		{
+			Action faceDrawer = null;
 
 			foreach (var layerScene in enumerateAllScenesWithMesh())
 			{
-				bool findVisibleFaces = ((layerScene.RenderMode & RenderMode.Faces) != 0) && layerScene.DrawElementNumbers;
-				bool beamsRendered = layerScene.Mesh.BeamCount > 0 && layerScene.DrawBeams;
-				bool findVisibleNodes = findVisibleFaces || ((layerScene.RenderMode & RenderMode.Points) != 0) || beamsRendered;
-
-				if (findVisibleNodes)
+				if ((layerScene.RenderMode & RenderMode.Faces) != 0)
 				{
-					bool xRay = (layerScene.RenderMode == RenderMode.None && beamsRendered) || layerScene.RenderMode == RenderMode.Points;
-					layerScene.Mesh.CreateVisibleNodesList(new Rectangle(Point.Empty, clientWindow), layerScene.Camera, xRay, faceDrawer);
+					faceDrawer += layerScene.Mesh.DrawFacesOnly;
 				}
+			}
 
-				if (findVisibleFaces)
-				{
-					layerScene.Mesh.CreateVisibleFacesList(new Rectangle(Point.Empty, clientWindow), layerScene.Camera, faceDrawer);
-				}
+			if (faceDrawer != null)
+			{
+				Mesh.DrawFacesToDepthBuffer(faceDrawer);
 			}
 		}
 
@@ -384,7 +396,7 @@ namespace MeshEditor.DataVisualizer.Data
 		/// <summary>
 		/// Order layer scenes: write outlines at the end because of blending.
 		/// </summary>
-		private IEnumerable<Scene> enumerateAllScenesWithMeshOrdered() => enumerateAllScenesWithMesh().OrderBy(scene => scene.RenderMode == RenderMode.AllLines || scene.RenderMode == RenderMode.BorderLines);
+		private IEnumerable<Scene> enumerateAllScenesWithMeshOrdered() => enumerateAllScenesWithMesh().OrderBy(scene => (scene.RenderMode & RenderMode.Faces) == 0); // faces go first (false is at the beginning), then render modes without faces
 
 		#endregion
 

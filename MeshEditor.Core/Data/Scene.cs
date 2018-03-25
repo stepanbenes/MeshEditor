@@ -835,6 +835,14 @@ namespace MeshEditor.Data
 				drawAxisArrows();
 		}
 
+		public void DrawMeshFacesToDepthBuffer()
+		{
+			if (mesh != null)
+			{
+				Mesh.DrawFacesToDepthBuffer(faceDrawer: mesh.DrawFacesOnly);
+			}
+		}
+
 		public void DrawWithoutMesh(Vector3 origin)
 		{
 			if (drawAxesFlag)
@@ -1818,7 +1826,7 @@ namespace MeshEditor.Data
 			}
 			else if (itemType != ItemTypeToSelect.Beam)
 			{
-				mesh.DrawFacesToDepthBuffer(faceDrawer: mesh.DrawFacesOnly); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
+				DrawMeshFacesToDepthBuffer(); // tohle tu jen kvuli zjisteni ty hloubky pomoci getPixelDepth nize
 			}
 
 			{

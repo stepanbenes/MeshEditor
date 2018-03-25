@@ -80,6 +80,8 @@ namespace MeshEditor.Data
 
 		void Draw(bool optimizeForMoving, bool optimizeForSelecting, bool drawDecorations);
 
+		void DrawMeshFacesToDepthBuffer();
+
 		#endregion
 
 		#region Selection - public methods

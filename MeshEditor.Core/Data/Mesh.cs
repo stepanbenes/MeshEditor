@@ -653,7 +653,7 @@ namespace MeshEditor.Data
 			// Console.Write("*"); // neprekresluje se sit po kazde akci dvakrat?
 		}
 
-		public void DrawFacesToDepthBuffer(Action faceDrawer)
+		public static void DrawFacesToDepthBuffer(Action faceDrawer)
 		{
 			Debug.Assert(faceDrawer != null);
 			GL.Clear(ClearBufferMask.DepthBufferBit);
