@@ -222,7 +222,7 @@ namespace MeshEditor.SolutionManager
 			return layerSummary;
 		}
 
-		public ILayerInfo Import(IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null)
+		public ILayerInfo Import(IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string gaussPointsExtrapolationStrategyName = null, string fieldName = null, string masterLayerName = null, CancellationToken cancellationToken = default)
 		{
 			var analysisResultImportServices = Solution.Results?.Select(result => AnalysisResultImportServiceFactory.Create(importStorage, result, gaussPointsExtrapolationStrategyName)) ?? Enumerable.Empty<IAnalysisResultImportService>();
 
@@ -232,12 +232,12 @@ namespace MeshEditor.SolutionManager
 										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
-			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName);
+			var masterLayerSummaryFile = layerGenerator.GenerateMasterLayer(masterLayerName ?? DefaultMasterLayerName, analysisResultImportServices, keyTimeSteps, fieldName, cancellationToken);
 
 			return addLayer(masterLayerSummaryFile, parentLayer: null);
 		}
 
-		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Filter(string parentLayerIdOrName, string filterTypeName, IEnumerable<string> filterParameters, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null, CancellationToken cancellationToken = default)
 		{
 			if (!Enum.TryParse(filterTypeName, ignoreCase: true, result: out FilterType filterType))
 				throw new ArgumentException($"Unknown filter type ({filterTypeName})", nameof(filterTypeName));
@@ -251,13 +251,13 @@ namespace MeshEditor.SolutionManager
 										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
-			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName);
+			var filterLayerSummaryFile = layerGenerator.GenerateFilterLayer(parentLayer.Id, filter, newLayerName, keyTimeSteps, fieldName, cancellationToken);
 
 			// convert filter layer to layer record and append it to parent layer's children
 			return addLayer(filterLayerSummaryFile, parentLayer);
 		}
 
-		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null)
+		public ILayerInfo Compress(string parentLayerIdOrName, IEnumerable<decimal> keyTimeSteps, IEnumerable<string> compressionParameters, string fieldName = null, string newLayerName = null, CancellationToken cancellationToken = default)
 		{
 			var parentLayer = findLayer(parentLayerIdOrName);
 
@@ -267,7 +267,7 @@ namespace MeshEditor.SolutionManager
 										compressionService: CompressionServiceFactory.Create(compressionParameters, logger),
 										logger: logger);
 
-			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName);
+			var compressedLayerSummaryFile = layerGenerator.CompressLayer(parentLayer.Id, keyTimeSteps, newLayerName ?? $"compressed ({string.Join(" ", compressionParameters)})", fieldName, cancellationToken);
 
 			// convert filter layer to layer record and append it to parent layer's children
 			return addLayer(compressedLayerSummaryFile, parentLayer);
@@ -287,7 +287,7 @@ namespace MeshEditor.SolutionManager
 			}
 		}
 
-		public async Task DeleteAsync(string layerIdOrName, bool deleteAll = false, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task DeleteAsync(string layerIdOrName, bool deleteAll = false, CancellationToken cancellationToken = default)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(layerIdOrName) ^ deleteAll);
 

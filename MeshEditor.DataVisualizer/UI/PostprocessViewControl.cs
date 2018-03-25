@@ -215,7 +215,7 @@ namespace MeshEditor.DataVisualizer.UI
 						var cancellationToken = currentOperationCancellationTokenSource.Token;
 						var parentLayerIdentifier = e.Layer.Id.ToString();
 
-						var filterLayerInfo = await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: parentLayerIdentifier, filterTypeName: e.FilterType.ToString(), filterParameters: filterParams.FilterParameters, keyTimeSteps: filterParams.KeyTimeSteps, compressionParameters: filterParams.CompressionParameters, fieldName: filterParams.ConstraintFieldName, newLayerName: filterParams.LayerName), cancellationToken);
+						var filterLayerInfo = await Task.Run(() => solutionHub.Filter(parentLayerIdOrName: parentLayerIdentifier, filterTypeName: e.FilterType.ToString(), filterParameters: filterParams.FilterParameters, keyTimeSteps: filterParams.KeyTimeSteps, compressionParameters: filterParams.CompressionParameters, fieldName: filterParams.ConstraintFieldName, newLayerName: filterParams.LayerName, cancellationToken: cancellationToken));
 
 						layersTreeView.SetCheckedFlagOfLayer(e.Layer.Id, true);
 						ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);

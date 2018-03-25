@@ -12,6 +12,7 @@ using MeshEditor.Common.Extensions;
 using System.IO;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.CoreInterface;
+using System.Threading;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -19,11 +20,14 @@ namespace MeshEditor.DataVisualizer.UI
 	{
 		bool isImportOperationRunning;
 		readonly LongOpNotifier longOpNotifier;
+		CancellationTokenSource currentOperationCancellationTokenSource;
 
 		public ImportFEMResultsForm(LongOpNotifier longOpNotifier)
 		{
 			InitializeComponent();
 			this.longOpNotifier = longOpNotifier;
+			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
+
 			comboBoxGaussPointExtrapolationStrategy.SelectedIndex = 0;
 			textBoxLocation.Text = SolutionHub.GetLocalStorageDefaultDirectory();
 
@@ -33,13 +37,31 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public string SolutionFileName { get; private set; }
 
+		protected override void OnClosed(EventArgs e)
+		{
+			longOpNotifier.CancellationRequested -= longOpNotifier_CancellationRequested;
+		}
+
+		private void longOpNotifier_CancellationRequested(LongOpNotifier.Token obj)
+		{
+			if (currentOperationCancellationTokenSource != null)
+			{
+				currentOperationCancellationTokenSource.Cancel();
+				currentOperationCancellationTokenSource.Dispose();
+				currentOperationCancellationTokenSource = null;
+			}
+		}
+
 		private async void buttonImport_Click(object sender, EventArgs e)
 		{
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
 
 			var logger = new MemoryLogger();
+			SolutionHub solutionHub = null;
 			try
 			{
+				currentOperationCancellationTokenSource = new CancellationTokenSource();
+
 				isImportOperationRunning = true;
 				updateUI();
 
@@ -70,14 +92,22 @@ namespace MeshEditor.DataVisualizer.UI
 				var compressionParameters = compressionParamsControl.GetCompressionParameters();
 				var gaussPointsExtrapolationStrategyName = buildGaussPointsExtrapolationStrategyName();
 
-				using (longOpNotifier.Begin("Importing FEM results", isCancellable: false, logger: logger))
+				using (longOpNotifier.Begin("Importing FEM results", isCancellable: true, logger: logger))
 				{
-					var solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
-					await Task.Run(() => solutionHub.Import(keyTimeSteps, compressionParameters, gaussPointsExtrapolationStrategyName));
+					solutionHub = SolutionHub.CreateNewLocal(solutionDirectory, analysisResults, projectName, logger);
+					await Task.Run(() => solutionHub.Import(keyTimeSteps, compressionParameters, gaussPointsExtrapolationStrategyName, cancellationToken: currentOperationCancellationTokenSource.Token));
 					SolutionFileName = solutionHub.GetSolutionDescription().Location;
 				}
 
 				DialogResult = DialogResult.OK; // close dialog
+			}
+			catch (OperationCanceledException)
+			{
+				// user cancelled import operation, remove solution
+				if (solutionHub != null)
+				{
+					await solutionHub.DeleteAsync(layerIdOrName: null, deleteAll: true);
+				}
 			}
 			catch (Exception ex)
 			{
