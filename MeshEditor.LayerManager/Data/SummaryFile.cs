@@ -17,7 +17,7 @@ namespace MeshEditor.LayerManager.Data
 
 		public MeshFileDescriptor[] Meshes { get; set; }
 
-		public Dictionary<string, FieldDescriptor> Fields { get; set; }
+		public Dictionary<string, FieldDescriptor> Fields { get; set; } = new Dictionary<string, FieldDescriptor>();
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public Guid? MeshFallbackLayerId { get; set; }

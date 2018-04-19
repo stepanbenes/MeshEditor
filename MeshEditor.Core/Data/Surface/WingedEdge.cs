@@ -156,7 +156,7 @@ namespace MeshEditor.Data
 			else
 			{
 				featureAngle = MeshEditor.Utilities.Functions.GetAngleInDegreesBetweenUnitVectors(face1.NormalVector, face2.NormalVector);
-				Debug.Assert(!float.IsNaN(featureAngle));
+				Debug.Assert(!float.IsNaN(featureAngle)); // featureAngle is NaN if either face is degenerated (some or all nodes have the same position)
 			}
 		}
 
