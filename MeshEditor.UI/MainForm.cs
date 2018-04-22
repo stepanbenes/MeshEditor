@@ -1014,14 +1014,14 @@ namespace MeshEditor.WinUI
 
 		private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			string userGuideFilePath = Path.Combine(Application.StartupPath, "user-guide.pdf");
+			string userGuideFilePath = UpdateChecker.MeshEditorUpdateUri + "/user-guide.pdf";
 			try
 			{
 				Process.Start(userGuideFilePath);
 			}
 			catch (Exception)
 			{
-				MessageBox.Show($"The file '{userGuideFilePath} could not be open.'", "Can't show the User guide");
+				MessageBox.Show($"The path '{userGuideFilePath} could not be open.'", "Can't show the User guide");
 			}
 		}
 

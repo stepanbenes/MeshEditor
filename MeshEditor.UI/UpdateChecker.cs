@@ -12,7 +12,7 @@ namespace MeshEditor.WinUI
 {
 	class UpdateChecker
 	{
-		private static readonly string updatesUri = @"https://feastorage.blob.core.windows.net/mesheditor-update";
+		public static string MeshEditorUpdateUri => @"https://feastorage.blob.core.windows.net/mesheditor-update";
 
 		public static bool IsUpdateServiceAvailableForThisPlatform => (Environment.OSVersion.Platform == PlatformID.Unix && Environment.Is64BitOperatingSystem);
 
@@ -49,7 +49,7 @@ namespace MeshEditor.WinUI
 				throw new NotSupportedException($"Updates are not available for this platform (x86).");
 			//architectureFolder = "x86";
 
-			string releasesFileUri = $"{updatesUri}/{clientFolder}/{architectureFolder}/releases.txt";
+			string releasesFileUri = $"{MeshEditorUpdateUri}/{clientFolder}/{architectureFolder}/releases.txt";
 			string releasesFileContent;
 			using (var webClient = new WebClient())
 			{
@@ -64,7 +64,7 @@ namespace MeshEditor.WinUI
 				ServerVersion = Version.Parse(lineParts[0]);
 				string packageName = lineParts[1];
 
-				PackageFileUri = $"{updatesUri}/{clientFolder}/{architectureFolder}/{packageName}";
+				PackageFileUri = $"{MeshEditorUpdateUri}/{clientFolder}/{architectureFolder}/{packageName}";
 
 				return CurrentVersion < ServerVersion;
 			}

@@ -159,10 +159,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="UserGuide\user-guide.md" />
-    <ContentWithTargetPath Include="UserGuide\user-guide.pdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  <TargetPath>user-guide.pdf</TargetPath>
-    </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj">
