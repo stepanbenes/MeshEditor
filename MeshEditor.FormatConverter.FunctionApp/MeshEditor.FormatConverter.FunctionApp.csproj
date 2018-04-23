@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
-    <FileVersion>2.2.1.0</FileVersion>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <Version>2.2.2</Version>
+    <FileVersion>2.3.0.0</FileVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <Version>2.3.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>latest</LangVersion>
