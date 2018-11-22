@@ -1158,6 +1158,10 @@ namespace MeshEditor.LayerManager
 		private IEnumerable<double[]> decodeAndDecompressAllRows(string data, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
+			if (compressionParameters == null)
+			{
+				compressionParameters = new TransparentCompressionParameters { Rows = 1, Columns = encodingParameters.OriginalLength };
+			}
 			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method, logger);
 			return selectedCompressionService.Decompress(compressedValues, compressionParameters);
 		}
@@ -1165,6 +1169,10 @@ namespace MeshEditor.LayerManager
 		private double[] decodeAndDecompressSingleRow(string data, int rowIndex, EncodingParameters encodingParameters, CompressionParameters compressionParameters)
 		{
 			double[] compressedValues = encodingService.Decode<double>(data, TrimOptions.BeginEnd, encodingParameters);
+			if (compressionParameters == null)
+			{
+				compressionParameters = new TransparentCompressionParameters { Rows = 1, Columns = encodingParameters.OriginalLength };
+			}
 			ICompressionService selectedCompressionService = CompressionServiceFactory.Create(compressionParameters.Method, logger);
 			return selectedCompressionService.Decompress(compressedValues, rowIndex, compressionParameters);
 		}
