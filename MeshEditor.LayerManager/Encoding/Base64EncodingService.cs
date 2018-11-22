@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MeshEditor.Common.Extensions;
+using MeshEditor.LayerManager.Data;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MeshEditor.LayerManager.Data;
-using System.Diagnostics;
-using System.Globalization;
-using MeshEditor.Common.Extensions;
 
 namespace MeshEditor.LayerManager.Encoding
 {
@@ -50,7 +50,7 @@ namespace MeshEditor.LayerManager.Encoding
 		{
 			Debug.Assert(encodingParameters != null);
 			byte[] bytes = Convert.FromBase64String(data);
-			T[] values = gatherArrayOfBytes<T>(bytes);
+			T[] values = gatherArrayOfBytes<T>(bytes, encodingParameters.DataType);
 			T[] result;
 			switch (trimOptions)
 			{
@@ -61,8 +61,7 @@ namespace MeshEditor.LayerManager.Encoding
 					result = expandEnd(values, encodingParameters.OriginalLength);
 					break;
 				case TrimOptions.BeginEnd:
-					Debug.Assert(encodingParameters.DataType == convertTypeToDataArrayType(typeof(T)));
-					T defaultValue = string.IsNullOrEmpty(encodingParameters.DefaultValue) ? default(T) : (T)Convert.ChangeType(encodingParameters.DefaultValue, typeof(T), CultureInfo.InvariantCulture);
+					T defaultValue = string.IsNullOrEmpty(encodingParameters.DefaultValue) ? default : (T)Convert.ChangeType(encodingParameters.DefaultValue, typeof(T), CultureInfo.InvariantCulture);
 					result = expand(values, encodingParameters.OriginalLength, encodingParameters.Offset, defaultValue);
 					break;
 				default:
@@ -107,18 +106,111 @@ namespace MeshEditor.LayerManager.Encoding
 			return bytes;
 		}
 
-		private static T[] gatherArrayOfBytes<T>(byte[] bytes) where T : struct
+		private static T[] gatherArrayOfBytes<T>(byte[] bytes, DataArrayType sourceDataType) where T : struct
 		{
-			// determine the correct type
-			Type itemType = typeof(T);
-			Debug.Assert(!itemType.IsEnum);
-			if (itemType != typeof(byte))
+			switch (sourceDataType)
 			{
-				T[] values = new T[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf(itemType)];
-				Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
-				return values;
+				case DataArrayType.Default: // source type is destination type
+					{
+						Type itemType = typeof(T);
+						if (itemType == typeof(byte))
+						{
+							return (T[])(object)bytes;
+						}
+						var array = new T[bytes.Length / System.Runtime.InteropServices.Marshal.SizeOf<T>()];
+						Buffer.BlockCopy(bytes, 0, array, 0, bytes.Length);
+						return array;
+					}
+				case DataArrayType.Float64:
+					{
+						var array = new double[bytes.Length / sizeof(double)];
+						Buffer.BlockCopy(bytes, 0, array, 0, bytes.Length);
+						if (typeof(T) == typeof(double))
+						{
+							return (T[])(object)array;
+						}
+						else if (typeof(T) == typeof(float))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (float)value);
+						}
+						else if (typeof(T) == typeof(int))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (int)value);
+						}
+						else if (typeof(T) == typeof(byte))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (byte)value);
+						}
+						throw new NotSupportedException();
+					}
+				case DataArrayType.Float32:
+					{
+						var array = new float[bytes.Length / sizeof(float)];
+						Buffer.BlockCopy(bytes, 0, array, 0, bytes.Length);
+						if (typeof(T) == typeof(double))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (double)value);
+						}
+						else if (typeof(T) == typeof(float))
+						{
+							return (T[])(object)array;
+						}
+						else if (typeof(T) == typeof(int))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (int)value);
+						}
+						else if (typeof(T) == typeof(byte))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (byte)value);
+						}
+						throw new NotSupportedException();
+					}
+				case DataArrayType.Int32:
+					{
+						var array = new int[bytes.Length / sizeof(int)];
+						Buffer.BlockCopy(bytes, 0, array, 0, bytes.Length);
+						if (typeof(T) == typeof(double))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (double)value);
+						}
+						else if (typeof(T) == typeof(float))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (float)value);
+						}
+						else if (typeof(T) == typeof(int))
+						{
+							return (T[])(object)array;
+						}
+						else if (typeof(T) == typeof(byte))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (byte)value);
+						}
+						throw new NotSupportedException();
+					}
+				case DataArrayType.UInt8:
+					{
+						var array = bytes;
+						if (typeof(T) == typeof(double))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (double)value);
+						}
+						else if (typeof(T) == typeof(float))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (float)value);
+						}
+						else if (typeof(T) == typeof(int))
+						{
+							return (T[])(object)Array.ConvertAll(array, value => (int)value);
+						}
+						else if (typeof(T) == typeof(byte))
+						{
+							return (T[])(object)array;
+						}
+						throw new NotSupportedException();
+					}
+				default:
+					throw new NotSupportedException();
 			}
-			return (T[])(object)bytes; // evade C# array cast limitation
 		}
 
 		private static T[] trimEnd<T>(T[] values) where T : struct

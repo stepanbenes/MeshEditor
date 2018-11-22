@@ -8,6 +8,7 @@ namespace MeshEditor.LayerManager.Data
 {
 	public enum DataArrayType
 	{
+		Default = 0,
 		Float64,
 		Float32,
 		Int32,
