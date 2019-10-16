@@ -9,7 +9,6 @@ using MeshEditor.Construction;
 using MeshEditor.CoreInterface;
 using MeshEditor.Cuts;
 using MeshEditor.Data;
-using MeshEditor.DataVisualizer.IO;
 using MeshEditor.Graphics;
 using MeshEditor.IO;
 using MeshEditor.LayerManager.Data;

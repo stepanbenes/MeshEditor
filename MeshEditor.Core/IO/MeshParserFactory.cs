@@ -27,6 +27,9 @@ namespace MeshEditor.IO
 				case ".obj":
 					return new OBJFileFormatParser(filename);
 
+				case ".json":
+					return new Base64JsonMeshFileParser(filename);
+
 				default:
 					return new SifelFileFormatParser(filename);
 			}

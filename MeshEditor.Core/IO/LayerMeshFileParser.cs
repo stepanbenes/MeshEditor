@@ -11,9 +11,9 @@ using MeshEditor.IO;
 using MeshEditor.LayerManager.Data;
 using OpenTK;
 
-namespace MeshEditor.DataVisualizer.IO
+namespace MeshEditor.IO
 {
-	class LayerMeshFileParser : IMeshFileParser, INameProvider
+	public class LayerMeshFileParser : IMeshFileParser, INameProvider
 	{
 		readonly GeometryDescription geometry;
 		readonly AttributeDescription elementPropertyAttribute;

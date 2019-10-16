@@ -229,7 +229,7 @@ namespace MeshEditor.CoreInterface
 
 		public static string SolutionFileExtension => ".solution.json";
 
-		public static string InputFileFormatFilter => string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply, *{1})|*{0};*.msh;*.vtu;*.obj;*.ply;*{1}|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|Solution file format (*{1})|*{1}|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension, SolutionFileExtension);
+		public static string InputFileFormatFilter => string.Format("All supported files (*{0}, *.msh, *.vtu, *.obj, *.ply, *.mesh.json, *{1})|*{0};*.msh;*.vtu;*.obj;*.ply;*.mesh.json;*{1}|SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|OBJ file format (*.obj)|*.obj|PLY file format (*.ply)|*.ply|Base64 JSON mesh format (*.mesh.json)|*.mesh.json|Solution file format (*{1})|*{1}|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension, SolutionFileExtension);
 
 		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension);
 

@@ -412,17 +412,27 @@ namespace MeshEditor.LayerManager
 		public GeometryDescription LoadGeometry(Guid layerId, Guid? fallbackLayerId, int meshIndex)
 		{
 			string record = getLayerMeshRecordName(fallbackLayerId ?? layerId, meshIndex);
-			using (Stream meshStream = sourceStorage.Load(record))
+			return LoadGeometry(record);
+		}
+
+		public GeometryDescription LoadGeometry(string recordName)
+		{
+			using (Stream meshStream = sourceStorage.Load(recordName))
 			{
 				MeshFile layerMesh = serializationService.Deserialize<MeshFile>(meshStream);
 				return createGeometryFromLayerMesh(layerMesh);
 			}
 		}
 
-		public async Task<GeometryDescription> LoadGeometryAsync(Guid layerId, Guid? fallbackLayerId, int meshIndex, CancellationToken cancellationToken)
+		public Task<GeometryDescription> LoadGeometryAsync(Guid layerId, Guid? fallbackLayerId, int meshIndex, CancellationToken cancellationToken)
 		{
 			string record = getLayerMeshRecordName(fallbackLayerId ?? layerId, meshIndex);
-			using (Stream meshStream = sourceStorage.Load(record))
+			return LoadGeometryAsync(record, cancellationToken);
+		}
+
+		public async Task<GeometryDescription> LoadGeometryAsync(string recordName, CancellationToken cancellationToken)
+		{
+			using (Stream meshStream = sourceStorage.Load(recordName))
 			{
 				MeshFile layerMesh = await serializationService.DeserializeAsync<MeshFile>(meshStream, cancellationToken);
 				return createGeometryFromLayerMesh(layerMesh);
