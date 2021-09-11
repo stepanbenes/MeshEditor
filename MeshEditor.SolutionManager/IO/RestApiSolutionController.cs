@@ -193,7 +193,7 @@ namespace MeshEditor.SolutionManager.IO
 		{
 			logRequest(request);
 			var client = new RestClient(uri);
-			var response = await client.ExecuteTaskAsync(request, cancellationToken);
+			var response = await client.ExecuteAsync(request, cancellationToken);
 			logResponse(response);
 			return response;
 		}

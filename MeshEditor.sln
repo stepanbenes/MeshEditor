@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Core", "MeshEditor.Core\MeshEditor.Core.csproj", "{604E83B3-5C76-47A8-BEB2-529CC28471F0}"
 EndProject
@@ -22,8 +22,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.SolutionManager", "MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj", "{551F7428-7A4E-4EE2-9681-5DE0105BF887}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshEditor.Common", "MeshEditor.Common\MeshEditor.Common.csproj", "{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MeshEditor.FormatConverter.FunctionApp", "MeshEditor.FormatConverter.FunctionApp\MeshEditor.FormatConverter.FunctionApp.csproj", "{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,14 +103,6 @@ Global
 		{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}.Release|x64.ActiveCfg = Release|x64
 		{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}.Release|x64.Build.0 = Release|x64
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Debug|x64.Build.0 = Debug|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Release|x64.ActiveCfg = Release|Any CPU
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,10 +111,9 @@ Global
 		{469F9E5D-1EE2-4219-A9AA-890E2923D26B} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 		{315E6AA6-A925-44BC-8F13-76CFF7DCB02F} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 		{551F7428-7A4E-4EE2-9681-5DE0105BF887} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
-		{75D338A9-EAFF-4B80-BF42-6B60B9CC7002} = {F991BEAE-FBD5-4BBC-8554-D1FD73C93D24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {62A78C12-34E0-4FDD-A164-E732BB9CD79B}
 		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {62A78C12-34E0-4FDD-A164-E732BB9CD79B}
 	EndGlobalSection
 EndGlobal
