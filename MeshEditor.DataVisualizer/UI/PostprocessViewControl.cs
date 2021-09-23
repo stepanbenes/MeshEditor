@@ -39,8 +39,8 @@ namespace MeshEditor.DataVisualizer.UI
 			this.longOpNotifier = longOpNotifier;
 			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
 
-			mainSplitContainer.FixedPanel = FixedPanel.Panel1;
-			mainSplitContainer.SplitterDistance = 220;
+			//mainSplitContainer.FixedPanel = FixedPanel.Panel1;
+			//mainSplitContainer.SplitterDistance = 220;
 
 			layersTreeView.LayerSelected += layersTreeView_LayerSelected;
 			layersTreeView.LayerChecked += layersTreeView_LayerChecked;

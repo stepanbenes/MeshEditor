@@ -32,19 +32,22 @@
 			// 
 			this.mainSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.mainSplitContainer.Location = new System.Drawing.Point(0, 0);
+			this.mainSplitContainer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.mainSplitContainer.Name = "mainSplitContainer";
 			// 
 			// mainSplitContainer.Panel1
 			// 
 			this.mainSplitContainer.Panel1.Controls.Add(this.leftSplitContainer);
-			this.mainSplitContainer.Size = new System.Drawing.Size(1090, 861);
-			this.mainSplitContainer.SplitterDistance = 363;
+			this.mainSplitContainer.Size = new System.Drawing.Size(1453, 1060);
+			this.mainSplitContainer.SplitterDistance = 220;
+			this.mainSplitContainer.SplitterWidth = 5;
 			this.mainSplitContainer.TabIndex = 0;
 			// 
 			// leftSplitContainer
 			// 
 			this.leftSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.leftSplitContainer.Location = new System.Drawing.Point(0, 0);
+			this.leftSplitContainer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.leftSplitContainer.Name = "leftSplitContainer";
 			this.leftSplitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
@@ -55,36 +58,37 @@
 			// leftSplitContainer.Panel2
 			// 
 			this.leftSplitContainer.Panel2.Controls.Add(this.dataSelectionControl);
-			this.leftSplitContainer.Size = new System.Drawing.Size(363, 861);
-			this.leftSplitContainer.SplitterDistance = 198;
+			this.leftSplitContainer.Size = new System.Drawing.Size(483, 1060);
+			this.leftSplitContainer.SplitterDistance = 243;
+			this.leftSplitContainer.SplitterWidth = 5;
 			this.leftSplitContainer.TabIndex = 3;
 			// 
 			// layersTreeView
 			// 
-			this.layersTreeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-			| System.Windows.Forms.AnchorStyles.Left)
-			| System.Windows.Forms.AnchorStyles.Right)));
-			this.layersTreeView.Location = new System.Drawing.Point(3, 3);
+			this.layersTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.layersTreeView.Location = new System.Drawing.Point(0, 0);
+			this.layersTreeView.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
 			this.layersTreeView.Name = "layersTreeView";
-			this.layersTreeView.Size = new System.Drawing.Size(357, 192);
+			this.layersTreeView.Size = new System.Drawing.Size(483, 243);
 			this.layersTreeView.TabIndex = 1;
 			// 
 			// dataSelectionControl
 			// 
-			this.dataSelectionControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-			| System.Windows.Forms.AnchorStyles.Right)));
-			this.dataSelectionControl.Location = new System.Drawing.Point(3, 3);
+			this.dataSelectionControl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.dataSelectionControl.Location = new System.Drawing.Point(0, 0);
+			this.dataSelectionControl.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
 			this.dataSelectionControl.Name = "dataSelectionControl";
-			this.dataSelectionControl.Size = new System.Drawing.Size(357, 340);
+			this.dataSelectionControl.Size = new System.Drawing.Size(483, 812);
 			this.dataSelectionControl.TabIndex = 0;
 			// 
 			// PostprocessViewControl
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.mainSplitContainer);
+			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.Name = "PostprocessViewControl";
-			this.Size = new System.Drawing.Size(1090, 861);
+			this.Size = new System.Drawing.Size(1453, 1060);
 			this.mainSplitContainer.Panel1.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).EndInit();
 			this.mainSplitContainer.ResumeLayout(false);

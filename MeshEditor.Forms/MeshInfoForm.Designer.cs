@@ -28,8 +28,8 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.buttonApply = new System.Windows.Forms.Button();
 			this.secondBorderLimitTrackBar = new System.Windows.Forms.TrackBar();
 			this.secondBorderLimitLabel = new System.Windows.Forms.Label();
@@ -47,15 +47,15 @@
 			this.tabPageBasicInfo = new System.Windows.Forms.TabPage();
 			this.tabPagePropertyDescriptions = new System.Windows.Forms.TabPage();
 			this.dataGridViewPropertyDescriptions = new System.Windows.Forms.DataGridView();
+			this.PropertyColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.TargetEntityColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.CommandsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.CommentColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.buttonEditComment = new System.Windows.Forms.Button();
 			this.buttonEditPropertyCommands = new System.Windows.Forms.Button();
 			this.tabPageEdgeAngleLimits = new System.Windows.Forms.TabPage();
 			this.label1 = new System.Windows.Forms.Label();
 			this.histogramViewer = new MeshEditor.WinUI.HistogramViewer();
-			this.PropertyColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.TargetEntityColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.CommandsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.CommentColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			((System.ComponentModel.ISupportInitialize)(this.secondBorderLimitTrackBar)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.firstBorderLimitTrackBar)).BeginInit();
 			this.groupBoxBasicInfo.SuspendLayout();
@@ -69,10 +69,10 @@
 			// buttonApply
 			// 
 			this.buttonApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonApply.Location = new System.Drawing.Point(858, 382);
-			this.buttonApply.Margin = new System.Windows.Forms.Padding(2);
+			this.buttonApply.Location = new System.Drawing.Point(990, 465);
+			this.buttonApply.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonApply.Name = "buttonApply";
-			this.buttonApply.Size = new System.Drawing.Size(94, 28);
+			this.buttonApply.Size = new System.Drawing.Size(125, 34);
 			this.buttonApply.TabIndex = 0;
 			this.buttonApply.Text = "Apply";
 			this.buttonApply.UseVisualStyleBackColor = true;
@@ -83,11 +83,11 @@
 			this.secondBorderLimitTrackBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.secondBorderLimitTrackBar.BackColor = System.Drawing.SystemColors.ControlLightLight;
-			this.secondBorderLimitTrackBar.Location = new System.Drawing.Point(4, 107);
-			this.secondBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(2);
+			this.secondBorderLimitTrackBar.Location = new System.Drawing.Point(5, 132);
+			this.secondBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.secondBorderLimitTrackBar.Maximum = 180;
 			this.secondBorderLimitTrackBar.Name = "secondBorderLimitTrackBar";
-			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(721, 45);
+			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(1110, 56);
 			this.secondBorderLimitTrackBar.TabIndex = 17;
 			this.secondBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.secondBorderLimitTrackBar_ValueChanged);
 			// 
@@ -95,10 +95,9 @@
 			// 
 			this.secondBorderLimitLabel.AutoSize = true;
 			this.secondBorderLimitLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.secondBorderLimitLabel.Location = new System.Drawing.Point(13, 91);
-			this.secondBorderLimitLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.secondBorderLimitLabel.Location = new System.Drawing.Point(17, 112);
 			this.secondBorderLimitLabel.Name = "secondBorderLimitLabel";
-			this.secondBorderLimitLabel.Size = new System.Drawing.Size(122, 13);
+			this.secondBorderLimitLabel.Size = new System.Drawing.Size(157, 17);
 			this.secondBorderLimitLabel.TabIndex = 16;
 			this.secondBorderLimitLabel.Text = "second border limit: ";
 			// 
@@ -107,11 +106,11 @@
 			this.firstBorderLimitTrackBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.firstBorderLimitTrackBar.BackColor = System.Drawing.SystemColors.ControlLightLight;
-			this.firstBorderLimitTrackBar.Location = new System.Drawing.Point(4, 43);
-			this.firstBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(2);
+			this.firstBorderLimitTrackBar.Location = new System.Drawing.Point(5, 53);
+			this.firstBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.firstBorderLimitTrackBar.Maximum = 180;
 			this.firstBorderLimitTrackBar.Name = "firstBorderLimitTrackBar";
-			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(721, 45);
+			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(1110, 56);
 			this.firstBorderLimitTrackBar.TabIndex = 15;
 			this.firstBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.firstBorderLimitTrackBar_ValueChanged);
 			// 
@@ -119,10 +118,10 @@
 			// 
 			this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.buttonClose.Location = new System.Drawing.Point(871, 454);
-			this.buttonClose.Margin = new System.Windows.Forms.Padding(2);
+			this.buttonClose.Location = new System.Drawing.Point(1007, 554);
+			this.buttonClose.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonClose.Name = "buttonClose";
-			this.buttonClose.Size = new System.Drawing.Size(94, 28);
+			this.buttonClose.Size = new System.Drawing.Size(125, 34);
 			this.buttonClose.TabIndex = 0;
 			this.buttonClose.Text = "Close";
 			this.buttonClose.UseVisualStyleBackColor = true;
@@ -131,10 +130,9 @@
 			// firstBorderLimitLabel
 			// 
 			this.firstBorderLimitLabel.AutoSize = true;
-			this.firstBorderLimitLabel.Location = new System.Drawing.Point(13, 27);
-			this.firstBorderLimitLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.firstBorderLimitLabel.Location = new System.Drawing.Point(17, 33);
 			this.firstBorderLimitLabel.Name = "firstBorderLimitLabel";
-			this.firstBorderLimitLabel.Size = new System.Drawing.Size(82, 13);
+			this.firstBorderLimitLabel.Size = new System.Drawing.Size(113, 17);
 			this.firstBorderLimitLabel.TabIndex = 13;
 			this.firstBorderLimitLabel.Text = "first border limit: ";
 			// 
@@ -142,10 +140,9 @@
 			// 
 			this.labelNodeCount.AutoSize = true;
 			this.labelNodeCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelNodeCount.Location = new System.Drawing.Point(4, 21);
-			this.labelNodeCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelNodeCount.Location = new System.Drawing.Point(5, 26);
 			this.labelNodeCount.Name = "labelNodeCount";
-			this.labelNodeCount.Size = new System.Drawing.Size(69, 13);
+			this.labelNodeCount.Size = new System.Drawing.Size(89, 17);
 			this.labelNodeCount.TabIndex = 21;
 			this.labelNodeCount.Text = "Node count: ";
 			// 
@@ -153,30 +150,27 @@
 			// 
 			this.labelElementCount.AutoSize = true;
 			this.labelElementCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelElementCount.Location = new System.Drawing.Point(4, 35);
-			this.labelElementCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelElementCount.Location = new System.Drawing.Point(5, 43);
 			this.labelElementCount.Name = "labelElementCount";
-			this.labelElementCount.Size = new System.Drawing.Size(81, 13);
+			this.labelElementCount.Size = new System.Drawing.Size(106, 17);
 			this.labelElementCount.TabIndex = 22;
 			this.labelElementCount.Text = "Element count: ";
 			// 
 			// groupBoxBasicInfo
 			// 
-			this.groupBoxBasicInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
 			this.groupBoxBasicInfo.Controls.Add(this.labelBeamCount);
 			this.groupBoxBasicInfo.Controls.Add(this.labelEdgeCount);
 			this.groupBoxBasicInfo.Controls.Add(this.labelFaceCount);
 			this.groupBoxBasicInfo.Controls.Add(this.labelSurfaceItems);
 			this.groupBoxBasicInfo.Controls.Add(this.labelNodeCount);
 			this.groupBoxBasicInfo.Controls.Add(this.labelElementCount);
+			this.groupBoxBasicInfo.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.groupBoxBasicInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.groupBoxBasicInfo.Location = new System.Drawing.Point(4, 4);
-			this.groupBoxBasicInfo.Margin = new System.Windows.Forms.Padding(2);
+			this.groupBoxBasicInfo.Location = new System.Drawing.Point(3, 2);
+			this.groupBoxBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.groupBoxBasicInfo.Name = "groupBoxBasicInfo";
-			this.groupBoxBasicInfo.Padding = new System.Windows.Forms.Padding(2);
-			this.groupBoxBasicInfo.Size = new System.Drawing.Size(908, 402);
+			this.groupBoxBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.groupBoxBasicInfo.Size = new System.Drawing.Size(1113, 510);
 			this.groupBoxBasicInfo.TabIndex = 23;
 			this.groupBoxBasicInfo.TabStop = false;
 			this.groupBoxBasicInfo.Text = "Mesh characteristics";
@@ -185,10 +179,9 @@
 			// 
 			this.labelBeamCount.AutoSize = true;
 			this.labelBeamCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelBeamCount.Location = new System.Drawing.Point(4, 48);
-			this.labelBeamCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelBeamCount.Location = new System.Drawing.Point(5, 59);
 			this.labelBeamCount.Name = "labelBeamCount";
-			this.labelBeamCount.Size = new System.Drawing.Size(76, 13);
+			this.labelBeamCount.Size = new System.Drawing.Size(101, 17);
 			this.labelBeamCount.TabIndex = 26;
 			this.labelBeamCount.Text = "(Beam count: )";
 			// 
@@ -196,10 +189,9 @@
 			// 
 			this.labelEdgeCount.AutoSize = true;
 			this.labelEdgeCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelEdgeCount.Location = new System.Drawing.Point(4, 103);
-			this.labelEdgeCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelEdgeCount.Location = new System.Drawing.Point(5, 127);
 			this.labelEdgeCount.Name = "labelEdgeCount";
-			this.labelEdgeCount.Size = new System.Drawing.Size(65, 13);
+			this.labelEdgeCount.Size = new System.Drawing.Size(84, 17);
 			this.labelEdgeCount.TabIndex = 25;
 			this.labelEdgeCount.Text = "Edge count:";
 			// 
@@ -207,10 +199,9 @@
 			// 
 			this.labelFaceCount.AutoSize = true;
 			this.labelFaceCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelFaceCount.Location = new System.Drawing.Point(4, 89);
-			this.labelFaceCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelFaceCount.Location = new System.Drawing.Point(5, 110);
 			this.labelFaceCount.Name = "labelFaceCount";
-			this.labelFaceCount.Size = new System.Drawing.Size(67, 13);
+			this.labelFaceCount.Size = new System.Drawing.Size(86, 17);
 			this.labelFaceCount.TabIndex = 24;
 			this.labelFaceCount.Text = "Face count: ";
 			// 
@@ -218,10 +209,9 @@
 			// 
 			this.labelSurfaceItems.AutoSize = true;
 			this.labelSurfaceItems.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.labelSurfaceItems.Location = new System.Drawing.Point(4, 73);
-			this.labelSurfaceItems.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.labelSurfaceItems.Location = new System.Drawing.Point(5, 90);
 			this.labelSurfaceItems.Name = "labelSurfaceItems";
-			this.labelSurfaceItems.Size = new System.Drawing.Size(71, 13);
+			this.labelSurfaceItems.Size = new System.Drawing.Size(94, 17);
 			this.labelSurfaceItems.TabIndex = 23;
 			this.labelSurfaceItems.Text = "Surface items";
 			// 
@@ -233,22 +223,22 @@
 			this.tabControl.Controls.Add(this.tabPageBasicInfo);
 			this.tabControl.Controls.Add(this.tabPagePropertyDescriptions);
 			this.tabControl.Controls.Add(this.tabPageEdgeAngleLimits);
-			this.tabControl.Location = new System.Drawing.Point(9, 10);
-			this.tabControl.Margin = new System.Windows.Forms.Padding(2);
+			this.tabControl.Location = new System.Drawing.Point(12, 12);
+			this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
-			this.tabControl.Size = new System.Drawing.Size(964, 440);
+			this.tabControl.Size = new System.Drawing.Size(1131, 537);
 			this.tabControl.TabIndex = 26;
 			this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
 			// 
 			// tabPageBasicInfo
 			// 
 			this.tabPageBasicInfo.Controls.Add(this.groupBoxBasicInfo);
-			this.tabPageBasicInfo.Location = new System.Drawing.Point(4, 22);
-			this.tabPageBasicInfo.Margin = new System.Windows.Forms.Padding(2);
+			this.tabPageBasicInfo.Location = new System.Drawing.Point(4, 25);
+			this.tabPageBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPageBasicInfo.Name = "tabPageBasicInfo";
-			this.tabPageBasicInfo.Padding = new System.Windows.Forms.Padding(2);
-			this.tabPageBasicInfo.Size = new System.Drawing.Size(956, 414);
+			this.tabPageBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.tabPageBasicInfo.Size = new System.Drawing.Size(1119, 514);
 			this.tabPageBasicInfo.TabIndex = 0;
 			this.tabPageBasicInfo.Text = "Basic info";
 			this.tabPageBasicInfo.UseVisualStyleBackColor = true;
@@ -258,11 +248,11 @@
 			this.tabPagePropertyDescriptions.Controls.Add(this.dataGridViewPropertyDescriptions);
 			this.tabPagePropertyDescriptions.Controls.Add(this.buttonEditComment);
 			this.tabPagePropertyDescriptions.Controls.Add(this.buttonEditPropertyCommands);
-			this.tabPagePropertyDescriptions.Location = new System.Drawing.Point(4, 22);
-			this.tabPagePropertyDescriptions.Margin = new System.Windows.Forms.Padding(2);
+			this.tabPagePropertyDescriptions.Location = new System.Drawing.Point(4, 25);
+			this.tabPagePropertyDescriptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPagePropertyDescriptions.Name = "tabPagePropertyDescriptions";
-			this.tabPagePropertyDescriptions.Padding = new System.Windows.Forms.Padding(2);
-			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(956, 414);
+			this.tabPagePropertyDescriptions.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(1119, 514);
 			this.tabPagePropertyDescriptions.TabIndex = 1;
 			this.tabPagePropertyDescriptions.Text = "Property descriptions";
 			this.tabPagePropertyDescriptions.UseVisualStyleBackColor = true;
@@ -276,30 +266,67 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.dataGridViewPropertyDescriptions.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
+			this.dataGridViewPropertyDescriptions.ColumnHeadersHeight = 29;
 			this.dataGridViewPropertyDescriptions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.PropertyColumn,
             this.TargetEntityColumn,
             this.CommandsColumn,
             this.CommentColumn});
-			this.dataGridViewPropertyDescriptions.Location = new System.Drawing.Point(4, 5);
+			this.dataGridViewPropertyDescriptions.Location = new System.Drawing.Point(5, 6);
+			this.dataGridViewPropertyDescriptions.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.dataGridViewPropertyDescriptions.MultiSelect = false;
 			this.dataGridViewPropertyDescriptions.Name = "dataGridViewPropertyDescriptions";
 			this.dataGridViewPropertyDescriptions.ReadOnly = true;
 			this.dataGridViewPropertyDescriptions.RowHeadersWidth = 20;
-			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle2;
+			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle4;
 			this.dataGridViewPropertyDescriptions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.dataGridViewPropertyDescriptions.Size = new System.Drawing.Size(947, 371);
+			this.dataGridViewPropertyDescriptions.Size = new System.Drawing.Size(1105, 458);
 			this.dataGridViewPropertyDescriptions.TabIndex = 27;
 			this.dataGridViewPropertyDescriptions.DoubleClick += new System.EventHandler(this.dataGridViewPropertyDescriptions_DoubleClick);
 			this.dataGridViewPropertyDescriptions.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewPropertyDescriptions_KeyDown);
 			// 
+			// PropertyColumn
+			// 
+			this.PropertyColumn.HeaderText = "Property";
+			this.PropertyColumn.MinimumWidth = 6;
+			this.PropertyColumn.Name = "PropertyColumn";
+			this.PropertyColumn.ReadOnly = true;
+			this.PropertyColumn.Width = 80;
+			// 
+			// TargetEntityColumn
+			// 
+			this.TargetEntityColumn.HeaderText = "Entity";
+			this.TargetEntityColumn.MinimumWidth = 6;
+			this.TargetEntityColumn.Name = "TargetEntityColumn";
+			this.TargetEntityColumn.ReadOnly = true;
+			this.TargetEntityColumn.Width = 60;
+			// 
+			// CommandsColumn
+			// 
+			dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle3;
+			this.CommandsColumn.HeaderText = "Commands";
+			this.CommandsColumn.MinimumWidth = 6;
+			this.CommandsColumn.Name = "CommandsColumn";
+			this.CommandsColumn.ReadOnly = true;
+			this.CommandsColumn.Width = 540;
+			// 
+			// CommentColumn
+			// 
+			this.CommentColumn.HeaderText = "Comment";
+			this.CommentColumn.MinimumWidth = 6;
+			this.CommentColumn.Name = "CommentColumn";
+			this.CommentColumn.ReadOnly = true;
+			this.CommentColumn.Width = 220;
+			// 
 			// buttonEditComment
 			// 
 			this.buttonEditComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonEditComment.Location = new System.Drawing.Point(858, 382);
+			this.buttonEditComment.Location = new System.Drawing.Point(986, 471);
+			this.buttonEditComment.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buttonEditComment.Name = "buttonEditComment";
-			this.buttonEditComment.Size = new System.Drawing.Size(94, 27);
+			this.buttonEditComment.Size = new System.Drawing.Size(125, 33);
 			this.buttonEditComment.TabIndex = 26;
 			this.buttonEditComment.Text = "Edit comment";
 			this.buttonEditComment.UseVisualStyleBackColor = true;
@@ -308,10 +335,10 @@
 			// buttonEditPropertyCommands
 			// 
 			this.buttonEditPropertyCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonEditPropertyCommands.Location = new System.Drawing.Point(752, 382);
-			this.buttonEditPropertyCommands.Margin = new System.Windows.Forms.Padding(2);
+			this.buttonEditPropertyCommands.Location = new System.Drawing.Point(845, 471);
+			this.buttonEditPropertyCommands.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonEditPropertyCommands.Name = "buttonEditPropertyCommands";
-			this.buttonEditPropertyCommands.Size = new System.Drawing.Size(101, 27);
+			this.buttonEditPropertyCommands.Size = new System.Drawing.Size(135, 33);
 			this.buttonEditPropertyCommands.TabIndex = 25;
 			this.buttonEditPropertyCommands.Text = "Edit commands";
 			this.buttonEditPropertyCommands.UseVisualStyleBackColor = true;
@@ -326,11 +353,11 @@
 			this.tabPageEdgeAngleLimits.Controls.Add(this.secondBorderLimitLabel);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.secondBorderLimitTrackBar);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.histogramViewer);
-			this.tabPageEdgeAngleLimits.Location = new System.Drawing.Point(4, 22);
-			this.tabPageEdgeAngleLimits.Margin = new System.Windows.Forms.Padding(2);
+			this.tabPageEdgeAngleLimits.Location = new System.Drawing.Point(4, 25);
+			this.tabPageEdgeAngleLimits.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPageEdgeAngleLimits.Name = "tabPageEdgeAngleLimits";
-			this.tabPageEdgeAngleLimits.Padding = new System.Windows.Forms.Padding(2);
-			this.tabPageEdgeAngleLimits.Size = new System.Drawing.Size(956, 414);
+			this.tabPageEdgeAngleLimits.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.tabPageEdgeAngleLimits.Size = new System.Drawing.Size(1123, 508);
 			this.tabPageEdgeAngleLimits.TabIndex = 2;
 			this.tabPageEdgeAngleLimits.Text = "Edge angle limits";
 			this.tabPageEdgeAngleLimits.UseVisualStyleBackColor = true;
@@ -338,10 +365,9 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(13, 146);
-			this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.label1.Location = new System.Drawing.Point(17, 180);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(117, 13);
+			this.label1.Size = new System.Drawing.Size(157, 17);
 			this.label1.TabIndex = 19;
 			this.label1.Text = "Edge angles histogram:";
 			// 
@@ -353,52 +379,22 @@
 			this.histogramViewer.BackColor = System.Drawing.SystemColors.Info;
 			this.histogramViewer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.histogramViewer.FirstLimit = 0;
-			this.histogramViewer.Location = new System.Drawing.Point(16, 161);
-			this.histogramViewer.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+			this.histogramViewer.Location = new System.Drawing.Point(21, 198);
+			this.histogramViewer.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.histogramViewer.Name = "histogramViewer";
 			this.histogramViewer.SecondLimit = 0;
-			this.histogramViewer.Size = new System.Drawing.Size(709, 209);
+			this.histogramViewer.Size = new System.Drawing.Size(1094, 252);
 			this.histogramViewer.TabIndex = 18;
-			// 
-			// PropertyColumn
-			// 
-			this.PropertyColumn.HeaderText = "Property";
-			this.PropertyColumn.Name = "PropertyColumn";
-			this.PropertyColumn.ReadOnly = true;
-			this.PropertyColumn.Width = 80;
-			// 
-			// TargetEntityColumn
-			// 
-			this.TargetEntityColumn.HeaderText = "Entity";
-			this.TargetEntityColumn.Name = "TargetEntityColumn";
-			this.TargetEntityColumn.ReadOnly = true;
-			this.TargetEntityColumn.Width = 60;
-			// 
-			// CommandsColumn
-			// 
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle1;
-			this.CommandsColumn.HeaderText = "Commands";
-			this.CommandsColumn.Name = "CommandsColumn";
-			this.CommandsColumn.ReadOnly = true;
-			this.CommandsColumn.Width = 540;
-			// 
-			// CommentColumn
-			// 
-			this.CommentColumn.HeaderText = "Comment";
-			this.CommentColumn.Name = "CommentColumn";
-			this.CommentColumn.ReadOnly = true;
-			this.CommentColumn.Width = 220;
 			// 
 			// MeshInfoForm
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonClose;
-			this.ClientSize = new System.Drawing.Size(982, 492);
+			this.ClientSize = new System.Drawing.Size(1155, 601);
 			this.Controls.Add(this.tabControl);
 			this.Controls.Add(this.buttonClose);
-			this.Margin = new System.Windows.Forms.Padding(2);
+			this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "MeshInfoForm";
