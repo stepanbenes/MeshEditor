@@ -1588,7 +1588,7 @@ namespace MeshEditor.CoreInterface
 				GL.Color4(SceneFacade.SELECTION_RECTANGLE_COLOR);
 			// ----------
 
-			GL.Begin(BeginMode.Quads);
+			GL.Begin(PrimitiveType.Quads);
 			{
 				GL.Vertex2(p1.X, p1.Y);
 				GL.Vertex2(p1.X, p2.Y);
@@ -1599,7 +1599,7 @@ namespace MeshEditor.CoreInterface
 
 			GL.Disable(EnableCap.Blend);
 
-			GL.Begin(BeginMode.LineLoop);
+			GL.Begin(PrimitiveType.LineLoop);
 			{
 				GL.Vertex2(p1.X, p1.Y);
 				GL.Vertex2(p1.X, p2.Y);
@@ -1670,7 +1670,7 @@ namespace MeshEditor.CoreInterface
 
 			GL.Enable(EnableCap.LineSmooth);
 			GL.Enable(EnableCap.Blend);
-			GL.Begin(BeginMode.Lines);
+			GL.Begin(PrimitiveType.Lines);
 			for (int i = 0; i < windowPositions.Length; i++)
 			{
 				Vector2 point = new Vector2(windowPositions[i].X, clientWindowSize.Height - windowPositions[i].Y);

@@ -153,7 +153,7 @@ namespace MeshEditor.Cuts
 					GL.Enable(EnableCap.Blend);
 			}
 			GL.Color4(ref SelectedColor.R);
-			GL.Begin(BeginMode.LineLoop);
+			GL.Begin(PrimitiveType.LineLoop);
 			GL.Vertex3(ref vertex1.X);
 			GL.Vertex3(ref vertex2.X);
 			GL.Vertex3(ref vertex3.X);
@@ -194,7 +194,7 @@ namespace MeshEditor.Cuts
 				GL.Enable(EnableCap.Blend);
 
 			GL.Color4(ref SelectedColor.R);
-			GL.Begin(BeginMode.Points);
+			GL.Begin(PrimitiveType.Points);
 			foreach (Vector3 point in points)
 				GL.Vertex3(point);
 			GL.End();
@@ -248,7 +248,7 @@ namespace MeshEditor.Cuts
 			// nastaveni normaly plochy
 			GL.Normal3(ref normalVector.X);
 
-			GL.Begin(BeginMode.Quads);
+			GL.Begin(PrimitiveType.Quads);
 			GL.Vertex3(ref vertex1.X);
 			GL.Vertex3(ref vertex2.X);
 			GL.Vertex3(ref vertex3.X);

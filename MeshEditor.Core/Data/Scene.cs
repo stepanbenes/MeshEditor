@@ -898,7 +898,7 @@ namespace MeshEditor.Data
 				GL.Translate(origin);
 
 				// kladne osy
-				GL.Begin(BeginMode.Lines);
+				GL.Begin(PrimitiveType.Lines);
 				GL.Color3(1.0, 0, 0);       // X
 				GL.Vertex3(0, 0, 0);
 				GL.Vertex3(AxisLength, 0, 0);
@@ -915,7 +915,7 @@ namespace MeshEditor.Data
 				GL.Enable(EnableCap.LineStipple);
 				GL.LineStipple(2, 52428);
 				// zaporne osy
-				GL.Begin(BeginMode.Lines);
+				GL.Begin(PrimitiveType.Lines);
 				GL.Color3(1.0, 0, 0);       // X
 				GL.Vertex3(0, 0, 0);
 				GL.Vertex3(-AxisLength, 0, 0);
@@ -980,7 +980,7 @@ namespace MeshEditor.Data
 					Vector3 zAxisEndPoint = new Vector3(0, 0, arrowLength);
 
 					// draw lines
-					GL.Begin(BeginMode.Lines);
+					GL.Begin(PrimitiveType.Lines);
 					{
 						GL.Color3(1.0, 0, 0);       // X
 						GL.Vertex3(0, 0, 0);

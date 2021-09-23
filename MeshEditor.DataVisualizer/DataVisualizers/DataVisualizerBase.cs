@@ -194,7 +194,7 @@ namespace MeshEditor.DataVisualizer
 					BeginDraw(lightingEnabled: false);
 
 					// DRAW COLOR RECTANGLES
-					GL.Begin(BeginMode.Quads);
+					GL.Begin(PrimitiveType.Quads);
 					{
 						Point location = startLocation;
 						byte r, g, b, a;
@@ -220,7 +220,7 @@ namespace MeshEditor.DataVisualizer
 					// DRAW BOUNDARY LINES
 					GL.LineWidth(1f);
 					GL.Color3(contrastColor);
-					GL.Begin(BeginMode.Lines);
+					GL.Begin(PrimitiveType.Lines);
 					{
 						Point location = startLocation;
 						for (int i = 0; i < controlPoints.Length; i++)

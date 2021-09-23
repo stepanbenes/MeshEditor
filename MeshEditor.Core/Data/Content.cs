@@ -785,7 +785,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				GL.Begin(BeginMode.Triangles);
+				GL.Begin(PrimitiveType.Triangles);
 				foreach (Element2D face in faces)
 					face.Draw();
 				GL.End();
@@ -800,7 +800,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				GL.Begin(BeginMode.Triangles);
+				GL.Begin(PrimitiveType.Triangles);
 				foreach (Element2D face in faces)
 				{
 					// -------------------------------------------
@@ -852,7 +852,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				GL.Begin(BeginMode.Lines);
+				GL.Begin(PrimitiveType.Lines);
 				foreach (WingedEdge edge in edges)
 				{
 					if (edge.FeatureAngle >= hardBorderLimit)
@@ -883,7 +883,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				GL.Begin(BeginMode.Lines);
+				GL.Begin(PrimitiveType.Lines);
 				foreach (WingedEdge edge in edges)
 				{
 					if (edge.FeatureAngle < hardBorderLimit)
@@ -911,7 +911,7 @@ namespace MeshEditor.Data
 			}
 			else
 			{
-				GL.Begin(BeginMode.Points);
+				GL.Begin(PrimitiveType.Points);
 				foreach (Node n in (includeMiddleNodes) ? GetAllExternalNodes() : GetSimpleExternalNodes())
 					DrawSingleNode(n, selectedItems.Contains(n), nodePropertyColors);
 				GL.End();
@@ -945,7 +945,7 @@ namespace MeshEditor.Data
 			}
 			else // Immediate mode
 			{
-				GL.Begin(BeginMode.Lines);
+				GL.Begin(PrimitiveType.Lines);
 				foreach (Beam beam in beams)
 				{
 					if (selectedItems.Contains(beam))
@@ -973,7 +973,7 @@ namespace MeshEditor.Data
 				this.vbo.DrawNodes(this.visibleNodesIBO);
 			else // vykreslit pomoci immediate mode
 			{
-				GL.Begin(BeginMode.Points);
+				GL.Begin(PrimitiveType.Points);
 				foreach (Node n in visibleNodes)
 					DrawSingleNode(n, selectedItems.Contains(n), nodePropertyColors);
 				GL.End();
