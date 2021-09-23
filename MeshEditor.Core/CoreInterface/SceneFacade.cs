@@ -307,7 +307,7 @@ namespace MeshEditor.CoreInterface
 			GL.Enable(EnableCap.ColorMaterial);
 			GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.AmbientAndDiffuse);
 
-			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+			GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 			//GL.Hint(HintTarget.PointSmoothHint, HintMode.Nicest);
 			GL.Hint(HintTarget.PointSmoothHint, HintMode.Fastest);
 			GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
