@@ -226,7 +226,7 @@
 			// openToolStripMenuItem
 			// 
 			this.openToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
-			this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
 			this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
 			this.openToolStripMenuItem.Size = new System.Drawing.Size(194, 26);
@@ -236,7 +236,7 @@
 			// saveToolStripMenuItem
 			// 
 			this.saveToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources._active__Save;
-			this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
 			this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
 			this.saveToolStripMenuItem.Size = new System.Drawing.Size(194, 26);
@@ -319,7 +319,7 @@
 			// setPropertyOfSelectedItemsToolStripMenuItem
 			// 
 			this.setPropertyOfSelectedItemsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("setPropertyOfSelectedItemsToolStripMenuItem.Image")));
-			this.setPropertyOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.setPropertyOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.setPropertyOfSelectedItemsToolStripMenuItem.Name = "setPropertyOfSelectedItemsToolStripMenuItem";
 			this.setPropertyOfSelectedItemsToolStripMenuItem.Size = new System.Drawing.Size(421, 26);
 			this.setPropertyOfSelectedItemsToolStripMenuItem.Text = "Set &property of selected entities";
@@ -328,7 +328,7 @@
 			// selectItemsByPropertyToolStripMenuItem
 			// 
 			this.selectItemsByPropertyToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("selectItemsByPropertyToolStripMenuItem.Image")));
-			this.selectItemsByPropertyToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(254)))), ((int)(((byte)(255)))));
+			this.selectItemsByPropertyToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.selectItemsByPropertyToolStripMenuItem.Name = "selectItemsByPropertyToolStripMenuItem";
 			this.selectItemsByPropertyToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
 			this.selectItemsByPropertyToolStripMenuItem.Size = new System.Drawing.Size(421, 26);
@@ -499,7 +499,7 @@
             this.toolStripSeparator6,
             this.configurePropertyColorsToolStripMenuItem});
 			this.propertyColorsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsToolStripMenuItem.Image")));
-			this.propertyColorsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.propertyColorsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.propertyColorsToolStripMenuItem.Name = "propertyColorsToolStripMenuItem";
 			this.propertyColorsToolStripMenuItem.Size = new System.Drawing.Size(262, 26);
 			this.propertyColorsToolStripMenuItem.Text = "&Property colors";
@@ -570,7 +570,7 @@
 			// pointsToolStripMenuItem
 			// 
 			this.pointsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.points;
-			this.pointsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.pointsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.pointsToolStripMenuItem.Name = "pointsToolStripMenuItem";
 			this.pointsToolStripMenuItem.Size = new System.Drawing.Size(246, 26);
 			this.pointsToolStripMenuItem.Text = "&Points";
@@ -579,7 +579,7 @@
 			// borderLinesToolStripMenuItem
 			// 
 			this.borderLinesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.borderLines;
-			this.borderLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.borderLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.borderLinesToolStripMenuItem.Name = "borderLinesToolStripMenuItem";
 			this.borderLinesToolStripMenuItem.Size = new System.Drawing.Size(246, 26);
 			this.borderLinesToolStripMenuItem.Text = "&Border lines";
@@ -588,7 +588,7 @@
 			// allLinesToolStripMenuItem
 			// 
 			this.allLinesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.allLines;
-			this.allLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.allLinesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.allLinesToolStripMenuItem.Name = "allLinesToolStripMenuItem";
 			this.allLinesToolStripMenuItem.Size = new System.Drawing.Size(246, 26);
 			this.allLinesToolStripMenuItem.Text = "&All lines";
@@ -597,7 +597,7 @@
 			// facesRenderToolStripMenuItem
 			// 
 			this.facesRenderToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.faces;
-			this.facesRenderToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.facesRenderToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.facesRenderToolStripMenuItem.Name = "facesRenderToolStripMenuItem";
 			this.facesRenderToolStripMenuItem.Size = new System.Drawing.Size(246, 26);
 			this.facesRenderToolStripMenuItem.Text = "&Faces";
@@ -656,7 +656,7 @@
 			// orbitToolStripMenuItem1
 			// 
 			this.orbitToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
-			this.orbitToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.orbitToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.orbitToolStripMenuItem1.Name = "orbitToolStripMenuItem1";
 			this.orbitToolStripMenuItem1.Size = new System.Drawing.Size(249, 26);
 			this.orbitToolStripMenuItem1.Text = "&Orbit";
@@ -665,7 +665,7 @@
 			// panToolStripMenuItem1
 			// 
 			this.panToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
-			this.panToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.panToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.panToolStripMenuItem1.Name = "panToolStripMenuItem1";
 			this.panToolStripMenuItem1.Size = new System.Drawing.Size(249, 26);
 			this.panToolStripMenuItem1.Text = "&Pan";
@@ -674,7 +674,7 @@
 			// lookAroundToolStripMenuItem1
 			// 
 			this.lookAroundToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
-			this.lookAroundToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.lookAroundToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.lookAroundToolStripMenuItem1.Name = "lookAroundToolStripMenuItem1";
 			this.lookAroundToolStripMenuItem1.Size = new System.Drawing.Size(249, 26);
 			this.lookAroundToolStripMenuItem1.Text = "Look &around";
@@ -683,7 +683,7 @@
 			// zoomWindowToolStripMenuItem
 			// 
 			this.zoomWindowToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
-			this.zoomWindowToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomWindowToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.zoomWindowToolStripMenuItem.Name = "zoomWindowToolStripMenuItem";
 			this.zoomWindowToolStripMenuItem.Size = new System.Drawing.Size(249, 26);
 			this.zoomWindowToolStripMenuItem.Text = "&Zoom window";
@@ -697,7 +697,7 @@
 			// zoomToFitToolStripMenuItem
 			// 
 			this.zoomToFitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
-			this.zoomToFitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomToFitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.zoomToFitToolStripMenuItem.Name = "zoomToFitToolStripMenuItem";
 			this.zoomToFitToolStripMenuItem.Size = new System.Drawing.Size(249, 26);
 			this.zoomToFitToolStripMenuItem.Text = "Zoo&m to fit";
@@ -773,7 +773,7 @@
 			// elementsToolStripMenuItem1
 			// 
 			this.elementsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
-			this.elementsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.elementsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.elementsToolStripMenuItem1.Name = "elementsToolStripMenuItem1";
 			this.elementsToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.elementsToolStripMenuItem1.Text = "&Elements";
@@ -782,7 +782,7 @@
 			// nodesToolStripMenuItem1
 			// 
 			this.nodesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
-			this.nodesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.nodesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.nodesToolStripMenuItem1.Name = "nodesToolStripMenuItem1";
 			this.nodesToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.nodesToolStripMenuItem1.Text = "&Nodes";
@@ -791,7 +791,7 @@
 			// selectFacesToolStripMenuItem
 			// 
 			this.selectFacesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
-			this.selectFacesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.selectFacesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.selectFacesToolStripMenuItem.Name = "selectFacesToolStripMenuItem";
 			this.selectFacesToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
 			this.selectFacesToolStripMenuItem.Text = "&Faces";
@@ -800,7 +800,7 @@
 			// edgesToolStripMenuItem1
 			// 
 			this.edgesToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
-			this.edgesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.edgesToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.edgesToolStripMenuItem1.Name = "edgesToolStripMenuItem1";
 			this.edgesToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.edgesToolStripMenuItem1.Text = "E&dges";
@@ -809,7 +809,7 @@
 			// beamsToolStripMenuItem1
 			// 
 			this.beamsToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
-			this.beamsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.beamsToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.beamsToolStripMenuItem1.Name = "beamsToolStripMenuItem1";
 			this.beamsToolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
 			this.beamsToolStripMenuItem1.Text = "&Beams";
@@ -837,7 +837,7 @@
 			// meshInfoToolStripMenuItem
 			// 
 			this.meshInfoToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.About;
-			this.meshInfoToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.meshInfoToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.meshInfoToolStripMenuItem.Name = "meshInfoToolStripMenuItem";
 			this.meshInfoToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4;
 			this.meshInfoToolStripMenuItem.Size = new System.Drawing.Size(259, 26);
@@ -847,7 +847,7 @@
 			// listOfSelectedItemsToolStripMenuItem
 			// 
 			this.listOfSelectedItemsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.listOfSelectedItems;
-			this.listOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.listOfSelectedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.listOfSelectedItemsToolStripMenuItem.Name = "listOfSelectedItemsToolStripMenuItem";
 			this.listOfSelectedItemsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
 			this.listOfSelectedItemsToolStripMenuItem.Size = new System.Drawing.Size(259, 26);
@@ -862,7 +862,7 @@
 			// cutsToolStripMenuItem
 			// 
 			this.cutsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.cutAndSelectArea;
-			this.cutsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.cutsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.cutsToolStripMenuItem.Name = "cutsToolStripMenuItem";
 			this.cutsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F8;
 			this.cutsToolStripMenuItem.Size = new System.Drawing.Size(259, 26);
@@ -881,7 +881,7 @@
 			// restoreCuttedItemsToolStripMenuItem
 			// 
 			this.restoreCuttedItemsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.restore;
-			this.restoreCuttedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.restoreCuttedItemsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.restoreCuttedItemsToolStripMenuItem.Name = "restoreCuttedItemsToolStripMenuItem";
 			this.restoreCuttedItemsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F10;
 			this.restoreCuttedItemsToolStripMenuItem.Size = new System.Drawing.Size(259, 26);
@@ -915,7 +915,7 @@
 			// settingsToolStripMenuItem
 			// 
 			this.settingsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.Settings;
-			this.settingsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.settingsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
 			this.settingsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F7;
 			this.settingsToolStripMenuItem.Size = new System.Drawing.Size(259, 26);
@@ -1058,7 +1058,7 @@
 			// 
 			this.openToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.openToolStripButton.Image = global::MeshEditor.WinUI.Properties.Resources.Open;
-			this.openToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.openToolStripButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.openToolStripButton.Name = "openToolStripButton";
 			this.openToolStripButton.Size = new System.Drawing.Size(28, 28);
 			this.openToolStripButton.Text = "Open";
@@ -1069,7 +1069,7 @@
 			// 
 			this.saveToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.saveToolStripButton.Image = global::MeshEditor.WinUI.Properties.Resources._active__Save;
-			this.saveToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.saveToolStripButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.saveToolStripButton.Name = "saveToolStripButton";
 			this.saveToolStripButton.Size = new System.Drawing.Size(28, 28);
 			this.saveToolStripButton.Text = "Save As...";
@@ -1086,7 +1086,7 @@
 			// 
 			this.toolStripButtonPoints.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonPoints.Image = global::MeshEditor.WinUI.Properties.Resources.points;
-			this.toolStripButtonPoints.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonPoints.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonPoints.Name = "toolStripButtonPoints";
 			this.toolStripButtonPoints.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonPoints.Text = "Show points";
@@ -1096,7 +1096,7 @@
 			// 
 			this.toolStripButtonBorderLines.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonBorderLines.Image = global::MeshEditor.WinUI.Properties.Resources.borderLines;
-			this.toolStripButtonBorderLines.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonBorderLines.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonBorderLines.Name = "toolStripButtonBorderLines";
 			this.toolStripButtonBorderLines.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonBorderLines.Text = "Show border lines";
@@ -1106,7 +1106,7 @@
 			// 
 			this.toolStripButtonAllLines.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonAllLines.Image = global::MeshEditor.WinUI.Properties.Resources.allLines;
-			this.toolStripButtonAllLines.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonAllLines.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonAllLines.Name = "toolStripButtonAllLines";
 			this.toolStripButtonAllLines.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonAllLines.Text = "Show all lines";
@@ -1116,7 +1116,7 @@
 			// 
 			this.toolStripButtonFaces.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonFaces.Image = global::MeshEditor.WinUI.Properties.Resources.faces;
-			this.toolStripButtonFaces.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonFaces.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonFaces.Name = "toolStripButtonFaces";
 			this.toolStripButtonFaces.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonFaces.Text = "Show faces";
@@ -1132,7 +1132,7 @@
 			// 
 			this.toolStripButtonOrbit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonOrbit.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
-			this.toolStripButtonOrbit.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonOrbit.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonOrbit.Name = "toolStripButtonOrbit";
 			this.toolStripButtonOrbit.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonOrbit.Text = "Orbit";
@@ -1143,7 +1143,7 @@
 			// 
 			this.toolStripButtonPan.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonPan.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
-			this.toolStripButtonPan.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonPan.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonPan.Name = "toolStripButtonPan";
 			this.toolStripButtonPan.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonPan.Text = "Pan";
@@ -1154,7 +1154,7 @@
 			// 
 			this.toolStripButtonLookAround.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonLookAround.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
-			this.toolStripButtonLookAround.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonLookAround.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonLookAround.Name = "toolStripButtonLookAround";
 			this.toolStripButtonLookAround.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonLookAround.Text = "Look around";
@@ -1165,7 +1165,7 @@
 			// 
 			this.toolStripButtonZoomWindow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonZoomWindow.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
-			this.toolStripButtonZoomWindow.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonZoomWindow.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonZoomWindow.Name = "toolStripButtonZoomWindow";
 			this.toolStripButtonZoomWindow.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonZoomWindow.Text = "Zoom window";
@@ -1181,7 +1181,7 @@
 			// 
 			this.toolStripButtonZoomToFit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonZoomToFit.Image = global::MeshEditor.WinUI.Properties.Resources.zoomToFit;
-			this.toolStripButtonZoomToFit.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonZoomToFit.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonZoomToFit.Name = "toolStripButtonZoomToFit";
 			this.toolStripButtonZoomToFit.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonZoomToFit.Text = "Zoom to fit";
@@ -1196,7 +1196,7 @@
 			// 
 			this.toolStripButtonSelectElements.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonSelectElements.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
-			this.toolStripButtonSelectElements.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectElements.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonSelectElements.Name = "toolStripButtonSelectElements";
 			this.toolStripButtonSelectElements.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonSelectElements.Text = "Select elements";
@@ -1207,7 +1207,7 @@
 			// 
 			this.toolStripButtonSelectNodes.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonSelectNodes.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
-			this.toolStripButtonSelectNodes.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectNodes.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonSelectNodes.Name = "toolStripButtonSelectNodes";
 			this.toolStripButtonSelectNodes.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonSelectNodes.Text = "Select nodes";
@@ -1218,7 +1218,7 @@
 			// 
 			this.toolStripButtonSelectFaces.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonSelectFaces.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
-			this.toolStripButtonSelectFaces.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectFaces.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonSelectFaces.Name = "toolStripButtonSelectFaces";
 			this.toolStripButtonSelectFaces.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonSelectFaces.Text = "Select faces";
@@ -1229,7 +1229,7 @@
 			// 
 			this.toolStripButtonSelectEdges.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonSelectEdges.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
-			this.toolStripButtonSelectEdges.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectEdges.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonSelectEdges.Name = "toolStripButtonSelectEdges";
 			this.toolStripButtonSelectEdges.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonSelectEdges.Text = "Select edges";
@@ -1240,7 +1240,7 @@
 			// 
 			this.toolStripButtonSelectBeams.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonSelectBeams.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
-			this.toolStripButtonSelectBeams.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.toolStripButtonSelectBeams.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonSelectBeams.Name = "toolStripButtonSelectBeams";
 			this.toolStripButtonSelectBeams.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonSelectBeams.Text = "Select beams";
@@ -1267,7 +1267,7 @@
             this.configurePropertyColorsToolStripMenuItem1});
 			this.propertyColorsTtoolStripDropDownButton.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
 			this.propertyColorsTtoolStripDropDownButton.Image = ((System.Drawing.Image)(resources.GetObject("propertyColorsTtoolStripDropDownButton.Image")));
-			this.propertyColorsTtoolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.White;
+			this.propertyColorsTtoolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.propertyColorsTtoolStripDropDownButton.Name = "propertyColorsTtoolStripDropDownButton";
 			this.propertyColorsTtoolStripDropDownButton.Size = new System.Drawing.Size(38, 28);
 			this.propertyColorsTtoolStripDropDownButton.Text = "Show property colors";
@@ -1353,7 +1353,7 @@
 			// 
 			this.toolStripButtonListOfSelectedItems.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonListOfSelectedItems.Image = global::MeshEditor.WinUI.Properties.Resources.listOfSelectedItems;
-			this.toolStripButtonListOfSelectedItems.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonListOfSelectedItems.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonListOfSelectedItems.Name = "toolStripButtonListOfSelectedItems";
 			this.toolStripButtonListOfSelectedItems.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonListOfSelectedItems.Text = "Show list of selected entities (F3)";
@@ -1363,7 +1363,7 @@
 			// 
 			this.toolStripButtonMeshInfo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonMeshInfo.Image = global::MeshEditor.WinUI.Properties.Resources.About;
-			this.toolStripButtonMeshInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonMeshInfo.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonMeshInfo.Name = "toolStripButtonMeshInfo";
 			this.toolStripButtonMeshInfo.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonMeshInfo.Text = "Mesh info";
@@ -1379,7 +1379,7 @@
 			// 
 			this.toolStripButtonCutSelectArea.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonCutSelectArea.Image = global::MeshEditor.WinUI.Properties.Resources.cutAndSelectArea;
-			this.toolStripButtonCutSelectArea.ImageTransparentColor = System.Drawing.Color.White;
+			this.toolStripButtonCutSelectArea.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonCutSelectArea.Name = "toolStripButtonCutSelectArea";
 			this.toolStripButtonCutSelectArea.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonCutSelectArea.Text = "Cut / Select area";
@@ -1390,7 +1390,7 @@
 			// 
 			this.toolStripButtonShowHideElements.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.toolStripButtonShowHideElements.Image = global::MeshEditor.WinUI.Properties.Resources.show_hide;
-			this.toolStripButtonShowHideElements.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripButtonShowHideElements.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.toolStripButtonShowHideElements.Name = "toolStripButtonShowHideElements";
 			this.toolStripButtonShowHideElements.Size = new System.Drawing.Size(28, 28);
 			this.toolStripButtonShowHideElements.Text = "Show / hide elements";
@@ -1451,7 +1451,7 @@
 			// elementsToolStripMenuItem
 			// 
 			this.elementsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectElements;
-			this.elementsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.elementsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.elementsToolStripMenuItem.Name = "elementsToolStripMenuItem";
 			this.elementsToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.elementsToolStripMenuItem.Text = "&Elements";
@@ -1460,7 +1460,7 @@
 			// nodesToolStripMenuItem
 			// 
 			this.nodesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectNodes;
-			this.nodesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.nodesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.nodesToolStripMenuItem.Name = "nodesToolStripMenuItem";
 			this.nodesToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.nodesToolStripMenuItem.Text = "&Nodes";
@@ -1469,7 +1469,7 @@
 			// facesToolStripMenuItem
 			// 
 			this.facesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectFaces;
-			this.facesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.facesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.facesToolStripMenuItem.Name = "facesToolStripMenuItem";
 			this.facesToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.facesToolStripMenuItem.Text = "&Faces";
@@ -1478,7 +1478,7 @@
 			// edgesToolStripMenuItem
 			// 
 			this.edgesToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectEdges;
-			this.edgesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.edgesToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.edgesToolStripMenuItem.Name = "edgesToolStripMenuItem";
 			this.edgesToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.edgesToolStripMenuItem.Text = "Ed&ges";
@@ -1487,7 +1487,7 @@
 			// beamsToolStripMenuItem
 			// 
 			this.beamsToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.selectBeams;
-			this.beamsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Transparent;
+			this.beamsToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.beamsToolStripMenuItem.Name = "beamsToolStripMenuItem";
 			this.beamsToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.beamsToolStripMenuItem.Text = "&Beams";
@@ -1501,7 +1501,7 @@
 			// orbitToolStripMenuItem
 			// 
 			this.orbitToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.orbit;
-			this.orbitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.orbitToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.orbitToolStripMenuItem.Name = "orbitToolStripMenuItem";
 			this.orbitToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
 			this.orbitToolStripMenuItem.Text = "&Orbit";
@@ -1510,7 +1510,7 @@
 			// panToolStripMenuItem
 			// 
 			this.panToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.pan;
-			this.panToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.panToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.panToolStripMenuItem.Name = "panToolStripMenuItem";
 			this.panToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
 			this.panToolStripMenuItem.Text = "&Pan";
@@ -1519,7 +1519,7 @@
 			// lookAroundToolStripMenuItem
 			// 
 			this.lookAroundToolStripMenuItem.Image = global::MeshEditor.WinUI.Properties.Resources.lookAround;
-			this.lookAroundToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+			this.lookAroundToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.lookAroundToolStripMenuItem.Name = "lookAroundToolStripMenuItem";
 			this.lookAroundToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
 			this.lookAroundToolStripMenuItem.Text = "&Look Around";
@@ -1528,7 +1528,7 @@
 			// zoomWindowToolStripMenuItem1
 			// 
 			this.zoomWindowToolStripMenuItem1.Image = global::MeshEditor.WinUI.Properties.Resources.zoomWindow;
-			this.zoomWindowToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.White;
+			this.zoomWindowToolStripMenuItem1.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
 			this.zoomWindowToolStripMenuItem1.Name = "zoomWindowToolStripMenuItem1";
 			this.zoomWindowToolStripMenuItem1.Size = new System.Drawing.Size(178, 26);
 			this.zoomWindowToolStripMenuItem1.Text = "&Zoom window";
