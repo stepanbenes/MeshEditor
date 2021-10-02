@@ -373,6 +373,16 @@ namespace MeshEditor.WinUI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap selectItemsByProperty {
+            get {
+                object obj = ResourceManager.GetObject("selectItemsByProperty", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap selectNodes {
             get {
                 object obj = ResourceManager.GetObject("selectNodes", resourceCulture);

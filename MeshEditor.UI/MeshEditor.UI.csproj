@@ -121,21 +121,22 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="UpdateChecker.cs" />
     <Content Include="UserGuide\figures\main-window-overview.png" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="app.config" />
     <None Include="MeshEditor.UI_TemporaryKey.pfx" />
     <None Include="OpenTK.dll.config" />
@@ -170,103 +171,103 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\_active_ Save.bmp" />
+    <None Include="Resources\_active_ Save.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Open.bmp" />
+    <None Include="Resources\Open.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Undo.bmp" />
+    <None Include="Resources\Undo.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Redo.bmp" />
+    <None Include="Resources\Redo.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\_disabled_ About.bmp" />
+    <None Include="Resources\_disabled_ About.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\About.bmp" />
+    <None Include="Resources\About.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Settings.bmp" />
+    <None Include="Resources\Settings.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\show_hide.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\orbit24.bmp" />
+    <None Include="Resources\orbit24.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\orbit.bmp" />
+    <None Include="Resources\orbit.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\pan.bmp" />
+    <None Include="Resources\pan.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\lookAround.bmp" />
+    <None Include="Resources\lookAround.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\zoomWindow.bmp" />
+    <None Include="Resources\zoomWindow.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\zoomToFit.bmp" />
+    <None Include="Resources\zoomToFit.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\points48.bmp" />
+    <None Include="Resources\points48.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\borderLines48.bmp" />
+    <None Include="Resources\borderLines48.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\points.bmp" />
+    <None Include="Resources\points.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\borderLines.bmp" />
+    <None Include="Resources\borderLines.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\allLines.bmp" />
+    <None Include="Resources\allLines.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\faces.bmp" />
+    <None Include="Resources\faces.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\propertyColors.bmp" />
+    <None Include="Resources\propertyColors.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectElements.bmp" />
+    <None Include="Resources\selectElements.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectNodes.bmp" />
+    <None Include="Resources\selectNodes.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectFaces.bmp" />
+    <None Include="Resources\selectFaces.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectEdges.bmp" />
+    <None Include="Resources\selectEdges.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectBeams.bmp" />
+    <None Include="Resources\selectBeams.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\cutAndSelectArea.bmp" />
+    <None Include="Resources\cutAndSelectArea.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\setPropertyOfSelectedItems.bmp" />
+    <None Include="Resources\setPropertyOfSelectedItems.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\selectItemsByProperty.bmp" />
+    <None Include="Resources\selectItemsByProperty.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\setPropertyOfSelectedItems1.bmp" />
+    <None Include="Resources\setPropertyOfSelectedItems1.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\restore.bmp" />
+    <None Include="Resources\restore.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\help.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\help32.bmp" />
+    <None Include="Resources\help32.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\porshe.png" />
