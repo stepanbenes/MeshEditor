@@ -13,6 +13,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Linq;
+using MeshEditor.Text;
 
 namespace MeshEditor.Utilities
 {
@@ -627,7 +628,7 @@ namespace MeshEditor.Utilities
 
 		public static void DrawText(string text, Vector3 position, Color color)
 		{
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			// NOTE: only for testing; very bad performance
 			int[] viewport;
@@ -652,7 +653,7 @@ namespace MeshEditor.Utilities
 		{
 			// NOTE: only for testing; very bad performance
 
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
@@ -665,7 +666,7 @@ namespace MeshEditor.Utilities
 		public static SizeF MeasureText(string text, Vector2 windowPosition)
 		{
 			// NOTE: only for testing; very bad performance
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection

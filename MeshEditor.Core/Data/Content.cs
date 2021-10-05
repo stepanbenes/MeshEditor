@@ -7,15 +7,13 @@ using System.Linq;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
-
-// Compatibility assembly (for TextPrinter)
 using OpenTK.Graphics;
 
 // alias
 using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.Graphics;
 using MeshEditor.CoreInterface;
-
+using MeshEditor.Text;
 
 namespace MeshEditor.Data
 {
@@ -978,7 +976,7 @@ namespace MeshEditor.Data
 			if (faceCentersPositions == null)
 				return;
 
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			int[] viewport;
 			Scene.ExtractViewport(out viewport);
@@ -1023,7 +1021,7 @@ namespace MeshEditor.Data
 
 		private void drawVisibleNodeNumbers(HashSet<ISelectable> selectedItems)
 		{
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			int[] viewport;
 			double[] modelview;
@@ -1051,7 +1049,7 @@ namespace MeshEditor.Data
 			if (beams.Count == 0)
 				return;
 
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			int[] viewport;
 			double[] modelview;
@@ -1115,7 +1113,7 @@ namespace MeshEditor.Data
 
 		public static void DrawTextLabels(KeyValuePair<string, Vector2>[] textPositions, float windowHeight)
 		{
-			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+			var textPrinter = TextPrinter.Instance;
 
 			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection

@@ -8,8 +8,8 @@
     <ProjectGuid>{3ED73469-9212-4EC7-B450-EC243B344A39}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MeshEditor.OpenTKCompatibility</RootNamespace>
-    <AssemblyName>MeshEditor.OpenTKCompatibility</AssemblyName>
+    <RootNamespace>MeshEditor.Text</RootNamespace>
+    <AssemblyName>MeshEditor.Text</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>

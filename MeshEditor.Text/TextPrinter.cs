@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using OpenTK.Graphics.OpenGL;
 
-namespace MeshEditor.OpenTKCompatibility
+namespace MeshEditor.Text
 {
 	public sealed class TextPrinter
 	{

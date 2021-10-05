@@ -247,9 +247,9 @@
       <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
       <Name>MeshEditor.LayerManager</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.OpenTKCompatibility\MeshEditor.OpenTKCompatibility.csproj">
+    <ProjectReference Include="..\MeshEditor.Text\MeshEditor.Text.csproj">
       <Project>{3ed73469-9212-4ec7-b450-ec243b344a39}</Project>
-      <Name>MeshEditor.OpenTKCompatibility</Name>
+      <Name>MeshEditor.Text</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
