@@ -101,7 +101,8 @@ namespace MeshEditor.Text
 
 			GL.Begin(PrimitiveType.Quads);
 			{
-				GL.Color3(1f, 1f, 1f); // white color to blend with texture
+				//GL.Color3(1f, 1f, 1f); // white color to blend with texture
+				GL.Color3(color);
 				GL.TexCoord2(0f, 0f);
 				GL.Vertex2(rect.X, rect.Y + sizeY);
 				GL.TexCoord2(1f, 0f);
