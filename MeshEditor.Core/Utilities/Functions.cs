@@ -625,11 +625,10 @@ namespace MeshEditor.Utilities
 
 		#region Text drawing
 
-		static MeshEditor.OpenTKCompatibility.TextPrinter textPrinter = new OpenTKCompatibility.TextPrinter();
-		static Font textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
-
 		public static void DrawText(string text, Vector3 position, Color color)
 		{
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			// NOTE: only for testing; very bad performance
 			int[] viewport;
 			double[] modelview;
@@ -644,7 +643,7 @@ namespace MeshEditor.Utilities
 			GluProject(position, modelview, projection, viewport, out winPos);
 			area.X = winPos.X + 1;
 			area.Y = viewport[3] - winPos.Y + 1;
-			textPrinter.Print(text, textFont, color, area);
+			textPrinter.Print(text, color, area);
 
 			textPrinter.End(); // restores projection matrix
 		}
@@ -653,10 +652,12 @@ namespace MeshEditor.Utilities
 		{
 			// NOTE: only for testing; very bad performance
 
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 
-			textPrinter.Print(text, textFont, color, area);
+			textPrinter.Print(text, color, area);
 
 			textPrinter.End(); // restores projection matrix
 		}
@@ -664,10 +665,11 @@ namespace MeshEditor.Utilities
 		public static SizeF MeasureText(string text, Vector2 windowPosition)
 		{
 			// NOTE: only for testing; very bad performance
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
 
 			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
-			RectangleF measuredArea = textPrinter.Measure(text, textFont, area);
+			RectangleF measuredArea = textPrinter.Measure(text, area);
 			textPrinter.End(); // restores projection matrix
 			return measuredArea.Size;
 		}

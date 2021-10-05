@@ -28,15 +28,6 @@ namespace MeshEditor.Data
 
 		#region Static members
 
-		private static MeshEditor.OpenTKCompatibility.TextPrinter textPrinter;
-		private static Font textFont;
-
-		static Content()
-		{
-			textPrinter = new OpenTKCompatibility.TextPrinter();
-			textFont = new Font(FontFamily.GenericSansSerif, 8f, FontStyle.Regular);
-		}
-
 		#endregion
 
 		#region Fields
@@ -987,6 +978,8 @@ namespace MeshEditor.Data
 			if (faceCentersPositions == null)
 				return;
 
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			int[] viewport;
 			Scene.ExtractViewport(out viewport);
 
@@ -1023,13 +1016,15 @@ namespace MeshEditor.Data
 				// --------------------------------------------------------------------------
 				area.X = winPos.X - 10;
 				area.Y = viewport[3] - winPos.Y - 8;
-				textPrinter.Print(id.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+				textPrinter.Print(id.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
 
 		private void drawVisibleNodeNumbers(HashSet<ISelectable> selectedItems)
 		{
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			int[] viewport;
 			double[] modelview;
 			double[] projection;
@@ -1046,7 +1041,7 @@ namespace MeshEditor.Data
 				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
 				area.X = winPos.X + 1;
 				area.Y = viewport[3] - winPos.Y + 1;
-				textPrinter.Print(n.ID.ToString(), textFont, selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
+				textPrinter.Print(n.ID.ToString(), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1055,6 +1050,9 @@ namespace MeshEditor.Data
 		{
 			if (beams.Count == 0)
 				return;
+
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			int[] viewport;
 			double[] modelview;
 			double[] projection;
@@ -1076,7 +1074,7 @@ namespace MeshEditor.Data
 				bool selected = selectedItems.Contains(beam);
 				area.X = winPos.X - 10;
 				area.Y = viewport[3] - winPos.Y - 8;
-				textPrinter.Print(beam.ID.ToString(), textFont, selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+				textPrinter.Print(beam.ID.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
 				//}
 			}
 			textPrinter.End(); // restores projection matrix
@@ -1117,6 +1115,8 @@ namespace MeshEditor.Data
 
 		public static void DrawTextLabels(KeyValuePair<string, Vector2>[] textPositions, float windowHeight)
 		{
+			var textPrinter = OpenTKCompatibility.TextPrinter.Instance;
+
 			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 			foreach (var textPosition in textPositions)
@@ -1124,7 +1124,7 @@ namespace MeshEditor.Data
 				Vector2 winPos = textPosition.Value;
 				area.X = winPos.X + 1;
 				area.Y = windowHeight - winPos.Y + 1;
-				textPrinter.Print(textPosition.Key, textFont, Scene.LabelColor, area);
+				textPrinter.Print(textPosition.Key, Scene.LabelColor, area);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
