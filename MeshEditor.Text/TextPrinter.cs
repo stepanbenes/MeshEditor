@@ -4,6 +4,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using OpenTK.Graphics.OpenGL;
+using OpenTK;
 
 namespace MeshEditor.Text
 {
@@ -24,7 +25,7 @@ namespace MeshEditor.Text
 		{
 			// https://opentk.net/learn/chapter1/5-textures.html
 
-			string path = "Resources/duck.png";
+			string path = "Resources/ascii.png";
 
 			//Load the image
 			Image<Rgba32> image = Image.Load<Rgba32>(path);
@@ -94,30 +95,47 @@ namespace MeshEditor.Text
 			GL.MatrixMode(MatrixMode.Modelview);
 		}
 
-		public void Print(string text, System.Drawing.Color color, System.Drawing.RectangleF rect)
+		public void Print(string text, System.Drawing.Color color, Vector2 position)
 		{
-			const float sizeX = 40f;
-			const float sizeY = 40f;
+			const float sizeX = 14f;
+			const float sizeY = 14f;
 
 			GL.Begin(PrimitiveType.Quads);
 			{
-				//GL.Color3(1f, 1f, 1f); // white color to blend with texture
-				GL.Color3(color);
-				GL.TexCoord2(0f, 0f);
-				GL.Vertex2(rect.X, rect.Y + sizeY);
-				GL.TexCoord2(1f, 0f);
-				GL.Vertex2(rect.X + sizeX, rect.Y + sizeY);
-				GL.TexCoord2(1f, 1f);
-				GL.Vertex2(rect.X + sizeX, rect.Y);
-				GL.TexCoord2(0f, 1f);
-				GL.Vertex2(rect.X, rect.Y);
+				GL.Color3(1f, 1f, 1f); // white color to blend with texture
+				//GL.Color3(color);
+				float charPosX = position.X;
+				foreach (char ch in text)
+				{
+					// TODO: wrong!!!!
+					var (s, t, width, height) = convertCharPositionToTexCoords(ch);
+					GL.TexCoord2(s, t);
+					GL.Vertex2(charPosX, position.Y + sizeY);
+					GL.TexCoord2(s + width, t);
+					GL.Vertex2(charPosX + sizeX, position.Y + sizeY);
+					GL.TexCoord2(s + width, t + height);
+					GL.Vertex2(charPosX + sizeX, position.Y);
+					GL.TexCoord2(s, t + height);
+					GL.Vertex2(charPosX, position.Y);
+
+					charPosX += sizeX;
+
+					static (float s, float t, float width, float height) convertCharPositionToTexCoords(char ch)
+					{
+						int index = (int)ch;
+						int row = (255 - index) / 16;
+						int column = index % 16;
+						return (column / 16f, row / 16f, 16f / 256f, 16f / 256f);
+					}
+				}
 			}
 			GL.End();
 		}
 
-		public System.Drawing.RectangleF Measure(string text, System.Drawing.RectangleF rect)
+		public (float width, float height) Measure(string text, Vector2 position)
 		{
-			return System.Drawing.RectangleF.Empty;
+			// TODO: implement this
+			throw new NotImplementedException();
 		}
 	}
 }

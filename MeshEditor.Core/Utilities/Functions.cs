@@ -638,13 +638,10 @@ namespace MeshEditor.Utilities
 
 			Vector3 winPos;
 
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 
 			GluProject(position, modelview, projection, viewport, out winPos);
-			area.X = winPos.X + 1;
-			area.Y = viewport[3] - winPos.Y + 1;
-			textPrinter.Print(text, color, area);
+			textPrinter.Print(text, color, new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1));
 
 			textPrinter.End(); // restores projection matrix
 		}
@@ -655,10 +652,9 @@ namespace MeshEditor.Utilities
 
 			var textPrinter = TextPrinter.Instance;
 
-			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 
-			textPrinter.Print(text, color, area);
+			textPrinter.Print(text, color, windowPosition);
 
 			textPrinter.End(); // restores projection matrix
 		}
@@ -668,11 +664,10 @@ namespace MeshEditor.Utilities
 			// NOTE: only for testing; very bad performance
 			var textPrinter = TextPrinter.Instance;
 
-			RectangleF area = new RectangleF(windowPosition.X, windowPosition.Y, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
-			RectangleF measuredArea = textPrinter.Measure(text, area);
+			(float width, float height) = textPrinter.Measure(text, windowPosition);
 			textPrinter.End(); // restores projection matrix
-			return measuredArea.Size;
+			return new SizeF(width, height);
 		}
 
 		#endregion

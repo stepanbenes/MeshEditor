@@ -986,7 +986,6 @@ namespace MeshEditor.Data
 			//Scene.ExtractMatrices(out viewport, out modelview, out projection);
 
 			//Vector3 cameraDir = camera.GetDirection();
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 			foreach (KeyValuePair<Element2D, Vector2> pair in faceCentersPositions)
 			{
@@ -1012,9 +1011,7 @@ namespace MeshEditor.Data
 					selected = selectedItems.Contains(faceOfElement.ParentElement);
 				}
 				// --------------------------------------------------------------------------
-				area.X = winPos.X - 10;
-				area.Y = viewport[3] - winPos.Y - 8;
-				textPrinter.Print(id.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+				textPrinter.Print(id.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8));
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1030,16 +1027,13 @@ namespace MeshEditor.Data
 
 			Vector3 winPos;
 
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 			foreach (Node n in this.visibleNodes)
 			{
 				if (stickyNodes.Contains(n))
 					continue;
 				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
-				area.X = winPos.X + 1;
-				area.Y = viewport[3] - winPos.Y + 1;
-				textPrinter.Print(n.ID.ToString(), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, area);
+				textPrinter.Print(n.ID.ToString(), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1));
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1057,7 +1051,6 @@ namespace MeshEditor.Data
 			Scene.ExtractMatrices(out viewport, out modelview, out projection);
 
 			Vector3 winPos;
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 								 //TextPrinterOptions options = TextPrinterOptions.NoCache; /* !!! */
 			foreach (Beam beam in beams)
@@ -1070,9 +1063,7 @@ namespace MeshEditor.Data
 				//if (winPos.Z >= 0f && winPos.Z <= 1f)
 				//{
 				bool selected = selectedItems.Contains(beam);
-				area.X = winPos.X - 10;
-				area.Y = viewport[3] - winPos.Y - 8;
-				textPrinter.Print(beam.ID.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, area);
+				textPrinter.Print(beam.ID.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8));
 				//}
 			}
 			textPrinter.End(); // restores projection matrix
@@ -1115,14 +1106,11 @@ namespace MeshEditor.Data
 		{
 			var textPrinter = TextPrinter.Instance;
 
-			RectangleF area = new RectangleF(0f, 0f, 0f, 0f);
 			textPrinter.Begin(); // sets orthografic projection
 			foreach (var textPosition in textPositions)
 			{
 				Vector2 winPos = textPosition.Value;
-				area.X = winPos.X + 1;
-				area.Y = windowHeight - winPos.Y + 1;
-				textPrinter.Print(textPosition.Key, Scene.LabelColor, area);
+				textPrinter.Print(textPosition.Key, Scene.LabelColor, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1));
 			}
 			textPrinter.End(); // restores projection matrix
 		}
