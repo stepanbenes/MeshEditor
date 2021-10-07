@@ -149,7 +149,7 @@ namespace MeshEditor.DataVisualizer
 
 			Point startLocation;
 			Size tableCellSize = new Size(20, 40);
-			SizeF captionSize = Utilities.Functions.MeasureText(description, new Vector2());
+			SizeF captionSize = Utilities.Functions.MeasureText(description);
 
 			int tableHeight = tableCellSize.Height * (controlPoints.Length - 1);
 			int tableWidth = Math.Max(tableCellSize.Width + 60, (int)captionSize.Width);

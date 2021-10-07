@@ -16,6 +16,9 @@ namespace MeshEditor.Text
 
 		private readonly int textureId;
 
+		private static readonly float characterWidth = 14f;
+		private static readonly float characterHeight = 14f;
+
 		private TextPrinter()
 		{
 			textureId = LoadTexture();
@@ -97,9 +100,6 @@ namespace MeshEditor.Text
 
 		public void Print(string text, System.Drawing.Color color, Vector2 position)
 		{
-			const float sizeX = 14f;
-			const float sizeY = 14f;
-
 			GL.Begin(PrimitiveType.Quads);
 			{
 				GL.Color3(1f, 1f, 1f); // white color to blend with texture
@@ -110,15 +110,15 @@ namespace MeshEditor.Text
 					// TODO: wrong!!!!
 					var (s, t, width, height) = convertCharPositionToTexCoords(ch);
 					GL.TexCoord2(s, t);
-					GL.Vertex2(charPosX, position.Y + sizeY);
+					GL.Vertex2(charPosX, position.Y + characterHeight);
 					GL.TexCoord2(s + width, t);
-					GL.Vertex2(charPosX + sizeX, position.Y + sizeY);
+					GL.Vertex2(charPosX + characterWidth, position.Y + characterHeight);
 					GL.TexCoord2(s + width, t + height);
-					GL.Vertex2(charPosX + sizeX, position.Y);
+					GL.Vertex2(charPosX + characterWidth, position.Y);
 					GL.TexCoord2(s, t + height);
 					GL.Vertex2(charPosX, position.Y);
 
-					charPosX += sizeX;
+					charPosX += characterWidth;
 
 					static (float s, float t, float width, float height) convertCharPositionToTexCoords(char ch)
 					{
@@ -132,10 +132,9 @@ namespace MeshEditor.Text
 			GL.End();
 		}
 
-		public (float width, float height) Measure(string text, Vector2 position)
+		public (float width, float height) Measure(string text)
 		{
-			// TODO: implement this
-			throw new NotImplementedException();
+			return (width: (text?.Length ?? 0) * characterWidth, height: characterHeight);
 		}
 	}
 }

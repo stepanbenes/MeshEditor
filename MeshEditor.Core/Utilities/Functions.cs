@@ -659,13 +659,13 @@ namespace MeshEditor.Utilities
 			textPrinter.End(); // restores projection matrix
 		}
 
-		public static SizeF MeasureText(string text, Vector2 windowPosition)
+		public static SizeF MeasureText(string text)
 		{
 			// NOTE: only for testing; very bad performance
 			var textPrinter = TextPrinter.Instance;
 
 			textPrinter.Begin(); // sets orthografic projection
-			(float width, float height) = textPrinter.Measure(text, windowPosition);
+			(float width, float height) = textPrinter.Measure(text);
 			textPrinter.End(); // restores projection matrix
 			return new SizeF(width, height);
 		}
