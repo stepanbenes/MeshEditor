@@ -319,7 +319,7 @@ namespace MeshEditor.Graphics
 			//GL.IndexPointer(IndexPointerType.Int, 0, IntPtr.Zero);
 			//GL.EnableClientState(EnableCap.IndexArray);
 
-			GL.DrawElements(ibo.Mode, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+			GL.DrawElements(ibo.PrimitiveType, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
 			
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
@@ -347,7 +347,7 @@ namespace MeshEditor.Graphics
 			//GL.IndexPointer(IndexPointerType.Int, 0, IntPtr.Zero);
 			//GL.EnableClientState(EnableCap.IndexArray);
 
-			GL.DrawElements(ibo.Mode, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+			GL.DrawElements(ibo.PrimitiveType, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
 
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
@@ -379,7 +379,7 @@ namespace MeshEditor.Graphics
 			//GL.IndexPointer(IndexPointerType.Int, 0, IntPtr.Zero);
 			//GL.EnableClientState(EnableCap.IndexArray);
 			
-			GL.DrawElements(ibo.Mode, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+			GL.DrawElements(ibo.PrimitiveType, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
 			
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
@@ -414,7 +414,7 @@ namespace MeshEditor.Graphics
 			//GL.IndexPointer(IndexPointerType.Int, 0, IntPtr.Zero);
 			//GL.EnableClientState(EnableCap.IndexArray);
 
-			GL.DrawElements(ibo.Mode, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+			GL.DrawElements(ibo.PrimitiveType, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
 
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);

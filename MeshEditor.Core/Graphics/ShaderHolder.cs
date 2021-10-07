@@ -142,7 +142,7 @@ namespace MeshEditor.Graphics
 		private bool CheckProgram(int programId)
 		{
 			int res = -1;
-			GL.GetProgram(programId, ProgramParameter.LinkStatus, out res);
+			GL.GetProgram(programId, GetProgramParameterName.LinkStatus, out res);
 			if (res != 1)
 			{
 				string infoLog;

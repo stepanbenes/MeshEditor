@@ -16,9 +16,9 @@ namespace MeshEditor.Graphics
 		private int vertexCount;
 		private int vertexBufferID, colorBufferID, normalBufferID;
 
-		private BeginMode primitivesType;
+		private PrimitiveType primitivesType;
 
-		public VBO(BeginMode primitivesType, Vector3[] vertices, int[] colors = null, Vector3[] normals = null)
+		public VBO(PrimitiveType primitivesType, Vector3[] vertices, int[] colors = null, Vector3[] normals = null)
 		{
 			this.primitivesType = primitivesType;
 			this.vertexCount = vertices.Length;
@@ -29,7 +29,7 @@ namespace MeshEditor.Graphics
 
 		#region Public methods
 
-		public void Draw(BeginMode primitiveType, bool bindColors = true, bool bindNormals = true)
+		public void Draw(PrimitiveType primitiveType, bool bindColors = true, bool bindNormals = true)
 		{
 			GL.PushClientAttrib(ClientAttribMask.ClientVertexArrayBit);
 			//----------------------------------------------------
@@ -92,7 +92,7 @@ namespace MeshEditor.Graphics
 			//GL.IndexPointer(IndexPointerType.Int, 0, IntPtr.Zero);
 			//GL.EnableClientState(EnableCap.IndexArray);
 
-			GL.DrawElements(ibo.Mode, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+			GL.DrawElements(ibo.PrimitiveType, ibo.ElementCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
 
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);

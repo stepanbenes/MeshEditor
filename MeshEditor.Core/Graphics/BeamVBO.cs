@@ -93,7 +93,7 @@ namespace MeshEditor.Graphics
 			GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
 			GL.EnableClientState(ArrayCap.ColorArray);
 
-			GL.DrawArrays(BeginMode.Lines, 0, vertexCount);
+			GL.DrawArrays(PrimitiveType.Lines, 0, vertexCount);
 
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			//----------------------------------------------------

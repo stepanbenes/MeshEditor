@@ -259,7 +259,7 @@ namespace MeshEditor.Data
 				indices.AddRange(faceIndexMap[face]);
 
 			if (indices.Count > 0)
-				this.facesIBO = new IndexBufferObject(BeginMode.Triangles, indices.ToArray());
+				this.facesIBO = new IndexBufferObject(PrimitiveType.Triangles, indices.ToArray());
 			// ------------------------------------
 			// create Index buffer object for nodes
 			indices = new List<int>(nodesEdgesIncidence.Count);
@@ -267,7 +267,7 @@ namespace MeshEditor.Data
 				indices.Add(nodeIndexMap[n]);
 
 			if (indices.Count > 0)
-				this.nodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+				this.nodesIBO = new IndexBufferObject(PrimitiveType.Points, indices.ToArray());
 			// ------------------------------------
 			// create Index buffer object for middle nodes in center of edges
 			indices = new List<int>();
@@ -275,7 +275,7 @@ namespace MeshEditor.Data
 				indices.Add(nodeIndexMap[n]);
 
 			if (indices.Count > 0)
-				this.middleNodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+				this.middleNodesIBO = new IndexBufferObject(PrimitiveType.Points, indices.ToArray());
 			// ------------------------------------
 			// create Index buffer object for edges
 			List<int> ordinaryEdgesIndices = new List<int>();
@@ -309,11 +309,11 @@ namespace MeshEditor.Data
 
 			// ----------------------------------------
 			if (ordinaryEdgesIndices.Count > 0)
-				this.ordinaryEdgesIBO = new IndexBufferObject(BeginMode.Lines, ordinaryEdgesIndices.ToArray());
+				this.ordinaryEdgesIBO = new IndexBufferObject(PrimitiveType.Lines, ordinaryEdgesIndices.ToArray());
 			if (softEdgesIndices.Count > 0)
-				this.softEdgesIBO = new IndexBufferObject(BeginMode.Lines, softEdgesIndices.ToArray());
+				this.softEdgesIBO = new IndexBufferObject(PrimitiveType.Lines, softEdgesIndices.ToArray());
 			if (hardEdgesIndices.Count > 0)
-				this.hardEdgesIBO = new IndexBufferObject(BeginMode.Lines, hardEdgesIndices.ToArray());
+				this.hardEdgesIBO = new IndexBufferObject(PrimitiveType.Lines, hardEdgesIndices.ToArray());
 
 		}
 
@@ -390,7 +390,7 @@ namespace MeshEditor.Data
 			}
 
 			if (visibleNodes.Count > 0)
-				this.visibleNodesIBO = new IndexBufferObject(BeginMode.Points, indices.ToArray());
+				this.visibleNodesIBO = new IndexBufferObject(PrimitiveType.Points, indices.ToArray());
 
 		}
 

@@ -58,8 +58,8 @@ namespace MeshEditor.DataVisualizer.Graphics
 				}
 			}
 
-			linesVBO = new VBO(BeginMode.Lines, vertices);
-			arrowsVBO = new VBO(BeginMode.Triangles, arrowVertices);
+			linesVBO = new VBO(PrimitiveType.Lines, vertices);
+			arrowsVBO = new VBO(PrimitiveType.Triangles, arrowVertices);
 		}
 
 		private static Vector3[] getArrowCap(float minDistanceBetweenPoints, ref Vector3 from, ref Vector3 to)

@@ -16,11 +16,11 @@ namespace MeshEditor.Graphics
 		private int bufferID;
 		private int elementCount;
 
-		private BeginMode mode;
+		private PrimitiveType primitiveType;
 
-		public BeginMode Mode
+		public PrimitiveType PrimitiveType
 		{
-			get { return mode; }
+			get { return primitiveType; }
 		}
 
 		public int BufferID
@@ -38,9 +38,9 @@ namespace MeshEditor.Graphics
 			get { return elementCount; }
 		}
 
-		public IndexBufferObject(BeginMode mode, int[] indices)
+		public IndexBufferObject(PrimitiveType primitiveType, int[] indices)
 		{
-			this.mode = mode;
+			this.primitiveType = primitiveType;
 			createBuffer(indices);
 		}
 
