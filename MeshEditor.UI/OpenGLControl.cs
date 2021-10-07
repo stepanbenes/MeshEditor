@@ -633,7 +633,7 @@ namespace MeshEditor.WinUI
 			}
 			if (progressViewForm != null)
 			{
-				progressViewForm.Quit();
+				progressViewForm.Invoke((Action)progressViewForm.Quit);
 				progressViewForm = null;
 			}
 
@@ -676,10 +676,10 @@ namespace MeshEditor.WinUI
 		{
 			if (progressViewForm != null)
 			{
-				progressViewForm.SetProgressState(e.ProgressPercentage);
+				progressViewForm.Invoke((Action<int>)progressViewForm.SetProgressState, e.ProgressPercentage);
 				if (e.ProgressPercentage >= 100)
 				{
-					progressViewForm.Quit();
+					progressViewForm.Invoke((Action)progressViewForm.Quit);
 					progressViewForm = null;
 				}
 			}
@@ -740,7 +740,7 @@ namespace MeshEditor.WinUI
 		{
 			if (progressViewForm != null)
 			{
-				progressViewForm.Quit();
+				progressViewForm.Invoke((Action)progressViewForm.Quit);
 				progressViewForm = null;
 			}
 			GC.Collect();

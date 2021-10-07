@@ -1198,14 +1198,13 @@ namespace MeshEditor.WinUI
 				updateStatus();
 				if (progressViewForms.TryGetValue(token, out ProgressViewForm progressViewForm))
 				{
-					progressViewForm.Quit();
 					progressViewForms.Remove(token);
+					progressViewForm.Invoke((Action)progressViewForm.Quit); // dispatch to UI thread
 				}
 			};
 			longOpNotifier.ProgressChanged += token =>
 			{
-				Action<LongOpNotifier.Token> reportAction = reportOperationProgress;
-				this.Invoke(reportAction, token); // dispatch to UI thread
+				this.Invoke((Action<LongOpNotifier.Token>)reportOperationProgress, token); // dispatch to UI thread
 			};
 		}
 
