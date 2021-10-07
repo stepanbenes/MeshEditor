@@ -28,8 +28,8 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.buttonApply = new System.Windows.Forms.Button();
 			this.secondBorderLimitTrackBar = new System.Windows.Forms.TrackBar();
 			this.secondBorderLimitLabel = new System.Windows.Forms.Label();
@@ -69,7 +69,7 @@
 			// buttonApply
 			// 
 			this.buttonApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonApply.Location = new System.Drawing.Point(990, 465);
+			this.buttonApply.Location = new System.Drawing.Point(978, 470);
 			this.buttonApply.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonApply.Name = "buttonApply";
 			this.buttonApply.Size = new System.Drawing.Size(125, 34);
@@ -87,7 +87,7 @@
 			this.secondBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.secondBorderLimitTrackBar.Maximum = 180;
 			this.secondBorderLimitTrackBar.Name = "secondBorderLimitTrackBar";
-			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(1110, 56);
+			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(1098, 56);
 			this.secondBorderLimitTrackBar.TabIndex = 17;
 			this.secondBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.secondBorderLimitTrackBar_ValueChanged);
 			// 
@@ -110,7 +110,7 @@
 			this.firstBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.firstBorderLimitTrackBar.Maximum = 180;
 			this.firstBorderLimitTrackBar.Name = "firstBorderLimitTrackBar";
-			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(1110, 56);
+			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(1098, 56);
 			this.firstBorderLimitTrackBar.TabIndex = 15;
 			this.firstBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.firstBorderLimitTrackBar_ValueChanged);
 			// 
@@ -118,7 +118,7 @@
 			// 
 			this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.buttonClose.Location = new System.Drawing.Point(1007, 554);
+			this.buttonClose.Location = new System.Drawing.Point(994, 556);
 			this.buttonClose.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonClose.Name = "buttonClose";
 			this.buttonClose.Size = new System.Drawing.Size(125, 34);
@@ -170,7 +170,7 @@
 			this.groupBoxBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.groupBoxBasicInfo.Name = "groupBoxBasicInfo";
 			this.groupBoxBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.groupBoxBasicInfo.Size = new System.Drawing.Size(1113, 510);
+			this.groupBoxBasicInfo.Size = new System.Drawing.Size(1117, 504);
 			this.groupBoxBasicInfo.TabIndex = 23;
 			this.groupBoxBasicInfo.TabStop = false;
 			this.groupBoxBasicInfo.Text = "Mesh characteristics";
@@ -238,7 +238,7 @@
 			this.tabPageBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPageBasicInfo.Name = "tabPageBasicInfo";
 			this.tabPageBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.tabPageBasicInfo.Size = new System.Drawing.Size(1119, 514);
+			this.tabPageBasicInfo.Size = new System.Drawing.Size(1123, 508);
 			this.tabPageBasicInfo.TabIndex = 0;
 			this.tabPageBasicInfo.Text = "Basic info";
 			this.tabPageBasicInfo.UseVisualStyleBackColor = true;
@@ -252,7 +252,7 @@
 			this.tabPagePropertyDescriptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPagePropertyDescriptions.Name = "tabPagePropertyDescriptions";
 			this.tabPagePropertyDescriptions.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(1119, 514);
+			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(1123, 508);
 			this.tabPagePropertyDescriptions.TabIndex = 1;
 			this.tabPagePropertyDescriptions.Text = "Property descriptions";
 			this.tabPagePropertyDescriptions.UseVisualStyleBackColor = true;
@@ -273,13 +273,13 @@
             this.CommandsColumn,
             this.CommentColumn});
 			this.dataGridViewPropertyDescriptions.Location = new System.Drawing.Point(5, 6);
-			this.dataGridViewPropertyDescriptions.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.dataGridViewPropertyDescriptions.Margin = new System.Windows.Forms.Padding(4);
 			this.dataGridViewPropertyDescriptions.MultiSelect = false;
 			this.dataGridViewPropertyDescriptions.Name = "dataGridViewPropertyDescriptions";
 			this.dataGridViewPropertyDescriptions.ReadOnly = true;
 			this.dataGridViewPropertyDescriptions.RowHeadersWidth = 20;
-			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle4;
+			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle2;
 			this.dataGridViewPropertyDescriptions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.dataGridViewPropertyDescriptions.Size = new System.Drawing.Size(1105, 458);
 			this.dataGridViewPropertyDescriptions.TabIndex = 27;
@@ -304,8 +304,8 @@
 			// 
 			// CommandsColumn
 			// 
-			dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle3;
+			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle1;
 			this.CommandsColumn.HeaderText = "Commands";
 			this.CommandsColumn.MinimumWidth = 6;
 			this.CommandsColumn.Name = "CommandsColumn";
@@ -324,7 +324,7 @@
 			// 
 			this.buttonEditComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonEditComment.Location = new System.Drawing.Point(986, 471);
-			this.buttonEditComment.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.buttonEditComment.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonEditComment.Name = "buttonEditComment";
 			this.buttonEditComment.Size = new System.Drawing.Size(125, 33);
 			this.buttonEditComment.TabIndex = 26;
@@ -383,7 +383,7 @@
 			this.histogramViewer.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.histogramViewer.Name = "histogramViewer";
 			this.histogramViewer.SecondLimit = 0;
-			this.histogramViewer.Size = new System.Drawing.Size(1094, 252);
+			this.histogramViewer.Size = new System.Drawing.Size(1082, 252);
 			this.histogramViewer.TabIndex = 18;
 			// 
 			// MeshInfoForm
