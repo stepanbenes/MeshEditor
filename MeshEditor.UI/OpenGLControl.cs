@@ -624,6 +624,11 @@ namespace MeshEditor.WinUI
 		/// </summary>
 		private void backgroundFileLoader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
+			if (e.Error is not null)
+			{
+				Program.ReportError("BackgroundFileLoader exception", e.Error);
+			}
+
 			Cursor temp = this.Cursor;
 			this.Cursor = Cursors.WaitCursor;
 
@@ -738,6 +743,11 @@ namespace MeshEditor.WinUI
 
 		void backgroundFileSaver_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
+			if (e.Error is not null)
+			{
+				Program.ReportError("BackgroundFileSaver exception", e.Error);
+			}
+
 			if (progressViewForm != null)
 			{
 				progressViewForm.Invoke((Action)progressViewForm.Quit);

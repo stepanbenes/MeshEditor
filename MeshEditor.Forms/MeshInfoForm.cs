@@ -45,6 +45,8 @@ namespace MeshEditor.WinUI
 			};
 			nodeCountComputer.RunWorkerCompleted += delegate(object sender, RunWorkerCompletedEventArgs e)
 			{
+				if (e.Error is not null)
+					Console.Error.WriteLine($"NodeCountComputer: {e.Error.GetType()}: {e.Error.Message}");
 				if (e.Result is int)
 					labelNodeCount.Text = "Node count: " + e.Result;
 			};
