@@ -10,6 +10,7 @@
     <RootNamespace>MeshEditor.LayerManager</RootNamespace>
     <AssemblyName>MeshEditor.LayerManager</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>

@@ -11,6 +11,7 @@
     <RootNamespace>MeshEditor</RootNamespace>
     <AssemblyName>MeshEditor.Core</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
