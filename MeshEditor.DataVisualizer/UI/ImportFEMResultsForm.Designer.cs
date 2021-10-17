@@ -303,6 +303,7 @@
 			this.buttonClose.TabIndex = 2;
 			this.buttonClose.Text = "Close";
 			this.buttonClose.UseVisualStyleBackColor = true;
+			this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
 			// 
 			// ImportFEMResultsForm
 			// 

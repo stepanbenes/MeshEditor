@@ -1630,17 +1630,21 @@ namespace MeshEditor.WinUI
 			signalDataMinimumToolStripMenuItem.Enabled = signalDataMaximumToolStripMenuItem.Enabled = (activeControl.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer)?.DisplayData ?? false;
 		}
 
-		private async void importFEMResultsToolStripMenuItem_Click(object sender, EventArgs e)
+		private void importFEMResultsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			var importFEMResultsForm = new ImportFEMResultsForm(longOpNotifier) { Owner = this };
-			if (importFEMResultsForm.ShowDialog() == DialogResult.OK)
+			importFEMResultsForm.FormClosed += async (s, e) =>
 			{
-				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
-				Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
+				if (importFEMResultsForm.DialogResult == DialogResult.OK)
+				{
+					Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
+					Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
 
-				setPostprocessorLayoutMode();
-				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
-			}
+					setPostprocessorLayoutMode();
+					await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
+				}
+			};
+			importFEMResultsForm.Show();
 		}
 
 		private async void openSolutionToolStripMenuItem_Click(object sender, EventArgs e)

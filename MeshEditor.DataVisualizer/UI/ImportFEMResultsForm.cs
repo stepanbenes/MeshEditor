@@ -99,7 +99,8 @@ namespace MeshEditor.DataVisualizer.UI
 					SolutionFileName = solutionHub.GetSolutionDescription().Location;
 				}
 
-				DialogResult = DialogResult.OK; // close dialog
+				DialogResult = DialogResult.OK;
+				this.Close();
 			}
 			catch (OperationCanceledException)
 			{
@@ -187,6 +188,12 @@ namespace MeshEditor.DataVisualizer.UI
 			{
 				textBoxLocation.Text = folderBrowserDialog.SelectedPath;
 			}
+		}
+
+		private void buttonClose_Click(object sender, EventArgs e)
+		{
+			this.DialogResult = DialogResult.Cancel;
+			this.Close();
 		}
 	}
 }
