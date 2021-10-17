@@ -28,8 +28,8 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.buttonApply = new System.Windows.Forms.Button();
 			this.secondBorderLimitTrackBar = new System.Windows.Forms.TrackBar();
 			this.secondBorderLimitLabel = new System.Windows.Forms.Label();
@@ -56,6 +56,7 @@
 			this.tabPageEdgeAngleLimits = new System.Windows.Forms.TabPage();
 			this.label1 = new System.Windows.Forms.Label();
 			this.histogramViewer = new MeshEditor.WinUI.HistogramViewer();
+			this.histogramPanel = new System.Windows.Forms.Panel();
 			((System.ComponentModel.ISupportInitialize)(this.secondBorderLimitTrackBar)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.firstBorderLimitTrackBar)).BeginInit();
 			this.groupBoxBasicInfo.SuspendLayout();
@@ -64,12 +65,13 @@
 			this.tabPagePropertyDescriptions.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.dataGridViewPropertyDescriptions)).BeginInit();
 			this.tabPageEdgeAngleLimits.SuspendLayout();
+			this.histogramPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// buttonApply
 			// 
 			this.buttonApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonApply.Location = new System.Drawing.Point(978, 470);
+			this.buttonApply.Location = new System.Drawing.Point(757, 405);
 			this.buttonApply.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonApply.Name = "buttonApply";
 			this.buttonApply.Size = new System.Drawing.Size(125, 34);
@@ -87,7 +89,7 @@
 			this.secondBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.secondBorderLimitTrackBar.Maximum = 180;
 			this.secondBorderLimitTrackBar.Name = "secondBorderLimitTrackBar";
-			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(1098, 56);
+			this.secondBorderLimitTrackBar.Size = new System.Drawing.Size(877, 56);
 			this.secondBorderLimitTrackBar.TabIndex = 17;
 			this.secondBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.secondBorderLimitTrackBar_ValueChanged);
 			// 
@@ -110,7 +112,7 @@
 			this.firstBorderLimitTrackBar.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.firstBorderLimitTrackBar.Maximum = 180;
 			this.firstBorderLimitTrackBar.Name = "firstBorderLimitTrackBar";
-			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(1098, 56);
+			this.firstBorderLimitTrackBar.Size = new System.Drawing.Size(873, 56);
 			this.firstBorderLimitTrackBar.TabIndex = 15;
 			this.firstBorderLimitTrackBar.ValueChanged += new System.EventHandler(this.firstBorderLimitTrackBar_ValueChanged);
 			// 
@@ -118,7 +120,7 @@
 			// 
 			this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.buttonClose.Location = new System.Drawing.Point(994, 556);
+			this.buttonClose.Location = new System.Drawing.Point(773, 491);
 			this.buttonClose.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonClose.Name = "buttonClose";
 			this.buttonClose.Size = new System.Drawing.Size(125, 34);
@@ -170,7 +172,7 @@
 			this.groupBoxBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.groupBoxBasicInfo.Name = "groupBoxBasicInfo";
 			this.groupBoxBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.groupBoxBasicInfo.Size = new System.Drawing.Size(1117, 504);
+			this.groupBoxBasicInfo.Size = new System.Drawing.Size(944, 432);
 			this.groupBoxBasicInfo.TabIndex = 23;
 			this.groupBoxBasicInfo.TabStop = false;
 			this.groupBoxBasicInfo.Text = "Mesh characteristics";
@@ -227,7 +229,7 @@
 			this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
-			this.tabControl.Size = new System.Drawing.Size(1131, 537);
+			this.tabControl.Size = new System.Drawing.Size(911, 472);
 			this.tabControl.TabIndex = 26;
 			this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
 			// 
@@ -238,7 +240,7 @@
 			this.tabPageBasicInfo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPageBasicInfo.Name = "tabPageBasicInfo";
 			this.tabPageBasicInfo.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.tabPageBasicInfo.Size = new System.Drawing.Size(1123, 508);
+			this.tabPageBasicInfo.Size = new System.Drawing.Size(950, 436);
 			this.tabPageBasicInfo.TabIndex = 0;
 			this.tabPageBasicInfo.Text = "Basic info";
 			this.tabPageBasicInfo.UseVisualStyleBackColor = true;
@@ -252,7 +254,7 @@
 			this.tabPagePropertyDescriptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPagePropertyDescriptions.Name = "tabPagePropertyDescriptions";
 			this.tabPagePropertyDescriptions.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(1123, 508);
+			this.tabPagePropertyDescriptions.Size = new System.Drawing.Size(950, 436);
 			this.tabPagePropertyDescriptions.TabIndex = 1;
 			this.tabPagePropertyDescriptions.Text = "Property descriptions";
 			this.tabPagePropertyDescriptions.UseVisualStyleBackColor = true;
@@ -278,10 +280,10 @@
 			this.dataGridViewPropertyDescriptions.Name = "dataGridViewPropertyDescriptions";
 			this.dataGridViewPropertyDescriptions.ReadOnly = true;
 			this.dataGridViewPropertyDescriptions.RowHeadersWidth = 20;
-			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle2;
+			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			this.dataGridViewPropertyDescriptions.RowsDefaultCellStyle = dataGridViewCellStyle4;
 			this.dataGridViewPropertyDescriptions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.dataGridViewPropertyDescriptions.Size = new System.Drawing.Size(1105, 458);
+			this.dataGridViewPropertyDescriptions.Size = new System.Drawing.Size(935, 377);
 			this.dataGridViewPropertyDescriptions.TabIndex = 27;
 			this.dataGridViewPropertyDescriptions.DoubleClick += new System.EventHandler(this.dataGridViewPropertyDescriptions_DoubleClick);
 			this.dataGridViewPropertyDescriptions.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewPropertyDescriptions_KeyDown);
@@ -304,8 +306,8 @@
 			// 
 			// CommandsColumn
 			// 
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle1;
+			dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.CommandsColumn.DefaultCellStyle = dataGridViewCellStyle3;
 			this.CommandsColumn.HeaderText = "Commands";
 			this.CommandsColumn.MinimumWidth = 6;
 			this.CommandsColumn.Name = "CommandsColumn";
@@ -323,7 +325,7 @@
 			// buttonEditComment
 			// 
 			this.buttonEditComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonEditComment.Location = new System.Drawing.Point(986, 471);
+			this.buttonEditComment.Location = new System.Drawing.Point(816, 390);
 			this.buttonEditComment.Margin = new System.Windows.Forms.Padding(4);
 			this.buttonEditComment.Name = "buttonEditComment";
 			this.buttonEditComment.Size = new System.Drawing.Size(125, 33);
@@ -335,7 +337,7 @@
 			// buttonEditPropertyCommands
 			// 
 			this.buttonEditPropertyCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonEditPropertyCommands.Location = new System.Drawing.Point(845, 471);
+			this.buttonEditPropertyCommands.Location = new System.Drawing.Point(675, 390);
 			this.buttonEditPropertyCommands.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buttonEditPropertyCommands.Name = "buttonEditPropertyCommands";
 			this.buttonEditPropertyCommands.Size = new System.Drawing.Size(135, 33);
@@ -346,18 +348,18 @@
 			// 
 			// tabPageEdgeAngleLimits
 			// 
+			this.tabPageEdgeAngleLimits.Controls.Add(this.histogramPanel);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.label1);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.firstBorderLimitLabel);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.buttonApply);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.firstBorderLimitTrackBar);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.secondBorderLimitLabel);
 			this.tabPageEdgeAngleLimits.Controls.Add(this.secondBorderLimitTrackBar);
-			this.tabPageEdgeAngleLimits.Controls.Add(this.histogramViewer);
 			this.tabPageEdgeAngleLimits.Location = new System.Drawing.Point(4, 25);
 			this.tabPageEdgeAngleLimits.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.tabPageEdgeAngleLimits.Name = "tabPageEdgeAngleLimits";
 			this.tabPageEdgeAngleLimits.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.tabPageEdgeAngleLimits.Size = new System.Drawing.Size(1123, 508);
+			this.tabPageEdgeAngleLimits.Size = new System.Drawing.Size(903, 443);
 			this.tabPageEdgeAngleLimits.TabIndex = 2;
 			this.tabPageEdgeAngleLimits.Text = "Edge angle limits";
 			this.tabPageEdgeAngleLimits.UseVisualStyleBackColor = true;
@@ -373,25 +375,35 @@
 			// 
 			// histogramViewer
 			// 
-			this.histogramViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.histogramViewer.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
 			this.histogramViewer.BackColor = System.Drawing.SystemColors.Info;
 			this.histogramViewer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this.histogramViewer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.histogramViewer.FirstLimit = 0;
-			this.histogramViewer.Location = new System.Drawing.Point(21, 198);
+			this.histogramViewer.Location = new System.Drawing.Point(0, 0);
 			this.histogramViewer.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.histogramViewer.Name = "histogramViewer";
 			this.histogramViewer.SecondLimit = 0;
-			this.histogramViewer.Size = new System.Drawing.Size(1082, 252);
+			this.histogramViewer.Size = new System.Drawing.Size(862, 200);
 			this.histogramViewer.TabIndex = 18;
+			// 
+			// histogramPanel
+			// 
+			this.histogramPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.histogramPanel.Controls.Add(this.histogramViewer);
+			this.histogramPanel.Location = new System.Drawing.Point(20, 200);
+			this.histogramPanel.Name = "histogramPanel";
+			this.histogramPanel.Size = new System.Drawing.Size(862, 200);
+			this.histogramPanel.TabIndex = 20;
 			// 
 			// MeshInfoForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonClose;
-			this.ClientSize = new System.Drawing.Size(1155, 601);
+			this.ClientSize = new System.Drawing.Size(935, 536);
 			this.Controls.Add(this.tabControl);
 			this.Controls.Add(this.buttonClose);
 			this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -411,6 +423,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.dataGridViewPropertyDescriptions)).EndInit();
 			this.tabPageEdgeAngleLimits.ResumeLayout(false);
 			this.tabPageEdgeAngleLimits.PerformLayout();
+			this.histogramPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -443,5 +456,6 @@
 		private System.Windows.Forms.DataGridViewTextBoxColumn TargetEntityColumn;
 		private System.Windows.Forms.DataGridViewTextBoxColumn CommandsColumn;
 		private System.Windows.Forms.DataGridViewTextBoxColumn CommentColumn;
+		private System.Windows.Forms.Panel histogramPanel;
 	}
 }
