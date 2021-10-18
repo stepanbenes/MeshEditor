@@ -16,8 +16,8 @@ namespace MeshEditor.Text
 
 		private readonly int textureId;
 
-		private static readonly float characterWidth = 14f;
-		private static readonly float characterHeight = 14f;
+		private static readonly float characterAspectRatio = 58f / 82f; // width / height
+		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
 
 		private TextPrinter()
 		{
@@ -35,9 +35,8 @@ namespace MeshEditor.Text
 
 			//ImageSharp loads from the top-left pixel, whereas OpenGL loads from the bottom-left, causing the texture to be flipped vertically.
 			//This will correct that, making the texture display properly.
-			image.Mutate(x => x.Flip(FlipMode.Vertical).ApplyProcessor(new BackgroundRemoverProcessor()));
-
-			image.SaveAsPng("Resources/ascii_converted.png");
+			//image.Mutate(x => x.Flip(FlipMode.Vertical).ApplyProcessor(new BackgroundRemoverProcessor()));
+			//image.SaveAsPng("Resources/ascii_converted.png", new SixLabors.ImageSharp.Formats.Png.PngEncoder { ColorType = SixLabors.ImageSharp.Formats.Png.PngColorType.RgbWithAlpha });
 
 			//Convert ImageSharp's format into a byte array, so we can use it with OpenGL.
 			var pixels = new byte[4 * image.Width * image.Height];
@@ -59,10 +58,10 @@ namespace MeshEditor.Text
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
 			GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
-			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
-			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapNearest);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
 			return texID;
@@ -99,8 +98,11 @@ namespace MeshEditor.Text
 			GL.MatrixMode(MatrixMode.Modelview);
 		}
 
-		public void Print(string text, System.Drawing.Color color, Vector2 position)
+		public void Print(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
 		{
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = getCharacterSize(fontSize);
+
 			GL.Begin(PrimitiveType.Quads);
 			{
 				//GL.Color3(1f, 1f, 1f); // white color to blend with texture
@@ -108,7 +110,7 @@ namespace MeshEditor.Text
 				float charPosX = position.X;
 				foreach (char ch in text)
 				{
-					var (s, t, width, height) = convertCharPositionToTexCoords(ch);
+					var (s, t, width, height) = convertCharToTexCoords(ch);
 					GL.TexCoord2(s, t);
 					GL.Vertex2(charPosX, position.Y + characterHeight);
 					GL.TexCoord2(s + width, t);
@@ -120,20 +122,29 @@ namespace MeshEditor.Text
 
 					charPosX += characterWidth;
 
-					static (float s, float t, float width, float height) convertCharPositionToTexCoords(char ch)
+					static (float s, float t, float width, float height) convertCharToTexCoords(char ch)
 					{
 						int index = (int)ch;
-						int row = (255 - index) / 16;
+						if (index > 127) // no
+							index = 0;
+						int row = (127 - index) / 16;
 						int column = index % 16;
-						return (column / 16f, row / 16f, 16f / 256f, 16f / 256f);
+						return (column / 16f, row / 8f, characterAspectRatio / 16f, 1 / 8f);
 					}
 				}
 			}
 			GL.End();
 		}
 
-		public (float width, float height) Measure(string text)
+		private static (float characterWidth, float characterHeight) getCharacterSize(int fontSize)
 		{
+			return (characterWidth: fontSize * characterAspectRatio, characterHeight: fontSize * characterAspectRatioInverse);
+		}
+
+		public (float width, float height) Measure(string text) // TODO: pass font size
+		{
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = getCharacterSize(fontSize);
 			return (width: (text?.Length ?? 0) * characterWidth, height: characterHeight);
 		}
 	}
