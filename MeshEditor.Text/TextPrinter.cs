@@ -35,27 +35,28 @@ namespace MeshEditor.Text
 
 			//ImageSharp loads from the top-left pixel, whereas OpenGL loads from the bottom-left, causing the texture to be flipped vertically.
 			//This will correct that, making the texture display properly.
-			image.Mutate(x => x.Flip(FlipMode.Vertical));
+			image.Mutate(x => x.Flip(FlipMode.Vertical).ApplyProcessor(new BackgroundRemoverProcessor()));
+
+			image.SaveAsPng("Resources/ascii_converted.png");
 
 			//Convert ImageSharp's format into a byte array, so we can use it with OpenGL.
-			var pixels = new List<byte>(4 * image.Width * image.Height); // TODO: make array
-
+			var pixels = new byte[4 * image.Width * image.Height];
+			int index = 0;
 			for (int y = 0; y < image.Height; y++)
 			{
 				var row = image.GetPixelRowSpan(y);
-
 				for (int x = 0; x < image.Width; x++)
 				{
-					pixels.Add(row[x].R);
-					pixels.Add(row[x].G);
-					pixels.Add(row[x].B);
-					pixels.Add(row[x].A);
+					pixels[index++] = row[x].R;
+					pixels[index++] = row[x].G;
+					pixels[index++] = row[x].B;
+					pixels[index++] = row[x].A;
 				}
 			}
 
 			int texID = GL.GenTexture();
 			GL.BindTexture(TextureTarget.Texture2D, texID);
-			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels.ToArray());
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
 			GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
@@ -102,12 +103,11 @@ namespace MeshEditor.Text
 		{
 			GL.Begin(PrimitiveType.Quads);
 			{
-				GL.Color3(1f, 1f, 1f); // white color to blend with texture
-				//GL.Color3(color);
+				//GL.Color3(1f, 1f, 1f); // white color to blend with texture
+				GL.Color3(color);
 				float charPosX = position.X;
 				foreach (char ch in text)
 				{
-					// TODO: wrong!!!!
 					var (s, t, width, height) = convertCharPositionToTexCoords(ch);
 					GL.TexCoord2(s, t);
 					GL.Vertex2(charPosX, position.Y + characterHeight);
