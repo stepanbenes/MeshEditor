@@ -159,7 +159,7 @@ namespace MeshEditor.Data
 			Z_FAR_PARAM = 50.0; // 50
 
 			RADIUS_OF_NORMALIZED_MESH = 1.0f;
-			MAX_VISIBLE_NUMBERS_DENSITY = 200f; // pixel^2
+			MAX_VISIBLE_NUMBERS_DENSITY = 1000f; // pixel^2
 
 			WHEEL_ZOOM_FACTOR = 0.1f; // (0,1)
 			MAX_ZOOM_DISTANCE = 0.2f;

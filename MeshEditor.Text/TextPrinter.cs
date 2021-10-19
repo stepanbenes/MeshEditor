@@ -6,6 +6,7 @@ using SixLabors.ImageSharp.Processing;
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
 using System.IO;
+using System.Reflection;
 
 namespace MeshEditor.Text
 {
@@ -17,11 +18,11 @@ namespace MeshEditor.Text
 
 		private readonly int textureId;
 
-		private static readonly float characterAspectRatio = 58f / 82f; // width / height
+		private static readonly float characterAspectRatio = 60f / 82f; // width / height
 		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
 		private const float betweenLineDistance = 4;
 
-		private const int defaultFontSize = 12;
+		private const int defaultFontSize = 14;
 
 		private TextPrinter()
 		{
@@ -103,12 +104,12 @@ namespace MeshEditor.Text
 				int newIndexOfNewLine = text.IndexOf(Environment.NewLine, indexOfNewLine);
 				if (newIndexOfNewLine < 0)
 				{
+					maxLineLength = Math.Max(maxLineLength, text.Length - indexOfNewLine);
 					break;
 				}
-				int length = newIndexOfNewLine - indexOfNewLine;
-				maxLineLength = Math.Max(maxLineLength, length);
-				indexOfNewLine = newIndexOfNewLine + Environment.NewLine.Length;
 				lineCount += 1;
+				maxLineLength = Math.Max(maxLineLength, newIndexOfNewLine - indexOfNewLine);
+				indexOfNewLine = newIndexOfNewLine + Environment.NewLine.Length;
 			}
 
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
@@ -120,10 +121,9 @@ namespace MeshEditor.Text
 		{
 			// https://opentk.net/learn/chapter1/5-textures.html
 
-			string path = "Resources/ascii.png";
-
 			//Load the image
-			Image<Rgba32> image = Image.Load<Rgba32>(path);
+			using var stream = typeof(TextPrinter).Assembly.GetManifestResourceStream("MeshEditor.Text.Resources.ascii.png");
+			using Image<Rgba32> image = Image.Load<Rgba32>(stream/*, new SixLabors.ImageSharp.Formats.Png.PngDecoder()*/);
 
 			//ImageSharp loads from the top-left pixel, whereas OpenGL loads from the bottom-left, causing the texture to be flipped vertically.
 			//This will correct that, making the texture display properly.
@@ -182,7 +182,7 @@ namespace MeshEditor.Text
 						index = 0;
 					int row = (127 - index) / 16;
 					int column = index % 16;
-					return (column / 16f, row / 8f, characterAspectRatio / 16f, 1 / 8f);
+					return (column / 16f, row / 8f + 0.01f, characterAspectRatio / 16f, 1 / 8f - 0.01f);
 				}
 			}
 		}

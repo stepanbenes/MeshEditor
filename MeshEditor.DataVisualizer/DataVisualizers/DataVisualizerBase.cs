@@ -147,17 +147,23 @@ namespace MeshEditor.DataVisualizer
 			int captionHeight = (int)captionSize.Height + 20;
 
 			int tableHeight = tableCellSize.Height * (controlPoints.Length - 1);
-			int tableWidth = Math.Max(tableCellSize.Width + 60, (int)captionSize.Width);
+			var tableWidth = new Lazy<int>(() => calculateTableWidth());
 			const int margin = 10;
+
+			int calculateTableWidth()
+			{
+				int maxControlPointValueTextWidth = controlPoints.Select(cp => (int)Utilities.Functions.MeasureText(getControlPointValueText(cp)).Width).DefaultIfEmpty().Max();
+				return Math.Max(tableCellSize.Width + maxControlPointValueTextWidth, (int)captionSize.Width);
+			}
 
 			switch (Scene.ColorScaleLegendPosition)
 			{
 				case ColorScaleLegendPosition.RightTop:
 				default:
-					startLocation = new Point(viewport[2] - tableWidth - margin, margin);
+					startLocation = new Point(viewport[2] - tableWidth.Value - margin, margin);
 					break;
 				case ColorScaleLegendPosition.RightBottom:
-					startLocation = new Point(viewport[2] - tableWidth - margin, viewport[3] - tableHeight - captionHeight - margin);
+					startLocation = new Point(viewport[2] - tableWidth.Value - margin, viewport[3] - tableHeight - captionHeight - margin);
 					break;
 				case ColorScaleLegendPosition.LeftBottom:
 					startLocation = new Point(margin, viewport[3] - tableHeight - captionHeight - margin);
@@ -245,12 +251,14 @@ namespace MeshEditor.DataVisualizer
 			GL.MatrixMode(MatrixMode.Modelview);
 
 			// DRAW NUMBERS
-			textPosition = new Vector2(startLocation.X + tableCellSize.Width + 4, startLocation.Y - 9);
+			textPosition = new Vector2(startLocation.X + tableCellSize.Width + 6, startLocation.Y - 9);
 			for (int i = 0; i < controlPoints.Length; i++)
 			{
-				Utilities.Functions.DrawText(controlPoints[i].Value.ToString("G4"), textPosition, contrastColor);
+				Utilities.Functions.DrawText(getControlPointValueText(controlPoints[i]), textPosition, contrastColor);
 				textPosition.Y += tableCellSize.Height;
 			}
+
+			static string getControlPointValueText(ColorScale.ControlPoint controlPoint) => controlPoint.Value.ToString("G4");
 		}
 
 		#endregion
