@@ -626,26 +626,6 @@ namespace MeshEditor.Utilities
 
 		#region Text drawing
 
-		public static void DrawText(string text, Vector3 position, Color color)
-		{
-			var textPrinter = TextPrinter.Instance;
-
-			// NOTE: only for testing; very bad performance
-			int[] viewport;
-			double[] modelview;
-			double[] projection;
-			MeshEditor.Data.Scene.ExtractMatrices(out viewport, out modelview, out projection);
-
-			Vector3 winPos;
-
-			textPrinter.Begin(); // sets orthografic projection
-
-			GluProject(position, modelview, projection, viewport, out winPos);
-			textPrinter.Print(text, color, new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1));
-
-			textPrinter.End(); // restores projection matrix
-		}
-
 		public static void DrawText(string text, Vector2 windowPosition, Color color)
 		{
 			// NOTE: only for testing; very bad performance
@@ -659,14 +639,30 @@ namespace MeshEditor.Utilities
 			textPrinter.End(); // restores projection matrix
 		}
 
-		public static SizeF MeasureText(string text)
+		public static void DrawTextLines(string text, Vector2 windowPosition, Color color)
 		{
 			// NOTE: only for testing; very bad performance
+
 			var textPrinter = TextPrinter.Instance;
 
 			textPrinter.Begin(); // sets orthografic projection
-			(float width, float height) = textPrinter.Measure(text);
+
+			textPrinter.PrintLines(text, color, windowPosition);
+
 			textPrinter.End(); // restores projection matrix
+		}
+
+		public static SizeF MeasureText(string text)
+		{
+			var textPrinter = TextPrinter.Instance;
+			(float width, float height) = textPrinter.Measure(text);
+			return new SizeF(width, height);
+		}
+
+		public static SizeF MeasureTextLines(string text)
+		{
+			var textPrinter = TextPrinter.Instance;
+			(float width, float height) = textPrinter.MeasureLines(text);
 			return new SizeF(width, height);
 		}
 

@@ -136,20 +136,15 @@ namespace MeshEditor.DataVisualizer
 
 			// -----------------------------------------------------------------------
 
-			int captionHeight = 0;
 			string description = LegendText;
-			captionHeight += 60;
-			//if (settings.DisplayMethod == ScalarDataDisplayMethod.ApproximationError)
-			//{
-			//	description += Environment.NewLine + "[Approximation Error]";
-			//	captionHeight += 20;
-			//}
 
 			// -----------------------------------------------------------------------
 
 			Point startLocation;
 			Size tableCellSize = new Size(20, 40);
-			SizeF captionSize = Utilities.Functions.MeasureText(description);
+			SizeF captionSize = Utilities.Functions.MeasureTextLines(description);
+			
+			int captionHeight = (int)captionSize.Height + 20;
 
 			int tableHeight = tableCellSize.Height * (controlPoints.Length - 1);
 			int tableWidth = Math.Max(tableCellSize.Width + 60, (int)captionSize.Width);
@@ -174,7 +169,7 @@ namespace MeshEditor.DataVisualizer
 
 			// DRAW DATA VALUE DESCRIPTION ---------------------------------------------
 			Vector2 textPosition = new Vector2(startLocation.X, startLocation.Y);
-			Utilities.Functions.DrawText(description, textPosition, contrastColor);
+			Utilities.Functions.DrawTextLines(description, textPosition, contrastColor);
 			// -------------------------------------------------------------------------
 			startLocation.Y += captionHeight;
 

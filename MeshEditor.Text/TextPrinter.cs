@@ -5,6 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
+using System.IO;
 
 namespace MeshEditor.Text
 {
@@ -18,10 +19,103 @@ namespace MeshEditor.Text
 
 		private static readonly float characterAspectRatio = 58f / 82f; // width / height
 		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
+		private const float betweenLineDistance = 4;
 
 		private TextPrinter()
 		{
 			textureId = LoadTexture();
+		}
+
+		public void Begin()
+		{
+			int[] viewport = new int[4];
+			GL.GetInteger(GetPName.Viewport, viewport);
+
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.PushMatrix();
+			GL.LoadIdentity();
+			GL.Ortho(0, viewport[2], viewport[3], 0, 0, 1);
+			GL.MatrixMode(MatrixMode.Modelview);
+			GL.PushMatrix();
+			GL.LoadIdentity();
+
+			GL.Disable(EnableCap.Lighting);
+			GL.Enable(EnableCap.Blend);
+			GL.Enable(EnableCap.Texture2D);
+
+			GL.BindTexture(TextureTarget.Texture2D, textureId);
+
+			GL.Begin(PrimitiveType.Quads);
+		}
+
+		public void End()
+		{
+			GL.End();
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
+			GL.Disable(EnableCap.Texture2D);
+
+			GL.PopMatrix();
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.PopMatrix();
+			GL.MatrixMode(MatrixMode.Modelview);
+		}
+
+		public void Print(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
+		{
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
+
+			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
+			GL.Color3(color);
+			PrintLine(text, position.X, position.Y, characterWidth, characterHeight);
+		}
+
+		public void PrintLines(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
+		{
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
+
+			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
+			GL.Color3(color);
+			float charPosY = position.Y;
+			using var reader = new StringReader(text);
+			while (reader.ReadLine() is string line)
+			{
+				PrintLine(line, position.X, charPosY, characterWidth, characterHeight);
+				charPosY += characterHeight + betweenLineDistance;
+			}
+		}
+
+		public (float width, float height) Measure(string text) // TODO: pass font size
+		{
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
+			return (width: text.Length * characterWidth, height: characterHeight);
+		}
+
+		public (float width, float height) MeasureLines(string text) // TODO: pass font size
+		{
+			int lineCount = 1;
+			int indexOfNewLine = 0;
+			int maxLineLength = 0;
+			while (true)
+			{
+				int newIndexOfNewLine = text.IndexOf(Environment.NewLine, indexOfNewLine);
+				if (newIndexOfNewLine < 0)
+				{
+					break;
+				}
+				int length = newIndexOfNewLine - indexOfNewLine;
+				maxLineLength = Math.Max(maxLineLength, length);
+				indexOfNewLine = newIndexOfNewLine + Environment.NewLine.Length;
+				lineCount += 1;
+			}
+
+			int fontSize = 14;
+			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
+
+			return (width: characterWidth * maxLineLength, height: characterHeight * lineCount + betweenLineDistance * (lineCount - 1));
 		}
 
 		private int LoadTexture()
@@ -67,85 +161,37 @@ namespace MeshEditor.Text
 			return texID;
 		}
 
-		public void Begin()
+		private static void PrintLine(string line, float charPosX, float charPosY, float characterWidth, float characterHeight)
 		{
-			int[] viewport = new int[4];
-			GL.GetInteger(GetPName.Viewport, viewport);
-
-			GL.MatrixMode(MatrixMode.Projection);
-			GL.PushMatrix();
-			GL.LoadIdentity();
-			GL.Ortho(0, viewport[2], viewport[3], 0, 0, 1);
-			GL.MatrixMode(MatrixMode.Modelview);
-			GL.PushMatrix();
-			GL.LoadIdentity();
-
-			GL.Disable(EnableCap.Lighting);
-			GL.Enable(EnableCap.Blend);
-			GL.Enable(EnableCap.Texture2D);
-
-			GL.BindTexture(TextureTarget.Texture2D, textureId);
-		}
-
-		public void End()
-		{
-			GL.BindTexture(TextureTarget.Texture2D, 0);
-			GL.Disable(EnableCap.Texture2D);
-
-			GL.PopMatrix();
-			GL.MatrixMode(MatrixMode.Projection);
-			GL.PopMatrix();
-			GL.MatrixMode(MatrixMode.Modelview);
-		}
-
-		public void Print(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
-		{
-			int fontSize = 14;
-			var (characterWidth, characterHeight) = getCharacterSize(fontSize);
-
-			GL.Begin(PrimitiveType.Quads);
+			foreach (char ch in line)
 			{
-				//GL.Color3(1f, 1f, 1f); // white color to blend with texture
-				GL.Color3(color);
-				float charPosX = position.X;
-				foreach (char ch in text)
+				var (s, t, width, height) = convertCharToTexCoords(ch);
+				GL.TexCoord2(s, t);
+				GL.Vertex2(charPosX, charPosY + characterHeight);
+				GL.TexCoord2(s + width, t);
+				GL.Vertex2(charPosX + characterWidth, charPosY + characterHeight);
+				GL.TexCoord2(s + width, t + height);
+				GL.Vertex2(charPosX + characterWidth, charPosY);
+				GL.TexCoord2(s, t + height);
+				GL.Vertex2(charPosX, charPosY);
+
+				charPosX += characterWidth;
+
+				static (float s, float t, float width, float height) convertCharToTexCoords(char ch)
 				{
-					var (s, t, width, height) = convertCharToTexCoords(ch);
-					GL.TexCoord2(s, t);
-					GL.Vertex2(charPosX, position.Y + characterHeight);
-					GL.TexCoord2(s + width, t);
-					GL.Vertex2(charPosX + characterWidth, position.Y + characterHeight);
-					GL.TexCoord2(s + width, t + height);
-					GL.Vertex2(charPosX + characterWidth, position.Y);
-					GL.TexCoord2(s, t + height);
-					GL.Vertex2(charPosX, position.Y);
-
-					charPosX += characterWidth;
-
-					static (float s, float t, float width, float height) convertCharToTexCoords(char ch)
-					{
-						int index = (int)ch;
-						if (index > 127) // no
-							index = 0;
-						int row = (127 - index) / 16;
-						int column = index % 16;
-						return (column / 16f, row / 8f, characterAspectRatio / 16f, 1 / 8f);
-					}
+					int index = (int)ch;
+					if (index > 127) // no
+						index = 0;
+					int row = (127 - index) / 16;
+					int column = index % 16;
+					return (column / 16f, row / 8f, characterAspectRatio / 16f, 1 / 8f);
 				}
 			}
-			GL.End();
 		}
 
-		private static (float characterWidth, float characterHeight) getCharacterSize(int fontSize)
+		private static (float characterWidth, float characterHeight) GetCharacterSize(int fontSize)
 		{
 			return (characterWidth: fontSize * characterAspectRatio, characterHeight: fontSize * characterAspectRatioInverse);
-		}
-
-		public (float width, float height) Measure(string text) // TODO: pass font size
-		{
-			int fontSize = 14;
-			var (characterWidth, characterHeight) = getCharacterSize(fontSize);
-			return (width: (text?.Length ?? 0) * characterWidth, height: characterHeight);
 		}
 	}
 }
