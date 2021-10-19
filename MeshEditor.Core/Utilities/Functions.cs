@@ -634,7 +634,7 @@ namespace MeshEditor.Utilities
 
 			textPrinter.Begin(); // sets orthografic projection
 
-			textPrinter.Print(text, color, windowPosition);
+			textPrinter.Print(text, windowPosition, color);
 
 			textPrinter.End(); // restores projection matrix
 		}
@@ -647,7 +647,7 @@ namespace MeshEditor.Utilities
 
 			textPrinter.Begin(); // sets orthografic projection
 
-			textPrinter.PrintLines(text, color, windowPosition);
+			textPrinter.PrintLines(text, windowPosition, color);
 
 			textPrinter.End(); // restores projection matrix
 		}

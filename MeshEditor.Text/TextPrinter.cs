@@ -21,6 +21,8 @@ namespace MeshEditor.Text
 		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
 		private const float betweenLineDistance = 4;
 
+		private const int defaultFontSize = 12;
+
 		private TextPrinter()
 		{
 			textureId = LoadTexture();
@@ -61,9 +63,8 @@ namespace MeshEditor.Text
 			GL.MatrixMode(MatrixMode.Modelview);
 		}
 
-		public void Print(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
+		public void Print(string text, Vector2 position, System.Drawing.Color color, int fontSize = defaultFontSize)
 		{
-			int fontSize = 14;
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
 			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
@@ -71,9 +72,8 @@ namespace MeshEditor.Text
 			PrintLine(text, position.X, position.Y, characterWidth, characterHeight);
 		}
 
-		public void PrintLines(string text, System.Drawing.Color color, Vector2 position) // TODO: pass font size
+		public void PrintLines(string text, Vector2 position, System.Drawing.Color color, int fontSize = defaultFontSize)
 		{
-			int fontSize = 14;
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
 			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
@@ -87,14 +87,13 @@ namespace MeshEditor.Text
 			}
 		}
 
-		public (float width, float height) Measure(string text) // TODO: pass font size
+		public (float width, float height) Measure(string text, int fontSize = defaultFontSize)
 		{
-			int fontSize = 14;
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 			return (width: text.Length * characterWidth, height: characterHeight);
 		}
 
-		public (float width, float height) MeasureLines(string text) // TODO: pass font size
+		public (float width, float height) MeasureLines(string text, int fontSize = defaultFontSize)
 		{
 			int lineCount = 1;
 			int indexOfNewLine = 0;
@@ -112,7 +111,6 @@ namespace MeshEditor.Text
 				lineCount += 1;
 			}
 
-			int fontSize = 14;
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
 			return (width: characterWidth * maxLineLength, height: characterHeight * lineCount + betweenLineDistance * (lineCount - 1));

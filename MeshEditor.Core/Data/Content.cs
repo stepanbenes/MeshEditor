@@ -1011,7 +1011,7 @@ namespace MeshEditor.Data
 					selected = selectedItems.Contains(faceOfElement.ParentElement);
 				}
 				// --------------------------------------------------------------------------
-				textPrinter.Print(id.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8));
+				textPrinter.Print(id.ToString(), new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1033,7 +1033,7 @@ namespace MeshEditor.Data
 				if (stickyNodes.Contains(n))
 					continue;
 				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
-				textPrinter.Print(n.ID.ToString(), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor, new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1));
+				textPrinter.Print(n.ID.ToString(), new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1063,7 +1063,7 @@ namespace MeshEditor.Data
 				//if (winPos.Z >= 0f && winPos.Z <= 1f)
 				//{
 				bool selected = selectedItems.Contains(beam);
-				textPrinter.Print(beam.ID.ToString(), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor, new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8));
+				textPrinter.Print(beam.ID.ToString(), new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
 				//}
 			}
 			textPrinter.End(); // restores projection matrix
@@ -1110,7 +1110,7 @@ namespace MeshEditor.Data
 			foreach (var textPosition in textPositions)
 			{
 				Vector2 winPos = textPosition.Value;
-				textPrinter.Print(textPosition.Key, Scene.LabelColor, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1));
+				textPrinter.Print(textPosition.Key, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1), Scene.LabelColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
