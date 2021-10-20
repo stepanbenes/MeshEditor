@@ -1017,7 +1017,7 @@ namespace MeshEditor.WinUI
 			string userGuideFilePath = UpdateChecker.MeshEditorUpdateUri + "/user-guide.pdf";
 			try
 			{
-				Process.Start(userGuideFilePath);
+				ProcessStarter.OpenBrowser(userGuideFilePath);
 			}
 			catch (Exception)
 			{
@@ -1065,7 +1065,7 @@ namespace MeshEditor.WinUI
 				var dialogResult = MessageBox.Show(questionTextBuilder.ToString(), "New version available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 				if (dialogResult == DialogResult.Yes)
 				{
-					Process.Start(updateChecker.PackageFileUri); // start web browser with package file uri
+					ProcessStarter.OpenBrowser(updateChecker.PackageFileUri); // start web browser with package file uri
 					this.Close(); // close application
 				}
 			}

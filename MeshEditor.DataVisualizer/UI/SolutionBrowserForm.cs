@@ -9,6 +9,7 @@ using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.IO;
 using MeshEditor.Common.Logging;
 using MeshEditor.CoreInterface;
+using MeshEditor.Common;
 
 namespace MeshEditor.DataVisualizer.UI
 {
@@ -106,7 +107,7 @@ namespace MeshEditor.DataVisualizer.UI
 					var location = new Uri(selectedSolution.Location);
 					UriBuilder uriBuilder = new UriBuilder(location);
 					uriBuilder.Path = $"/postprocess/{selectedSolution.Id}";
-					Process.Start(uriBuilder.Uri.ToString());
+					ProcessStarter.OpenBrowser(uriBuilder.Uri.ToString());
 				}
 				catch (Exception ex)
 				{
