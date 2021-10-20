@@ -22,7 +22,7 @@ namespace MeshEditor.Text
 		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
 		private const float betweenLineDistance = 4;
 
-		private const int defaultFontSize = 14;
+		private const int defaultFontSize = 12;
 
 		private TextPrinter()
 		{

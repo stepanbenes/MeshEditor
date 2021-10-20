@@ -1033,7 +1033,7 @@ namespace MeshEditor.Data
 				if (stickyNodes.Contains(n))
 					continue;
 				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
-				textPrinter.Print(n.ID.ToString(), new Vector2(winPos.X + 1, viewport[3] - winPos.Y + 1), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor);
+				textPrinter.Print(n.ID.ToString(), new Vector2(winPos.X + 2, viewport[3] - winPos.Y + 2), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1110,7 +1110,7 @@ namespace MeshEditor.Data
 			foreach (var textPosition in textPositions)
 			{
 				Vector2 winPos = textPosition.Value;
-				textPrinter.Print(textPosition.Key, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1), Scene.LabelColor);
+				textPrinter.Print(textPosition.Key, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1), Scene.LabelColor, fontSize: 14);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
