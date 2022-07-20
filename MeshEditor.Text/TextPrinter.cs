@@ -22,7 +22,9 @@ namespace MeshEditor.Text
 		private static readonly float characterAspectRatioInverse = 1f / characterAspectRatio;
 		private const float betweenLineDistance = 4;
 
-		private const int defaultFontSize = 12;
+		private const int defaultFontSize = 16; // TODO: make adjustable in settings
+
+		// TODO: implement test app inspired by: https://stackoverflow.com/questions/59800470/c-sharp-opentk-draw-string-on-window
 
 		private TextPrinter()
 		{
