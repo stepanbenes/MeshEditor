@@ -415,11 +415,11 @@ namespace MeshEditor.Data
 					break;
 				case ElementType.TriangularPrismLinear:
 				case ElementType.TriangularPrismQuadratic:
-					yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[2]);
-					yield return new TriangleMark(nodeIDs[3], nodeIDs[5], nodeIDs[4]);
-					yield return new QuadMark(nodeIDs[1], nodeIDs[0], nodeIDs[3], nodeIDs[4]);
 					yield return new QuadMark(nodeIDs[2], nodeIDs[1], nodeIDs[4], nodeIDs[5]);
 					yield return new QuadMark(nodeIDs[0], nodeIDs[2], nodeIDs[5], nodeIDs[3]);
+					yield return new QuadMark(nodeIDs[1], nodeIDs[0], nodeIDs[3], nodeIDs[4]);
+					yield return new TriangleMark(nodeIDs[0], nodeIDs[1], nodeIDs[2]);
+					yield return new TriangleMark(nodeIDs[3], nodeIDs[5], nodeIDs[4]);
 					break;
 				case ElementType.HexahedronLinear:
 				case ElementType.HexahedronQuadratic:
