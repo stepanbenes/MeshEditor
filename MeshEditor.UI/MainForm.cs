@@ -1051,7 +1051,7 @@ namespace MeshEditor.WinUI
 
 			if (updateExists)
 			{
-				if (!Version.TryParse(maxVersionToIgnoreString, out Version maxVersionToIgnore) && maxVersionToIgnore >= updateChecker.ServerVersion)
+				if (Version.TryParse(maxVersionToIgnoreString, out Version maxVersionToIgnore) && maxVersionToIgnore >= updateChecker.ServerVersion)
 					return false;
 
 				StringBuilder questionTextBuilder = new StringBuilder();
