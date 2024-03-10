@@ -1060,7 +1060,9 @@ namespace MeshEditor.WinUI
 				questionTextBuilder.AppendLine("New version: " + updateChecker.ServerVersion);
 				questionTextBuilder.AppendLine("Current version: " + updateChecker.CurrentVersion);
 				questionTextBuilder.AppendLine();
-				questionTextBuilder.Append("Do you want to download the new version?");
+                questionTextBuilder.AppendLine($"Link to download: {updateChecker.PackageFileUri}");
+                questionTextBuilder.AppendLine();
+                questionTextBuilder.Append("Do you want to download the new version?");
 
 				var dialogResult = MessageBox.Show(questionTextBuilder.ToString(), "New version available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 				if (dialogResult == DialogResult.Yes)
@@ -1459,7 +1461,7 @@ namespace MeshEditor.WinUI
 			}
 			mainWindowSettings.LastLoadedMesh = activeControl.SceneFacade.MeshSourceFileName;
 			ConfigurationManager.SetConfigurationObject("MainWindowSettings", mainWindowSettings);
-		}
+        }
 
 		private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
 		{
