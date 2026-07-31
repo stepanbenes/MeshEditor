@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK;
 using System.IO;
 using System.Reflection;
+using SixLabors.ImageSharp.Advanced;
 
 namespace MeshEditor.Text
 {
@@ -71,7 +72,7 @@ namespace MeshEditor.Text
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
 			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
-			GL.Color3(color);
+			GL.Color3(color.R, color.G, color.B);
 			PrintLine(text, position.X, position.Y, characterWidth, characterHeight);
 		}
 
@@ -80,7 +81,7 @@ namespace MeshEditor.Text
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
 			//GL.Color3(1f, 1f, 1f); // white color to blend with texture
-			GL.Color3(color);
+			GL.Color3(color.R, color.G, color.B);
 			float charPosY = position.Y;
 			using var reader = new StringReader(text);
 			while (reader.ReadLine() is string line)
@@ -125,7 +126,7 @@ namespace MeshEditor.Text
 
 			//Load the image
 			using var stream = typeof(TextPrinter).Assembly.GetManifestResourceStream("MeshEditor.Text.Resources.ascii.png");
-			using Image<Rgba32> image = Image.Load<Rgba32>(stream/*, new SixLabors.ImageSharp.Formats.Png.PngDecoder()*/);
+			using Image<Rgba32> image = SixLabors.ImageSharp.Image.Load<Rgba32>(stream/*, new SixLabors.ImageSharp.Formats.Png.PngDecoder()*/);
 
 			//ImageSharp loads from the top-left pixel, whereas OpenGL loads from the bottom-left, causing the texture to be flipped vertically.
 			//This will correct that, making the texture display properly.
@@ -137,7 +138,7 @@ namespace MeshEditor.Text
 			int index = 0;
 			for (int y = 0; y < image.Height; y++)
 			{
-				var row = image.GetPixelRowSpan(y);
+				var row = image.DangerousGetPixelRowMemory(y).Span;
 				for (int x = 0; x < image.Width; x++)
 				{
 					pixels[index++] = row[x].R;

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows</TargetFramework>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
 		<UseWindowsForms>true</UseWindowsForms>
 		<OutputType>WinExe</OutputType>
 		<RootNamespace>MeshEditor.WinUI</RootNamespace>
@@ -34,15 +35,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="OpenTK" Version="3.3.2" />
-		<PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
 		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
 		<ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj" />
 		<ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="OpenTK" Version="3.3.2" />
+	  <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
 	</ItemGroup>
 </Project>
 
