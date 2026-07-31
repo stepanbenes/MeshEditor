@@ -25,12 +25,14 @@ namespace MeshEditor.WinUI
 
 		private int firstLimit, secondLimit;
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int FirstLimit
 		{
 			get { return firstLimit; }
 			set { firstLimit = value; this.Invalidate(); }
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int SecondLimit
 		{
 			get { return secondLimit; }

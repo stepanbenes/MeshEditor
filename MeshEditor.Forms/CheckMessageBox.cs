@@ -15,6 +15,7 @@ namespace MeshEditor.WinUI
 	{
 		private bool isChecked;
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsChecked
 		{
 			get { return isChecked; }

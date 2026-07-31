@@ -37,6 +37,7 @@ namespace MeshEditor.WinUI
 			get { return commands; }
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public PropertyCommand SelectedCommand
 		{
 			get { return selectedCommand; }

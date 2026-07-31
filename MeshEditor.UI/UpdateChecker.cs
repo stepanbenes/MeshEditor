@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +12,8 @@ namespace MeshEditor.WinUI
 {
 	class UpdateChecker
 	{
+		private static readonly HttpClient HttpClient = new HttpClient();
+
 		public static string MeshEditorUpdateUri => @"https://feastorage.blob.core.windows.net/mesheditor-update";
 
 		public static bool IsUpdateServiceAvailableForThisPlatform => (Environment.OSVersion.Platform == PlatformID.Unix && Environment.Is64BitOperatingSystem);
@@ -50,11 +52,7 @@ namespace MeshEditor.WinUI
 			//architectureFolder = "x86";
 
 			string releasesFileUri = $"{MeshEditorUpdateUri}/{clientFolder}/{architectureFolder}/releases.txt";
-			string releasesFileContent;
-			using (var webClient = new WebClient())
-			{
-				releasesFileContent = await webClient.DownloadStringTaskAsync(releasesFileUri);
-			}
+			string releasesFileContent = await HttpClient.GetStringAsync(releasesFileUri);
 
 			string[] lines = releasesFileContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			if (lines.Length > 0)

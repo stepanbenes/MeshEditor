@@ -37,9 +37,10 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public string SolutionFileName { get; private set; }
 
-		protected override void OnClosed(EventArgs e)
+		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			longOpNotifier.CancellationRequested -= longOpNotifier_CancellationRequested;
+			base.OnFormClosed(e);
 		}
 
 		private void longOpNotifier_CancellationRequested(LongOpNotifier.Token obj)

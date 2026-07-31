@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows</TargetFramework>
 		<UseWindowsForms>true</UseWindowsForms>
@@ -36,7 +36,6 @@
 	<ItemGroup>
 		<PackageReference Include="OpenTK" Version="3.3.2" />
 		<PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.7" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -46,4 +45,5 @@
 		<ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj" />
 	</ItemGroup>
 </Project>
+
 

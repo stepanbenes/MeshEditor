@@ -122,9 +122,9 @@ namespace MeshEditor.WinUI
 			}
 		}
 
-		protected override void OnClosing(CancelEventArgs e)
+		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
-			base.OnClosing(e);
+			base.OnFormClosing(e);
 
 			List<OpenGLControl> controls = new List<OpenGLControl>(openGLControls.Count);
 			controls.Add(activeControl);
@@ -134,7 +134,7 @@ namespace MeshEditor.WinUI
 			askToSaveChanges(controls, true, e);
 		}
 
-		protected override void OnClosed(EventArgs e)
+		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			// save settings from Options dialog
 			SceneSettings.SaveToConfigurationFile();
@@ -148,7 +148,7 @@ namespace MeshEditor.WinUI
 			foreach (OpenGLControl c in openGLControls)
 				c.DisposeScene();
 
-			base.OnClosed(e);
+			base.OnFormClosed(e);
 		}
 
 		#endregion

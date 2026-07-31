@@ -20,6 +20,7 @@ namespace MeshEditor.WinUI
 			updateOkButtonText();
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool UseSelectionArea
 		{
 			get { return radioButtonSelectionArea.Checked; }

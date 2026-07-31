@@ -35,6 +35,7 @@ namespace MeshEditor.DataVisualizer.UI
 		[Category("Behavior")]
 		public event EventHandler SolutionListDoubleClick;
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string Notification
 		{
 			get { return labelNotification.Text; }

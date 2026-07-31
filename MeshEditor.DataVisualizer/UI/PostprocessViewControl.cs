@@ -73,6 +73,7 @@ namespace MeshEditor.DataVisualizer.UI
 			}
 		}
 
+		[System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
 		public SceneFacade ActiveScene
 		{
 			get { return activeScene; }

@@ -81,10 +81,10 @@ namespace MeshEditor.DataVisualizer.UI
 			updateButtonStates();
 		}
 
-		protected override void OnClosed(EventArgs e)
+		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			formClosedCancellationSource.Cancel();
-			base.OnClosed(e);
+			base.OnFormClosed(e);
 		}
 
 		private void tabControl_SelectedIndexChanged(object sender, EventArgs e)

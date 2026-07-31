@@ -15,6 +15,7 @@ namespace MeshEditor.WinUI
 	/// </summary>
 	public partial class ProgressViewForm : Form
 	{
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string Caption
 		{
 			get { return caption; }
@@ -28,6 +29,7 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string OperationName
 		{
 			get { return operationName; }
@@ -95,12 +97,13 @@ namespace MeshEditor.WinUI
 			string createLogMessage(LogRecord logRecord) => (logRecord.Type == RecordType.OperationProgress) ? logRecord.Content : $"[{logRecord.Type}] {logRecord.Content}";
 		}
 
-		protected override void OnClosed(EventArgs e)
+		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			if (logger != null)
 			{
 				logger.LogRecordReported -= logRecordReported_handler; // unsubscribe from log
 			}
+			base.OnFormClosed(e);
 		}
 
 		/// <summary>
@@ -152,12 +155,13 @@ namespace MeshEditor.WinUI
 			this.Close();
 		}
 
-		protected override void OnClosing(CancelEventArgs e)
+		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			if (!quitRequested)
 			{
 				e.Cancel = true;
 			}
+			base.OnFormClosing(e);
 		}
 	}
 }

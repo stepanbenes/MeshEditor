@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace MeshEditor.DataVisualizer.UI
@@ -29,6 +30,7 @@ namespace MeshEditor.DataVisualizer.UI
 	{
 		private FilterParams filterParams;
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public FilterParams FilterParams
 		{
 			get => filterParams ?? throw new InvalidOperationException("Filter params should be requested only if dialog result is OK");

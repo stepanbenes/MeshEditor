@@ -161,6 +161,7 @@ namespace MeshEditor.WinUI
 			get { return !ioProcessCancelled && !ioProcessError; }
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public SceneFacade SceneFacade
 		{
 			get { return sceneFacade; }
@@ -178,12 +179,14 @@ namespace MeshEditor.WinUI
 			}
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Control MyContainer
 		{
 			get { return myContainer; }
 			set { myContainer = value; }
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsActive
 		{
 			get { return isActive; }

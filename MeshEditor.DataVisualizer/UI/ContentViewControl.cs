@@ -17,6 +17,7 @@ namespace MeshEditor.DataVisualizer.UI
 			InitializeComponent();
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public virtual Control Content
 		{
 			get { return null; }

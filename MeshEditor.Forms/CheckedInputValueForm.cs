@@ -27,6 +27,7 @@ namespace MeshEditor.WinUI
 			checkBox.Text = checkBoxText;
 		}
 
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsChecked
 		{
 			get { return checkBox.Checked; }

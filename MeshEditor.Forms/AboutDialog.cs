@@ -49,7 +49,7 @@ namespace MeshEditor.WinUI
 						return titleAttribute.Title;
 					}
 				}
-				return System.IO.Path.GetFileNameWithoutExtension(AssemblyWithInfo.CodeBase);
+				return System.IO.Path.GetFileNameWithoutExtension(AssemblyWithInfo.Location);
 			}
 		}
 

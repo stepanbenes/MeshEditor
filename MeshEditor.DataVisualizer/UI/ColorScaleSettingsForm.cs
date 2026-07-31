@@ -33,9 +33,10 @@ namespace MeshEditor.DataVisualizer.UI
 
 		public event EventHandler SettingsChanged;
 
-		protected override void OnClosed(EventArgs e)
+		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			removeAllControlPointSetters();
+			base.OnFormClosed(e);
 		}
 
 		private void updateView()
