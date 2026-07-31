@@ -29,13 +29,7 @@ namespace MeshEditor.WinUI
 
 		private Assembly getAssemblyWithInfo()
 		{
-			Assembly EntryAssembly = Assembly.GetEntryAssembly();
-			foreach (AssemblyName Name in EntryAssembly.GetReferencedAssemblies())
-			{
-				if (Name.Name == "MeshEditor.Core")
-					Assembly.ReflectionOnlyLoad(Name.FullName);
-			}
-			return EntryAssembly;
+			return Assembly.GetEntryAssembly();
 		}
 
 		#region Assembly Attribute Accessors
