@@ -1,258 +1,38 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A282D924-E26B-4077-A803-D3064F36A744}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MeshEditor.Forms</RootNamespace>
-    <AssemblyName>MeshEditor.Forms</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <LangVersion>latest</LangVersion>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AboutDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AboutDialog.Designer.cs">
-      <DependentUpon>AboutDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CheckedInputValueForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CheckedInputValueForm.Designer.cs">
-      <DependentUpon>CheckedInputValueForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CheckMessageBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CheckMessageBox.Designer.cs">
-      <DependentUpon>CheckMessageBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ConfigurePropertyColorsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ConfigurePropertyColorsForm.Designer.cs">
-      <DependentUpon>ConfigurePropertyColorsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CutEditorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CutEditorForm.Designer.cs">
-      <DependentUpon>CutEditorForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="HistogramViewer.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="HistogramViewer.Designer.cs">
-      <DependentUpon>HistogramViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="InputValueForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="InputValueForm.Designer.cs">
-      <DependentUpon>InputValueForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ListOfSelectedItemsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ListOfSelectedItemsForm.Designer.cs">
-      <DependentUpon>ListOfSelectedItemsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MeshInfoForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MeshInfoForm.Designer.cs">
-      <DependentUpon>MeshInfoForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ProgressViewForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ProgressViewForm.Designer.cs">
-      <DependentUpon>ProgressViewForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="PropertyColorControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PropertyColorControl.Designer.cs">
-      <DependentUpon>PropertyColorControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PropertyCommandForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PropertyCommandForm.Designer.cs">
-      <DependentUpon>PropertyCommandForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PropertyInputForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PropertyInputForm.Designer.cs">
-      <DependentUpon>PropertyInputForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ScreenshotOptionsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ScreenshotOptionsForm.Designer.cs">
-      <DependentUpon>ScreenshotOptionsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsForm.Designer.cs">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ShowHideElementsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ShowHideElementsForm.Designer.cs">
-      <DependentUpon>ShowHideElementsForm.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj">
-      <Project>{06D721B8-CDB0-4A95-A009-2BF4C4AC5DB9}</Project>
-      <Name>MeshEditor.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
-      <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
-      <Name>MeshEditor.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="AboutDialog.resx">
-      <DependentUpon>AboutDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CheckedInputValueForm.resx">
-      <DependentUpon>CheckedInputValueForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CheckMessageBox.resx">
-      <DependentUpon>CheckMessageBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ConfigurePropertyColorsForm.resx">
-      <DependentUpon>ConfigurePropertyColorsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CutEditorForm.resx">
-      <DependentUpon>CutEditorForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="HistogramViewer.resx">
-      <DependentUpon>HistogramViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="InputValueForm.resx">
-      <DependentUpon>InputValueForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ListOfSelectedItemsForm.resx">
-      <DependentUpon>ListOfSelectedItemsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MeshInfoForm.resx">
-      <DependentUpon>MeshInfoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ProgressViewForm.resx">
-      <DependentUpon>ProgressViewForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PropertyColorControl.resx">
-      <DependentUpon>PropertyColorControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PropertyCommandForm.resx">
-      <DependentUpon>PropertyCommandForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PropertyInputForm.resx">
-      <DependentUpon>PropertyInputForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ScreenshotOptionsForm.resx">
-      <DependentUpon>ScreenshotOptionsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsForm.resx">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ShowHideElementsForm.resx">
-      <DependentUpon>ShowHideElementsForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\help32.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hinkley.png" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>MeshEditor.Forms</RootNamespace>
+		<AssemblyName>MeshEditor.Forms</AssemblyName>
+		<LangVersion>latest</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AssetTargetFallback>$(AssetTargetFallback);net48;net472;net471;net461;net452;net45;net40;net35;net20</AssetTargetFallback>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+		<Prefer32Bit>false</Prefer32Bit>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DefineConstants>TRACE</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+		<Prefer32Bit>false</Prefer32Bit>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+		<DefineConstants>TRACE</DefineConstants>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+	</ItemGroup>
 </Project>

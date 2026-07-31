@@ -1,273 +1,45 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F586DC27-A7FD-4AB7-9A6B-1B6683A84B3F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MeshEditor.DataVisualizer</RootNamespace>
-    <AssemblyName>MeshEditor.DataVisualizer</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <LangVersion>latest</LangVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK, Version=3.3.2.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>..\packages\OpenTK.3.3.2\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.XML" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="DataVisualizers\DataSelection.cs" />
-    <Compile Include="DataVisualizers\LayerDataVisualizer.cs" />
-    <Compile Include="Data\Interval.cs" />
-    <Compile Include="DataVisualizers\DataVisualizerBase.cs" />
-    <Compile Include="Data\ColorScale.cs" />
-    <Compile Include="Data\LayerFilterEventArgs.cs" />
-    <Compile Include="Data\PostprocessScene.cs" />
-    <Compile Include="Data\VisualizerSettings.cs" />
-    <Compile Include="DataVisualizers\IDataVisualizerController.cs" />
-    <Compile Include="Graphics\IsoAreasShader.cs" />
-    <Compile Include="Graphics\VectorField.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\ColorScaleControlPointSetter.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ColorScaleControlPointSetter.Designer.cs">
-      <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\CompressionParamsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\CompressionParamsControl.Designer.cs">
-      <DependentUpon>CompressionParamsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\ContentViewControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ContentViewControl.Designer.cs">
-      <DependentUpon>ContentViewControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\DataSelectionControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\DataSelectionControl.Designer.cs">
-      <DependentUpon>DataSelectionControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Data\DataSelectionEventArgs.cs" />
-    <Compile Include="UI\DeformationFilterParamsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\DeformationFilterParamsForm.Designer.cs">
-      <DependentUpon>DeformationFilterParamsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\ColorScaleSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\ColorScaleSettingsForm.Designer.cs">
-      <DependentUpon>ColorScaleSettingsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\ErrorReportForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\ErrorReportForm.Designer.cs">
-      <DependentUpon>ErrorReportForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\FilterParamsForm.cs" />
-    <Compile Include="UI\FormExtensions.cs" />
-    <Compile Include="UI\ImportFEMResultsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\ImportFEMResultsForm.Designer.cs">
-      <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Data\LayerSelectionEventArgs.cs" />
-    <Compile Include="UI\IsoSurfaceFilterParamsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\IsoSurfaceFilterParamsForm.Designer.cs">
-      <DependentUpon>IsoSurfaceFilterParamsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\LayersTreeViewControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\LayersTreeViewControl.Designer.cs">
-      <DependentUpon>LayersTreeViewControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\PostprocessViewControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\PostprocessViewControl.Designer.cs">
-      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\PreprocessViewControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\PreprocessViewControl.Designer.cs">
-      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\SliceFilterParamsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\SliceFilterParamsForm.Designer.cs">
-      <DependentUpon>SliceFilterParamsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\SolutionBrowserForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\SolutionBrowserForm.Designer.cs">
-      <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\SolutionListView.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\SolutionListView.Designer.cs">
-      <DependentUpon>SolutionListView.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\VectorFieldVisualizationSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\VectorFieldVisualizationSettingsForm.Designer.cs">
-      <DependentUpon>VectorFieldVisualizationSettingsForm.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ColorScaleControlPointSetter.resx">
-      <DependentUpon>ColorScaleControlPointSetter.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\CompressionParamsControl.resx">
-      <DependentUpon>CompressionParamsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DataSelectionControl.resx">
-      <DependentUpon>DataSelectionControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DeformationFilterParamsForm.resx">
-      <DependentUpon>DeformationFilterParamsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ColorScaleSettingsForm.resx">
-      <DependentUpon>ColorScaleSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ErrorReportForm.resx">
-      <DependentUpon>ErrorReportForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ImportFEMResultsForm.resx">
-      <DependentUpon>ImportFEMResultsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\IsoSurfaceFilterParamsForm.resx">
-      <DependentUpon>IsoSurfaceFilterParamsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\LayersTreeViewControl.resx">
-      <DependentUpon>LayersTreeViewControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\PostprocessViewControl.resx">
-      <DependentUpon>PostprocessViewControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\PreprocessViewControl.resx">
-      <DependentUpon>PreprocessViewControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\SliceFilterParamsForm.resx">
-      <DependentUpon>SliceFilterParamsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\SolutionBrowserForm.resx">
-      <DependentUpon>SolutionBrowserForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\SolutionListView.resx">
-      <DependentUpon>SolutionListView.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\VectorFieldVisualizationSettingsForm.resx">
-      <DependentUpon>VectorFieldVisualizationSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj">
-      <Project>{604E83B3-5C76-47A8-BEB2-529CC28471F0}</Project>
-      <Name>MeshEditor.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj">
-      <Project>{06d721b8-cdb0-4a95-a009-2bf4c4ac5db9}</Project>
-      <Name>MeshEditor.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj">
-      <Project>{315e6aa6-a925-44bc-8f13-76cff7dcb02f}</Project>
-      <Name>MeshEditor.LayerManager</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj">
-      <Project>{551F7428-7A4E-4EE2-9681-5DE0105BF887}</Project>
-      <Name>MeshEditor.SolutionManager</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="OpenTK.dll.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>MeshEditor.DataVisualizer</RootNamespace>
+		<AssemblyName>MeshEditor.DataVisualizer</AssemblyName>
+		<LangVersion>latest</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AssetTargetFallback>$(AssetTargetFallback);net48;net472;net471;net461;net452;net45;net40;net35;net20</AssetTargetFallback>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<DefineConstants>TRACE;DEBUG</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+		<Prefer32Bit>false</Prefer32Bit>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DefineConstants>TRACE</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+		<Prefer32Bit>false</Prefer32Bit>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+		<DefineConstants>TRACE;DEBUG</DefineConstants>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+		<DefineConstants>TRACE</DefineConstants>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="OpenTK" Version="3.3.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj" />
+		<ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj" />
+	</ItemGroup>
 </Project>
