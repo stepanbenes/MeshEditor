@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MeshEditor</RootNamespace>
     <AssemblyName>MeshEditor.Core</AssemblyName>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 		<NoWarn>$(NoWarn);NU1701</NoWarn>
     <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
@@ -89,7 +89,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="3.3.2" />
+    <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="System.CodeDom" Version="9.0.7" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.7" />
   </ItemGroup>

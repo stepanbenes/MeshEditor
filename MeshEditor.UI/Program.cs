@@ -25,8 +25,6 @@ namespace MeshEditor.WinUI
 				AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			}
 
-			using var _ = OpenTK.Toolkit.Init();
-
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Application.CurrentCulture = MeshEditor.IO.CultureProvider.EnglishCulture; // sets us language culture

@@ -5,13 +5,13 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.GLControl;
+using OpenTK.Windowing.Common;
 
 using MeshEditor.CoreInterface;
 using System.IO;
 using MeshEditor.IO;
-using OpenTK.Graphics;
 using MeshEditor.Cuts;
 using MeshEditor.Graphics;
 using MeshEditor.Utilities;
@@ -37,6 +37,7 @@ namespace MeshEditor.WinUI
 		public event EventHandler<ScreenshotNeededEventArgs> ScreenshotNeeded;
 
 		private SceneFacade sceneFacade;
+		private bool openGlInitialized;
 
 		// ---------------------------------------
 		private ProgressViewForm progressViewForm;
@@ -64,7 +65,15 @@ namespace MeshEditor.WinUI
 
 		private OpenGLControl(SceneFacade sceneToCopy, MouseEventHandler mouseDownHandler, bool callBase)
 			// ten radek s volanim konstruktoru predka zpusoboval nefunkcnost na linuxu
-			: base(new GraphicsMode(new ColorFormat(SceneFacade.COLOR_BITS), SceneFacade.DEPTH_BITS))
+			: base(new GLControlSettings
+			{
+				RedBits = SceneFacade.COLOR_BITS / 4,
+				GreenBits = SceneFacade.COLOR_BITS / 4,
+				BlueBits = SceneFacade.COLOR_BITS / 4,
+				AlphaBits = SceneFacade.COLOR_BITS / 4,
+				DepthBits = SceneFacade.DEPTH_BITS,
+				Profile = ContextProfile.Compatability
+			})
 		{
 			initializeControl(sceneToCopy, mouseDownHandler);
 		}
@@ -119,12 +128,6 @@ namespace MeshEditor.WinUI
 
 			hookEvents();
 
-			MakeCurrent();
-
-			SceneFacade.InitializeGL();
-
-			editorModeChangedHandler(null, null);
-
 			// ------------------------------------
 			backgroundFileLoader = new BackgroundWorker();
 			backgroundFileLoader.DoWork += new DoWorkEventHandler(backgroundFileLoader_DoWork);
@@ -143,6 +146,19 @@ namespace MeshEditor.WinUI
 			delayTimer = null;
 
 
+		}
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+
+			if (openGlInitialized)
+				return;
+
+			MakeCurrent();
+			SceneFacade.InitializeGL();
+			editorModeChangedHandler(null, null);
+			openGlInitialized = true;
 		}
 
 		// =======================================================
@@ -521,7 +537,7 @@ namespace MeshEditor.WinUI
 
 		void sceneFacade_MakeCurrentNeeded(object sender, EventArgs e)
 		{
-			if (!Context.IsCurrent)
+			if (Context?.IsCurrent != true)
 				this.MakeCurrent();
 		}
 
@@ -1002,9 +1018,9 @@ namespace MeshEditor.WinUI
 			Height = (imageHeight <= 0) ? Height : imageHeight;
 			//draw(false); // draw model without calling SwapBuffers()
 			sceneFacade.DrawScene(isActive, false);
-			if (GraphicsContext.CurrentContext == null)
+			if (Context?.IsCurrent != true)
 			{
-				throw new GraphicsContextMissingException();
+				throw new InvalidOperationException("No OpenGL context is current.");
 			}
 			Bitmap bmp = new Bitmap(this.ClientSize.Width, this.ClientSize.Height);
 			System.Drawing.Imaging.BitmapData data = bmp.LockBits(this.ClientRectangle, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -1035,9 +1051,9 @@ namespace MeshEditor.WinUI
 
 			sceneFacade.DrawScene(isActive, false);
 
-			if (GraphicsContext.CurrentContext == null)
+			if (Context?.IsCurrent != true)
 			{
-				throw new GraphicsContextMissingException();
+				throw new InvalidOperationException("No OpenGL context is current.");
 			}
 
 			if (area.Width <= 0 || area.Height <= 0)

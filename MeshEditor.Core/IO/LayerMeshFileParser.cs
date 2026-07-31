@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,7 +9,7 @@ using MeshEditor.Common.Extensions;
 using MeshEditor.Data;
 using MeshEditor.IO;
 using MeshEditor.LayerManager.Data;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace MeshEditor.IO
 {

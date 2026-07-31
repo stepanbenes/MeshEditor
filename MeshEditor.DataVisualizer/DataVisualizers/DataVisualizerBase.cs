@@ -1,10 +1,10 @@
-﻿using MeshEditor.CoreInterface;
+using MeshEditor.CoreInterface;
 using MeshEditor.Data;
 using MeshEditor.DataVisualizer.Data;
 using MeshEditor.DataVisualizer.Graphics;
 using MeshEditor.DataVisualizer.Mathematics;
 using MeshEditor.Graphics;
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;

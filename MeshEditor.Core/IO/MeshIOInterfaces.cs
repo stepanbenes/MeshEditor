@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Data;
 using MeshEditor.IO;
 using MeshEditor.CoreInterface;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace MeshEditor.IO
 {

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Data;
-using OpenTK;
+using OpenTK.Mathematics;
 using MeshEditor.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;

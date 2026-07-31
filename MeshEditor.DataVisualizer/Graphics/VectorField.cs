@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MeshEditor.Graphics;
 using MeshEditor.DataVisualizer.Mathematics;
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 
 namespace MeshEditor.DataVisualizer.Graphics

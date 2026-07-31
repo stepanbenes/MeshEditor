@@ -10,7 +10,6 @@ using System.IO;
 using System.Diagnostics;
 using MeshEditor.CoreInterface;
 using System.ComponentModel;
-using OpenTK;
 using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.DataVisualizer.UI;
@@ -59,8 +58,6 @@ namespace MeshEditor.WinUI
 
 		public MainForm(string[] args)
 		{
-			Toolkit.Init();
-
 			ConfigurationManager.LoadConfiguration();
 
 			InitializeComponent();
@@ -111,6 +108,9 @@ namespace MeshEditor.WinUI
 		protected override async void OnShown(EventArgs e)
 		{
 			base.OnShown(e);
+
+			// OnHandleCreated has initialized the GL context by this point.
+			activateControl(activeControl);
 
 			if (arguments != null && arguments.Length > 0) // load file in command file arguments
 			{
@@ -1112,7 +1112,10 @@ namespace MeshEditor.WinUI
 			mainOpenGLControl.Dock = DockStyle.Fill;
 
 			registerNewControl(mainOpenGLControl);
-			activateControl(mainOpenGLControl); // zakladni opengl okno je nyni ulozeno v activeControl
+			// The form and GLControl handles do not exist while MainForm's constructor is running.
+			// Store the initial control now and activate its OpenGL context from OnShown.
+			activeControl = mainOpenGLControl;
+			activeControl.IsActive = true;
 		}
 
 		private void askToSaveChanges(List<OpenGLControl> controls, bool canBeCancelled, CancelEventArgs e)

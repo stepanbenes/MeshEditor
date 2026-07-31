@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml;
 using MeshEditor.Data;
 using MeshEditor.Common.Extensions;
+using OpenTK.Mathematics;
 
 namespace MeshEditor.IO
 {
@@ -146,7 +147,7 @@ namespace MeshEditor.IO
 				case 2:
 					for (int i = 0; i < numberOfPoints; i++)
 					{
-						OpenTK.Vector3 position = new OpenTK.Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], 0f);
+						Vector3 position = new Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], 0f);
 						Node node = new Node(i, position, properties: null);
 						yield return node;
 					}
@@ -154,7 +155,7 @@ namespace MeshEditor.IO
 				case 3:
 					for (int i = 0; i < numberOfPoints; i++)
 					{
-						OpenTK.Vector3 position = new OpenTK.Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], coordinates[(i * numberOfComponents) + 2]);
+						Vector3 position = new Vector3(coordinates[i * numberOfComponents], coordinates[(i * numberOfComponents) + 1], coordinates[(i * numberOfComponents) + 2]);
 						Node node = new Node(i, position, properties: null);
 						yield return node;
 					}

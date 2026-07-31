@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -13,7 +13,7 @@ using MeshEditor.Graphics;
 using MeshEditor.IO;
 using MeshEditor.LayerManager.Data;
 using MeshEditor.SolutionManager;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace MeshEditor.DataVisualizer.Data
 {

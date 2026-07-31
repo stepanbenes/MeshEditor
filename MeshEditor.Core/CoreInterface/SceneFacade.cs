@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Drawing;
 using System.Timers;
@@ -8,7 +8,7 @@ using MeshEditor.IO;
 using MeshEditor.Construction;
 using MeshEditor.Graphics;
 
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 
 using Utils = MeshEditor.Utilities.Functions;

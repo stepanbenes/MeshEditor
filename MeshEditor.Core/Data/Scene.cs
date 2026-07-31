@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using MeshEditor.CoreInterface;
 using MeshEditor.Cuts;
 using MeshEditor.Graphics;
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using Utils = MeshEditor.Utilities.Functions;
 using MeshEditor.Construction;

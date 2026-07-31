@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>MeshEditor.FormatConverter</RootNamespace>
 		<AssemblyName>fem-format-converter</AssemblyName>
 		<LangVersion>latest</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<ApplicationIcon>appIcon.ico</ApplicationIcon>
-		<AssetTargetFallback>$(AssetTargetFallback);net48;net472;net471;net461;net452;net45;net40;net35;net20</AssetTargetFallback>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
