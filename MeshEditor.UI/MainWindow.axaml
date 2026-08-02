@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:local="using:MeshEditor.UI"
+		x:Class="MeshEditor.UI.MainWindow"
+		Title="MeshEditor"
+		Width="1280"
+		Height="900"
+		MinWidth="960"
+		MinHeight="720">
+  <Grid>
+	<Grid.RowDefinitions>
+	  <RowDefinition Height="Auto" />
+	  <RowDefinition Height="Auto" />
+	  <RowDefinition Height="*" />
+	  <RowDefinition Height="Auto" />
+	</Grid.RowDefinitions>
+
+	<Menu Grid.Row="0">
+	  <MenuItem Header="_File">
+		<MenuItem Header="_Open mesh" />
+		<MenuItem Header="_Save" />
+		<Separator />
+		<MenuItem Header="E_xit" Click="Exit_Click" />
+	  </MenuItem>
+	  <MenuItem Header="_View">
+		<MenuItem Header="_Single view" />
+		<MenuItem Header="_Split view" />
+	  </MenuItem>
+	  <MenuItem Header="_Tools">
+		<MenuItem Header="_Options" />
+	  </MenuItem>
+	  <MenuItem Header="_Help">
+		<MenuItem Header="_About" />
+	  </MenuItem>
+	</Menu>
+
+	<Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+	  <StackPanel Orientation="Horizontal" Spacing="8" Margin="8">
+		<Button Content="Open" Click="OpenMesh_Click" />
+		<Button Content="Save" />
+		<Button x:Name="OrbitButton" Content="Orbit" />
+		<Button x:Name="PanButton" Content="Pan" />
+		<Button x:Name="ZoomButton" Content="Zoom" />
+		<Button Content="Refresh" Click="RefreshViewport_Click" />
+	  </StackPanel>
+	</Border>
+
+	<Grid Grid.Row="2" Margin="8">
+	  <Grid.ColumnDefinitions>
+		<ColumnDefinition Width="240" />
+		<ColumnDefinition Width="*" />
+		<ColumnDefinition Width="260" />
+	  </Grid.ColumnDefinitions>
+
+	  <Border Grid.Column="0" Margin="0,0,8,0" Padding="12" CornerRadius="8" BorderBrush="#404040" BorderThickness="1">
+		<StackPanel Spacing="8">
+		  <TextBlock Text="Scene" FontWeight="SemiBold" />
+		  <TextBlock Text="- Mesh layers" TextWrapping="Wrap" />
+		  <TextBlock Text="- Selection" TextWrapping="Wrap" />
+		  <TextBlock Text="- Visibility" TextWrapping="Wrap" />
+		</StackPanel>
+	  </Border>
+
+	  <Border Grid.Column="1" Padding="16" CornerRadius="8" BorderBrush="#404040" BorderThickness="1">
+		<Grid>
+		  <Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		  </Grid.RowDefinitions>
+
+		  <TextBlock Grid.Row="0" Text="Viewport" FontWeight="SemiBold" Margin="0,0,0,8" />
+		  <Border Grid.Row="1" Background="#1F1F22" CornerRadius="6">
+			<local:OpenGlSurface x:Name="ViewportSurface" />
+		  </Border>
+		</Grid>
+	  </Border>
+
+	  <Border Grid.Column="2" Margin="8,0,0,0" Padding="12" CornerRadius="8" BorderBrush="#404040" BorderThickness="1">
+		<StackPanel Spacing="8">
+		  <TextBlock Text="Properties" FontWeight="SemiBold" />
+		  <TextBlock Text="- Active object" TextWrapping="Wrap" />
+		  <TextBlock Text="- Transform" TextWrapping="Wrap" />
+		  <TextBlock Text="- Display options" TextWrapping="Wrap" />
+		</StackPanel>
+	  </Border>
+	</Grid>
+
+	<Border Grid.Row="3" Padding="8,6" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+	  <TextBlock Text="Ready" />
+	</Border>
+  </Grid>
+</Window>

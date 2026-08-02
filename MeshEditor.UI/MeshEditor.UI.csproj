@@ -1,50 +1,43 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
-		<NoWarn>$(NoWarn);NU1701</NoWarn>
-		<UseWindowsForms>true</UseWindowsForms>
-		<OutputType>WinExe</OutputType>
-		<RootNamespace>MeshEditor.WinUI</RootNamespace>
-		<AssemblyName>MeshEditor</AssemblyName>
-		<LangVersion>latest</LangVersion>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<ApplicationIcon>appIcon.ico</ApplicationIcon>
-		<AssetTargetFallback>$(AssetTargetFallback);net48;net472;net471;net461;net452;net45;net40;net35;net20</AssetTargetFallback>
-	</PropertyGroup>
+  <PropertyGroup>
+	<OutputType>Exe</OutputType>
+	<TargetFramework>net10.0</TargetFramework>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<LangVersion>latest</LangVersion>
+	<AssemblyName>MeshEditor</AssemblyName>
+	<RootNamespace>MeshEditor.UI</RootNamespace>
+	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<WarningLevel>4</WarningLevel>
-		<Prefer32Bit>false</Prefer32Bit>
-	</PropertyGroup>
+  <ItemGroup>
+	<PackageReference Include="Avalonia" Version="12.1.1" />
+	<PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+	<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+	<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+	<PackageReference Include="OpenTK" Version="4.9.4" />
+	<PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+	<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+  </ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-		<DefineConstants>TRACE</DefineConstants>
-		<WarningLevel>4</WarningLevel>
-		<Prefer32Bit>false</Prefer32Bit>
-	</PropertyGroup>
+  <ItemGroup>
+	<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+	<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+  </ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<PlatformTarget>x64</PlatformTarget>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-		<DefineConstants>TRACE</DefineConstants>
-		<PlatformTarget>x64</PlatformTarget>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
-		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
-		<ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj" />
-		<ProjectReference Include="..\MeshEditor.Forms\MeshEditor.Forms.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="OpenTK" Version="4.9.4" />
-	  <PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
-	</ItemGroup>
+  <ItemGroup>
+	<Compile Remove="LayoutMode.cs" />
+	<Compile Remove="MainForm.cs" />
+	<Compile Remove="MainForm.Designer.cs" />
+	<Compile Remove="OpenGLControl.cs" />
+	<Compile Remove="OpenGLControl.Designer.cs" />
+	<Compile Remove="UpdateChecker.cs" />
+	<Compile Remove="Properties\AssemblyInfo.cs" />
+	<Compile Remove="Properties\Resources.Designer.cs" />
+	<Compile Remove="Properties\Settings.Designer.cs" />
+	<EmbeddedResource Remove="MainForm.resx" />
+	<EmbeddedResource Remove="Properties\Resources.resx" />
+	<None Remove="Properties\Settings.settings" />
+  </ItemGroup>
 </Project>
-
-

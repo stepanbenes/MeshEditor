@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="MeshEditor.UI.OpenGlSurface">
+  <Grid x:Name="ViewportRoot" Background="Transparent">
+	<Image x:Name="ViewportImage" Stretch="Uniform" />
+	<TextBlock x:Name="StatusText"
+			   HorizontalAlignment="Center"
+			   VerticalAlignment="Center"
+			   Margin="24"
+			   Text="No mesh loaded"
+			   IsVisible="True" />
+  </Grid>
+</UserControl>
