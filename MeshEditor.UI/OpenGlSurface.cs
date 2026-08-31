@@ -21,6 +21,8 @@ namespace MeshEditor.UI;
 
 public partial class OpenGlSurface : UserControl
 {
+	public event Action<string>? StatusChanged;
+
 	public enum ViewportTool
 	{
 		Orbit,
@@ -171,6 +173,7 @@ public partial class OpenGlSurface : UserControl
 				return;
 
 			StatusText.Text = text;
+			StatusChanged?.Invoke(text);
 		});
 	}
 

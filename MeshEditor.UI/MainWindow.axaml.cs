@@ -10,12 +10,20 @@ namespace MeshEditor.UI;
 public partial class MainWindow : Window
 {
     private OpenGlSurface? viewportSurface;
+    private Button? saveButton;
+    private TextBlock? statusBarText;
+    private TextBlock? scenePathText;
     private string? lastMeshPath;
 
     public MainWindow()
     {
         InitializeComponent();
         viewportSurface = this.FindControl<OpenGlSurface>("ViewportSurface");
+        saveButton = this.FindControl<Button>("SaveButton");
+        statusBarText = this.FindControl<TextBlock>("StatusBarText");
+        scenePathText = this.FindControl<TextBlock>("ScenePathText");
+        if (viewportSurface is not null)
+            viewportSurface.StatusChanged += HandleViewportStatusChanged;
 
         var orbitButton = this.FindControl<Button>("OrbitButton");
         var panButton = this.FindControl<Button>("PanButton");
@@ -27,6 +35,8 @@ public partial class MainWindow : Window
             panButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Pan);
         if (zoomButton is not null)
             zoomButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Zoom);
+
+        updateSceneInfo();
     }
 
     private async void OpenMesh_Click(object? sender, RoutedEventArgs e)
@@ -49,6 +59,8 @@ public partial class MainWindow : Window
 
         lastMeshPath = files[0].TryGetLocalPath() ?? files[0].Path.LocalPath;
         viewportSurface?.LoadMesh(lastMeshPath);
+        updateSceneInfo();
+        setStatus("Loading mesh...");
     }
 
     private void RefreshViewport_Click(object? sender, RoutedEventArgs e)
@@ -59,6 +71,12 @@ public partial class MainWindow : Window
 
     private async void SaveMesh_Click(object? sender, RoutedEventArgs e)
     {
+        if (string.IsNullOrWhiteSpace(lastMeshPath))
+        {
+            setStatus("No mesh loaded");
+            return;
+        }
+
         var suggestedName = !string.IsNullOrWhiteSpace(lastMeshPath)
             ? Path.GetFileNameWithoutExtension(lastMeshPath)
             : "mesh";
@@ -85,6 +103,7 @@ public partial class MainWindow : Window
             return;
 
         viewportSurface?.SaveMesh(savePath);
+        setStatus("Saving mesh...");
     }
 
     private void SetViewportTool(OpenGlSurface.ViewportTool tool)
@@ -107,5 +126,39 @@ public partial class MainWindow : Window
     private void Exit_Click(object? sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (viewportSurface is not null)
+            viewportSurface.StatusChanged -= HandleViewportStatusChanged;
+
+        base.OnClosed(e);
+    }
+
+    private async void About_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new AboutWindow();
+        await dialog.ShowDialog(this);
+    }
+
+    private void HandleViewportStatusChanged(string status)
+    {
+        setStatus(status);
+    }
+
+    private void updateSceneInfo()
+    {
+        if (scenePathText is not null)
+            scenePathText.Text = !string.IsNullOrWhiteSpace(lastMeshPath) ? lastMeshPath : "No mesh loaded";
+
+        if (saveButton is not null)
+            saveButton.IsEnabled = !string.IsNullOrWhiteSpace(lastMeshPath);
+    }
+
+    private void setStatus(string status)
+    {
+        if (statusBarText is not null && !string.IsNullOrWhiteSpace(status))
+            statusBarText.Text = status;
     }
 }

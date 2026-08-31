@@ -30,14 +30,14 @@
 		<MenuItem Header="_Options" />
 	  </MenuItem>
 	  <MenuItem Header="_Help">
-		<MenuItem Header="_About" />
+		<MenuItem Header="_About" Click="About_Click" />
 	  </MenuItem>
 	</Menu>
 
 	<Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
 	  <StackPanel Orientation="Horizontal" Spacing="8" Margin="8">
 		<Button Content="Open" Click="OpenMesh_Click" />
-		<Button Content="Save" Click="SaveMesh_Click" />
+		<Button x:Name="SaveButton" Content="Save" Click="SaveMesh_Click" IsEnabled="False" />
 		<Button x:Name="OrbitButton" Content="Orbit" />
 		<Button x:Name="PanButton" Content="Pan" />
 		<Button x:Name="ZoomButton" Content="Zoom" />
@@ -55,7 +55,7 @@
 	  <Border Grid.Column="0" Margin="0,0,8,0" Padding="12" CornerRadius="8" BorderBrush="#404040" BorderThickness="1">
 		<StackPanel Spacing="8">
 		  <TextBlock Text="Scene" FontWeight="SemiBold" />
-		  <TextBlock Text="- Mesh layers" TextWrapping="Wrap" />
+		  <TextBlock x:Name="ScenePathText" Text="No mesh loaded" TextWrapping="Wrap" />
 		  <TextBlock Text="- Selection" TextWrapping="Wrap" />
 		  <TextBlock Text="- Visibility" TextWrapping="Wrap" />
 		</StackPanel>
@@ -86,7 +86,7 @@
 	</Grid>
 
 	<Border Grid.Row="3" Padding="8,6" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
-	  <TextBlock Text="Ready" />
+	  <TextBlock x:Name="StatusBarText" Text="Ready" />
 	</Border>
   </Grid>
 </Window>
