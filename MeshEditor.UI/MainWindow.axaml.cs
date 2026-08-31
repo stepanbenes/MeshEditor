@@ -10,6 +10,9 @@ namespace MeshEditor.UI;
 
 public partial class MainWindow : Window
 {
+    private static string savedInputValue = "0";
+    private static string savedCheckedInputValue = "0";
+
     private OpenGlSurface? viewportSurface;
     private Button? saveButton;
     private TextBlock? statusBarText;
@@ -149,7 +152,7 @@ public partial class MainWindow : Window
             return;
 
         var parsedIds = new List<int>();
-        var dialog = new ValuePromptDialog("Insert node ID", "Signal node(s) with ID(s):", "0");
+        var dialog = new ValuePromptDialog("Insert node ID", "Signal node(s) with ID(s):", savedInputValue);
         dialog.Validator = d =>
         {
             parsedIds.Clear();
@@ -169,6 +172,7 @@ public partial class MainWindow : Window
 
         if (await dialog.ShowDialog<bool>(this))
         {
+            savedInputValue = dialog.InputValue;
             viewportSurface.SignalNodes(parsedIds.ToArray());
             setStatus($"Signalled {parsedIds.Count} node(s)");
         }
@@ -180,7 +184,7 @@ public partial class MainWindow : Window
             return;
 
         var elementId = 0;
-        var dialog = new ValuePromptDialog("Insert element ID", "Signal element with ID:", "0");
+        var dialog = new ValuePromptDialog("Insert element ID", "Signal element with ID:", savedInputValue);
         dialog.ConfigureOption("Clear signalled element", isChecked: false);
         dialog.Validator = d =>
         {
@@ -194,6 +198,7 @@ public partial class MainWindow : Window
 
         if (await dialog.ShowDialog<bool>(this))
         {
+            savedInputValue = dialog.InputValue;
             if (dialog.IsOptionChecked)
             {
                 viewportSurface.ClearSignalElement();
@@ -204,6 +209,98 @@ public partial class MainWindow : Window
                 viewportSurface.SignalElement(elementId);
                 setStatus($"Signalled element {elementId}");
             }
+        }
+    }
+
+    private async void MeshInfo_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var dialog = new MeshInfoWindow(viewportSurface);
+        await dialog.ShowDialog(this);
+    }
+
+    private async void Options_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var dialog = new SettingsWindow(viewportSurface);
+        if (await dialog.ShowDialog<bool>(this))
+            setStatus("Settings updated");
+    }
+
+    private async void SetPropertyOfSelectedItems_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var propertyValue = 0;
+        var snapshot = await viewportSurface.GetMeshInfoAsync();
+        var description = snapshot?.SelectedItemsDescription;
+        if (string.IsNullOrWhiteSpace(description))
+            description = "Nothing selected";
+
+        var dialog = new ValuePromptDialog("Insert property number", description, savedInputValue);
+        dialog.Validator = d => int.TryParse(d.InputValue, out propertyValue)
+            ? (true, null)
+            : (false, $"Please input valid integer value in range <{int.MinValue}; {int.MaxValue}>.");
+
+        if (await dialog.ShowDialog<bool>(this))
+        {
+            savedInputValue = dialog.InputValue;
+            viewportSurface.SetPropertyOfSelectedItems(propertyValue);
+            setStatus($"Applied property {propertyValue}");
+        }
+    }
+
+    private async void SelectItemsByProperty_Click(object? sender, RoutedEventArgs e)
+    {
+        await selectItemsByPropertyInternal(addToSelection: false);
+    }
+
+    private async void SelectItemsByPropertyAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        await selectItemsByPropertyInternal(addToSelection: true);
+    }
+
+    private void ClearSignalNode_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.ClearSignalNode();
+        setStatus("Cleared signalled node");
+    }
+
+    private void ClearSignalElement_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.ClearSignalElement();
+        setStatus("Cleared signalled element");
+    }
+
+    private async System.Threading.Tasks.Task selectItemsByPropertyInternal(bool addToSelection)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var propertyValue = 0;
+        var dialog = new ValuePromptDialog(
+            "Insert property number",
+            "Select items by property:",
+            savedCheckedInputValue);
+        dialog.ConfigureOption("add to selection", addToSelection);
+        dialog.Validator = d =>
+        {
+            if (!int.TryParse(d.InputValue, out propertyValue) || propertyValue < 0)
+                return (false, $"Please input valid integer value in range <0; {int.MaxValue}>.");
+
+            return (true, null);
+        };
+
+        if (await dialog.ShowDialog<bool>(this))
+        {
+            savedCheckedInputValue = dialog.InputValue;
+            viewportSurface.SelectItemsByProperty(propertyValue, dialog.IsOptionChecked);
+            setStatus($"Selected items with property {propertyValue}");
         }
     }
 

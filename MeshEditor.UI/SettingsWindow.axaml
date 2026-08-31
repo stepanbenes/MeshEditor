@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		x:Class="MeshEditor.UI.SettingsWindow"
+		Title="Settings"
+		Width="620"
+		Height="560"
+		WindowStartupLocation="CenterOwner">
+  <Grid Margin="12" RowDefinitions="*,Auto">
+	<ScrollViewer>
+	  <StackPanel Spacing="10">
+		<TextBlock Text="Entity appearance" FontWeight="SemiBold"/>
+		<CheckBox x:Name="LineSmoothCheckBox" Content="Smooth lines"/>
+		<CheckBox x:Name="PointSmoothCheckBox" Content="Smooth points"/>
+		<CheckBox x:Name="FaceLightingCheckBox" Content="Face lighting"/>
+		<CheckBox x:Name="EdgeLightingCheckBox" Content="Edge lighting"/>
+		<TextBlock Text="Point size"/>
+		<NumericUpDown x:Name="PointSizeUpDown" Minimum="0" Maximum="50" Increment="0.5"/>
+		<TextBlock Text="Ordinary edge width"/>
+		<NumericUpDown x:Name="OrdinaryEdgeWidthUpDown" Minimum="0" Maximum="50" Increment="0.5"/>
+		<TextBlock Text="Border edge width"/>
+		<NumericUpDown x:Name="BorderEdgeWidthUpDown" Minimum="0" Maximum="50" Increment="0.5"/>
+		<TextBlock Text="Beam width"/>
+		<NumericUpDown x:Name="BeamWidthUpDown" Minimum="0" Maximum="50" Increment="0.5"/>
+		<TextBlock Text="Mesh shading model"/>
+		<ComboBox x:Name="ShadingModelComboBox"/>
+		<TextBlock Text="Default render mode"/>
+		<ComboBox x:Name="RenderModeComboBox"/>
+		<TextBlock Text="SIFEL file extension"/>
+		<TextBox x:Name="SifelExtensionTextBox"/>
+	  </StackPanel>
+	</ScrollViewer>
+	<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0" Spacing="8">
+	  <Button Content="Reset" Click="Reset_Click"/>
+	  <Button Content="Cancel" Click="Cancel_Click"/>
+	  <Button Content="OK" IsDefault="True" Click="Ok_Click"/>
+	</StackPanel>
+  </Grid>
+</Window>

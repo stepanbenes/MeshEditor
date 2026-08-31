@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,6 +12,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using MeshEditor.CoreInterface;
+using MeshEditor.Data;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -24,6 +27,24 @@ public partial class OpenGlSurface : UserControl
 {
 	public event Action<string>? StatusChanged;
 
+	public sealed class MeshInfoSnapshot
+	{
+		public bool HasMesh { get; init; }
+		public bool MeshHasHiddenElements { get; init; }
+		public int NodeCount { get; init; }
+		public int ElementCount { get; init; }
+		public int FaceCount { get; init; }
+		public int EdgeCount { get; init; }
+		public int BeamCount { get; init; }
+		public string SelectedItemsDescription { get; init; } = string.Empty;
+		public string[] PropertyRows { get; init; } = Array.Empty<string>();
+	}
+
+	private sealed class MeshInfoRequest
+	{
+		public required TaskCompletionSource<MeshInfoSnapshot?> Completion { get; init; }
+	}
+
 	public enum ViewportTool
 	{
 		Orbit,
@@ -35,8 +56,12 @@ public partial class OpenGlSurface : UserControl
 	private readonly ConcurrentQueue<string> pendingSaves = new();
 	private readonly ConcurrentQueue<int[]> pendingSignalNodes = new();
 	private readonly ConcurrentQueue<int> pendingSignalElements = new();
+	private readonly ConcurrentQueue<(int property, bool add)> pendingSelectByProperty = new();
+	private readonly ConcurrentQueue<int> pendingSetProperty = new();
+	private readonly ConcurrentQueue<MeshInfoRequest> pendingMeshInfoRequests = new();
 	private int clearSignalNodeRequested;
 	private int clearSignalElementRequested;
+	private int applySettingsRequested;
 	private OffscreenRenderWindow? renderWindow;
 	private DispatcherTimer? renderTimer;
 	private WriteableBitmap? drawingBitmap;
@@ -107,6 +132,36 @@ public partial class OpenGlSurface : UserControl
 		EnsureRenderWindow();
 		Interlocked.Exchange(ref clearSignalElementRequested, 1);
 		renderWindow?.RequestRedraw();
+	}
+
+	public void SetPropertyOfSelectedItems(int property)
+	{
+		EnsureRenderWindow();
+		pendingSetProperty.Enqueue(property);
+		renderWindow?.RequestRedraw();
+	}
+
+	public void SelectItemsByProperty(int property, bool addToSelection)
+	{
+		EnsureRenderWindow();
+		pendingSelectByProperty.Enqueue((property, addToSelection));
+		renderWindow?.RequestRedraw();
+	}
+
+	public void ApplySceneSettings()
+	{
+		EnsureRenderWindow();
+		Interlocked.Exchange(ref applySettingsRequested, 1);
+		renderWindow?.RequestRedraw();
+	}
+
+	public Task<MeshInfoSnapshot?> GetMeshInfoAsync()
+	{
+		EnsureRenderWindow();
+		var tcs = new TaskCompletionSource<MeshInfoSnapshot?>(TaskCreationOptions.RunContinuationsAsynchronously);
+		pendingMeshInfoRequests.Enqueue(new MeshInfoRequest { Completion = tcs });
+		renderWindow?.RequestRedraw();
+		return tcs.Task;
 	}
 
 	private void EnsureRenderWindow()
@@ -414,6 +469,84 @@ public partial class OpenGlSurface : UserControl
 					}
 
 					sceneFacade.PerformAction(AvailableAction.SignalElement, elementId);
+				}
+
+				while (owner.pendingSetProperty.TryDequeue(out var property))
+				{
+					if (!sceneFacade.ContainsMesh)
+					{
+						owner.UpdateStatus("No mesh loaded");
+						continue;
+					}
+
+					sceneFacade.SetPropertyOfSelectedItems(new Property(property));
+					sceneFacade.PerformAction(AvailableAction.Refresh);
+					owner.UpdateStatus($"Property {property} applied to selected items");
+				}
+
+				while (owner.pendingSelectByProperty.TryDequeue(out var request))
+				{
+					if (!sceneFacade.ContainsMesh)
+					{
+						owner.UpdateStatus("No mesh loaded");
+						continue;
+					}
+
+					var action = request.add
+						? AvailableAction.SelectItemsWithPropertyAdd
+						: AvailableAction.SelectItemsWithProperty;
+					sceneFacade.PerformAction(action, new Property(request.property));
+					sceneFacade.PerformAction(AvailableAction.Refresh);
+					owner.UpdateStatus($"Selected items by property {request.property}");
+				}
+
+				if (Interlocked.Exchange(ref owner.applySettingsRequested, 0) == 1)
+				{
+					sceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
+					sceneFacade.PerformAction(AvailableAction.RecreateBuffers);
+					sceneFacade.PerformAction(AvailableAction.Refresh);
+				}
+
+				while (owner.pendingMeshInfoRequests.TryDequeue(out var request))
+				{
+					try
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							request.Completion.TrySetResult(new MeshInfoSnapshot { HasMesh = false });
+							continue;
+						}
+
+						var stats = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
+						var rows = new List<string>();
+						if (stats != null)
+						{
+							foreach (var pair in stats.GetAllPropertyEntityPairs())
+							{
+								stats.PropertyComments.TryGetValue(pair.Property, out var comment);
+								stats.PropertyCommands.TryGetValue(pair, out var commands);
+								var commandText = commands is null ? string.Empty : string.Join("; ", commands);
+								rows.Add($"{pair.Property} [{pair.EntityType}]  Commands: {commandText}  Comment: {comment}");
+							}
+						}
+
+						request.Completion.TrySetResult(new MeshInfoSnapshot
+						{
+							HasMesh = true,
+							MeshHasHiddenElements = (bool)(sceneFacade.GetValue(AvailableValue.MeshHasHiddenElements) ?? false),
+							NodeCount = (int)(sceneFacade.GetValue(AvailableValue.NodeCount) ?? 0),
+							ElementCount = (int)(sceneFacade.GetValue(AvailableValue.ElementCount) ?? 0),
+							FaceCount = (int)(sceneFacade.GetValue(AvailableValue.FaceCount) ?? 0),
+							EdgeCount = (int)(sceneFacade.GetValue(AvailableValue.EdgeCount) ?? 0),
+							BeamCount = (int)(sceneFacade.GetValue(AvailableValue.BeamCount) ?? 0),
+							SelectedItemsDescription = sceneFacade.GetValue(AvailableValue.SelectedItemsDescription)?.ToString() ?? string.Empty,
+							PropertyRows = rows.ToArray()
+						});
+					}
+					catch (Exception ex)
+					{
+						request.Completion.TrySetException(ex);
+					}
 				}
 
 				if (sceneFacade.ContainsMesh)

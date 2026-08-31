@@ -27,10 +27,18 @@
 		<MenuItem Header="_Split view" />
 	  </MenuItem>
 	  <MenuItem Header="_Tools">
+		<MenuItem Header="_Mesh info" Click="MeshInfo_Click" />
+		<Separator />
+		<MenuItem Header="Set property of selected items..." Click="SetPropertyOfSelectedItems_Click" />
+		<MenuItem Header="Select items by property..." Click="SelectItemsByProperty_Click" />
+		<MenuItem Header="Select items by property (add)..." Click="SelectItemsByPropertyAdd_Click" />
+		<Separator />
 		<MenuItem Header="Signal _Node..." Click="SignalNode_Click" />
 		<MenuItem Header="Signal _Element..." Click="SignalElement_Click" />
+		<MenuItem Header="Clear signalled node" Click="ClearSignalNode_Click" />
+		<MenuItem Header="Clear signalled element" Click="ClearSignalElement_Click" />
 		<Separator />
-		<MenuItem Header="_Options" />
+		<MenuItem Header="_Options" Click="Options_Click" />
 	  </MenuItem>
 	  <MenuItem Header="_Help">
 		<MenuItem Header="_About" Click="About_Click" />
