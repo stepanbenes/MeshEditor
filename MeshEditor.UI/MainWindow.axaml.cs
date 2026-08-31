@@ -314,6 +314,42 @@ public partial class MainWindow : Window
         await selectItemsByPropertyInternal(addToSelection: true);
     }
 
+    private void SelectAllItems_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.SelectAllItems);
+        setStatus("Selected all items");
+    }
+
+    private void UnselectAllItems_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.UnselectAllItems);
+        setStatus("Selection cleared");
+    }
+
+    private void InvertSelection_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.InvertSelection);
+        setStatus("Selection inverted");
+    }
+
+    private void SelectIncidingItems_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.SelectIncidingItems);
+        setStatus("Selected inciding items");
+    }
+
+    private void DeleteSelectedElements_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.DeleteSelectedElements);
+        setStatus("Deleting selected elements...");
+    }
+
+    private void RestoreMesh_Click(object? sender, RoutedEventArgs e)
+    {
+        viewportSurface?.PerformSimpleAction(AvailableAction.RestoreMesh);
+        setStatus("Restoring mesh...");
+    }
+
     private void ClearSignalNode_Click(object? sender, RoutedEventArgs e)
     {
         viewportSurface?.ClearSignalNode();

@@ -27,6 +27,15 @@
 		<MenuItem Header="_Single view" />
 		<MenuItem Header="_Split view" />
 	  </MenuItem>
+	  <MenuItem Header="_Edit">
+		<MenuItem Header="Select all items" Click="SelectAllItems_Click" />
+		<MenuItem Header="Unselect all items" Click="UnselectAllItems_Click" />
+		<MenuItem Header="Invert selection" Click="InvertSelection_Click" />
+		<MenuItem Header="Select inciding items" Click="SelectIncidingItems_Click" />
+		<Separator />
+		<MenuItem Header="Delete selected elements" Click="DeleteSelectedElements_Click" />
+		<MenuItem Header="Restore mesh" Click="RestoreMesh_Click" />
+	  </MenuItem>
 	  <MenuItem Header="_Tools">
 		<MenuItem Header="_Mesh info" Click="MeshInfo_Click" />
 		<MenuItem Header="_List of selected items..." Click="ListOfSelectedItems_Click" />

@@ -7,7 +7,7 @@
 		MinWidth="700"
 		MinHeight="480"
 		WindowStartupLocation="CenterOwner">
-  <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+  <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto">
 	<TextBlock x:Name="MeshStateText" FontWeight="SemiBold"/>
 	<TextBlock x:Name="NodeCountText" Grid.Row="1" Margin="0,6,0,0"/>
 	<TextBlock x:Name="ElementCountText" Grid.Row="2" Margin="0,4,0,0"/>
@@ -15,13 +15,16 @@
 	<TextBlock x:Name="BeamCountText" Grid.Row="4" Margin="0,4,0,0"/>
 	<TextBlock x:Name="SelectionText" Grid.Row="5" Margin="0,10,0,0" TextWrapping="Wrap"/>
 	<TextBlock Grid.Row="6" Margin="0,10,0,0" Text="Property descriptions" FontWeight="SemiBold"/>
-	<TextBlock Grid.Row="7" Margin="0,4,0,0" Text="Property [Entity]  Commands  Comment" Opacity="0.8"/>
+	<TextBlock Grid.Row="7" Margin="0,4,0,0" Text="Select a row and edit comment/commands." Opacity="0.8"/>
 	<Border Grid.Row="8" Margin="0,6,0,0" BorderThickness="1" BorderBrush="#505050" CornerRadius="6" Padding="8">
-	  <ScrollViewer>
-		<ItemsControl x:Name="PropertyRowsList"/>
-	  </ScrollViewer>
+	  <ListBox x:Name="PropertyRowsListBox"/>
 	</Border>
-	<StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Spacing="8">
+	<StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,10,0,0" Spacing="8">
+	  <Button Content="Edit commands..." Click="EditCommands_Click"/>
+	  <Button Content="Edit comment..." Click="EditComment_Click"/>
+	</StackPanel>
+	<TextBlock x:Name="StatusText" Grid.Row="10" Margin="0,8,0,0" Foreground="IndianRed" TextWrapping="Wrap"/>
+	<StackPanel Grid.Row="10" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
 	  <Button Content="Refresh" Click="Refresh_Click"/>
 	  <Button Content="Close" IsDefault="True" Click="Close_Click"/>
 	</StackPanel>

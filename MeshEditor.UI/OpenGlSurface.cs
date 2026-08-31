@@ -30,6 +30,14 @@ public partial class OpenGlSurface : UserControl
 
 	public sealed class MeshInfoSnapshot
 	{
+		public sealed class PropertyInfoRow
+		{
+			public int Property { get; init; }
+			public EntityType EntityType { get; init; }
+			public string Commands { get; init; } = string.Empty;
+			public string Comment { get; init; } = string.Empty;
+		}
+
 		public bool HasMesh { get; init; }
 		public bool MeshHasHiddenElements { get; init; }
 		public int NodeCount { get; init; }
@@ -38,7 +46,7 @@ public partial class OpenGlSurface : UserControl
 		public int EdgeCount { get; init; }
 		public int BeamCount { get; init; }
 		public string SelectedItemsDescription { get; init; } = string.Empty;
-		public string[] PropertyRows { get; init; } = Array.Empty<string>();
+		public PropertyInfoRow[] PropertyRows { get; init; } = Array.Empty<PropertyInfoRow>();
 	}
 
 	public sealed class SelectedItemsSnapshot
@@ -61,6 +69,21 @@ public partial class OpenGlSurface : UserControl
 		public required TaskCompletionSource<SelectedItemsSnapshot?> Completion { get; init; }
 	}
 
+	private sealed class PropertyCommentUpdateRequest
+	{
+		public required int Property { get; init; }
+		public string? Comment { get; init; }
+		public required TaskCompletionSource<bool> Completion { get; init; }
+	}
+
+	private sealed class PropertyCommandsUpdateRequest
+	{
+		public required int Property { get; init; }
+		public required EntityType EntityType { get; init; }
+		public required string[] CommandLines { get; init; }
+		public required TaskCompletionSource<(bool success, string? error)> Completion { get; init; }
+	}
+
 	public enum ViewportTool
 	{
 		Orbit,
@@ -75,8 +98,11 @@ public partial class OpenGlSurface : UserControl
 	private readonly ConcurrentQueue<(int property, bool add)> pendingSelectByProperty = new();
 	private readonly ConcurrentQueue<int> pendingSetProperty = new();
 	private readonly ConcurrentQueue<(int property, bool add)> pendingSelectedNodePropertyChanges = new();
+	private readonly ConcurrentQueue<AvailableAction> pendingSimpleActions = new();
 	private readonly ConcurrentQueue<MeshInfoRequest> pendingMeshInfoRequests = new();
 	private readonly ConcurrentQueue<SelectedItemsRequest> pendingSelectedItemsRequests = new();
+	private readonly ConcurrentQueue<PropertyCommentUpdateRequest> pendingPropertyCommentUpdates = new();
+	private readonly ConcurrentQueue<PropertyCommandsUpdateRequest> pendingPropertyCommandUpdates = new();
 	private int clearSignalNodeRequested;
 	private int clearSignalElementRequested;
 	private int applySettingsRequested;
@@ -180,6 +206,13 @@ public partial class OpenGlSurface : UserControl
 		renderWindow?.RequestRedraw();
 	}
 
+	public void PerformSimpleAction(AvailableAction action)
+	{
+		EnsureRenderWindow();
+		pendingSimpleActions.Enqueue(action);
+		renderWindow?.RequestRedraw();
+	}
+
 	public void ApplySceneSettings()
 	{
 		EnsureRenderWindow();
@@ -204,6 +237,35 @@ public partial class OpenGlSurface : UserControl
 		{
 			ItemType = itemType,
 			ShowCompleteInfo = showCompleteInfo,
+			Completion = tcs
+		});
+		renderWindow?.RequestRedraw();
+		return tcs.Task;
+	}
+
+	public Task<bool> SetPropertyCommentAsync(int property, string? comment)
+	{
+		EnsureRenderWindow();
+		var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+		pendingPropertyCommentUpdates.Enqueue(new PropertyCommentUpdateRequest
+		{
+			Property = property,
+			Comment = comment,
+			Completion = tcs
+		});
+		renderWindow?.RequestRedraw();
+		return tcs.Task;
+	}
+
+	public Task<(bool success, string? error)> SetPropertyCommandsAsync(int property, EntityType entityType, string[] commandLines)
+	{
+		EnsureRenderWindow();
+		var tcs = new TaskCompletionSource<(bool success, string? error)>(TaskCreationOptions.RunContinuationsAsynchronously);
+		pendingPropertyCommandUpdates.Enqueue(new PropertyCommandsUpdateRequest
+		{
+			Property = property,
+			EntityType = entityType,
+			CommandLines = commandLines ?? Array.Empty<string>(),
 			Completion = tcs
 		});
 		renderWindow?.RequestRedraw();
@@ -585,6 +647,18 @@ public partial class OpenGlSurface : UserControl
 						continue;
 					}
 
+					while (owner.pendingSimpleActions.TryDequeue(out var simpleAction))
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							owner.UpdateStatus("No mesh loaded");
+							continue;
+						}
+
+						sceneFacade.PerformAction(simpleAction);
+						sceneFacade.PerformAction(AvailableAction.Refresh);
+					}
+
 					var action = propertyChange.add
 						? AvailableAction.AddPropertyToSelectedNodes
 						: AvailableAction.RemovePropertyFromSelectedNodes;
@@ -602,6 +676,138 @@ public partial class OpenGlSurface : UserControl
 					sceneFacade.PerformAction(AvailableAction.Refresh);
 				}
 
+				while (owner.pendingSelectedItemsRequests.TryDequeue(out var selectedRequest))
+				{
+					try
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
+							{
+								HasMesh = false,
+								ItemType = selectedRequest.ItemType
+							});
+							continue;
+						}
+
+						sceneFacade.GetSelectionSummary(out var nodeCount, out var elementCount, out var faceCount, out var edgeCount);
+						var count = selectedRequest.ItemType switch
+						{
+							ItemTypeToSelect.Node => nodeCount,
+							ItemTypeToSelect.Element => elementCount,
+							ItemTypeToSelect.Face => faceCount,
+							ItemTypeToSelect.Edge => edgeCount,
+							_ => 0
+						};
+
+						var description = sceneFacade.GetDescriptionOfSelectedItems(selectedRequest.ItemType, selectedRequest.ShowCompleteInfo) ?? string.Empty;
+						selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
+						{
+							HasMesh = true,
+							ItemType = selectedRequest.ItemType,
+							Count = count,
+							Description = description
+						});
+					}
+					catch (Exception ex)
+					{
+						selectedRequest.Completion.TrySetException(ex);
+					}
+				}
+
+				while (owner.pendingPropertyCommentUpdates.TryDequeue(out var commentUpdate))
+				{
+					try
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							commentUpdate.Completion.TrySetResult(false);
+							continue;
+						}
+
+						var stats = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
+						if (stats is null)
+						{
+							commentUpdate.Completion.TrySetResult(false);
+							continue;
+						}
+
+						var property = new Property(commentUpdate.Property);
+						if (string.IsNullOrWhiteSpace(commentUpdate.Comment))
+							stats.PropertyComments.Remove(property);
+						else
+							stats.PropertyComments[property] = commentUpdate.Comment.Trim();
+
+						sceneFacade.SetValue(AvailableValue.UnsavedChangesInMesh, true);
+						sceneFacade.PerformAction(AvailableAction.Refresh);
+						commentUpdate.Completion.TrySetResult(true);
+					}
+					catch
+					{
+						commentUpdate.Completion.TrySetResult(false);
+					}
+				}
+
+				while (owner.pendingPropertyCommandUpdates.TryDequeue(out var commandUpdate))
+				{
+					try
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							commandUpdate.Completion.TrySetResult((false, "No mesh loaded"));
+							continue;
+						}
+
+						var stats = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
+						if (stats is null)
+						{
+							commandUpdate.Completion.TrySetResult((false, "Mesh statistics are not available"));
+							continue;
+						}
+
+						var property = new Property(commandUpdate.Property);
+						var pair = new PropertyEntityPair(property, commandUpdate.EntityType);
+						var commands = new List<PropertyCommand>();
+						var parseError = string.Empty;
+						foreach (var line in commandUpdate.CommandLines)
+						{
+							if (string.IsNullOrWhiteSpace(line))
+								continue;
+							try
+							{
+								var command = PropertyCommand.CreateFromString(line.Trim());
+								if (command is null)
+									continue;
+								commands.Add(command);
+							}
+							catch (Exception ex)
+							{
+								parseError = $"Invalid command \"{line}\": {ex.Message}";
+								break;
+							}
+						}
+
+						if (!string.IsNullOrEmpty(parseError))
+						{
+							commandUpdate.Completion.TrySetResult((false, parseError));
+							continue;
+						}
+
+						if (commands.Count == 0)
+							stats.PropertyCommands.Remove(pair);
+						else
+							stats.PropertyCommands[pair] = commands;
+
+						sceneFacade.SetValue(AvailableValue.UnsavedChangesInMesh, true);
+						sceneFacade.PerformAction(AvailableAction.Refresh);
+						commandUpdate.Completion.TrySetResult((true, null));
+					}
+					catch (Exception ex)
+					{
+						commandUpdate.Completion.TrySetResult((false, ex.Message));
+					}
+				}
+
 				while (owner.pendingMeshInfoRequests.TryDequeue(out var request))
 				{
 					try
@@ -612,55 +818,21 @@ public partial class OpenGlSurface : UserControl
 							continue;
 						}
 
-						while (owner.pendingSelectedItemsRequests.TryDequeue(out var selectedRequest))
-						{
-							try
-							{
-								if (!sceneFacade.ContainsMesh)
-								{
-									selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
-									{
-										HasMesh = false,
-										ItemType = selectedRequest.ItemType
-									});
-									continue;
-								}
-
-								sceneFacade.GetSelectionSummary(out var nodeCount, out var elementCount, out var faceCount, out var edgeCount);
-								var count = selectedRequest.ItemType switch
-								{
-									ItemTypeToSelect.Node => nodeCount,
-									ItemTypeToSelect.Element => elementCount,
-									ItemTypeToSelect.Face => faceCount,
-									ItemTypeToSelect.Edge => edgeCount,
-									_ => 0
-								};
-
-								var description = sceneFacade.GetDescriptionOfSelectedItems(selectedRequest.ItemType, selectedRequest.ShowCompleteInfo) ?? string.Empty;
-								selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
-								{
-									HasMesh = true,
-									ItemType = selectedRequest.ItemType,
-									Count = count,
-									Description = description
-								});
-							}
-							catch (Exception ex)
-							{
-								selectedRequest.Completion.TrySetException(ex);
-							}
-						}
-
 						var stats = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
-						var rows = new List<string>();
+						var rows = new List<MeshInfoSnapshot.PropertyInfoRow>();
 						if (stats != null)
 						{
 							foreach (var pair in stats.GetAllPropertyEntityPairs())
 							{
 								stats.PropertyComments.TryGetValue(pair.Property, out var comment);
 								stats.PropertyCommands.TryGetValue(pair, out var commands);
-								var commandText = commands is null ? string.Empty : string.Join("; ", commands);
-								rows.Add($"{pair.Property} [{pair.EntityType}]  Commands: {commandText}  Comment: {comment}");
+								rows.Add(new MeshInfoSnapshot.PropertyInfoRow
+								{
+									Property = pair.Property.Value,
+									EntityType = pair.EntityType,
+									Commands = commands is null ? string.Empty : string.Join(Environment.NewLine, commands),
+									Comment = comment ?? string.Empty
+								});
 							}
 						}
 
