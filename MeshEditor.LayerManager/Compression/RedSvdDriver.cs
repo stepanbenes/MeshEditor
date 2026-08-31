@@ -10,10 +10,17 @@ namespace MeshEditor.LayerManager.Compression
 {
     public static class RedSvdDriver
 	{
-		[DllImport("redsvd.dll")]
+		private const string NativeLibraryName =
+#if WINDOWS
+			"redsvd.dll";
+#else
+			"redsvd";
+#endif
+
+		[DllImport(NativeLibraryName, EntryPoint = "ComputeSvdExact", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void ComputeSvdExact(double[] inputMatrix_RowMajor, int numberOfRows, int numberOfColumns, double[] singularValues, double[] U_VT_ColumnMajor);
 
-		[DllImport("redsvd.dll")]
+		[DllImport(NativeLibraryName, EntryPoint = "ComputeSvdRandomized", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void ComputeSvdRandomized(double[] inputMatrix_RowMajor, int numberOfRows, int numberOfColumns, int rank, double[] singularValues, double[] U_VT_ColumnMajor);
 
 

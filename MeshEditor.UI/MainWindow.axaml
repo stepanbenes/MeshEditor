@@ -17,8 +17,9 @@
 
 	<Menu Grid.Row="0">
 	  <MenuItem Header="_File">
-		<MenuItem Header="_Open mesh" />
-		<MenuItem Header="_Save" />
+		<MenuItem Header="_Open mesh" Click="OpenMesh_Click" />
+		<MenuItem Header="_Save" Click="SaveMesh_Click" />
+		<MenuItem Header="_Take screenshot..." Click="TakeScreenshot_Click" />
 		<Separator />
 		<MenuItem Header="E_xit" Click="Exit_Click" />
 	  </MenuItem>
@@ -26,18 +27,39 @@
 		<MenuItem Header="_Single view" />
 		<MenuItem Header="_Split view" />
 	  </MenuItem>
+	  <MenuItem Header="_Edit">
+		<MenuItem Header="Select all items" Click="SelectAllItems_Click" />
+		<MenuItem Header="Unselect all items" Click="UnselectAllItems_Click" />
+		<MenuItem Header="Invert selection" Click="InvertSelection_Click" />
+		<MenuItem Header="Select inciding items" Click="SelectIncidingItems_Click" />
+		<Separator />
+		<MenuItem Header="Delete selected elements" Click="DeleteSelectedElements_Click" />
+		<MenuItem Header="Restore mesh" Click="RestoreMesh_Click" />
+	  </MenuItem>
 	  <MenuItem Header="_Tools">
-		<MenuItem Header="_Options" />
+		<MenuItem Header="_Mesh info" Click="MeshInfo_Click" />
+		<MenuItem Header="_List of selected items..." Click="ListOfSelectedItems_Click" />
+		<Separator />
+		<MenuItem Header="Set property of selected items..." Click="SetPropertyOfSelectedItems_Click" />
+		<MenuItem Header="Select items by property..." Click="SelectItemsByProperty_Click" />
+		<MenuItem Header="Select items by property (add)..." Click="SelectItemsByPropertyAdd_Click" />
+		<Separator />
+		<MenuItem Header="Signal _Node..." Click="SignalNode_Click" />
+		<MenuItem Header="Signal _Element..." Click="SignalElement_Click" />
+		<MenuItem Header="Clear signalled node" Click="ClearSignalNode_Click" />
+		<MenuItem Header="Clear signalled element" Click="ClearSignalElement_Click" />
+		<Separator />
+		<MenuItem Header="_Options" Click="Options_Click" />
 	  </MenuItem>
 	  <MenuItem Header="_Help">
-		<MenuItem Header="_About" />
+		<MenuItem Header="_About" Click="About_Click" />
 	  </MenuItem>
 	</Menu>
 
 	<Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
 	  <StackPanel Orientation="Horizontal" Spacing="8" Margin="8">
 		<Button Content="Open" Click="OpenMesh_Click" />
-		<Button Content="Save" />
+		<Button x:Name="SaveButton" Content="Save" Click="SaveMesh_Click" IsEnabled="False" />
 		<Button x:Name="OrbitButton" Content="Orbit" />
 		<Button x:Name="PanButton" Content="Pan" />
 		<Button x:Name="ZoomButton" Content="Zoom" />
@@ -55,7 +77,7 @@
 	  <Border Grid.Column="0" Margin="0,0,8,0" Padding="12" CornerRadius="8" BorderBrush="#404040" BorderThickness="1">
 		<StackPanel Spacing="8">
 		  <TextBlock Text="Scene" FontWeight="SemiBold" />
-		  <TextBlock Text="- Mesh layers" TextWrapping="Wrap" />
+		  <TextBlock x:Name="ScenePathText" Text="No mesh loaded" TextWrapping="Wrap" />
 		  <TextBlock Text="- Selection" TextWrapping="Wrap" />
 		  <TextBlock Text="- Visibility" TextWrapping="Wrap" />
 		</StackPanel>
@@ -86,7 +108,7 @@
 	</Grid>
 
 	<Border Grid.Row="3" Padding="8,6" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
-	  <TextBlock Text="Ready" />
+	  <TextBlock x:Name="StatusBarText" Text="Ready" />
 	</Border>
   </Grid>
 </Window>

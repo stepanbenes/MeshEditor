@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		x:Class="MeshEditor.UI.ListOfSelectedItemsWindow"
+		Title="List of selected items"
+		Width="860"
+		Height="620"
+		MinWidth="700"
+		MinHeight="480"
+		WindowStartupLocation="CenterOwner">
+  <Grid Margin="12" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,Auto">
+	<StackPanel Orientation="Horizontal" Spacing="8" Grid.ColumnSpan="2">
+	  <TextBlock VerticalAlignment="Center" Text="Entity:"/>
+	  <ComboBox x:Name="EntityTypeComboBox" Width="160" SelectedIndex="0">
+		<ComboBoxItem Content="Nodes"/>
+		<ComboBoxItem Content="Elements"/>
+		<ComboBoxItem Content="Faces"/>
+		<ComboBoxItem Content="Edges"/>
+	  </ComboBox>
+	  <CheckBox x:Name="ShowCompleteInfoCheckBox" Content="Show complete info" IsChecked="True" VerticalAlignment="Center"/>
+	  <TextBlock x:Name="CountTextBlock" VerticalAlignment="Center"/>
+	</StackPanel>
+
+	<StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" Margin="0,10,0,8">
+	  <Button x:Name="AddPropertyButton" Content="Add property to selected nodes..." Click="AddProperty_Click"/>
+	  <Button x:Name="RemovePropertyButton" Content="Remove property from selected nodes..." Click="RemoveProperty_Click"/>
+	  <Button Content="Refresh" Click="Refresh_Click"/>
+	</StackPanel>
+
+	<Border Grid.Row="2" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="#505050" CornerRadius="6">
+	  <TextBox x:Name="ItemsTextBox"
+			   IsReadOnly="True"
+			   AcceptsReturn="True"
+			   TextWrapping="Wrap"
+			   ScrollViewer.VerticalScrollBarVisibility="Auto"
+			   ScrollViewer.HorizontalScrollBarVisibility="Auto"
+			   FontFamily="Consolas"
+			   Padding="8"/>
+	</Border>
+
+	<Button Grid.Row="3"
+			Grid.Column="1"
+			Content="Close"
+			Margin="0,10,0,0"
+			MinWidth="90"
+			IsDefault="True"
+			HorizontalAlignment="Right"
+			Click="Close_Click"/>
+  </Grid>
+</Window>

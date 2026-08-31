@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		x:Class="MeshEditor.UI.ScreenshotOptionsWindow"
+		Title="Screenshot options"
+		Width="430"
+		Height="230"
+		CanResize="False"
+		WindowStartupLocation="CenterOwner">
+  <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,*,Auto">
+	<TextBlock Text="Save screenshot of:"/>
+	<RadioButton x:Name="WholeSceneRadioButton" Grid.Row="1" Margin="0,10,0,0" IsChecked="True" IsCheckedChanged="Radio_Checked" Content="Whole scene"/>
+	<RadioButton x:Name="SelectionAreaRadioButton" Grid.Row="2" Margin="0,6,0,0" IsCheckedChanged="Radio_Checked" Content="Selection area (legacy mode)"/>
+	<StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+	  <Button Content="Cancel" Click="Cancel_Click"/>
+	  <Button x:Name="OkButton" Content="Save" IsDefault="True" Click="Ok_Click"/>
+	</StackPanel>
+  </Grid>
+</Window>
