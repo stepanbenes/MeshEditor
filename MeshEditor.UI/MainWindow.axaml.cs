@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -20,9 +21,12 @@ public partial class MainWindow : Window
         var panButton = this.FindControl<Button>("PanButton");
         var zoomButton = this.FindControl<Button>("ZoomButton");
 
-        orbitButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Orbit);
-        panButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Pan);
-        zoomButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Zoom);
+        if (orbitButton is not null)
+            orbitButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Orbit);
+        if (panButton is not null)
+            panButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Pan);
+        if (zoomButton is not null)
+            zoomButton.Click += (_, _) => SetViewportTool(OpenGlSurface.ViewportTool.Zoom);
     }
 
     private async void OpenMesh_Click(object? sender, RoutedEventArgs e)
@@ -51,6 +55,36 @@ public partial class MainWindow : Window
     {
         if (!string.IsNullOrWhiteSpace(lastMeshPath))
             viewportSurface?.LoadMesh(lastMeshPath);
+    }
+
+    private async void SaveMesh_Click(object? sender, RoutedEventArgs e)
+    {
+        var suggestedName = !string.IsNullOrWhiteSpace(lastMeshPath)
+            ? Path.GetFileNameWithoutExtension(lastMeshPath)
+            : "mesh";
+
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save mesh file",
+            SuggestedFileName = string.IsNullOrWhiteSpace(suggestedName) ? "mesh" : suggestedName,
+            DefaultExtension = "msh",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("Supported mesh formats")
+                {
+                    Patterns = new[] { "*.msh", "*.vtu", "*.obj", "*.ply", "*.mesh.json" }
+                }
+            }
+        });
+
+        if (file is null)
+            return;
+
+        var savePath = file.TryGetLocalPath() ?? file.Path.LocalPath;
+        if (string.IsNullOrWhiteSpace(savePath))
+            return;
+
+        viewportSurface?.SaveMesh(savePath);
     }
 
     private void SetViewportTool(OpenGlSurface.ViewportTool tool)

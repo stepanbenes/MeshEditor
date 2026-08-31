@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using MeshEditor.CoreInterface;
 using OpenTK.Graphics.OpenGL;
@@ -29,9 +29,10 @@ public partial class OpenGlSurface : UserControl
 	}
 
 	private readonly ConcurrentQueue<string> pendingLoads = new();
+	private readonly ConcurrentQueue<string> pendingSaves = new();
 	private OffscreenRenderWindow? renderWindow;
 	private DispatcherTimer? renderTimer;
-	private Bitmap? drawingBitmap;
+	private WriteableBitmap? drawingBitmap;
 	private int width;
 	private int height;
 	private ViewportTool activeTool = ViewportTool.Orbit;
@@ -57,6 +58,17 @@ public partial class OpenGlSurface : UserControl
 	{
 		activeTool = tool;
 		renderWindow?.SetTool(tool);
+	}
+
+	public void SaveMesh(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+			return;
+
+		Console.WriteLine($"[OpenGlSurface] save requested: {path}");
+		EnsureRenderWindow();
+		pendingSaves.Enqueue(path);
+		UpdateStatus("Saving mesh...");
 	}
 
 	private void EnsureRenderWindow()
@@ -167,28 +179,27 @@ public partial class OpenGlSurface : UserControl
 		if (pixelWidth <= 0 || pixelHeight <= 0 || pixels.Length < pixelWidth * pixelHeight * 4)
 			return;
 
-		var needsResize = drawingBitmap is null || drawingBitmap.Width != pixelWidth || drawingBitmap.Height != pixelHeight;
+		var needsResize = drawingBitmap is null || drawingBitmap.PixelSize.Width != pixelWidth || drawingBitmap.PixelSize.Height != pixelHeight;
 		if (needsResize)
 		{
-			drawingBitmap = new Bitmap(pixelWidth, pixelHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-		}
-
-		var data = drawingBitmap.LockBits(new Rectangle(0, 0, pixelWidth, pixelHeight), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-		try
-		{
-			Marshal.Copy(pixels, 0, data.Scan0, pixels.Length);
-		}
-		finally
-		{
-			drawingBitmap.UnlockBits(data);
+			drawingBitmap = new WriteableBitmap(
+				new PixelSize(pixelWidth, pixelHeight),
+				new Vector(96, 96),
+				PixelFormats.Bgra8888,
+				AlphaFormat.Unpremul);
 		}
 
 		Dispatcher.UIThread.Post(() =>
 		{
-			using var stream = new MemoryStream();
-			drawingBitmap.Save(stream, ImageFormat.Png);
-			stream.Position = 0;
-			ViewportImage.Source = new Avalonia.Media.Imaging.Bitmap(stream);
+			if (drawingBitmap is null)
+				return;
+
+			using (var framebuffer = drawingBitmap.Lock())
+			{
+				Marshal.Copy(pixels, 0, framebuffer.Address, pixels.Length);
+			}
+
+			ViewportImage.Source = drawingBitmap;
 			StatusText.IsVisible = false;
 		});
 	}
@@ -307,6 +318,27 @@ public partial class OpenGlSurface : UserControl
 					}
 				}
 
+				while (owner.pendingSaves.TryDequeue(out var path))
+				{
+					try
+					{
+						if (!sceneFacade.ContainsMesh)
+						{
+							owner.UpdateStatus("No mesh loaded");
+							continue;
+						}
+
+						owner.UpdateStatus("Saving mesh...");
+						sceneFacade.SaveMeshToFile(path, false, null, null);
+						owner.UpdateStatus("Mesh saved");
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine($"[OpenGlSurface] save failed: {ex}");
+						owner.UpdateStatus($"Error: {ex.Message}");
+					}
+				}
+
 				if (sceneFacade.ContainsMesh)
 				{
 					try
@@ -333,7 +365,16 @@ public partial class OpenGlSurface : UserControl
 						var rowBytes = ClientSize.X * 4;
 						for (var row = 0; row < ClientSize.Y; row++)
 						{
-							System.Buffer.BlockCopy(pixels, row * rowBytes, flipped, (ClientSize.Y - 1 - row) * rowBytes, rowBytes);
+							var sourceOffset = row * rowBytes;
+							var destinationOffset = (ClientSize.Y - 1 - row) * rowBytes;
+							for (var columnOffset = 0; columnOffset < rowBytes; columnOffset += 4)
+							{
+								// RGBA -> BGRA
+								flipped[destinationOffset + columnOffset + 0] = pixels[sourceOffset + columnOffset + 2];
+								flipped[destinationOffset + columnOffset + 1] = pixels[sourceOffset + columnOffset + 1];
+								flipped[destinationOffset + columnOffset + 2] = pixels[sourceOffset + columnOffset + 0];
+								flipped[destinationOffset + columnOffset + 3] = pixels[sourceOffset + columnOffset + 3];
+							}
 						}
 
 						owner.UpdateFrame(flipped, ClientSize.X, ClientSize.Y);
@@ -369,4 +410,3 @@ public partial class OpenGlSurface : UserControl
 		}
 	}
 }
-

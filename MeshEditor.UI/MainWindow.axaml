@@ -17,8 +17,8 @@
 
 	<Menu Grid.Row="0">
 	  <MenuItem Header="_File">
-		<MenuItem Header="_Open mesh" />
-		<MenuItem Header="_Save" />
+		<MenuItem Header="_Open mesh" Click="OpenMesh_Click" />
+		<MenuItem Header="_Save" Click="SaveMesh_Click" />
 		<Separator />
 		<MenuItem Header="E_xit" Click="Exit_Click" />
 	  </MenuItem>
@@ -37,7 +37,7 @@
 	<Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
 	  <StackPanel Orientation="Horizontal" Spacing="8" Margin="8">
 		<Button Content="Open" Click="OpenMesh_Click" />
-		<Button Content="Save" />
+		<Button Content="Save" Click="SaveMesh_Click" />
 		<Button x:Name="OrbitButton" Content="Orbit" />
 		<Button x:Name="PanButton" Content="Pan" />
 		<Button x:Name="ZoomButton" Content="Zoom" />
