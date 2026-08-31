@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Threading;
@@ -162,6 +163,37 @@ public partial class OpenGlSurface : UserControl
 		pendingMeshInfoRequests.Enqueue(new MeshInfoRequest { Completion = tcs });
 		renderWindow?.RequestRedraw();
 		return tcs.Task;
+	}
+
+	public bool SaveScreenshot(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+			return false;
+
+		WriteableBitmap? snapshot = null;
+		Dispatcher.UIThread.Invoke(() =>
+		{
+			snapshot = drawingBitmap;
+		});
+
+		if (snapshot is null)
+		{
+			UpdateStatus("No frame to save");
+			return false;
+		}
+
+		try
+		{
+			using var stream = File.Create(path);
+			snapshot.Save(stream);
+			UpdateStatus("Screenshot saved");
+			return true;
+		}
+		catch (Exception ex)
+		{
+			UpdateStatus($"Error: {ex.Message}");
+			return false;
+		}
 	}
 
 	private void EnsureRenderWindow()

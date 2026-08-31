@@ -12,6 +12,7 @@ public partial class MainWindow : Window
 {
     private static string savedInputValue = "0";
     private static string savedCheckedInputValue = "0";
+    private static string? takeScreenshotLastFilename;
 
     private OpenGlSurface? viewportSurface;
     private Button? saveButton;
@@ -108,6 +109,45 @@ public partial class MainWindow : Window
 
         viewportSurface?.SaveMesh(savePath);
         setStatus("Saving mesh...");
+    }
+
+    private async void TakeScreenshot_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var optionsDialog = new ScreenshotOptionsWindow();
+        if (!await optionsDialog.ShowDialog<bool>(this))
+            return;
+
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save screenshot",
+            SuggestedFileName = string.IsNullOrWhiteSpace(takeScreenshotLastFilename) ? "screenshot" : takeScreenshotLastFilename,
+            DefaultExtension = "png",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PNG image") { Patterns = new[] { "*.png" } },
+                new FilePickerFileType("JPEG image") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                new FilePickerFileType("Bitmap image") { Patterns = new[] { "*.bmp" } }
+            }
+        });
+
+        if (file is null)
+            return;
+
+        var savePath = file.TryGetLocalPath() ?? file.Path.LocalPath;
+        if (string.IsNullOrWhiteSpace(savePath))
+            return;
+
+        takeScreenshotLastFilename = Path.GetFileNameWithoutExtension(savePath);
+        if (optionsDialog.UseSelectionArea)
+        {
+            setStatus("Selection-area screenshot not yet implemented; saving whole scene");
+        }
+
+        if (viewportSurface.SaveScreenshot(savePath))
+            setStatus($"Screenshot saved: {savePath}");
     }
 
     private void SetViewportTool(OpenGlSurface.ViewportTool tool)

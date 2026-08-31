@@ -19,6 +19,7 @@
 	  <MenuItem Header="_File">
 		<MenuItem Header="_Open mesh" Click="OpenMesh_Click" />
 		<MenuItem Header="_Save" Click="SaveMesh_Click" />
+		<MenuItem Header="_Take screenshot..." Click="TakeScreenshot_Click" />
 		<Separator />
 		<MenuItem Header="E_xit" Click="Exit_Click" />
 	  </MenuItem>
