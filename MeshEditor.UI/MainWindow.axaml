@@ -29,6 +29,7 @@
 	  </MenuItem>
 	  <MenuItem Header="_Tools">
 		<MenuItem Header="_Mesh info" Click="MeshInfo_Click" />
+		<MenuItem Header="_List of selected items..." Click="ListOfSelectedItems_Click" />
 		<Separator />
 		<MenuItem Header="Set property of selected items..." Click="SetPropertyOfSelectedItems_Click" />
 		<MenuItem Header="Select items by property..." Click="SelectItemsByProperty_Click" />

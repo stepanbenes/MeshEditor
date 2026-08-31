@@ -261,6 +261,15 @@ public partial class MainWindow : Window
         await dialog.ShowDialog(this);
     }
 
+    private async void ListOfSelectedItems_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var dialog = new ListOfSelectedItemsWindow(viewportSurface);
+        await dialog.ShowDialog(this);
+    }
+
     private async void Options_Click(object? sender, RoutedEventArgs e)
     {
         if (viewportSurface is null)

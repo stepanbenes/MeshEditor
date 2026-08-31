@@ -41,9 +41,24 @@ public partial class OpenGlSurface : UserControl
 		public string[] PropertyRows { get; init; } = Array.Empty<string>();
 	}
 
+	public sealed class SelectedItemsSnapshot
+	{
+		public bool HasMesh { get; init; }
+		public ItemTypeToSelect ItemType { get; init; }
+		public int Count { get; init; }
+		public string Description { get; init; } = string.Empty;
+	}
+
 	private sealed class MeshInfoRequest
 	{
 		public required TaskCompletionSource<MeshInfoSnapshot?> Completion { get; init; }
+	}
+
+	private sealed class SelectedItemsRequest
+	{
+		public required ItemTypeToSelect ItemType { get; init; }
+		public required bool ShowCompleteInfo { get; init; }
+		public required TaskCompletionSource<SelectedItemsSnapshot?> Completion { get; init; }
 	}
 
 	public enum ViewportTool
@@ -59,7 +74,9 @@ public partial class OpenGlSurface : UserControl
 	private readonly ConcurrentQueue<int> pendingSignalElements = new();
 	private readonly ConcurrentQueue<(int property, bool add)> pendingSelectByProperty = new();
 	private readonly ConcurrentQueue<int> pendingSetProperty = new();
+	private readonly ConcurrentQueue<(int property, bool add)> pendingSelectedNodePropertyChanges = new();
 	private readonly ConcurrentQueue<MeshInfoRequest> pendingMeshInfoRequests = new();
+	private readonly ConcurrentQueue<SelectedItemsRequest> pendingSelectedItemsRequests = new();
 	private int clearSignalNodeRequested;
 	private int clearSignalElementRequested;
 	private int applySettingsRequested;
@@ -149,6 +166,20 @@ public partial class OpenGlSurface : UserControl
 		renderWindow?.RequestRedraw();
 	}
 
+	public void AddPropertyToSelectedNodes(int property)
+	{
+		EnsureRenderWindow();
+		pendingSelectedNodePropertyChanges.Enqueue((property, add: true));
+		renderWindow?.RequestRedraw();
+	}
+
+	public void RemovePropertyFromSelectedNodes(int property)
+	{
+		EnsureRenderWindow();
+		pendingSelectedNodePropertyChanges.Enqueue((property, add: false));
+		renderWindow?.RequestRedraw();
+	}
+
 	public void ApplySceneSettings()
 	{
 		EnsureRenderWindow();
@@ -161,6 +192,20 @@ public partial class OpenGlSurface : UserControl
 		EnsureRenderWindow();
 		var tcs = new TaskCompletionSource<MeshInfoSnapshot?>(TaskCreationOptions.RunContinuationsAsynchronously);
 		pendingMeshInfoRequests.Enqueue(new MeshInfoRequest { Completion = tcs });
+		renderWindow?.RequestRedraw();
+		return tcs.Task;
+	}
+
+	public Task<SelectedItemsSnapshot?> GetSelectedItemsDescriptionAsync(ItemTypeToSelect itemType, bool showCompleteInfo)
+	{
+		EnsureRenderWindow();
+		var tcs = new TaskCompletionSource<SelectedItemsSnapshot?>(TaskCreationOptions.RunContinuationsAsynchronously);
+		pendingSelectedItemsRequests.Enqueue(new SelectedItemsRequest
+		{
+			ItemType = itemType,
+			ShowCompleteInfo = showCompleteInfo,
+			Completion = tcs
+		});
 		renderWindow?.RequestRedraw();
 		return tcs.Task;
 	}
@@ -532,6 +577,24 @@ public partial class OpenGlSurface : UserControl
 					owner.UpdateStatus($"Selected items by property {request.property}");
 				}
 
+				while (owner.pendingSelectedNodePropertyChanges.TryDequeue(out var propertyChange))
+				{
+					if (!sceneFacade.ContainsMesh)
+					{
+						owner.UpdateStatus("No mesh loaded");
+						continue;
+					}
+
+					var action = propertyChange.add
+						? AvailableAction.AddPropertyToSelectedNodes
+						: AvailableAction.RemovePropertyFromSelectedNodes;
+					sceneFacade.PerformAction(action, new Property(propertyChange.property));
+					sceneFacade.PerformAction(AvailableAction.Refresh);
+					owner.UpdateStatus(propertyChange.add
+						? $"Added property {propertyChange.property} to selected nodes"
+						: $"Removed property {propertyChange.property} from selected nodes");
+				}
+
 				if (Interlocked.Exchange(ref owner.applySettingsRequested, 0) == 1)
 				{
 					sceneFacade.PerformAction(AvailableAction.UpdateColorBuffers);
@@ -547,6 +610,45 @@ public partial class OpenGlSurface : UserControl
 						{
 							request.Completion.TrySetResult(new MeshInfoSnapshot { HasMesh = false });
 							continue;
+						}
+
+						while (owner.pendingSelectedItemsRequests.TryDequeue(out var selectedRequest))
+						{
+							try
+							{
+								if (!sceneFacade.ContainsMesh)
+								{
+									selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
+									{
+										HasMesh = false,
+										ItemType = selectedRequest.ItemType
+									});
+									continue;
+								}
+
+								sceneFacade.GetSelectionSummary(out var nodeCount, out var elementCount, out var faceCount, out var edgeCount);
+								var count = selectedRequest.ItemType switch
+								{
+									ItemTypeToSelect.Node => nodeCount,
+									ItemTypeToSelect.Element => elementCount,
+									ItemTypeToSelect.Face => faceCount,
+									ItemTypeToSelect.Edge => edgeCount,
+									_ => 0
+								};
+
+								var description = sceneFacade.GetDescriptionOfSelectedItems(selectedRequest.ItemType, selectedRequest.ShowCompleteInfo) ?? string.Empty;
+								selectedRequest.Completion.TrySetResult(new SelectedItemsSnapshot
+								{
+									HasMesh = true,
+									ItemType = selectedRequest.ItemType,
+									Count = count,
+									Description = description
+								});
+							}
+							catch (Exception ex)
+							{
+								selectedRequest.Completion.TrySetException(ex);
+							}
 						}
 
 						var stats = sceneFacade.GetValue(AvailableValue.MeshStatistics) as MeshStatistics;
