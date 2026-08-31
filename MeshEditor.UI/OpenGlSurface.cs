@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -32,6 +33,10 @@ public partial class OpenGlSurface : UserControl
 
 	private readonly ConcurrentQueue<string> pendingLoads = new();
 	private readonly ConcurrentQueue<string> pendingSaves = new();
+	private readonly ConcurrentQueue<int[]> pendingSignalNodes = new();
+	private readonly ConcurrentQueue<int> pendingSignalElements = new();
+	private int clearSignalNodeRequested;
+	private int clearSignalElementRequested;
 	private OffscreenRenderWindow? renderWindow;
 	private DispatcherTimer? renderTimer;
 	private WriteableBitmap? drawingBitmap;
@@ -71,6 +76,37 @@ public partial class OpenGlSurface : UserControl
 		EnsureRenderWindow();
 		pendingSaves.Enqueue(path);
 		UpdateStatus("Saving mesh...");
+	}
+
+	public void SignalNodes(int[] nodeIds)
+	{
+		if (nodeIds == null || nodeIds.Length == 0)
+			return;
+
+		EnsureRenderWindow();
+		pendingSignalNodes.Enqueue(nodeIds);
+		renderWindow?.RequestRedraw();
+	}
+
+	public void SignalElement(int elementId)
+	{
+		EnsureRenderWindow();
+		pendingSignalElements.Enqueue(elementId);
+		renderWindow?.RequestRedraw();
+	}
+
+	public void ClearSignalNode()
+	{
+		EnsureRenderWindow();
+		Interlocked.Exchange(ref clearSignalNodeRequested, 1);
+		renderWindow?.RequestRedraw();
+	}
+
+	public void ClearSignalElement()
+	{
+		EnsureRenderWindow();
+		Interlocked.Exchange(ref clearSignalElementRequested, 1);
+		renderWindow?.RequestRedraw();
 	}
 
 	private void EnsureRenderWindow()
@@ -340,6 +376,44 @@ public partial class OpenGlSurface : UserControl
 						Console.WriteLine($"[OpenGlSurface] save failed: {ex}");
 						owner.UpdateStatus($"Error: {ex.Message}");
 					}
+				}
+
+				if (Interlocked.Exchange(ref owner.clearSignalNodeRequested, 0) == 1)
+				{
+					if (sceneFacade.ContainsMesh)
+						sceneFacade.PerformAction(AvailableAction.ClearSignalNode);
+					else
+						owner.UpdateStatus("No mesh loaded");
+				}
+
+				if (Interlocked.Exchange(ref owner.clearSignalElementRequested, 0) == 1)
+				{
+					if (sceneFacade.ContainsMesh)
+						sceneFacade.PerformAction(AvailableAction.ClearSignalElement);
+					else
+						owner.UpdateStatus("No mesh loaded");
+				}
+
+				while (owner.pendingSignalNodes.TryDequeue(out var nodeIds))
+				{
+					if (!sceneFacade.ContainsMesh)
+					{
+						owner.UpdateStatus("No mesh loaded");
+						continue;
+					}
+
+					sceneFacade.PerformAction(AvailableAction.SignalNode, nodeIds);
+				}
+
+				while (owner.pendingSignalElements.TryDequeue(out var elementId))
+				{
+					if (!sceneFacade.ContainsMesh)
+					{
+						owner.UpdateStatus("No mesh loaded");
+						continue;
+					}
+
+					sceneFacade.PerformAction(AvailableAction.SignalElement, elementId);
 				}
 
 				if (sceneFacade.ContainsMesh)

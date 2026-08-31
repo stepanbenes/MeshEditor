@@ -27,6 +27,9 @@
 		<MenuItem Header="_Split view" />
 	  </MenuItem>
 	  <MenuItem Header="_Tools">
+		<MenuItem Header="Signal _Node..." Click="SignalNode_Click" />
+		<MenuItem Header="Signal _Element..." Click="SignalElement_Click" />
+		<Separator />
 		<MenuItem Header="_Options" />
 	  </MenuItem>
 	  <MenuItem Header="_Help">

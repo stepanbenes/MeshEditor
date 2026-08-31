@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -140,6 +141,70 @@ public partial class MainWindow : Window
     {
         var dialog = new AboutWindow();
         await dialog.ShowDialog(this);
+    }
+
+    private async void SignalNode_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var parsedIds = new List<int>();
+        var dialog = new ValuePromptDialog("Insert node ID", "Signal node(s) with ID(s):", "0");
+        dialog.Validator = d =>
+        {
+            parsedIds.Clear();
+            var parts = d.InputValue.Split([',', ';', ' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return (false, "Please input at least one integer value.");
+
+            foreach (var part in parts)
+            {
+                if (!int.TryParse(part, out var value))
+                    return (false, "Please input valid integer value(s).");
+                parsedIds.Add(value);
+            }
+
+            return (true, null);
+        };
+
+        if (await dialog.ShowDialog<bool>(this))
+        {
+            viewportSurface.SignalNodes(parsedIds.ToArray());
+            setStatus($"Signalled {parsedIds.Count} node(s)");
+        }
+    }
+
+    private async void SignalElement_Click(object? sender, RoutedEventArgs e)
+    {
+        if (viewportSurface is null)
+            return;
+
+        var elementId = 0;
+        var dialog = new ValuePromptDialog("Insert element ID", "Signal element with ID:", "0");
+        dialog.ConfigureOption("Clear signalled element", isChecked: false);
+        dialog.Validator = d =>
+        {
+            if (d.IsOptionChecked)
+                return (true, null);
+
+            return int.TryParse(d.InputValue, out elementId)
+                ? (true, null)
+                : (false, "Please input valid integer value.");
+        };
+
+        if (await dialog.ShowDialog<bool>(this))
+        {
+            if (dialog.IsOptionChecked)
+            {
+                viewportSurface.ClearSignalElement();
+                setStatus("Cleared signalled element");
+            }
+            else
+            {
+                viewportSurface.SignalElement(elementId);
+                setStatus($"Signalled element {elementId}");
+            }
+        }
     }
 
     private void HandleViewportStatusChanged(string status)
