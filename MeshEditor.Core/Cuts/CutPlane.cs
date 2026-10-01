@@ -145,7 +145,7 @@ namespace MeshEditor.Cuts
 		private void drawOutline()
 		{
 			bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
-			GL.LineWidth(2f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(2f);
 			if (Scene.LineSmooth)
 			{
 				GL.Enable(EnableCap.LineSmooth);
@@ -187,7 +187,7 @@ namespace MeshEditor.Cuts
 		public static void DrawDefinitionPoints(IEnumerable<Vector3> points)
 		{
 			bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
-			GL.PointSize(Scene.PointSize * 1.5f);
+			MeshEditor.Graphics.DeviceScaling.PointSize(Scene.PointSize * 1.5f);
 
 			GL.Enable(EnableCap.PointSmooth);
 			if (!blendEnabled)

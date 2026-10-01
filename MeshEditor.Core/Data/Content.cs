@@ -920,7 +920,7 @@ namespace MeshEditor.Data
 
 		public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors)
 		{
-			GL.LineWidth(Scene.BeamWidth);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.BeamWidth);
 			if (Scene.LineSmooth)
 			{
 				GL.Enable(EnableCap.LineSmooth);

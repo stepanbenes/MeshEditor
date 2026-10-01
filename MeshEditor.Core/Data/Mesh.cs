@@ -545,7 +545,7 @@ namespace MeshEditor.Data
 				GL.ShadeModel(ShadingModel.Flat);
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
-				GL.LineWidth(Scene.BorderEdgeWidth);
+				MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.BorderEdgeWidth);
 				// -----------------------------------------
 				if(Scene.LineSmooth)
 				{
@@ -569,7 +569,7 @@ namespace MeshEditor.Data
 			{
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
-				GL.LineWidth(Scene.OrdinaryEdgeWidth);
+				MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.OrdinaryEdgeWidth);
 				if (Scene.LineSmooth)
 				{
 					GL.Enable(EnableCap.LineSmooth);
@@ -621,7 +621,7 @@ namespace MeshEditor.Data
 
 			if ((renderMode & RenderMode.Points) != 0)
 			{
-				GL.PointSize(Scene.PointSize);
+				MeshEditor.Graphics.DeviceScaling.PointSize(Scene.PointSize);
 				GL.Disable(EnableCap.Lighting);
 
 				if (Scene.PointSmooth & !(optimizeForMoving || optimizeForSelecting))

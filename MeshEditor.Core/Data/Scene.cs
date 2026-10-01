@@ -890,7 +890,7 @@ namespace MeshEditor.Data
 				GL.Enable(EnableCap.Blend);
 			}
 
-			GL.LineWidth(1.0f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(1.0f);
 			GL.Disable(EnableCap.Lighting);
 
 			{
@@ -956,7 +956,7 @@ namespace MeshEditor.Data
 				GL.Enable(EnableCap.Blend);
 			}
 
-			GL.LineWidth(1.5f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(1.5f);
 			GL.Disable(EnableCap.Lighting);
 			GL.Disable(EnableCap.DepthTest);
 

@@ -534,7 +534,12 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		private void sceneFacade_RefreshNeeded(object sender, EventArgs e) => Refresh();
 
-		private void sceneFacade_MakeCurrentNeeded(object sender, EventArgs e) => glContext.MakeCurrent();
+		private void sceneFacade_MakeCurrentNeeded(object sender, EventArgs e)
+		{
+			glContext.MakeCurrent();
+			// the scene is rendered in device pixels; line widths and point sizes of the core are in logical pixels
+			DeviceScaling.Factor = (float)renderScaling;
+		}
 
 		private static void onUIThread(Action action)
 		{

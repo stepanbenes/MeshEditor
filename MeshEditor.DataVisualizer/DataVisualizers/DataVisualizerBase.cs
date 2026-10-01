@@ -219,7 +219,7 @@ namespace MeshEditor.DataVisualizer
 					EndDraw();
 
 					// DRAW BOUNDARY LINES
-					GL.LineWidth(1f);
+					MeshEditor.Graphics.DeviceScaling.LineWidth(1f);
 					GL.Color3(contrastColor);
 					GL.Begin(PrimitiveType.Lines);
 					{

@@ -116,6 +116,7 @@
     <Compile Include="Data\PointUnderCursorContext.cs" />
     <Compile Include="Data\PropertyCommand.cs" />
     <Compile Include="Graphics\CrossHatchShader.cs" />
+    <Compile Include="Graphics\DeviceScaling.cs" />
     <Compile Include="Graphics\IVertexBufferObject.cs" />
     <Compile Include="Graphics\ShaderHolder.cs" />
     <Compile Include="Graphics\VBO.cs" />

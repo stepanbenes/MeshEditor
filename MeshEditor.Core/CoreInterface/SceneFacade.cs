@@ -1575,7 +1575,7 @@ namespace MeshEditor.CoreInterface
 			GL.PushMatrix();
 			GL.LoadIdentity();
 
-			GL.LineWidth(1.0f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(1.0f);
 			GL.Disable(EnableCap.Lighting);
 			GL.Enable(EnableCap.Blend);
 
@@ -1664,7 +1664,7 @@ namespace MeshEditor.CoreInterface
 
 			GL.Enable(EnableCap.LineStipple);
 			GL.LineStipple(2, 52428);
-			GL.LineWidth(2.0f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(2.0f);
 
 			Vector2[] windowCorners = { new Vector2(), new Vector2(clientWindowSize.Width, 0f), new Vector2(0f, clientWindowSize.Height), new Vector2(clientWindowSize.Width, clientWindowSize.Height) };
 
