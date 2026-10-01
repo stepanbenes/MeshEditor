@@ -35,6 +35,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
 		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
 		<ProjectReference Include="..\MeshEditor.DataVisualizer\MeshEditor.DataVisualizer.csproj" />
