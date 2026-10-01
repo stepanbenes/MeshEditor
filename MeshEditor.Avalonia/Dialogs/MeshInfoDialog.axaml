@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="using:MeshEditor.AvaloniaUI.Dialogs"
+        xmlns:controls="using:MeshEditor.AvaloniaUI.Controls"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.MeshInfoDialog"
+        Title="Mesh info"
+        Width="935" Height="536" MinWidth="600" MinHeight="400"
+        CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+	<Grid Margin="12" RowDefinitions="*,Auto">
+		<TabControl x:Name="tabControl" SelectionChanged="tabControl_SelectedIndexChanged" Padding="0,6,0,0">
+			<TabItem x:Name="tabPageBasicInfo" Header="Basic info">
+				<HeaderedContentControl x:Name="groupBoxBasicInfo" Header="Mesh characteristics" Theme="{StaticResource GroupBox}" FontWeight="Bold">
+					<StackPanel x:Name="basicInfoPanel" Spacing="1" TextElement.FontWeight="Normal">
+						<TextBlock x:Name="labelNodeCount" Text="Node count: " />
+						<TextBlock x:Name="labelElementCount" Text="Element count: " />
+						<TextBlock x:Name="labelBeamCount" Text="(Beam count: )" />
+						<TextBlock x:Name="labelSurfaceItems" Text="Surface items" Margin="0,12,0,0" TextDecorations="Underline" />
+						<TextBlock x:Name="labelFaceCount" Text="Face count: " />
+						<TextBlock x:Name="labelEdgeCount" Text="Edge count:" />
+					</StackPanel>
+				</HeaderedContentControl>
+			</TabItem>
+			<TabItem x:Name="tabPagePropertyDescriptions" Header="Property descriptions">
+				<Grid RowDefinitions="*,Auto">
+					<DataGrid x:Name="dataGridViewPropertyDescriptions" x:DataType="dialogs:PropertyDescriptionRow"
+					          IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="True" CanUserResizeColumns="True"
+					          GridLinesVisibility="All" FontSize="{DynamicResource ControlContentThemeFontSize}" BorderBrush="#ABADB3" BorderThickness="1" HeadersVisibility="Column"
+					          DoubleTapped="dataGridViewPropertyDescriptions_DoubleClick" KeyDown="dataGridViewPropertyDescriptions_KeyDown">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell">
+								<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+								<Setter Property="MinHeight" Value="22" />
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTextColumn Tag="PropertyColumn" Header="Property" Width="95" Binding="{Binding PropertyText}" SortMemberPath="PropertyValue" />
+							<DataGridTextColumn Tag="TargetEntityColumn" Header="Entity" Width="80" Binding="{Binding EntityText}" />
+							<DataGridTemplateColumn Tag="CommandsColumn" Header="Commands" Width="540" SortMemberPath="Commands">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate x:DataType="dialogs:PropertyDescriptionRow">
+										<TextBlock Text="{Binding Commands}" TextWrapping="Wrap" Margin="4,2" VerticalAlignment="Center" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTextColumn Tag="CommentColumn" Header="Comment" Width="*" Binding="{Binding Comment}" />
+						</DataGrid.Columns>
+					</DataGrid>
+					<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,6,0,0">
+						<Button x:Name="buttonEditPropertyCommands" Content="Edit commands" MinWidth="135" MinHeight="33"
+						        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="buttonEditPropertyCommands_Click" />
+						<Button x:Name="buttonEditComment" Content="Edit comment" MinWidth="125" MinHeight="33"
+						        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="buttonEditComment_Click" />
+					</StackPanel>
+				</Grid>
+			</TabItem>
+			<TabItem x:Name="tabPageEdgeAngleLimits" Header="Edge angle limits">
+				<Grid Margin="12,8" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+					<TextBlock x:Name="firstBorderLimitLabel" Text="first border limit: " />
+					<Slider x:Name="firstBorderLimitTrackBar" Grid.Row="1" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+					        SmallChange="1" LargeChange="5" ValueChanged="firstBorderLimitTrackBar_ValueChanged" />
+					<TextBlock x:Name="secondBorderLimitLabel" Grid.Row="2" Text="second border limit: " Margin="0,8,0,0" />
+					<Slider x:Name="secondBorderLimitTrackBar" Grid.Row="3" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+					        SmallChange="1" LargeChange="5" ValueChanged="secondBorderLimitTrackBar_ValueChanged" />
+					<TextBlock x:Name="label1" Grid.Row="4" Text="Edge angles histogram:" Margin="0,8,0,4" />
+					<Border Grid.Row="5" BorderBrush="Black" BorderThickness="1">
+						<controls:HistogramViewer x:Name="histogramViewer" />
+					</Border>
+					<Button x:Name="buttonApply" Grid.Row="6" Content="Apply" MinWidth="125" MinHeight="34" Margin="0,8,0,0"
+					        HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="buttonApply_Click" />
+				</Grid>
+			</TabItem>
+		</TabControl>
+		<Button x:Name="buttonClose" Grid.Row="1" Content="Close" MinWidth="125" MinHeight="34" Margin="0,8,0,0"
+		        HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+		        IsCancel="True" Click="buttonClose_Click" />
+	</Grid>
+</Window>

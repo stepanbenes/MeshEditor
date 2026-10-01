@@ -4,5 +4,35 @@
              RequestedThemeVariant="Light">
 	<Application.Styles>
 		<FluentTheme DensityStyle="Compact" />
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+		<!-- disabled group boxes look disabled as a whole (WinForms greys out also the labels) -->
+		<Style Selector="HeaderedContentControl:disabled">
+			<Setter Property="Opacity" Value="0.55" />
+		</Style>
+		<!-- compact tabs like the WinForms TabControl -->
+		<Style Selector="TabItem">
+			<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+			<Setter Property="MinHeight" Value="28" />
+			<Setter Property="Padding" Value="10,4" />
+		</Style>
 	</Application.Styles>
+
+	<Application.Resources>
+		<!-- WinForms GroupBox: titled border (use HeaderedContentControl with Theme="{StaticResource GroupBox}") -->
+		<ControlTheme x:Key="GroupBox" TargetType="HeaderedContentControl">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Grid RowDefinitions="Auto,*">
+						<Border Grid.Row="1" Grid.RowSpan="1" Margin="0,-8,0,0" Padding="8,12,8,8"
+						        BorderBrush="#DCDCDC" BorderThickness="1" CornerRadius="3">
+							<ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+						</Border>
+						<TextBlock Grid.Row="0" Margin="8,0,0,0" Padding="2,0" HorizontalAlignment="Left"
+						           Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+						           Text="{TemplateBinding Header}" />
+					</Grid>
+				</ControlTemplate>
+			</Setter>
+		</ControlTheme>
+	</Application.Resources>
 </Application>

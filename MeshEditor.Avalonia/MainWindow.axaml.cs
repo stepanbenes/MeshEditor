@@ -479,8 +479,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void meshInfoToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port MeshInfoForm
-			await NotPorted.Show("Mesh info", "MeshInfoForm");
+			var sf = new MeshInfoDialog(activeControl.SceneFacade, this.longOpNotifier);
+			await sf.ShowDialog(this);
 		}
 
 		private void contextMenuStrip_Closed(object sender, RoutedEventArgs e)
