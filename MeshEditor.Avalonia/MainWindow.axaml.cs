@@ -18,6 +18,7 @@ using Avalonia.Threading;
 
 using MeshEditor.AvaloniaUI.Controls;
 using MeshEditor.AvaloniaUI.Dialogs;
+using MeshEditor.AvaloniaUI.Postprocessing;
 using MeshEditor.AvaloniaUI.Rendering;
 using MeshEditor.Common;
 using MeshEditor.CoreInterface;
@@ -433,12 +434,13 @@ namespace MeshEditor.AvaloniaUI
 		{
 			if (fileNames.Length == 1 && fileNames[0].EndsWith(SceneFacade.SolutionFileExtension)) // check if file to open is solution file
 			{
-				// TODO: port PostprocessViewControl (MeshEditor.DataVisualizer)
-				await NotPorted.Show("Opening a solution (postprocessor)", "PostprocessViewControl");
+				await setPostprocessorLayoutMode();
+				var postprocessView = getCurrentPostprocessView();
+				await postprocessView.LoadLocalSolutionAsync(fileNames[0]);
 			}
 			else
 			{
-				setPreprocessorLayoutMode();
+				await setPreprocessorLayoutModeAsync();
 				activeControl.LoadFiles(fileNames);
 				await activeControl.WaitForIOActionAsync();
 			}
@@ -1362,6 +1364,11 @@ namespace MeshEditor.AvaloniaUI
 			updateStatus();
 			updateColorModeButtons();
 			updateRenderModeButtons();
+
+			// update postprocess view
+			var postprocessView = getCurrentPostprocessView();
+			if (postprocessView != null)
+				postprocessView.ActiveScene = activeControl.SceneFacade;
 		}
 
 		private void updateCaption()
@@ -1587,18 +1594,75 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void importFEMResultsToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port ImportFEMResultsForm and PostprocessViewControl (MeshEditor.DataVisualizer)
-			await NotPorted.Show("Import FEM results", "ImportFEMResultsForm");
+			var importFEMResultsForm = new ImportFEMResultsDialog(longOpNotifier);
+			if (await importFEMResultsForm.ShowDialog(this))
+			{
+				Debug.Assert(!string.IsNullOrEmpty(importFEMResultsForm.SolutionFileName));
+				Debug.Assert(File.Exists(importFEMResultsForm.SolutionFileName));
+
+				await setPostprocessorLayoutMode();
+				await getCurrentPostprocessView().LoadLocalSolutionAsync(importFEMResultsForm.SolutionFileName);
+			}
 		}
 
 		private async void openSolutionToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port SolutionBrowserForm and PostprocessViewControl (MeshEditor.DataVisualizer)
-			await NotPorted.Show("Open solution", "SolutionBrowserForm");
+			var solutionBrowserForm = new SolutionBrowserDialog();
+
+			if (await solutionBrowserForm.ShowDialog(this))
+			{
+				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserDialog.SolutionLocationType.Local);
+
+				await setPostprocessorLayoutMode();
+				var postprocessView = getCurrentPostprocessView();
+
+				switch (solutionBrowserForm.SolutionLocation)
+				{
+					case SolutionBrowserDialog.SolutionLocationType.Local:
+						Debug.Assert(solutionBrowserForm.LocalSolutionFileName != null);
+						await postprocessView.LoadLocalSolutionAsync(solutionBrowserForm.LocalSolutionFileName);
+						break;
+				}
+			}
 		}
 
-		private void closeSolutionToolStripMenuItem_Click(object sender, RoutedEventArgs e)
+		private async void closeSolutionToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
+			await setPreprocessorLayoutModeAsync();
+		}
+
+		/// <summary>
+		/// The postprocessor view (left panel with layers and data selection), if the postprocessor layout is active.
+		/// </summary>
+		internal PostprocessViewControl getCurrentPostprocessView()
+		{
+			return centralPanel.Child as PostprocessViewControl;
+		}
+
+		private async Task closeAllScenes()
+		{
+			if (activeControl == null)
+				return;
+
+			// close all open views, leave only one empty
+			while (true)
+			{
+				activeControl.SceneFacade.SetValue(AvailableValue.DataVisualizer, null);
+				activeControl.ClearScene();
+				if (!await removeActiveWindow())
+					break;
+			}
+
+			updateCaption();
+			updateStatus();
+			updateColorModeButtons();
+			updateRenderModeButtons();
+		}
+
+		private async Task setPreprocessorLayoutModeAsync()
+		{
+			if (LayoutMode == LayoutMode.Postprocessor)
+				await closeAllScenes();
 			setPreprocessorLayoutMode();
 		}
 
@@ -1606,12 +1670,28 @@ namespace MeshEditor.AvaloniaUI
 		{
 			// the WinForms UI hosts the viewports in PreprocessViewControl, which is a plain container
 			if (contentContainer == null)
-			{
 				contentContainer = new Border();
-				centralPanel.Child = contentContainer;
+			if (getCurrentPostprocessView() is PostprocessViewControl postprocessView)
+			{
+				postprocessView.Detach(); // releases contentContainer
+				centralPanel.Child = null;
 			}
+			centralPanel.Child ??= contentContainer;
 			layoutMode = LayoutMode.Preprocessor;
 			activeControl?.Focus();
+		}
+
+		private async Task setPostprocessorLayoutMode()
+		{
+			await closeAllScenes();
+			if (getCurrentPostprocessView() is PostprocessViewControl oldPostprocessView)
+				oldPostprocessView.Detach();
+			centralPanel.Child = null;
+			layoutMode = LayoutMode.Postprocessor;
+			var postprocessView = new PostprocessViewControl(longOpNotifier) { Content = contentContainer };
+			centralPanel.Child = postprocessView;
+			activeControl.SetNewScene(postprocessView.ActiveScene);
+			activeControl.Focus();
 		}
 
 		#endregion

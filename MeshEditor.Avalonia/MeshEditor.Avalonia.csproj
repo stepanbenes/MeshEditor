@@ -28,6 +28,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
 		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+		<ProjectReference Include="..\MeshEditor.Postprocessing\MeshEditor.Postprocessing.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
