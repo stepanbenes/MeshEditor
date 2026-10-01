@@ -476,8 +476,12 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void settingsToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port SettingsForm
-			await NotPorted.Show("Settings", "SettingsForm");
+			List<SceneFacade> scenes = new List<SceneFacade>();
+			foreach (OpenGLViewport c in openGLControls)
+				scenes.Add(c.SceneFacade);
+
+			var sf = new SettingsDialog(scenes);
+			await sf.ShowDialog(this);
 		}
 
 		private async void meshInfoToolStripMenuItem_Click(object sender, RoutedEventArgs e)
