@@ -82,6 +82,7 @@ namespace MeshEditor.AvaloniaUI
 		private readonly MainWindowSettings mainWindowSettings;
 
 		private ShowHideElementsDialog showHideElementsForm;
+		private CutEditorDialog cutEditorForm;
 
 		private readonly Dictionary<LongOpNotifier.Token, ProgressViewDialog> progressViewForms = new Dictionary<LongOpNotifier.Token, ProgressViewDialog>();
 
@@ -415,7 +416,11 @@ namespace MeshEditor.AvaloniaUI
 					this.showHideElementsForm.Close();
 					this.showHideElementsForm = null;
 				}
-				// TODO: close CutEditorForm here once it is ported
+				if (this.cutEditorForm != null)
+				{
+					this.cutEditorForm.Close();
+					this.cutEditorForm = null;
+				}
 				await openFiles(fileNames);
 			}
 		}
@@ -505,8 +510,15 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void cutMeshToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port CutEditorForm
-			await NotPorted.Show("Cut / Select area", "CutEditorForm");
+			this.cutEditorForm = new CutEditorDialog(activeControl.SceneFacade, this.longOpNotifier);
+			this.cutEditorForm.ParentFormFocusNeeded += delegate
+			{
+				Activate();
+				activeControl?.Focus();
+			};
+			this.cutEditorForm.Closed += delegate { this.cutEditorForm = null; };
+			this.cutEditorForm.Show(this);
+			await Task.CompletedTask;
 		}
 
 		private async void showHideElementsToolStripMenuItem_Click(object sender, RoutedEventArgs e)
