@@ -795,14 +795,44 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			if (!sceneFacade.ContainsMesh)
 				return;
 
-			// TODO: port PropertyInputForm
-			await NotPorted.Show("Set property of selected entities", "PropertyInputForm");
+			string description = (string)sceneFacade.GetValue(AvailableValue.SelectedItemsDescription);
+			if (string.IsNullOrEmpty(description))
+				description = "Nothing selected";
+			var form = new PropertyInputDialog("Insert property number", description, sceneFacade);
+			int value = 0;
+
+			form.InputValueValidating += (sender, ea) =>
+			{
+				if (!int.TryParse(form.InputValue, out value))
+					ea.Reject("Inserted value is not an integer", "Please input valid integer value" + Environment.NewLine + "in range <" + int.MinValue + "; " + int.MaxValue + ">");
+			};
+
+			if (await form.ShowDialog(null))
+			{
+				sceneFacade.SetPropertyOfSelectedItems(new MeshEditor.Data.Property(value));
+			}
+
+			MeshNeedRefresh?.Invoke(this, new MeshNeedRefreshEventArgs(sceneFacade.ActiveMeshUniqueIdentifier.Value));
+			ActionPerformed?.Invoke(this, EventArgs.Empty);
 		}
 
 		public async Task SelectItemsWithProperty(string itemsName, bool addToSelection = false)
 		{
-			// TODO: port CheckedInputValueForm
-			await NotPorted.Show("Select " + itemsName + " by property", "CheckedInputValueForm");
+			var form = new CheckedInputValueDialog("Insert property number", "Select " + itemsName + " by property:", "add to selection");
+			form.IsChecked = addToSelection;
+
+			int value = 0;
+			form.InputValueValidating += (s, ea) =>
+			{
+				if (!int.TryParse(form.InputValue, out value) || value < 0)
+					ea.Reject("Inserted value is not an integer", "Please input valid integer value" + Environment.NewLine + "in range <0; " + int.MaxValue + ">");
+			};
+
+			if (await form.ShowDialog(null))
+			{
+				AvailableAction action = form.IsChecked ? AvailableAction.SelectItemsWithPropertyAdd : AvailableAction.SelectItemsWithProperty;
+				sceneFacade.PerformAction(action, new MeshEditor.Data.Property(value));
+			}
 		}
 
 		public void SignalNodeByID(int[] ids)

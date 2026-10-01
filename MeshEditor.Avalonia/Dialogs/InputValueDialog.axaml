@@ -9,10 +9,13 @@
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen">
 	<!-- minimum client width 360 like the WinForms form (on the content, so it also applies when the platform ignores Window.MinWidth) -->
-	<Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="12,10,12,12" MinWidth="336">
+	<Grid x:Name="layoutRoot" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" Margin="12,10,12,12" MinWidth="336">
 		<TextBlock x:Name="labelText" Grid.ColumnSpan="2" Text="label1" Margin="0,0,0,12" />
-		<TextBox x:Name="textBoxValue" Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" MinWidth="174" />
-		<Button x:Name="buttonOK" Grid.Row="1" Grid.Column="1" Content="OK" MinWidth="60"
+		<!-- optional content of derived dialogs (check box of CheckedInputValueDialog, link of PropertyInputDialog) -->
+		<ContentControl x:Name="contentAboveValue" Grid.Row="1" Grid.ColumnSpan="2" />
+		<TextBox x:Name="textBoxValue" Grid.Row="2" Grid.Column="0" Margin="0,0,8,0" MinWidth="174" />
+		<Button x:Name="buttonOK" Grid.Row="2" Grid.Column="1" Content="OK" MinWidth="60"
 		        HorizontalContentAlignment="Center" Click="buttonOK_Click" />
+		<ContentControl x:Name="contentBelowValue" Grid.Row="3" Grid.ColumnSpan="2" />
 	</Grid>
 </Window>

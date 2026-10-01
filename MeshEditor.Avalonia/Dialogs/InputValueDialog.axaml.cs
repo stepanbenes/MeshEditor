@@ -78,7 +78,7 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 			return dialogResultOK;
 		}
 
-		private void focusTextbox()
+		protected void focusTextbox()
 		{
 			textBoxValue.Focus();
 			textBoxValue.SelectAll();
@@ -104,13 +104,42 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 			labelText.Text = builder.ToString();
 		}
 
+		/// <summary>
+		/// Stores the confirmed value as default for the next time (static SavedValue of the dialog class).
+		/// </summary>
+		protected virtual void RememberValue(string value)
+		{
+			SavedValue = value;
+		}
+
+		/// <summary>
+		/// Content shown between the info text and the value (used by derived dialogs).
+		/// </summary>
+		protected Control ContentAboveValue
+		{
+			get => contentAboveValue.Content as Control;
+			set => contentAboveValue.Content = value;
+		}
+
+		/// <summary>
+		/// Content shown below the value (used by derived dialogs).
+		/// </summary>
+		protected Control ContentBelowValue
+		{
+			get => contentBelowValue.Content as Control;
+			set => contentBelowValue.Content = value;
+		}
+
+		/// <summary>
+		/// Validates the value like the OK button; shows the error message when invalid.
+		/// </summary>
 		protected async Task<bool> validateInput()
 		{
 			var args = new InputValueValidatingEventArgs();
 			InputValueValidating?.Invoke(this, args);
 			if (!args.Cancel)
 			{
-				SavedValue = InputValue;
+				RememberValue(InputValue);
 				return true;
 			}
 			if (!string.IsNullOrEmpty(args.ErrorMessage))
