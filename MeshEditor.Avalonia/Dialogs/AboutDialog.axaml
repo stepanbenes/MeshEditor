@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.AboutDialog"
+        Title="AboutDialog"
+        Width="576" Height="337"
+        CanResize="False" CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+	<!-- layout of the WinForms AboutDialog: 2 columns (38 % / 62 %), rows 10/10/10/10/50/10 % -->
+	<Grid Margin="12,11" ColumnDefinitions="37.8*,62.2*" RowDefinitions="10*,10*,10*,10*,50*,10*">
+		<Image x:Name="logoPictureBox" Grid.RowSpan="6" Margin="4" Stretch="Fill"
+		       Source="avares://MeshEditor.Avalonia/Assets/hinkley.png" />
+		<TextBlock x:Name="labelProductName" Grid.Column="1" Grid.Row="0" Margin="8,0,4,0" VerticalAlignment="Center" Text="Product Name" />
+		<TextBlock x:Name="labelVersion" Grid.Column="1" Grid.Row="1" Margin="8,0,4,0" VerticalAlignment="Center" Text="Version" />
+		<TextBlock x:Name="labelCopyright" Grid.Column="1" Grid.Row="2" Margin="8,0,4,0" VerticalAlignment="Center" Text="Copyright" />
+		<TextBlock x:Name="labelCompanyName" Grid.Column="1" Grid.Row="3" Margin="8,0,4,0" VerticalAlignment="Center" Text="Company Name" />
+		<TextBox x:Name="textBoxDescription" Grid.Column="1" Grid.Row="4" Margin="8,4,4,4" Text="Description"
+		         IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Focusable="False"
+		         ScrollViewer.VerticalScrollBarVisibility="Auto" />
+		<Button x:Name="okButton" Grid.Column="1" Grid.Row="5" Margin="4" Content="_OK" MinWidth="100"
+		        HorizontalAlignment="Right" VerticalAlignment="Bottom" HorizontalContentAlignment="Center"
+		        IsDefault="True" IsCancel="True" Click="okButton_Click" />
+	</Grid>
+</Window>

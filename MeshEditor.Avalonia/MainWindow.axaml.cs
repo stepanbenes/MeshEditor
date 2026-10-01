@@ -81,6 +81,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private readonly MainWindowSettings mainWindowSettings;
 
+		private readonly Dictionary<LongOpNotifier.Token, ProgressViewDialog> progressViewForms = new Dictionary<LongOpNotifier.Token, ProgressViewDialog>();
+
 		private bool closeConfirmed;
 
 		public MainWindow()
@@ -865,8 +867,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void aboutToolStripMenuItem1_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port AboutDialog
-			await NotPorted.Show("About", "AboutDialog");
+			var dialog = new AboutDialog();
+			await dialog.ShowDialog(this);
 		}
 
 		private async void closeActiveMeshToolStripMenuItem_Click(object sender, RoutedEventArgs e)
@@ -1137,7 +1139,8 @@ namespace MeshEditor.AvaloniaUI
 				string stateText = longOpNotifier.GetState(token).ToString();
 				statusLabel.Text = string.IsNullOrEmpty(stateText) ? "Operation in progress..." : stateText;
 				statusLabel.Foreground = Brushes.Blue;
-				// TODO: port ProgressViewForm (shown after 500 ms for long operations)
+
+				setupProgressViewTimer(token, isCancellable);
 			});
 			longOpNotifier.HasEnded += token => onUIThread(() =>
 			{
@@ -1145,12 +1148,49 @@ namespace MeshEditor.AvaloniaUI
 				activeControl?.SetCursorAccordingToEditorMode();
 				statusLabel.Foreground = Brushes.Black;
 				updateStatus();
+				if (progressViewForms.TryGetValue(token, out ProgressViewDialog progressViewForm))
+				{
+					progressViewForms.Remove(token);
+					progressViewForm.Quit();
+				}
 			});
 			longOpNotifier.ProgressChanged += token => onUIThread(() =>
 			{
 				LongOpNotifier.State operationState = longOpNotifier.GetState(token);
 				statusLabel.Text = operationState.ToString();
+
+				if (progressViewForms.TryGetValue(token, out ProgressViewDialog progressViewForm))
+				{
+					progressViewForm.Caption = operationState.TaskName;
+					progressViewForm.OperationName = operationState.OperationName;
+					progressViewForm.SetProgressState(operationState.PercentDone);
+				}
 			});
+		}
+
+		/// <summary>
+		/// Shows the progress window when the long operation takes longer than 500 ms.
+		/// </summary>
+		private void setupProgressViewTimer(LongOpNotifier.Token operationToken, bool isCancellable)
+		{
+			DispatcherTimer.RunOnce(() =>
+			{
+				if (longOpNotifier.IsRunning(operationToken) && !progressViewForms.ContainsKey(operationToken))
+				{
+					LongOpNotifier.State state = longOpNotifier.GetState(operationToken);
+					var progressViewForm = new ProgressViewDialog(state.TaskName ?? "Operation in progress...", isCancellable, logger: longOpNotifier.GetLogger(operationToken));
+					progressViewForms[operationToken] = progressViewForm;
+					if (isCancellable)
+						progressViewForm.Cancel += (s, e) => longOpNotifier.Cancel(operationToken);
+					progressViewForm.OperationName = state.OperationName;
+					progressViewForm.SetProgressState(state.PercentDone);
+
+					Cursor = Cursor.Default;
+					activeControl?.SetCursorAccordingToEditorMode();
+
+					progressViewForm.Show(this);
+				}
+			}, TimeSpan.FromMilliseconds(500));
 		}
 
 		private static void onUIThread(Action action)
@@ -1204,13 +1244,6 @@ namespace MeshEditor.AvaloniaUI
 				updateCaption();
 				updateStatus();
 				updateRenderModeButtons();
-			};
-			openGLControl.IOProgress += (sender, args) =>
-			{
-				if (sender == activeControl && ((OpenGLViewport)sender).IOActionInProgress) // progress may be dispatched after the operation finished
-				{
-					statusLabel.Text = args.PercentDone > 0 ? $"{args.Description} ({args.PercentDone} %)" : args.Description + "...";
-				}
 			};
 
 			openGLControl.MeshNeedRefresh += meshNeedRefreshHandler;
@@ -1453,8 +1486,19 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void takeScreenshotToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port ScreenshotOptionsForm (whole screen / selection area), then call saveScreenshot
-			await NotPorted.Show("Take screenshot", "ScreenshotOptionsForm");
+			// open screenshot options dialog which has two options: take whole screen or take selection window
+			var screenshotOptionsForm = new ScreenshotOptionsDialog();
+			if (await screenshotOptionsForm.ShowDialog(this))
+			{
+				if (screenshotOptionsForm.UseSelectionArea)
+				{
+					SceneFacade.EditorMode = EditorMode.ScreenshotWindow;
+				}
+				else // take whole screen
+				{
+					await saveScreenshot(activeControl, DrawingRectangle.Empty);
+				}
+			}
 		}
 
 		private async void configurePropertyColorsToolStripMenuItem_Click(object sender, RoutedEventArgs e)

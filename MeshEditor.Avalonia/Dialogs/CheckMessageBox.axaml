@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.CheckMessageBox"
+        Title="CheckMessageBox"
+        Width="455" MinHeight="187"
+        SizeToContent="Height"
+        CanResize="False" CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen">
+	<Grid Margin="12,20,12,12" RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
+		<TextBlock x:Name="label1" Grid.ColumnSpan="2" Text="label1" TextWrapping="Wrap" MinHeight="110" />
+		<CheckBox x:Name="checkBox1" Grid.Row="1" Content="checkBox" VerticalAlignment="Bottom" IsCheckedChanged="checkBox1_CheckedChanged" />
+		<Button x:Name="buttonOK" Grid.Row="1" Grid.Column="1" Content="OK" MinWidth="85" MinHeight="30"
+		        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsDefault="True" Click="buttonOK_Click" />
+	</Grid>
+</Window>

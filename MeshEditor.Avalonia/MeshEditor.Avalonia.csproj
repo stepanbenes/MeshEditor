@@ -9,8 +9,15 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ApplicationIcon>..\MeshEditor.UI\appIcon.ico</ApplicationIcon>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-		<Version>2.5.2</Version>
-		<Product>MeshEditor</Product>
+		<!-- product information and version: ..\SharedAssemblyInfo.cs -->
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
 		<NoWarn>$(NoWarn);NU1701</NoWarn>
 	</PropertyGroup>
 
@@ -37,6 +44,8 @@
 		<AvaloniaResource Include="..\MeshEditor.UI\appIcon.ico" Link="Assets\appIcon.ico" />
 		<!-- UI-toolkit independent update checker shared with the WinForms UI. -->
 		<Compile Include="..\MeshEditor.UI\UpdateChecker.cs" Link="UpdateChecker.cs" />
+		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+		<AvaloniaResource Include="..\MeshEditor.Forms\Resources\hinkley.png" Link="Assets\hinkley.png" />
 		<None Include="..\MeshEditor.Core\OpenTK.dll.config" Condition="Exists('..\MeshEditor.Core\OpenTK.dll.config')" CopyToOutputDirectory="Never" />
 	</ItemGroup>
 </Project>

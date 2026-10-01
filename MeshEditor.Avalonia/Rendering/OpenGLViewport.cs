@@ -65,6 +65,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		private Task ioTask;
 		private CancellationTokenSource ioCancellation;
+		private ProgressViewDialog progressViewForm;
 		private bool ioProcessCancelled;
 		private bool ioProcessError;
 
@@ -603,13 +604,52 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 			ioTask = runIOTask(() =>
 			{
-				MeshIOEventHandler progressNotifier = (s, ea) => onUIThread(() => IOProgress?.Invoke(this, new IOProgressEventArgs(description, ea.PercentDone)));
+				MeshIOEventHandler progressNotifier = (s, ea) => onUIThread(() => ioProgressChanged(description, ea.PercentDone));
 				YesNoQuestion cancelled = () => cancellation.IsCancellationRequested;
 
 				SceneFacade newScene = SceneFacade.GetEmptyScene();
 				newScene.LoadMeshFromFiles(files, progressNotifier, cancelled);
 				return newScene;
 			}, loadingCompleted);
+
+			showProgressViewWhenSlow(description);
+		}
+
+		/// <summary>
+		/// Shows the progress window when the load/save operation takes longer than 500 ms (like the WinForms UI).
+		/// </summary>
+		private void showProgressViewWhenSlow(string description)
+		{
+			var task = ioTask;
+			DispatcherTimer.RunOnce(() =>
+			{
+				if (task == ioTask && IOActionInProgress && progressViewForm == null)
+				{
+					progressViewForm = new ProgressViewDialog(description, enableCancellation: true);
+					progressViewForm.Cancel += delegate { CancelIOAction(); };
+					if (TopLevel.GetTopLevel(this) is Window owner)
+						progressViewForm.Show(owner);
+					else
+						progressViewForm.Show();
+				}
+			}, TimeSpan.FromMilliseconds(500));
+		}
+
+		private void ioProgressChanged(string description, int percentDone)
+		{
+			IOProgress?.Invoke(this, new IOProgressEventArgs(description, percentDone));
+			if (progressViewForm != null)
+			{
+				progressViewForm.SetProgressState(percentDone);
+				if (percentDone >= 100)
+					closeProgressView();
+			}
+		}
+
+		private void closeProgressView()
+		{
+			progressViewForm?.Quit();
+			progressViewForm = null;
 		}
 
 		/// <summary>
@@ -666,6 +706,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			{
 				setSceneFacade(newScene);
 			}
+			closeProgressView();
 
 			GC.Collect();
 
@@ -678,8 +719,9 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			}
 			else if (SceneSettings.Instance.ShowOpenGLLowVersionMessage && !sceneFacade.CheckOpenGLVersion())
 			{
-				// TODO: port CheckMessageBox ("don't show again" check box); a plain message box is shown meanwhile
-				await MessageBox.Show("This application requires graphics card that supports OpenGL version 2.0+ which includes Vertex buffer object (VBO) and OpenGL shading language (GLSL) support. Check that you have the latest graphics card drivers. OpenGL version supported by your graphics drivers is now " + SceneSettings.Instance.OpenGLVersion + ".", "Low OpenGL version", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				var mbox = new CheckMessageBox("This application requires graphics card that supports OpenGL version 2.0+ which includes Vertex buffer object (VBO) and OpenGL shading language (GLSL) support. Check that you have the latest graphics card drivers. OpenGL version supported by your graphics drivers is now " + SceneSettings.Instance.OpenGLVersion + ".", "Low OpenGL version");
+				await mbox.ShowDialog(null);
+				SceneSettings.Instance.ShowOpenGLLowVersionMessage = !mbox.IsChecked;
 			}
 
 			Cursor = previousCursor;
@@ -714,15 +756,18 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 			ioTask = runIOTask(() =>
 			{
-				MeshIOEventHandler progressNotifier = (s, ea) => onUIThread(() => IOProgress?.Invoke(this, new IOProgressEventArgs(description, ea.PercentDone)));
+				MeshIOEventHandler progressNotifier = (s, ea) => onUIThread(() => ioProgressChanged(description, ea.PercentDone));
 				YesNoQuestion cancelled = () => cancellation.IsCancellationRequested;
 				scene.SaveMeshToFile(filename, saveWithoutHiddenElements, progressNotifier, cancelled);
 				return null;
 			}, result => savingCompleted(result, saveWithoutHiddenElements));
+
+			showProgressViewWhenSlow(description);
 		}
 
 		private async Task savingCompleted(object result, bool saveWithoutHiddenElements)
 		{
+			closeProgressView();
 			GC.Collect();
 
 			if (ioProcessError)
