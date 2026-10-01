@@ -5,6 +5,7 @@
 	<Application.Styles>
 		<FluentTheme DensityStyle="Compact" />
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 		<!-- disabled group boxes look disabled as a whole (WinForms greys out also the labels) -->
 		<Style Selector="HeaderedContentControl:disabled">
 			<Setter Property="Opacity" Value="0.55" />

@@ -98,6 +98,9 @@ namespace MeshEditor.AvaloniaUI
 			// the hidden WinForms menu item only provides this shortcut; hot keys of invisible menu items don't fire in Avalonia
 			KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.F6, KeyModifiers.Shift), Command = new DelegateCommand(() => invisibleSelectEntitiesByPropertyAddToolStripMenuItem_Click(this, null)) });
 
+			// access keys in the drop-down of the tool strip (WinForms ToolStripDropDownButton supports them)
+			FlyoutAccessKeys.Attach((MenuFlyout)propertyColorsTtoolStripDropDownButton.Flyout);
+
 			SceneFacade.EditorModeChanged += editorModeChanged;
 			SceneFacade.ShowError += SceneFacade_ShowError;
 
@@ -1507,8 +1510,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private async void configurePropertyColorsToolStripMenuItem_Click(object sender, RoutedEventArgs e)
 		{
-			// TODO: port ConfigurePropertyColorsForm
-			await NotPorted.Show("Configure property colors", "ConfigurePropertyColorsForm");
+			var configurePropertyColorsForm = new ConfigurePropertyColorsDialog(openGLControls.Select(c => c.SceneFacade).ToList(), (IEnumerable<Property>)activeControl.SceneFacade.GetValue(AvailableValue.AllMeshPropertiesSorted));
+			await configurePropertyColorsForm.ShowDialog(this);
 		}
 
 		private async Task saveScreenshot(OpenGLViewport control, DrawingRectangle screenshotWindow)
