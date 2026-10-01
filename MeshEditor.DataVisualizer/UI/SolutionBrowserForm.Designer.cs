@@ -30,19 +30,14 @@
 		{
 			this.buttonOk = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
-			this.buttonRemoteSolutionOpenInBrowser = new System.Windows.Forms.Button();
 			this.tabControl = new System.Windows.Forms.TabControl();
 			this.tabPageLocalSolutions = new System.Windows.Forms.TabPage();
 			this.buttonChangeDefaultSolutionDirectory = new System.Windows.Forms.Button();
 			this.buttonDeleteLocalSolution = new System.Windows.Forms.Button();
-			this.tabPageRemoteSolutions = new System.Windows.Forms.TabPage();
-			this.buttonDeleteRemoteSolution = new System.Windows.Forms.Button();
 			this.buttonBrowse = new System.Windows.Forms.Button();
 			this.localSolutionListView = new MeshEditor.DataVisualizer.UI.SolutionListView();
-			this.remoteSolutionListView = new MeshEditor.DataVisualizer.UI.SolutionListView();
 			this.tabControl.SuspendLayout();
 			this.tabPageLocalSolutions.SuspendLayout();
-			this.tabPageRemoteSolutions.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// buttonOk
@@ -71,15 +66,6 @@
 			// 
 			// buttonRemoteSolutionOpenInBrowser
 			// 
-			this.buttonRemoteSolutionOpenInBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.buttonRemoteSolutionOpenInBrowser.Location = new System.Drawing.Point(8, 443);
-			this.buttonRemoteSolutionOpenInBrowser.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-			this.buttonRemoteSolutionOpenInBrowser.Name = "buttonRemoteSolutionOpenInBrowser";
-			this.buttonRemoteSolutionOpenInBrowser.Size = new System.Drawing.Size(151, 28);
-			this.buttonRemoteSolutionOpenInBrowser.TabIndex = 3;
-			this.buttonRemoteSolutionOpenInBrowser.Text = "Open in browser";
-			this.buttonRemoteSolutionOpenInBrowser.UseVisualStyleBackColor = true;
-			this.buttonRemoteSolutionOpenInBrowser.Click += new System.EventHandler(this.buttonOpenRemoteSolutionInBrowser_Click);
 			// 
 			// tabControl
 			// 
@@ -87,7 +73,6 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tabControl.Controls.Add(this.tabPageLocalSolutions);
-			this.tabControl.Controls.Add(this.tabPageRemoteSolutions);
 			this.tabControl.Location = new System.Drawing.Point(0, 0);
 			this.tabControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.tabControl.Name = "tabControl";
@@ -136,29 +121,9 @@
 			// 
 			// tabPageRemoteSolutions
 			// 
-			this.tabPageRemoteSolutions.Controls.Add(this.remoteSolutionListView);
-			this.tabPageRemoteSolutions.Controls.Add(this.buttonDeleteRemoteSolution);
-			this.tabPageRemoteSolutions.Controls.Add(this.buttonRemoteSolutionOpenInBrowser);
-			this.tabPageRemoteSolutions.Location = new System.Drawing.Point(4, 25);
-			this.tabPageRemoteSolutions.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-			this.tabPageRemoteSolutions.Name = "tabPageRemoteSolutions";
-			this.tabPageRemoteSolutions.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-			this.tabPageRemoteSolutions.Size = new System.Drawing.Size(723, 482);
-			this.tabPageRemoteSolutions.TabIndex = 1;
-			this.tabPageRemoteSolutions.Text = "Public remote solutions";
-			this.tabPageRemoteSolutions.UseVisualStyleBackColor = true;
 			// 
 			// buttonDeleteRemoteSolution
 			// 
-			this.buttonDeleteRemoteSolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDeleteRemoteSolution.Location = new System.Drawing.Point(612, 443);
-			this.buttonDeleteRemoteSolution.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-			this.buttonDeleteRemoteSolution.Name = "buttonDeleteRemoteSolution";
-			this.buttonDeleteRemoteSolution.Size = new System.Drawing.Size(100, 28);
-			this.buttonDeleteRemoteSolution.TabIndex = 4;
-			this.buttonDeleteRemoteSolution.Text = "Delete";
-			this.buttonDeleteRemoteSolution.UseVisualStyleBackColor = true;
-			this.buttonDeleteRemoteSolution.Click += new System.EventHandler(this.buttonDeleteRemoteSolution_Click);
 			// 
 			// buttonBrowse
 			// 
@@ -184,20 +149,7 @@
 			this.localSolutionListView.TabIndex = 4;
 			this.localSolutionListView.SelectedSolutionChanged += new System.EventHandler(this.localSolutionListView_SelectedSolutionChanged);
 			this.localSolutionListView.SolutionListDoubleClick += new System.EventHandler(this.localSolutionListView_SolutionListDoubleClick);
-			// 
-			// remoteSolutionListView
-			// 
-			this.remoteSolutionListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.remoteSolutionListView.Location = new System.Drawing.Point(8, 7);
-			this.remoteSolutionListView.Margin = new System.Windows.Forms.Padding(5);
-			this.remoteSolutionListView.Name = "remoteSolutionListView";
-			this.remoteSolutionListView.Notification = "Notification label";
-			this.remoteSolutionListView.Size = new System.Drawing.Size(704, 428);
-			this.remoteSolutionListView.TabIndex = 5;
-			this.remoteSolutionListView.SelectedSolutionChanged += new System.EventHandler(this.remoteSolutionListView_SelectedSolutionChanged);
-			this.remoteSolutionListView.SolutionListDoubleClick += new System.EventHandler(this.remoteSolutionListView_SolutionListDoubleClick);
+
 			// 
 			// SolutionBrowserForm
 			// 
@@ -216,7 +168,6 @@
 			this.Text = "Open solution";
 			this.tabControl.ResumeLayout(false);
 			this.tabPageLocalSolutions.ResumeLayout(false);
-			this.tabPageRemoteSolutions.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -224,14 +175,10 @@
 		#endregion
 		private System.Windows.Forms.Button buttonOk;
 		private System.Windows.Forms.Button buttonCancel;
-		private System.Windows.Forms.Button buttonRemoteSolutionOpenInBrowser;
 		private System.Windows.Forms.TabControl tabControl;
 		private System.Windows.Forms.TabPage tabPageLocalSolutions;
 		private System.Windows.Forms.Button buttonDeleteLocalSolution;
-		private System.Windows.Forms.TabPage tabPageRemoteSolutions;
-		private System.Windows.Forms.Button buttonDeleteRemoteSolution;
 		private SolutionListView localSolutionListView;
-		private SolutionListView remoteSolutionListView;
 		private System.Windows.Forms.Button buttonChangeDefaultSolutionDirectory;
 		private System.Windows.Forms.Button buttonBrowse;
 	}

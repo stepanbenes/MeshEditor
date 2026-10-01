@@ -12,11 +12,9 @@ namespace MeshEditor.SolutionManager.CommandLine
 		[Option(Required = false, HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("solution", Required = false, HelpText = "Solution id (for remote solutions) or solution file path (for local solutions)")]
+		[Option("solution", Required = false, HelpText = "Solution file path")]
 		public string Solution { get; set; }
 
-		[Option("remote", Required = false, HelpText = "Use remote storage")]
-		public bool ForceUseRemoteStorage { get; set; }
 
 		[Option("pressanykey", Required = false, HelpText = "Require pressing any key before quitting the program")]
 		public bool PressAnyKeyToQuit { get; set; }

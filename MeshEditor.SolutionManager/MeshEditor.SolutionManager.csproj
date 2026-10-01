@@ -29,19 +29,7 @@
 
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.8.0" />
-        <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="3.0.5" />
-        <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
-        <PackageReference Include="Microsoft.Azure.Storage.Common" Version="11.2.3" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-        <PackageReference Include="Microsoft.Data.Edm" Version="5.8.5" />
-        <PackageReference Include="Microsoft.Data.OData" Version="5.8.5" />
-        <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.5" />
-		<PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="RestSharp" Version="106.15.0" />
-        <PackageReference Include="System.Memory.Data" Version="6.0.0" />
-        <PackageReference Include="System.Spatial" Version="5.8.5" />
     </ItemGroup>
 
     <ItemGroup>

@@ -98,13 +98,6 @@ namespace MeshEditor.DataVisualizer.UI
 			_ = await loadSolutionWithErrorHandlingAsync();
 		}
 
-		public async Task LoadRemoteSolutionAsync(int solutionId)
-		{
-			logger = new MemoryLogger();
-			solutionHub = SolutionHub.OpenRemote(solutionId, logger);
-			_ = await loadSolutionWithErrorHandlingAsync();
-		}
-
 		#endregion
 
 		#region Private methods

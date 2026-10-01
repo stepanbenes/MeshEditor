@@ -1,10 +1,2 @@
 ﻿{
-  "AzureBlobStorage": {
-      "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=feastorage;AccountKey=w+rJLFGo1Fn17z78+1xz3MgZDsGOux9rIRGjwzijKESXfvd8uhCmIv6IFl6XfFpyylOsKpqOoqXn76Od53IKjA==;EndpointSuffix=core.windows.net",
-      "ResultsBlobContainerName": "fea-results",
-      "LayersBlobContainerName": "fea-layers"
-  },
-  "RestApi": {
-      "Uri": "http://mesheditor.azurewebsites.net"
-  }
 }

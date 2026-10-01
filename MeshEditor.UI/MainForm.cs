@@ -1658,7 +1658,7 @@ namespace MeshEditor.WinUI
 
 			if (solutionBrowserForm.ShowDialog() == DialogResult.OK)
 			{
-				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Local || solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Remote);
+				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserForm.SolutionLocationType.Local);
 
 				setPostprocessorLayoutMode();
 				var postprocessView = getCurrentPostprocessView();
@@ -1668,10 +1668,6 @@ namespace MeshEditor.WinUI
 					case SolutionBrowserForm.SolutionLocationType.Local:
 						Debug.Assert(solutionBrowserForm.LocalSolutionFileName != null);
 						await postprocessView.LoadLocalSolutionAsync(solutionBrowserForm.LocalSolutionFileName);
-						break;
-					case SolutionBrowserForm.SolutionLocationType.Remote:
-						Debug.Assert(solutionBrowserForm.RemoteSolutionId.HasValue);
-						await postprocessView.LoadRemoteSolutionAsync(solutionBrowserForm.RemoteSolutionId.Value);
 						break;
 				}
 			}

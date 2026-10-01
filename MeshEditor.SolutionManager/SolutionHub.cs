@@ -13,7 +13,6 @@ using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
-using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.IO;
 
 namespace MeshEditor.SolutionManager
@@ -23,12 +22,8 @@ namespace MeshEditor.SolutionManager
 		#region Static fields, static constructor
 
 		static LocalStorageConfiguration localStorageConfiguration;
-		static AzureBlobStorageConfiguration azureBlobStorageConfiguration;
-		static RestApiConfiguration restApiConfiguration;
 
 		static LocalStorageConfiguration LocalStorageConfiguration => localStorageConfiguration ?? (localStorageConfiguration = ConfigurationManager.GetConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration());
-		static AzureBlobStorageConfiguration AzureBlobStorageConfiguration => azureBlobStorageConfiguration ?? (azureBlobStorageConfiguration = ConfigurationManager.GetConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration());
-		static RestApiConfiguration RestApiConfiguration => restApiConfiguration ?? (restApiConfiguration = ConfigurationManager.GetConfigurationObject<RestApiConfiguration>("RestApi") ?? new RestApiConfiguration());
 
 		readonly static string DefaultMasterLayerName = "master";
 
@@ -87,18 +82,6 @@ namespace MeshEditor.SolutionManager
 			);
 		}
 
-		public static SolutionHub OpenRemote(int solutionId, ILogger logger = null)
-		{
-			return new SolutionHub(
-				solutionLocator: solutionId,
-				solutionController: new RestApiSolutionController(RestApiConfiguration.Uri, logger),
-				importStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.ResultsBlobContainerName),
-				layerSourceStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.LayersBlobContainerName),
-				layerDestinationStorage: new AzureBlobStorageService(AzureBlobStorageConfiguration.ConnectionString, AzureBlobStorageConfiguration.LayersBlobContainerName),
-				logger: logger
-			);
-		}
-
 		public static IEnumerable<ISolutionInfo> EnumerateAllLocalSolutions(string solutionDirectory, bool includeOneSubDirectory, ILogger logger = null)
 		{
 			var controller = new LocalSolutionController(solutionDirectory);
@@ -109,18 +92,6 @@ namespace MeshEditor.SolutionManager
 		{
 			var controller = new LocalSolutionController(solutionDirectory);
 			return await controller.GetAllAsync(includeOneSubDirectory, cancellationToken);
-		}
-
-		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
-		{
-			var controller = new RestApiSolutionController(RestApiConfiguration.Uri, logger);
-			return controller.GetAll();
-		}
-
-		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
-		{
-			var controller = new RestApiSolutionController(RestApiConfiguration.Uri, logger);
-			return await controller.GetAllAsync(cancellationToken);
 		}
 
 		#endregion

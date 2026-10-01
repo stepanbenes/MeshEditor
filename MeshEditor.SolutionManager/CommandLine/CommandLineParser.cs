@@ -14,8 +14,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 {
 	public enum StorageType
 	{
-		Local,
-		Remote
+		Local
 	}
 
 	public class CommandLineParser
@@ -113,13 +112,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 				logger.Level = TraceLevel.Verbose;
 			}
 
-			int solutionId;
-			if (!isRunningLocally && !int.TryParse(options.Solution, NumberStyles.Integer, CultureInfo.InvariantCulture, out solutionId))
-			{
-				throw new FormatException("Argument Solution is not an integer");
-			}
-
-			StorageType requestedStorageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
+			StorageType requestedStorageType = this.storageType;
 
 			switch (requestedStorageType)
 			{
@@ -147,20 +140,6 @@ namespace MeshEditor.SolutionManager.CommandLine
 						{
 							return SolutionHub.OpenLocal(options.Solution, logger);
 						}
-					}
-				case StorageType.Remote:
-					{
-						if (options.Solution == null)
-						{
-							var solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
-							var solutionIndex = chooseSolution(solutions);
-							solutionId = solutions[solutionIndex].Id;
-						}
-						else
-						{
-							solutionId = int.Parse(options.Solution, CultureInfo.InvariantCulture);
-						}
-						return SolutionHub.OpenRemote(solutionId, logger);
 					}
 				default:
 					throw new NotSupportedException();
