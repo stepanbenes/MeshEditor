@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>MeshEditor.AvaloniaUI.Tests</RootNamespace>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="NUnit" Version="4.5.1" />
+		<PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+		<PackageReference Include="Avalonia.Headless.NUnit" Version="12.1.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Avalonia\MeshEditor.Avalonia.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The WinForms designer file is the reference for the menu/toolbar parity tests. -->
+		<None Include="..\MeshEditor.UI\MainForm.Designer.cs" Link="Reference\MainForm.Designer.cs.txt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\bin\sample.obj" Link="TestData\sample.obj" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+</Project>
