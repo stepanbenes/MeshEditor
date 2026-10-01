@@ -70,6 +70,29 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Picking_depth_reads_work_with_multisampled_frame()
+		{
+			// the visible frame is drawn multisampled; the depth passes and glReadPixels of the core must use the single-sampled framebuffer
+			var window = await openWindowWithSample();
+			var viewport = window.ActiveViewport;
+			var scene = viewport.SceneFacade;
+			viewport.Refresh();
+
+			var center = new System.Drawing.Point(viewport.PixelSize.Width / 2, viewport.PixelSize.Height / 2);
+			scene.MouseDownHandler(center);
+			string statusOnMesh = (string)scene.GetValue(AvailableValue.Status);
+			scene.MouseUpHandler(center, MouseButton.Left);
+
+			var corner = new System.Drawing.Point(3, 3);
+			scene.MouseDownHandler(corner);
+			string statusOnBackground = (string)scene.GetValue(AvailableValue.Status);
+			scene.MouseUpHandler(corner, MouseButton.Left);
+
+			Assert.That(statusOnMesh, Does.StartWith("Point under cursor"));
+			Assert.That(statusOnBackground ?? string.Empty, Does.Not.StartWith("Point under cursor"));
+		}
+
+		[AvaloniaTest]
 		public async Task Signal_node_draws_signal_lines()
 		{
 			var window = await openWindowWithSample();

@@ -177,7 +177,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			{
 				int[] viewport = new int[4];
 				OpenTK.Graphics.OpenGL.GL.GetInteger(OpenTK.Graphics.OpenGL.GetPName.Viewport, viewport);
-				Diag($"present fbo={width}x{height} glViewport={string.Join(",", viewport)} bounds={Bounds}");
+				Diag($"present msaa={glContext.Samples}x fbo={width}x{height} glViewport={string.Join(",", viewport)} bounds={Bounds}");
 			}
 			if (frontBuffer == null || frontBuffer.PixelSize.Width != width || frontBuffer.PixelSize.Height != height)
 			{
@@ -486,6 +486,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			sceneFacade.MakeCurrentNeeded += sceneFacade_MakeCurrentNeeded;
 			sceneFacade.RefreshNeeded += sceneFacade_RefreshNeeded;
 			sceneFacade.SwapBuffersNeeded += sceneFacade_SwapBuffersNeeded;
+			sceneFacade.FrameDrawingStarted += sceneFacade_FrameDrawingStarted;
 			sceneFacade.InvalidateNeeded += sceneFacade_InvalidateNeeded;
 			sceneFacade.MeshReloaded += sceneFacade_MeshReloaded;
 			sceneFacade.MeshNeedRefresh += sceneFacade_MeshNeedRefresh;
@@ -500,6 +501,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			sceneFacade.MakeCurrentNeeded -= sceneFacade_MakeCurrentNeeded;
 			sceneFacade.RefreshNeeded -= sceneFacade_RefreshNeeded;
 			sceneFacade.SwapBuffersNeeded -= sceneFacade_SwapBuffersNeeded;
+			sceneFacade.FrameDrawingStarted -= sceneFacade_FrameDrawingStarted;
 			sceneFacade.InvalidateNeeded -= sceneFacade_InvalidateNeeded;
 			sceneFacade.MeshReloaded -= sceneFacade_MeshReloaded;
 			sceneFacade.MeshNeedRefresh -= sceneFacade_MeshNeedRefresh;
@@ -531,6 +533,8 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		}
 
 		private void sceneFacade_SwapBuffersNeeded(object sender, EventArgs e) => present();
+
+		private void sceneFacade_FrameDrawingStarted(object sender, EventArgs e) => glContext.BeginFrame();
 
 		private void sceneFacade_RefreshNeeded(object sender, EventArgs e) => Refresh();
 
@@ -776,6 +780,12 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 			text.Append("Depth buffer bits: ");
 			text.AppendLine(Functions.GetDepthBufferBits().ToString());
+
+			text.Append("Multisampling (MSAA): ");
+			text.AppendLine(glContext.Samples > 0 ? glContext.Samples + "x" : "off");
+
+			text.Append("Display scaling: ");
+			text.AppendLine(Math.Round(renderScaling * 100) + " %");
 
 			await MessageBox.Show(text.ToString(), "Internal state info");
 		}

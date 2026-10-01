@@ -21,12 +21,30 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private static NativeWindow rootWindow;
 
 		private NativeWindow window;
+
+		// single-sampled framebuffer: target of the auxiliary depth passes of the core (picking/visibility) and source of the read back
 		private int framebuffer;
 		private int colorRenderbuffer;
 		private int depthRenderbuffer;
 
+		// multisampled framebuffer: target of the visible frame (antialiasing), resolved into the single-sampled one
+		private int msaaFramebuffer;
+		private int msaaColorRenderbuffer;
+		private int msaaDepthRenderbuffer;
+		private bool msaaFrameUnresolved;
+
+		/// <summary>
+		/// Number of MSAA samples requested (environment variable MESHEDITOR_MSAA_SAMPLES overrides, 0 disables).
+		/// </summary>
+		private static readonly int requestedSamples = int.TryParse(Environment.GetEnvironmentVariable("MESHEDITOR_MSAA_SAMPLES"), out int value) ? Math.Max(0, value) : 4;
+
 		public int Width { get; private set; }
 		public int Height { get; private set; }
+
+		/// <summary>
+		/// MSAA samples of the frame (0 = no multisampling).
+		/// </summary>
+		public int Samples { get; private set; }
 
 		/// <summary>
 		/// Root context all viewport contexts share their objects with. Created lazily on the UI thread.
@@ -68,10 +86,40 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		public bool IsCurrent => window?.Context.IsCurrent == true;
 
+		/// <summary>
+		/// Makes the context current with the single-sampled framebuffer bound (resolving the last multisampled frame first);
+		/// depth reads of the core (glReadPixels of depth) are not possible from a multisampled framebuffer.
+		/// </summary>
 		public void MakeCurrent()
 		{
 			if (!window.Context.IsCurrent)
 				window.Context.MakeCurrent();
+			resolveFrame();
+			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+		}
+
+		/// <summary>
+		/// Redirects drawing of the visible frame into the multisampled framebuffer.
+		/// </summary>
+		public void BeginFrame()
+		{
+			if (Samples == 0)
+				return;
+			GL.BindFramebuffer(FramebufferTarget.Framebuffer, msaaFramebuffer);
+			GL.Enable(EnableCap.Multisample);
+			msaaFrameUnresolved = true;
+		}
+
+		private void resolveFrame()
+		{
+			if (!msaaFrameUnresolved)
+				return;
+			msaaFrameUnresolved = false;
+			GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, msaaFramebuffer);
+			GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, framebuffer);
+			// only color: every depth read of the core (picking, point under cursor, visible nodes) is preceded
+			// by its own depth pass drawn into the single-sampled framebuffer
+			GL.BlitFramebuffer(0, 0, Width, Height, 0, 0, Width, Height, ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Nearest);
 			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
 		}
 
@@ -110,6 +158,52 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 			Width = width;
 			Height = height;
+
+			createMultisampledFramebuffer(width, height);
+			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+		}
+
+		private void createMultisampledFramebuffer(int width, int height)
+		{
+			GL.GetInteger(GetPName.MaxSamples, out int maxSamples);
+			for (int samples = Math.Min(requestedSamples, maxSamples); samples > 1; samples /= 2)
+			{
+				msaaFramebuffer = GL.GenFramebuffer();
+				GL.BindFramebuffer(FramebufferTarget.Framebuffer, msaaFramebuffer);
+
+				msaaColorRenderbuffer = GL.GenRenderbuffer();
+				GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, msaaColorRenderbuffer);
+				GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, samples, RenderbufferStorage.Rgba8, width, height);
+				GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, RenderbufferTarget.Renderbuffer, msaaColorRenderbuffer);
+
+				msaaDepthRenderbuffer = GL.GenRenderbuffer();
+				GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, msaaDepthRenderbuffer);
+				GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, samples, RenderbufferStorage.Depth24Stencil8, width, height);
+				GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, msaaDepthRenderbuffer);
+
+				if (GL.GetError() == ErrorCode.NoError && GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) == FramebufferErrorCode.FramebufferComplete)
+				{
+					GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+					GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+					Samples = samples;
+					return;
+				}
+				deleteMultisampledFramebuffer(); // e.g. out of memory, try fewer samples
+			}
+			Samples = 0;
+		}
+
+		private void deleteMultisampledFramebuffer()
+		{
+			if (msaaFramebuffer != 0)
+			{
+				GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+				GL.DeleteFramebuffer(msaaFramebuffer);
+				GL.DeleteRenderbuffer(msaaColorRenderbuffer);
+				GL.DeleteRenderbuffer(msaaDepthRenderbuffer);
+				msaaFramebuffer = msaaColorRenderbuffer = msaaDepthRenderbuffer = 0;
+			}
+			msaaFrameUnresolved = false;
 		}
 
 		/// <summary>
@@ -134,6 +228,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		private void deleteFramebuffer()
 		{
+			deleteMultisampledFramebuffer();
 			if (framebuffer != 0)
 			{
 				GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

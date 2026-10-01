@@ -25,6 +25,11 @@ namespace MeshEditor.Text
 
 		private const int defaultFontSize = 16; // TODO: make adjustable in settings
 
+		/// <summary>
+		/// Scale of the text (font sizes are in logical pixels); set to the display scaling when rendering in device pixels.
+		/// </summary>
+		public static float Scale { get; set; } = 1f;
+
 		// TODO: implement test app inspired by: https://stackoverflow.com/questions/59800470/c-sharp-opentk-draw-string-on-window
 
 		private TextPrinter()
@@ -87,7 +92,7 @@ namespace MeshEditor.Text
 			while (reader.ReadLine() is string line)
 			{
 				PrintLine(line, position.X, charPosY, characterWidth, characterHeight);
-				charPosY += characterHeight + betweenLineDistance;
+				charPosY += characterHeight + betweenLineDistance * Scale;
 			}
 		}
 
@@ -117,7 +122,7 @@ namespace MeshEditor.Text
 
 			var (characterWidth, characterHeight) = GetCharacterSize(fontSize);
 
-			return (width: characterWidth * maxLineLength, height: characterHeight * lineCount + betweenLineDistance * (lineCount - 1));
+			return (width: characterWidth * maxLineLength, height: characterHeight * lineCount + betweenLineDistance * Scale * (lineCount - 1));
 		}
 
 		private int LoadTexture()
@@ -192,7 +197,7 @@ namespace MeshEditor.Text
 
 		private static (float characterWidth, float characterHeight) GetCharacterSize(int fontSize)
 		{
-			return (characterWidth: fontSize * characterAspectRatio, characterHeight: fontSize * characterAspectRatioInverse);
+			return (characterWidth: fontSize * Scale * characterAspectRatio, characterHeight: fontSize * Scale * characterAspectRatioInverse);
 		}
 	}
 }

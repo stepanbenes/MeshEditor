@@ -74,6 +74,11 @@ namespace MeshEditor.CoreInterface
 		public event EventHandler InvalidateNeeded;
 		public event EventHandler MeshReloaded;
 		public event EventHandler SwapBuffersNeeded;
+		/// <summary>
+		/// Raised by <see cref="DrawScene"/> right before the visible frame is drawn (after the auxiliary depth passes),
+		/// so that a UI can redirect the frame to another framebuffer (e.g. a multisampled one).
+		/// </summary>
+		public event EventHandler FrameDrawingStarted;
 		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler CutPlaneDefinitionPointsChanged;
 		public event EventHandler ActionPerformed;
@@ -422,6 +427,8 @@ namespace MeshEditor.CoreInterface
 				computeVisibleNodes();
 				needToComputeVisibleNodesFlag = false;
 			}
+
+			FrameDrawingStarted?.Invoke(this, EventArgs.Empty);
 
 			GL.ShadeModel(Scene.MeshShadingModel);
 

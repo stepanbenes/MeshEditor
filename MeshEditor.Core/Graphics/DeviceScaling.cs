@@ -17,7 +17,19 @@ namespace MeshEditor.Graphics
 		public static float Factor
 		{
 			get { return factor; }
-			set { factor = (value > 0f) ? value : 1f; }
+			set
+			{
+				factor = (value > 0f) ? value : 1f;
+				MeshEditor.Text.TextPrinter.Scale = factor;
+			}
+		}
+
+		/// <summary>
+		/// Converts a distance in logical pixels to device pixels.
+		/// </summary>
+		public static float Scale(float logicalPixels)
+		{
+			return logicalPixels * factor;
 		}
 
 		public static void LineWidth(float width)

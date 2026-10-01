@@ -942,10 +942,11 @@ namespace MeshEditor.Data
 
 		public void drawAxisArrows()
 		{
-			const float arrowLength = 60f;
-			const float distanceFromWindowLeftBorder = 62f;
-			const float distanceFromWindowBottomBorder = 75f;
-			const float zDistance = 80f;
+			// sizes in logical pixels
+			float arrowLength = MeshEditor.Graphics.DeviceScaling.Scale(60f);
+			float distanceFromWindowLeftBorder = MeshEditor.Graphics.DeviceScaling.Scale(62f);
+			float distanceFromWindowBottomBorder = MeshEditor.Graphics.DeviceScaling.Scale(75f);
+			float zDistance = MeshEditor.Graphics.DeviceScaling.Scale(80f);
 
 			int[] viewport = new int[4];
 			GL.GetInteger(GetPName.Viewport, viewport);
