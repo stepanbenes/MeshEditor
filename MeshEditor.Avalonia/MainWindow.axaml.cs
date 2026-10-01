@@ -404,6 +404,7 @@ namespace MeshEditor.AvaloniaUI
 
 			var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
 			{
+				Title = "Open", // default title of the WinForms OpenFileDialog
 				AllowMultiple = true,
 				FileTypeFilter = FileDialogFilter.Parse(SceneFacade.InputFileFormatFilter),
 			});
@@ -460,6 +461,7 @@ namespace MeshEditor.AvaloniaUI
 
 			var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
 			{
+				Title = "Save As", // default title of the WinForms SaveFileDialog
 				SuggestedFileName = Utilities.Functions.MakeTextValidFilename(control.SceneFacade.MeshName),
 				FileTypeChoices = FileDialogFilter.Parse(SceneFacade.OutputFileFormatFilter),
 				ShowOverwritePrompt = true,
@@ -1550,6 +1552,7 @@ namespace MeshEditor.AvaloniaUI
 
 			var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
 			{
+				Title = "Save As",
 				SuggestedFileName = suggestedFileName,
 				FileTypeChoices = fileTypes,
 				SuggestedFileType = fileTypes[Math.Clamp(takeScreenshotLastFilterIndex - 1, 0, fileTypes.Count - 1)],
