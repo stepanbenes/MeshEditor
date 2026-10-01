@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.InputValueDialog"
+        Title="Input value"
+        CanResize="False"
+        CanMinimize="False"
+        CanMaximize="False"
+        ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen">
+	<!-- minimum client width 360 like the WinForms form (on the content, so it also applies when the platform ignores Window.MinWidth) -->
+	<Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="12,10,12,12" MinWidth="336">
+		<TextBlock x:Name="labelText" Grid.ColumnSpan="2" Text="label1" Margin="0,0,0,12" />
+		<TextBox x:Name="textBoxValue" Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" MinWidth="174" />
+		<Button x:Name="buttonOK" Grid.Row="1" Grid.Column="1" Content="OK" MinWidth="60"
+		        HorizontalContentAlignment="Center" Click="buttonOK_Click" />
+	</Grid>
+</Window>

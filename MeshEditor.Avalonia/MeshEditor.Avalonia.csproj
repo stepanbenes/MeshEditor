@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<RootNamespace>MeshEditor.AvaloniaUI</RootNamespace>
+		<AssemblyName>MeshEditor.Avalonia</AssemblyName>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>..\MeshEditor.UI\appIcon.ico</ApplicationIcon>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<Version>2.5.2</Version>
+		<Product>MeshEditor</Product>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="MeshEditor.Avalonia.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+		<PackageReference Include="OpenTK" Version="4.9.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Reuse the original toolbar/menu icons of the WinForms UI without copying them. -->
+		<AvaloniaResource Include="..\MeshEditor.UI\Resources\*.png" Link="Assets\Icons\%(Filename)%(Extension)" />
+		<AvaloniaResource Include="..\MeshEditor.UI\appIcon.ico" Link="Assets\appIcon.ico" />
+		<!-- UI-toolkit independent update checker shared with the WinForms UI. -->
+		<Compile Include="..\MeshEditor.UI\UpdateChecker.cs" Link="UpdateChecker.cs" />
+		<None Include="..\MeshEditor.Core\OpenTK.dll.config" Condition="Exists('..\MeshEditor.Core\OpenTK.dll.config')" CopyToOutputDirectory="Never" />
+	</ItemGroup>
+</Project>
