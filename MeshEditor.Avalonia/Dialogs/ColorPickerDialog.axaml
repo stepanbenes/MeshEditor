@@ -6,8 +6,28 @@
         CanResize="False" CanMinimize="False" CanMaximize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
+	<Window.Styles>
+		<!-- The icons of the built-in tab strip of ColorView are not rendered (Avalonia 12.1 ColorPicker), only an empty grey bar:
+		     hide it and switch the pages by the text tab strip below. -->
+		<Style Selector="ColorView /template/ Border#TabBackgroundBorder">
+			<Setter Property="IsVisible" Value="False" />
+		</Style>
+		<Style Selector="ColorView /template/ TabControl#PART_TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+			<Setter Property="IsVisible" Value="False" />
+		</Style>
+		<Style Selector="TabStripItem">
+			<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+			<Setter Property="MinHeight" Value="28" />
+			<Setter Property="Padding" Value="10,4" />
+		</Style>
+	</Window.Styles>
 	<!-- replacement of the system ColorDialog (FullOpen) used by the WinForms UI -->
 	<StackPanel Margin="12" Spacing="10">
+		<TabStrip x:Name="pageTabs" SelectedIndex="0" SelectionChanged="pageTabs_SelectionChanged">
+			<TabStripItem Content="Spectrum" />
+			<TabStripItem Content="Palette" />
+			<TabStripItem Content="Components" />
+		</TabStrip>
 		<ColorView x:Name="colorView" IsAlphaVisible="False" IsAlphaEnabled="False" />
 		<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
 			<Button x:Name="buttonOK" Content="OK" MinWidth="75" HorizontalContentAlignment="Center" IsDefault="True" Click="buttonOK_Click" />
