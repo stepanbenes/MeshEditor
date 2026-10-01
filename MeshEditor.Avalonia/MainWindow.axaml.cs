@@ -81,6 +81,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private readonly MainWindowSettings mainWindowSettings;
 
+		private ShowHideElementsDialog showHideElementsForm;
+
 		private readonly Dictionary<LongOpNotifier.Token, ProgressViewDialog> progressViewForms = new Dictionary<LongOpNotifier.Token, ProgressViewDialog>();
 
 		private bool closeConfirmed;
@@ -407,7 +409,13 @@ namespace MeshEditor.AvaloniaUI
 			string[] fileNames = files.Select(f => f.TryGetLocalPath()).Where(p => p != null).ToArray();
 			if (fileNames.Length > 0)
 			{
-				// TODO: close CutEditorForm and ShowHideElementsForm here once they are ported
+				// first close the windows that could interfere
+				if (this.showHideElementsForm != null)
+				{
+					this.showHideElementsForm.Close();
+					this.showHideElementsForm = null;
+				}
+				// TODO: close CutEditorForm here once it is ported
 				await openFiles(fileNames);
 			}
 		}
@@ -505,8 +513,10 @@ namespace MeshEditor.AvaloniaUI
 		{
 			if (activeControl.SceneFacade.ContainsMesh)
 			{
-				// TODO: port ShowHideElementsForm
-				await NotPorted.Show("Show / Hide elements", "ShowHideElementsForm");
+				this.showHideElementsForm = new ShowHideElementsDialog(activeControl.SceneFacade, this.longOpNotifier);
+				this.showHideElementsForm.Closed += delegate { this.showHideElementsForm = null; };
+				this.showHideElementsForm.Show(this);
+				await Task.CompletedTask;
 			}
 		}
 
