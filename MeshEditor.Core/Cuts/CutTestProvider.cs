@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.CodeDom.Compiler;
 using System.Reflection;
-using Microsoft.CSharp;
 using MeshEditor.Data;
 
 namespace MeshEditor.Cuts
@@ -89,36 +88,55 @@ namespace MeshEditor.Cuts
 
 		private static Assembly compile(string source)
 		{
-			CSharpCodeProvider compiler = new CSharpCodeProvider();
-			CompilerParameters compilerParametres = new CompilerParameters();
+			// CodeDom compilation (CSharpCodeProvider) is not supported on .NET (Core); Roslyn compiles the same source in memory
+			var syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(source);
+			var compilation = Microsoft.CodeAnalysis.CSharp.CSharpCompilation.Create(
+				"RuntimeGenerated_" + Guid.NewGuid().ToString("N"),
+				new[] { syntaxTree },
+				getCompilationReferences(),
+				new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary));
 
-			/*************/
-			List<string> assemblyLocations = new List<string>();
+			using (var assemblyStream = new System.IO.MemoryStream())
+			{
+				var emitResult = compilation.Emit(assemblyStream);
+				if (!emitResult.Success)
+				{
+					// keep reporting errors by CompilerResults (public API of RuntimeCompilationException)
+					CompilerResults compilerResults = new CompilerResults(new TempFileCollection());
+					foreach (var diagnostic in emitResult.Diagnostics)
+					{
+						if (diagnostic.Severity != Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+							continue;
+						var position = diagnostic.Location.GetLineSpan().StartLinePosition;
+						compilerResults.Errors.Add(new CompilerError(string.Empty, position.Line + 1, position.Character + 1, diagnostic.Id, diagnostic.GetMessage()));
+					}
+					throw new RuntimeCompilationException("Runtime compliling error", compilerResults);
+				}
+				return Assembly.Load(assemblyStream.ToArray());
+			}
+		}
 
-			//foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-			//    if (asm.FullName.Contains("Core"))
-			//        assemblyLocations.Add(asm.Location);
+		private static List<Microsoft.CodeAnalysis.MetadataReference> compilationReferences;
 
-			// pridat reference na assembly
-			assemblyLocations.Add(typeof(CutTestProvider).Assembly.Location);
-			assemblyLocations.Add("System.dll");
-
-			foreach (string location in assemblyLocations)
-				compilerParametres.ReferencedAssemblies.Add(location);
-			/**************/
-
-			compilerParametres.GenerateExecutable = false;
-			compilerParametres.GenerateInMemory = false;
-			compilerParametres.IncludeDebugInformation = false;
-
-			// kompilace
-			CompilerResults compilerResults = compiler.CompileAssemblyFromSource(compilerParametres, source);
-			
-			// pri kompilaci doslo k chybam - vyhodit vujjimku
-			if (compilerResults.Errors.Count > 0)
-				throw new RuntimeCompilationException("Runtime compliling error", compilerResults);
-
-			return compilerResults.CompiledAssembly;
+		/// <summary>
+		/// References of the generated code: the runtime (System.Runtime, System.Private.CoreLib, ...) and MeshEditor.Core (CutTest delegate).
+		/// </summary>
+		private static List<Microsoft.CodeAnalysis.MetadataReference> getCompilationReferences()
+		{
+			if (compilationReferences == null)
+			{
+				var references = new List<Microsoft.CodeAnalysis.MetadataReference>();
+				string trustedAssemblies = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
+				foreach (string path in trustedAssemblies.Split(System.IO.Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+				{
+					string name = System.IO.Path.GetFileNameWithoutExtension(path);
+					if (name == "System.Runtime" || name == "System.Private.CoreLib" || name == "netstandard" || name == "System.Runtime.Extensions")
+						references.Add(Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(path));
+				}
+				references.Add(Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(CutTestProvider).Assembly.Location));
+				compilationReferences = references;
+			}
+			return compilationReferences;
 		}
 
 		#endregion
