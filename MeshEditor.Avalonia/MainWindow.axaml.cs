@@ -914,8 +914,12 @@ namespace MeshEditor.AvaloniaUI
 		{
 			if (!activeControl.SceneFacade.ContainsMesh)
 				return;
-			// TODO: port ListOfSelectedItemsForm
-			await NotPorted.Show("List of selected entities", "ListOfSelectedItemsForm");
+			ListOfSelectedItemsDialog form;
+			using (longOpNotifier.Begin("Creating list of selected items"))
+			{
+				form = new ListOfSelectedItemsDialog(activeControl.SceneFacade);
+			}
+			await form.ShowDialog(this);
 		}
 
 		private void axesToolStripMenuItem_Click(object sender, RoutedEventArgs e)
