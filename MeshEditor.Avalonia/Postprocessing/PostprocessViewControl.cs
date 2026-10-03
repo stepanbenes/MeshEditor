@@ -151,19 +151,23 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			targetScene.SetValue(AvailableValue.SelectedLayerId, e.Layer.Id);
 			await updateDataSelectionInLeftPanelAsync();
 
-			var visibleLayerIds = targetScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
-			if (!visibleLayerIds.Contains(e.Layer.Id))
+			if (!((PostprocessScene)targetScene.GetUnderlyingSceneObject()).IsLayerLoaded(e.Layer.Id))
 				await loadLayerWithErrorHandlingAsync(e.Layer, targetScene);
 		}
 
-		private void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
+		private async void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
 		{
 			Debug.Assert(ActiveScene != null);
 			if (changingActiveScene)
 				return;
-			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			var targetScene = ActiveScene;
+			var visibleLayerIds = targetScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
 			if (!visibleLayerIds.Contains(e.Layer.Id))
 				visibleLayerIds.Add(e.Layer.Id);
+			bool isSelected = targetScene.GetValue(AvailableValue.SelectedLayerId) as Guid? == e.Layer.Id; // the selected layer is loaded by the selection
+			if (!isSelected && !((PostprocessScene)targetScene.GetUnderlyingSceneObject()).IsLayerLoaded(e.Layer.Id))
+				await loadLayerWithErrorHandlingAsync(e.Layer, targetScene);
+			targetScene.PerformAction(AvailableAction.Refresh);
 		}
 
 		private void layersTreeView_LayerUnchecked(object sender, LayerSelectionEventArgs e)
@@ -173,11 +177,14 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				return;
 			var visibleLayerIds = ActiveScene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
 			visibleLayerIds.Remove(e.Layer.Id);
+			ActiveScene.PerformAction(AvailableAction.Refresh);
 		}
 
 		private async void layersTreeView_LayerReloadRequested(object sender, LayerSelectionEventArgs e)
 		{
-			((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).RemoveMeshFromAllUncheckedLayers();
+			var postprocessScene = (PostprocessScene)ActiveScene.GetUnderlyingSceneObject();
+			postprocessScene.RemoveMeshFromAllUncheckedLayers();
+			postprocessScene.ForgetStateOfRemovedLayer(e.Layer.Id); // reload with the default data selection
 			await loadLayerWithErrorHandlingAsync(e.Layer, ActiveScene);
 		}
 
@@ -226,6 +233,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 						layersTreeView.SetCheckedFlagOfLayer(e.Layer.Id, true);
 						ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);
 						layersTreeView.AddNewLayer(e.Layer.Id, filterLayerInfo, selectNewLayer: true);
+						layersTreeView.SetCheckedFlagOfLayer(filterLayerInfo.Id, true); // show the new layer
 						cancellationToken.ThrowIfCancellationRequested();
 					}
 					finally
@@ -346,7 +354,10 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			{
 				await ExceptionReportDialog.Show(taskName, ex, logger);
 			}
-			layersTreeView.SetSelectedLayer(solutionDescription?.Layers.FirstOrDefault()?.Id); // select first layer
+			var firstLayerId = solutionDescription?.Layers.FirstOrDefault()?.Id;
+			layersTreeView.SetSelectedLayer(firstLayerId); // select and show first layer
+			if (firstLayerId.HasValue)
+				layersTreeView.SetCheckedFlagOfLayer(firstLayerId.Value, true);
 			return solutionDescription;
 		}
 
@@ -381,12 +392,29 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			if (firstMesh != null)
 			{
 				Action<string, int> progressReport = (operationName, percentDone) => longOpNotifier.UpdateState(operationToken, operationName, percentDone);
-				dataSelection = new DataSelection(timeStep: firstMesh.TimeSteps.FirstOrDefault() /* zero if no time step is present */, mesh: firstMesh);
-				var dataVisualizerController = await ((PostprocessScene)ActiveScene.GetUnderlyingSceneObject()).UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
+				var postprocessScene = (PostprocessScene)ActiveScene.GetUnderlyingSceneObject();
+				dataSelection = getDataSelectionOfRemovedLayer(postprocessScene, layerInfo.Id, summary)
+					?? new DataSelection(timeStep: firstMesh.TimeSteps.FirstOrDefault() /* zero if no time step is present */, mesh: firstMesh);
+				var dataVisualizerController = await postprocessScene.UpdateLayerAsync(solutionHub, layerInfo.Id, layerInfo.Name, dataSelection, progressReport, cancellationToken);
 				targetScene.PerformAction(AvailableAction.Refresh);
 				visualizerSettings = dataVisualizerController?.Settings;
 			}
-			dataSelectionControl.UpdateDataSource(summary, dataSelection, visualizerSettings);
+			if (targetScene == ActiveScene && targetScene.GetValue(AvailableValue.SelectedLayerId) as Guid? == layerInfo.Id) // a checked layer can be loaded without being selected
+				dataSelectionControl.UpdateDataSource(summary, dataSelection, visualizerSettings);
+		}
+
+		/// <summary>
+		/// Data selection the layer had before its mesh was removed (when another layer was selected), if it is still valid for the layer summary.
+		/// </summary>
+		private static DataSelection getDataSelectionOfRemovedLayer(PostprocessScene postprocessScene, Guid layerId, SummaryFile summary)
+		{
+			var lastDataSelection = postprocessScene.GetDataSelectionOfRemovedLayer(layerId);
+			if (lastDataSelection == null)
+				return null;
+			var mesh = summary.Meshes.FirstOrDefault(m => m.Index == lastDataSelection.Mesh.Index && m.TimeSteps.Contains(lastDataSelection.TimeStep));
+			if (mesh == null)
+				return null;
+			return new DataSelection(lastDataSelection.TimeStep, lastDataSelection.FieldName, lastDataSelection.ComponentName, lastDataSelection.VectorFieldName, mesh);
 		}
 
 		private async Task loadLayerWithErrorHandlingAsync(ILayerInfo layerInfo, SceneFacade targetScene)

@@ -131,21 +131,15 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 		private Control createNodeView(LayerTreeNode node)
 		{
-			var checkBox = new CheckBox { IsChecked = node.IsChecked, MinWidth = 0, Padding = new Thickness(4, 0), VerticalAlignment = VerticalAlignment.Center, Content = node.Name };
+			// the name is not the check box content: clicking the name selects the node (the check box would handle the click)
+			var checkBox = new CheckBox { IsChecked = node.IsChecked, MinWidth = 0, Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
+			var label = new TextBlock { Text = node.Name, Margin = new Thickness(4, 0), VerticalAlignment = VerticalAlignment.Center };
 			bool updating = false;
 			checkBox.IsCheckedChanged += (s, e) =>
 			{
 				if (updating)
 					return;
-				bool value = checkBox.IsChecked == true;
-				if (!checkingTreeNodesFlag && selectedNode != node) // it must be selected before checking/unchecking
-				{
-					updating = true;
-					checkBox.IsChecked = node.IsChecked;
-					updating = false;
-					return;
-				}
-				setChecked(node, value);
+				setChecked(node, checkBox.IsChecked == true); // any layer can be checked, not only the selected one
 			};
 			node.PropertyChanged += (s, e) =>
 			{
@@ -153,7 +147,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				checkBox.IsChecked = node.IsChecked;
 				updating = false;
 			};
-			return checkBox;
+			return new StackPanel { Orientation = Orientation.Horizontal, Children = { checkBox, label } };
 		}
 
 		/// <summary>

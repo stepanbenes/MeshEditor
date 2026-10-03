@@ -24,6 +24,7 @@ namespace MeshEditor.DataVisualizer.Data
 		private readonly Scene emptyScene;
 		private readonly Dictionary<Guid, Scene> layerSceneMap;
 		private readonly HashSet<Guid> visibleLayers;
+		private readonly Dictionary<Guid, (DataSelection DataSelection, IVisualizerSettings Settings)> removedLayerStates; // data selection and settings of layers whose mesh was removed
 
 		private Guid? selectedLayer;
 		private Scene currentScene;
@@ -42,6 +43,7 @@ namespace MeshEditor.DataVisualizer.Data
 			currentScene = this.emptyScene;
 			layerSceneMap = new Dictionary<Guid, Scene>();
 			visibleLayers = new HashSet<Guid>();
+			removedLayerStates = new Dictionary<Guid, (DataSelection, IVisualizerSettings)>();
 		}
 
 		public void Dispose()
@@ -54,6 +56,7 @@ namespace MeshEditor.DataVisualizer.Data
 			currentScene = null;
 			selectedLayer = null;
 			layerSceneMap.Clear();
+			removedLayerStates.Clear();
 		}
 
 		#endregion
@@ -65,8 +68,22 @@ namespace MeshEditor.DataVisualizer.Data
 		public void RemoveMeshFromLayer(Guid layerId)
 		{
 			IScene scene = getOrCreateSceneFor(layerId);
+			if (scene.Mesh?.GetDataVisualizer() is LayerDataVisualizer dataVisualizer && dataVisualizer.DataSelection != null)
+				removedLayerStates[layerId] = (dataVisualizer.DataSelection, dataVisualizer.Settings); // restored when the layer is loaded again
 			setMeshForLayer(scene, null);
 		}
+
+		/// <summary>
+		/// Data selection of the layer before its mesh was removed (null if the layer is loaded or wasn't loaded yet).
+		/// </summary>
+		public DataSelection GetDataSelectionOfRemovedLayer(Guid layerId) => removedLayerStates.TryGetValue(layerId, out var state) ? state.DataSelection : null;
+
+		/// <summary>
+		/// Forgets the data selection and settings of the removed layer (the layer is loaded with the default ones).
+		/// </summary>
+		public void ForgetStateOfRemovedLayer(Guid layerId) => removedLayerStates.Remove(layerId);
+
+		public bool IsLayerLoaded(Guid layerId) => layerSceneMap.TryGetValue(layerId, out var scene) && scene.Mesh != null;
 
 		public void RemoveMeshFromAllUncheckedLayers()
 		{
@@ -88,7 +105,9 @@ namespace MeshEditor.DataVisualizer.Data
 			if (dataVisualizer == null || newDataSelection.Mesh.Index != dataVisualizer.DataSelection?.Mesh.Index)
 			{
 				var geometry = await reloadMeshAsync(scene, solutionHub, layerId, layerName, newDataSelection, progressReport, cancellationToken);
-				dataVisualizer = new LayerDataVisualizer(geometry, dataVisualizer?.Settings);
+				var settings = dataVisualizer?.Settings ?? (removedLayerStates.TryGetValue(layerId, out var removedLayerState) ? removedLayerState.Settings : null);
+				removedLayerStates.Remove(layerId);
+				dataVisualizer = new LayerDataVisualizer(geometry, settings);
 				scene.Mesh.SetDataVisualizer(dataVisualizer);
 			}
 
@@ -169,6 +188,11 @@ namespace MeshEditor.DataVisualizer.Data
 				result.layerSceneMap.Add(pair.Key, sceneCopy);
 			}
 
+			foreach (var pair in removedLayerStates)
+			{
+				result.removedLayerStates.Add(pair.Key, pair.Value);
+			}
+
 			// copy visibleLayers
 			foreach (var visibleLayer in visibleLayers)
 			{
@@ -185,7 +209,7 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			Debug.Assert(emptyScene.Mesh == null);
 
-			foreach (var layerScene in enumerateAllScenesWithMeshOrdered())
+			foreach (var layerScene in enumerateVisibleScenesWithMeshOrdered())
 			{
 				layerScene.Draw(optimizeForMoving, optimizeForSelecting, drawDecorations: layerScene == currentScene);
 			}
@@ -195,12 +219,12 @@ namespace MeshEditor.DataVisualizer.Data
 
 		void IScene.ComputeVisibleNodes(Size clientWindow)
 		{
-			foreach (var layerScene in enumerateAllScenesWithMesh())
+			foreach (var layerScene in enumerateVisibleScenesWithMesh())
 			{
 				Action faceDrawer = layerScene.Mesh.DrawFacesOnly;
 
 				// prokazdou iteraci vlozit do faceDriver layerScene a vsechny vrstvy, ktere maji zobrazene plochy
-				foreach (var layerSceneToDraw in enumerateAllScenesWithMesh())
+				foreach (var layerSceneToDraw in enumerateVisibleScenesWithMesh())
 				{
 					if (layerSceneToDraw != layerScene && (layerSceneToDraw.RenderMode & RenderMode.Faces) != 0)
 					{
@@ -219,7 +243,7 @@ namespace MeshEditor.DataVisualizer.Data
 		{
 			Action faceDrawer = null;
 
-			foreach (var layerScene in enumerateAllScenesWithMesh())
+			foreach (var layerScene in enumerateVisibleScenesWithMesh())
 			{
 				if ((layerScene.RenderMode & RenderMode.Faces) != 0)
 				{
@@ -393,9 +417,14 @@ namespace MeshEditor.DataVisualizer.Data
 		private IEnumerable<Mesh> enumerateAllMeshes() => enumerateAllScenesWithMesh().Select(scene => scene.Mesh);
 
 		/// <summary>
+		/// Scenes of the visible (checked) layers; meshes of the other layers are loaded but not drawn.
+		/// </summary>
+		private IEnumerable<Scene> enumerateVisibleScenesWithMesh() => layerSceneMap.Where(pair => pair.Value.Mesh != null && visibleLayers.Contains(pair.Key)).Select(pair => pair.Value);
+
+		/// <summary>
 		/// Order layer scenes: write outlines at the end because of blending.
 		/// </summary>
-		private IEnumerable<Scene> enumerateAllScenesWithMeshOrdered() => enumerateAllScenesWithMesh().OrderBy(scene => (scene.RenderMode & RenderMode.Faces) == 0); // faces go first (false is at the beginning), then render modes without faces
+		private IEnumerable<Scene> enumerateVisibleScenesWithMeshOrdered() => enumerateVisibleScenesWithMesh().OrderBy(scene => (scene.RenderMode & RenderMode.Faces) == 0); // faces go first (false is at the beginning), then render modes without faces
 
 		#endregion
 
