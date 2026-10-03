@@ -214,6 +214,36 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Signal_data_minimum_and_maximum_return_IDs_of_mesh_nodes()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var dataSelection = postprocessView.dataSelectionControl;
+			var sceneFacade = window.ActiveViewport.SceneFacade;
+			int nodeCount = (int)sceneFacade.GetValue(AvailableValue.NodeCount);
+
+			foreach (string field in new[] { "Temperature", "Displacement" })
+			{
+				dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == field);
+				IDataVisualizer dataVisualizer = null;
+				await waitUntil(() => dataSelection.CurrentDataSelection.FieldName == field
+					&& (dataVisualizer = sceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer) != null
+					&& !double.IsNaN(dataVisualizer.GetMinimumDataValue()), $"{field} data is displayed");
+
+				int[] minimumIDs = dataVisualizer.GetIDsOfNodesWithMinimumDataValue();
+				int[] maximumIDs = dataVisualizer.GetIDsOfNodesWithMaximumDataValue();
+				Assert.That(minimumIDs, Is.Not.Empty.And.All.InRange(1, nodeCount), $"{field} minimum");
+				Assert.That(maximumIDs, Is.Not.Empty.And.All.InRange(1, nodeCount), $"{field} maximum");
+
+				click(window.signalDataMinimumToolStripMenuItem);
+				click(window.signalDataMaximumToolStripMenuItem);
+				Dispatcher.UIThread.RunJobs();
+				Assert.That(ErrorReports(), Is.Null);
+			}
+		}
+
+		[AvaloniaTest]
 		public async Task Visualizer_settings_dialogs_open_from_data_selection_and_apply_changes()
 		{
 			string solutionFileName = importSolution();

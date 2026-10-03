@@ -188,20 +188,20 @@ namespace MeshEditor.DataVisualizer
 
 		public override int[] GetIDsOfNodesWithMinimumDataValue()
 		{
-			IEnumerable<int> cellIndices;
+			IEnumerable<int> pointIndices;
 
 			if (currentScalarComponent != null)
 			{
 				switch (currentScalarComponent.Location)
 				{
 					case DataLocationType.Points:
-						cellIndices = currentScalarComponent.Values.IndicesOfMinElements();
+						pointIndices = currentScalarComponent.Values.IndicesOfMinElements();
 						break;
 					case DataLocationType.CellPoints:
-						cellIndices = currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]);
+						pointIndices = currentScalarComponent.Values.IndicesOfMinElements().Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]);
 						break;
 					case DataLocationType.Cells:
-						cellIndices = currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]));
+						pointIndices = currentScalarComponent.Values.IndicesOfMinElements().SelectMany(cellIndex => getCellPointIndicesForCell(cellIndex).Select(cellPointIndex => geometry.CellConnectivity[cellPointIndex]));
 						break;
 					default:
 						throw new NotSupportedException();
@@ -209,21 +209,21 @@ namespace MeshEditor.DataVisualizer
 			}
 			else if (currentVectorComponents != null)
 			{
-				cellIndices = enumerateVectorMagnitudes().IndicesOfMinElements();
+				pointIndices = enumerateVectorMagnitudes().IndicesOfMinElements();
 			}
 			else
 			{
 				return new int[0]; //Array.Empty<int>();
 			}
 
-			var reversedMapping = (geometry.Mapping as GeometryEntityMapping)?.GenerateReversedCellMapping();
+			var reversedMapping = (geometry.Mapping as GeometryEntityMapping)?.GenerateReversedPointMapping();
 
 			if (reversedMapping == null)
 			{
-				return cellIndices.ToArray();
+				return pointIndices.ToArray();
 			}
 
-			return cellIndices.Select(cellIndex => reversedMapping[cellIndex]).ToArray();
+			return pointIndices.Select(pointIndex => reversedMapping[pointIndex]).ToArray();
 		}
 
 
