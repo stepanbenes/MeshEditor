@@ -76,10 +76,10 @@ namespace MeshEditor.DataVisualizer.Graphics
 			Vector3 axis = getSuitableAxisToComputeCrossProductForVector(ref a);
 
 			Vector3 b;
-			Vector3.Cross(ref a, ref axis, out b);
+			Vector3.Cross(in a, in axis, out b);
 
 			Vector3 c;
-			Vector3.Cross(ref a, ref b, out c);
+			Vector3.Cross(in a, in b, out c);
 
 			float arrowCapLength = vLength * 0.2f;
 			float arrowCapWidth = arrowCapLength * 0.4f;

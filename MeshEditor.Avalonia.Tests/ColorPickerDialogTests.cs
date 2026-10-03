@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using MeshEditor.AvaloniaUI.Dialogs;
@@ -17,7 +18,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 		{
 			Dispatcher.UIThread.RunJobs();
 			string path = Path.Combine(Path.GetTempPath(), name);
-			dialog.CaptureRenderedFrame().Save(path);
+			dialog.CaptureRenderedFrame().Save(path, PngBitmapEncoderOptions.Default);
 			return path;
 		}
 
