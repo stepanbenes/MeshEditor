@@ -278,6 +278,66 @@ namespace MeshEditor.AvaloniaUI.Tests
 			await waitUntil(() => !vectorDialog.IsVisible, "dialog is closed");
 		}
 
+		[Test]
+		public void Legend_text_has_proportional_character_widths()
+		{
+			var textPrinter = MeshEditor.Text.TextPrinter.Instance;
+			float narrow = textPrinter.Measure("IIIIIIII").width;
+			float wide = textPrinter.Measure("MMMMMMMM").width;
+			Assert.That(narrow, Is.LessThan(wide / 2), "letters are not drawn in fixed-width cells");
+			Assert.That(textPrinter.Measure("DISPLACEMENTS").height, Is.InRange(14f, 20f), "line height of the default font size");
+			var lines = textPrinter.MeasureLines("DISPLACEMENTS" + Environment.NewLine + "X(1)");
+			Assert.That(lines.width, Is.EqualTo(textPrinter.Measure("DISPLACEMENTS").width));
+			Assert.That(lines.height, Is.GreaterThan(2 * textPrinter.Measure("X").height));
+		}
+
+		[AvaloniaTest]
+		public async Task Color_scale_legend_is_drawn_with_text()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var dataSelection = postprocessView.dataSelectionControl;
+			dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == "Temperature");
+			await waitUntil(() => dataSelection.linkLabelEditColorScale.IsEnabled, "scalar field is selected");
+
+			byte[] frame = null;
+			int width = 0, height = 0;
+			string path = Path.Combine(TestContext.CurrentContext.WorkDirectory, "postprocessor-legend.png");
+			try
+			{
+				// the legend (caption, color bar and values) is in the right top corner, text is drawn in the contrast color (black) on the light background
+				await waitUntil(() =>
+				{
+					window.ActiveViewport.Refresh();
+					frame = window.ActiveViewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out width, out height);
+					return countDarkPixels(frame, width, height, x0: width - 250, y0: 0, x1: width, y1: Math.Min(height, 300)) > 200;
+				}, "legend text is drawn", timeoutSeconds: 10);
+			}
+			finally
+			{
+				if (frame != null)
+				{
+					using var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Bgra32>(frame, width, height);
+					SixLabors.ImageSharp.ImageExtensions.SaveAsPng(image, path);
+					TestContext.Out.WriteLine(path);
+				}
+			}
+
+			static int countDarkPixels(byte[] bgra, int width, int height, int x0, int y0, int x1, int y1)
+			{
+				int count = 0;
+				for (int y = y0; y < y1; y++)
+					for (int x = Math.Max(x0, 0); x < x1; x++)
+					{
+						int i = (y * width + x) * 4;
+						if (bgra[i] < 100 && bgra[i + 1] < 100 && bgra[i + 2] < 100)
+							count++;
+					}
+				return count;
+			}
+		}
+
 		[AvaloniaTest]
 		public async Task Deformation_filter_creates_child_layer()
 		{

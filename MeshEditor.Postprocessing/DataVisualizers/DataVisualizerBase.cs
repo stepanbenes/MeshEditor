@@ -251,7 +251,8 @@ namespace MeshEditor.DataVisualizer
 			GL.MatrixMode(MatrixMode.Modelview);
 
 			// DRAW NUMBERS
-			textPosition = new Vector2(startLocation.X + tableCellSize.Width + 6, startLocation.Y - 9);
+			float valueTextHeight = Utilities.Functions.MeasureText("0").Height;
+			textPosition = new Vector2(startLocation.X + tableCellSize.Width + 6, startLocation.Y - valueTextHeight / 2);
 			for (int i = 0; i < controlPoints.Length; i++)
 			{
 				Utilities.Functions.DrawText(getControlPointValueText(controlPoints[i]), textPosition, contrastColor);
