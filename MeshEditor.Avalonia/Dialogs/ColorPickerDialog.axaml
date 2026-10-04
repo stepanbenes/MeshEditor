@@ -15,11 +15,6 @@
 		<Style Selector="ColorView /template/ TabControl#PART_TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
 			<Setter Property="IsVisible" Value="False" />
 		</Style>
-		<Style Selector="TabStripItem">
-			<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
-			<Setter Property="MinHeight" Value="28" />
-			<Setter Property="Padding" Value="10,4" />
-		</Style>
 	</Window.Styles>
 	<!-- replacement of the system ColorDialog (FullOpen) used by the WinForms UI -->
 	<StackPanel Margin="12" Spacing="10">
