@@ -3,15 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using MeshEditor.AvaloniaUI.Postprocessing;
 using MeshEditor.CoreInterface;
+using MeshEditor.DataVisualizer;
+using MeshEditor.DataVisualizer.Data;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.SolutionManager;
 using NUnit.Framework;
+using MouseButton = Avalonia.Input.MouseButton;
 
 namespace MeshEditor.AvaloniaUI.Tests
 {
@@ -369,6 +376,195 @@ namespace MeshEditor.AvaloniaUI.Tests
 			click((MenuItem)contextMenu.Items[1]);
 			await waitUntil(() => rootNode.Children.Count == 0, "filter layer is deleted");
 			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "parent layer is selected");
+		}
+
+		/// <summary>
+		/// Real mouse click (pointer pressed + released) on the control (near its left edge: long layer names are clipped by the panel).
+		/// </summary>
+		private static void mouseClick(Window window, Control control, MouseButton button = MouseButton.Left)
+		{
+			var point = control.TranslatePoint(new Point(Math.Min(control.Bounds.Width / 2, 8), control.Bounds.Height / 2), window) ?? throw new InvalidOperationException("control is not in the window");
+			window.MouseMove(point);
+			window.MouseDown(point, button);
+			window.MouseUp(point, button);
+			Dispatcher.UIThread.RunJobs();
+		}
+
+		private static TreeViewItem treeViewItemOf(LayersTreeViewControl layersTree, LayerTreeNode node) =>
+			layersTree.TreeView.GetVisualDescendants().OfType<TreeViewItem>().Single(i => i.DataContext == node);
+
+		private static TextBlock layerNameLabelOf(LayersTreeViewControl layersTree, LayerTreeNode node) =>
+			treeViewItemOf(layersTree, node).GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == node.Name);
+
+		private static Control layerCheckBoxOf(LayersTreeViewControl layersTree, LayerTreeNode node) =>
+			treeViewItemOf(layersTree, node).GetVisualDescendants().OfType<CheckBox>().First().GetVisualDescendants().OfType<Border>().First(b => b.Name == "NormalRectangle");
+
+		[AvaloniaTest]
+		public async Task Left_click_on_layer_selects_it_without_context_menu()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var layersTree = postprocessView.layersTreeView;
+			var rootNode = layersTree.RootNodes.Single();
+
+			// add a child layer (it gets selected)
+			click((MenuItem)((MenuItem)layersTree.LayerContextMenu.Items[0]).Items[0]);
+			var dialog = await waitForWindow<DeformationFilterParamsDialog>();
+			click(dialog.buttonOK);
+			await waitUntil(() => rootNode.Children.Count == 1, "filter layer is added");
+			var filterNode = rootNode.Children.Single();
+			await waitUntil(() => layersTree.GetSelectedLayer()?.Id == filterNode.Layer.Id, "filter layer is selected");
+			await waitUntil(() => postprocessView.dataSelectionControl.comboBoxField.ItemCount > 0, "filter layer is loaded");
+			Dispatcher.UIThread.RunJobs();
+
+			// left click on the name of the root layer selects it, doesn't open the context menu and doesn't toggle the check box
+			bool rootChecked = rootNode.IsChecked;
+			mouseClick(window, layerNameLabelOf(layersTree, rootNode));
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "root layer is selected by left click");
+			Assert.That(layersTree.LayerContextMenu.IsOpen, Is.False, "context menu is not opened by left click");
+			Assert.That(rootNode.IsChecked, Is.EqualTo(rootChecked), "clicking the name doesn't toggle visibility");
+			await waitUntil(() => postprocessView.dataSelectionControl.comboBoxField.ItemCount > 0, "root layer is loaded");
+
+			// check box of a non-selected layer is toggled without changing the selection
+			bool filterChecked = filterNode.IsChecked;
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			Assert.That(filterNode.IsChecked, Is.EqualTo(!filterChecked), "non-selected layer is toggled");
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "selection is not changed by the check box");
+
+			// check box of the selected layer is toggled too
+			mouseClick(window, layerNameLabelOf(layersTree, filterNode));
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(filterNode.Layer.Id), "filter layer is selected by left click");
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			Assert.That(filterNode.IsChecked, Is.EqualTo(filterChecked), "selected layer is toggled");
+
+			// right click on the selected layer opens the context menu
+			mouseClick(window, layerNameLabelOf(layersTree, filterNode), MouseButton.Right);
+			Assert.That(layersTree.LayerContextMenu.IsOpen, Is.True, "context menu is opened by right click");
+			layersTree.LayerContextMenu.Close();
+		}
+
+		[AvaloniaTest]
+		public async Task Switching_layers_keeps_data_selection_of_each_layer()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var layersTree = postprocessView.layersTreeView;
+			var dataSelection = postprocessView.dataSelectionControl;
+			var rootNode = layersTree.RootNodes.Single();
+			LayerDataVisualizer currentDataVisualizer() => postprocessView.ActiveScene.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+
+			// add a child layer (it gets selected) and uncheck it (its mesh is unloaded when another layer is selected)
+			click((MenuItem)((MenuItem)layersTree.LayerContextMenu.Items[0]).Items[0]);
+			var dialog = await waitForWindow<DeformationFilterParamsDialog>();
+			click(dialog.buttonOK);
+			await waitUntil(() => rootNode.Children.Count == 1, "filter layer is added");
+			var filterNode = rootNode.Children.Single();
+			await waitUntil(() => layersTree.GetSelectedLayer()?.Id == filterNode.Layer.Id && dataSelection.comboBoxField.ItemCount > 0 && currentDataVisualizer() != null, "filter layer is loaded");
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			Assert.That(filterNode.IsChecked, Is.False);
+
+			// select the second time step and a scalar field of the filter layer
+			Assert.That(dataSelection.comboBoxTimeStep.ItemCount, Is.EqualTo(2));
+			dataSelection.comboBoxTimeStep.SelectedIndex = 1;
+			dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == "Temperature");
+			var selection = dataSelection.CurrentDataSelection;
+			await waitUntil(() => currentDataVisualizer()?.DataSelection is DataSelection s && s.TimeStep == selection.TimeStep && s.FieldName == "Temperature" && s.ComponentName == selection.ComponentName, "filter layer shows the selected data");
+			var filterDataVisualizer = currentDataVisualizer();
+			var settings = filterDataVisualizer.Settings;
+
+			// select the parent layer (checked, stays loaded) and then the filter layer again (its mesh is unloaded meanwhile because it is unchecked)
+			layersTree.SetSelectedLayer(rootNode.Layer.Id);
+			await waitUntil(() => currentDataVisualizer() is LayerDataVisualizer v && v != filterDataVisualizer && dataSelection.comboBoxField.ItemCount > 0, "parent layer is selected");
+			await Task.Delay(200);
+			Dispatcher.UIThread.RunJobs();
+			layersTree.SetSelectedLayer(filterNode.Layer.Id);
+			await waitUntil(() => currentDataVisualizer() is LayerDataVisualizer v && v.DataSelection?.Mesh != null && dataSelection.CurrentDataSelection != null, "filter layer is loaded again");
+			await Task.Delay(200);
+			Dispatcher.UIThread.RunJobs();
+
+			var restoredSelection = dataSelection.CurrentDataSelection;
+			Assert.That(restoredSelection.TimeStep, Is.EqualTo(selection.TimeStep), "time step is kept");
+			Assert.That(restoredSelection.FieldName, Is.EqualTo("Temperature"), "field is kept");
+			Assert.That(restoredSelection.ComponentName, Is.EqualTo(selection.ComponentName), "component is kept");
+			Assert.That(currentDataVisualizer().DataSelection.TimeStep, Is.EqualTo(selection.TimeStep), "mesh shows the kept time step");
+			Assert.That(currentDataVisualizer().DataSelection.FieldName, Is.EqualTo("Temperature"), "mesh shows the kept field");
+			Assert.That(currentDataVisualizer().Settings, Is.SameAs(settings), "visualizer settings (color scale) are kept");
+			Assert.That(dataSelection.linkLabelEditColorScale.IsEnabled, Is.True);
+		}
+
+		/// <summary>
+		/// Number of white pixels (faces of a mesh without scalar data; the background is gray).
+		/// </summary>
+		private static int countMeshPixels(MainWindow window)
+		{
+			window.ActiveViewport.Refresh();
+			byte[] bgra = window.ActiveViewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out _, out _);
+			int count = 0;
+			for (int i = 0; i < bgra.Length; i += 4)
+			{
+				if (bgra[i] > 245 && bgra[i + 1] > 245 && bgra[i + 2] > 245)
+					count++;
+			}
+			return count;
+		}
+
+		[AvaloniaTest]
+		public async Task Layer_visibility_follows_check_boxes_independently_of_selection()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var layersTree = postprocessView.layersTreeView;
+			var rootNode = layersTree.RootNodes.Single();
+			var postprocessScene = (PostprocessScene)postprocessView.ActiveScene.GetUnderlyingSceneObject();
+			Dispatcher.UIThread.RunJobs();
+
+			// the first layer is selected and shown
+			Assert.That(rootNode.IsChecked, Is.True, "first layer is checked");
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "first layer is shown");
+
+			// unchecking the selected layer hides it immediately
+			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
+			Assert.That(rootNode.IsChecked, Is.False);
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "layer stays selected");
+			Assert.That(countMeshPixels(window), Is.LessThan(100), "unchecked selected layer is hidden");
+			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "checked selected layer is shown");
+
+			// a new filter layer is selected and shown
+			click((MenuItem)((MenuItem)layersTree.LayerContextMenu.Items[0]).Items[0]);
+			var dialog = await waitForWindow<DeformationFilterParamsDialog>();
+			click(dialog.buttonOK);
+			await waitUntil(() => rootNode.Children.Count == 1, "filter layer is added");
+			var filterNode = rootNode.Children.Single();
+			await waitUntil(() => layersTree.GetSelectedLayer()?.Id == filterNode.Layer.Id && postprocessScene.IsLayerLoaded(filterNode.Layer.Id) && postprocessView.dataSelectionControl.comboBoxField.ItemCount > 0, "filter layer is loaded");
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(filterNode.IsChecked, Is.True, "new filter layer is checked");
+
+			// both layers are hidden by unchecking them (the parent layer is not selected)
+			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			Assert.That(rootNode.IsChecked || filterNode.IsChecked, Is.False);
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(filterNode.Layer.Id), "selection is not changed by the check boxes");
+			Assert.That(countMeshPixels(window), Is.LessThan(100), "no layer is shown");
+
+			// select the parent layer (stays hidden; the mesh of the unchecked filter layer is unloaded)
+			mouseClick(window, layerNameLabelOf(layersTree, rootNode));
+			await waitUntil(() => postprocessScene.IsLayerLoaded(rootNode.Layer.Id) && !postprocessScene.IsLayerLoaded(filterNode.Layer.Id), "parent layer is selected");
+			await Task.Delay(200);
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(countMeshPixels(window), Is.LessThan(100), "unchecked selected layer is hidden");
+
+			// checking the non-selected (unloaded) filter layer loads and shows it, the parent layer stays selected
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			await waitUntil(() => postprocessScene.IsLayerLoaded(filterNode.Layer.Id), "filter layer is loaded");
+			await Task.Delay(200);
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "checked non-selected layer is shown");
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "parent layer stays selected");
+			Assert.That(postprocessView.ActiveScene.GetValue(AvailableValue.SelectedLayerId), Is.EqualTo(rootNode.Layer.Id));
 		}
 
 		[AvaloniaTest]
