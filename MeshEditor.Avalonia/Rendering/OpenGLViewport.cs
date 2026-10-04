@@ -66,6 +66,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private Task ioTask;
 		private CancellationTokenSource ioCancellation;
 		private ProgressViewDialog progressViewForm;
+		private IDisposable progressViewTimer;
 		private bool ioProcessCancelled;
 		private bool ioProcessError;
 
@@ -621,8 +622,10 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private void showProgressViewWhenSlow(string description)
 		{
 			var task = ioTask;
-			DispatcherTimer.RunOnce(() =>
+			progressViewTimer?.Dispose();
+			progressViewTimer = DispatcherTimer.RunOnce(() =>
 			{
+				progressViewTimer = null;
 				if (task == ioTask && IOActionInProgress && progressViewForm == null)
 				{
 					progressViewForm = new ProgressViewDialog(description, enableCancellation: true);
@@ -648,6 +651,10 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		private void closeProgressView()
 		{
+			// the operation has finished; don't let the pending timer open the progress view later
+			// (e.g. while the completion handler still awaits an error message box)
+			progressViewTimer?.Dispose();
+			progressViewTimer = null;
 			progressViewForm?.Quit();
 			progressViewForm = null;
 		}
