@@ -151,7 +151,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		internal readonly TextBox textBoxProjectName = new TextBox { Width = 175, HorizontalAlignment = HorizontalAlignment.Left };
 		internal readonly TextBox textBoxLocation = new TextBox();
 		internal readonly CheckBox checkBoxCreateDirectoryForSolution = new CheckBox { Content = "Create directory for solution", IsChecked = true };
-		internal readonly CompressionParamsControl compressionParamsControl = new CompressionParamsControl { Margin = new Thickness(9, 12, 9, 9) };
+		internal readonly CompressionParamsControl compressionParamsControl = new CompressionParamsControl();
 		internal readonly ComboBox comboBoxGaussPointExtrapolationStrategy = new ComboBox { Width = 160, ItemsSource = new[] { "Nearest" } };
 		internal readonly Button buttonImport = new Button { Content = "Import", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsDefault = true };
 		internal readonly Button buttonClose = new Button { Content = "Close", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsCancel = true };
@@ -182,7 +182,6 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 			var resultFilesPage = new StackPanel
 			{
-				Margin = new Thickness(12, 8, 8, 12),
 				Children =
 				{
 					label("Mesh file", 4), fileRow(textBoxMeshFile, buttonChooseMeshFile),
@@ -192,9 +191,11 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 					checkBoxCreateDirectoryForSolution,
 				},
 			};
-			var gaussPage = new StackPanel { Margin = new Thickness(12, 12, 8, 12), Spacing = 2, Children = { new TextBlock { Text = "Strategy" }, comboBoxGaussPointExtrapolationStrategy } };
+			var gaussPage = new StackPanel { Margin = new Thickness(0, 4, 0, 0), Spacing = 2, Children = { new TextBlock { Text = "Strategy" }, comboBoxGaussPointExtrapolationStrategy } };
 			tabControl = new TabControl
 			{
+				Margin = new Thickness(12, 12, 12, 0),
+				Padding = new Thickness(0, 6, 0, 0),
 				Items =
 				{
 					new TabItem { Header = "Result files", Content = resultFilesPage },

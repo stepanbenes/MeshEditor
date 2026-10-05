@@ -114,11 +114,11 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			localPageButtons.Children.Add(buttonChangeDefaultSolutionDirectory);
 			localPageButtons.Children.Add(buttonDeleteLocalSolution);
 			localPageButtons.Children.Add(new Panel());
-			var localPage = new DockPanel { Margin = new Thickness(8) };
+			var localPage = new DockPanel();
 			DockPanel.SetDock(localPageButtons, Dock.Bottom);
 			localPage.Children.Add(localPageButtons);
 			localPage.Children.Add(localSolutionListView);
-			var tabControl = new TabControl { Items = { new TabItem { Header = "Local solutions", Content = localPage } } };
+			var tabControl = new TabControl { Margin = new Thickness(12, 12, 12, 0), Padding = new Thickness(0, 6, 0, 0), Items = { new TabItem { Header = "Local solutions", Content = localPage } } };
 
 			var bottom = new DockPanel { Margin = new Thickness(12, 8, 12, 12) };
 			DockPanel.SetDock(buttonBrowse, Dock.Left);
