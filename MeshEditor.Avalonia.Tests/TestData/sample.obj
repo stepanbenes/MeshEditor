@@ -1,0 +1,12 @@
+# Test mesh: a square of 4 triangles around an off-centre inner node.
+# It is placed away from the origin so the world axes don't cross the middle of
+# the zoomed-to-fit viewport, and the middle is inside a face, not on an edge.
+v 4 4 0
+v 6 4 0
+v 6 6 0
+v 4 6 0
+v 5.4 5.3 0
+f 1 2 5
+f 2 3 5
+f 3 4 5
+f 4 1 5
