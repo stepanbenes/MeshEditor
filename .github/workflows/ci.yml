@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, port/net10-avalonia]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  avalonia-tests:
+    # The WinForms projects in the solution (net10.0-windows) don't build here; the Avalonia
+    # test project builds the cross-platform app and everything it depends on.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The viewport renders through a hidden GLFW window with a legacy OpenGL compatibility
+      # context: Mesa's software renderer provides it on a virtual X display.
+      - name: Install Mesa and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth libgl1 libglx-mesa0 libgl1-mesa-dri
+
+      - name: Build
+        # Debug, so Debug.Assert failures in the app fail the tests
+        run: dotnet build MeshEditor.Avalonia.Tests
+
+      - name: Test
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 1
+        run: xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults
+            MeshEditor.Avalonia.Tests/bin/Debug/net10.0/*.png
