@@ -16,9 +16,14 @@ namespace MeshEditor.Common
 		static readonly ConcurrentDictionary<string, JToken> configurations = new ConcurrentDictionary<string, JToken>();
 		static string configurationFileFullPath;
 
+		/// <summary>
+		/// Directory of the configuration file (tests point it to a temporary directory to not use the user's configuration).
+		/// </summary>
+		public static string ConfigurationDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MeshEditor");
+
 		public static void LoadConfiguration()
 		{
-			string configurationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MeshEditor");
+			string configurationDirectory = ConfigurationDirectory;
 			if (!Directory.Exists(configurationDirectory))
 			{
 				Directory.CreateDirectory(configurationDirectory);

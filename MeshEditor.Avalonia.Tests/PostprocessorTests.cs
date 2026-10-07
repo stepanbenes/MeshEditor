@@ -285,6 +285,26 @@ namespace MeshEditor.AvaloniaUI.Tests
 			await waitUntil(() => !vectorDialog.IsVisible, "dialog is closed");
 		}
 
+		[AvaloniaTest]
+		public void Color_scale_dialog_keeps_data_range_loaded_while_it_is_open([Values] bool ok)
+		{
+			// the scalar data (and so the min/max of the color scale) is loaded asynchronously, the dialog can be opened before
+			var settings = new VisualizerSettings();
+			settings.ColorScale.SetMinMaxValue(0.0, 1.0);
+			var dialog = new ColorScaleSettingsDialog(settings);
+			dialog.Show();
+			dialog.checkBoxShowIsoAreas.IsChecked = !settings.DrawIsoAreas;
+
+			settings.ColorScale.SetMinMaxValue(20.0, 80.0); // data loaded
+			click(ok ? dialog.buttonOK : dialog.buttonCancel);
+
+			Assert.That((settings.ColorScale.MinValue, settings.ColorScale.MaxValue), Is.EqualTo((20.0, 80.0)));
+			Assert.That(settings.ColorScale.ControlPoints.First().Value, Is.EqualTo(20.0));
+			Assert.That(settings.ColorScale.ControlPoints.Last().Value, Is.EqualTo(80.0));
+			Assert.That(settings.ColorScale.GetColorForValue(50.0), Is.Not.EqualTo(ColorScale.OutOfRangeColor));
+			Assert.That(settings.DrawIsoAreas, Is.EqualTo(ok), "the other settings are applied (OK) or restored (Cancel)");
+		}
+
 		[Test]
 		public void Legend_text_has_proportional_character_widths()
 		{
