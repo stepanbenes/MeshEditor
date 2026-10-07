@@ -40,8 +40,6 @@ dlldata.c
 *_i.h
 *.ilk
 *.meta
-*.obj
-!MeshEditor.Avalonia.Tests/TestData/*.obj
 *.pch
 *.pdb
 *.pgc
