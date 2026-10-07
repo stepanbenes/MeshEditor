@@ -142,19 +142,25 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 		protected override void OnOK()
 		{
-			copyProperties(currentSettings, appliedSettings);
-			SettingsChanged?.Invoke(this, EventArgs.Empty);
+			applySettings(currentSettings);
 		}
 
 		protected override void OnApply()
 		{
-			copyProperties(currentSettings, appliedSettings);
-			SettingsChanged?.Invoke(this, EventArgs.Empty);
+			applySettings(currentSettings);
 		}
 
 		protected override void OnCancel()
 		{
-			copyProperties(originalSettings, appliedSettings);
+			applySettings(originalSettings);
+		}
+
+		private void applySettings(IVisualizerSettings source)
+		{
+			// the min/max values follow the data, which can be loaded while the dialog is open; keep the current ones
+			double minValue = appliedSettings.ColorScale.MinValue, maxValue = appliedSettings.ColorScale.MaxValue;
+			copyProperties(source, appliedSettings);
+			appliedSettings.ColorScale.SetMinMaxValue(minValue, maxValue);
 			SettingsChanged?.Invoke(this, EventArgs.Empty);
 		}
 
