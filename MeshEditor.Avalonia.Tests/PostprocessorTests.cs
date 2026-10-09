@@ -130,6 +130,35 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Import_FEM_results_dialog_has_a_default_location_so_a_mesh_file_enables_import()
+		{
+			// without a configured directory the default is the documents folder, or the home folder when there is
+			// none (e.g. WSL without ~/Documents, where the empty location kept the Import button disabled)
+			string originalDirectory = SolutionHub.GetLocalStorageDefaultDirectory();
+			SolutionHub.SetLocalStorageDefaultDirectory(null);
+			try
+			{
+				string defaultDirectory = SolutionHub.GetLocalStorageDefaultDirectory();
+				Assert.That(defaultDirectory, Is.Not.Empty);
+				Assert.That(Directory.Exists(defaultDirectory), Is.True, defaultDirectory);
+
+				var window = showMainWindow();
+				click(window.importFEMResultsToolStripMenuItem);
+				var dialog = await waitForWindow<ImportFEMResultsDialog>();
+				Assert.That(dialog.textBoxLocation.Text, Is.EqualTo(defaultDirectory));
+
+				dialog.textBoxMeshFile.Text = testDataPath("props.msh");
+				Dispatcher.UIThread.RunJobs(); // TextChanged
+				Assert.That(dialog.buttonImport.IsEnabled, Is.True, "mesh file is the only required input");
+				dialog.Close();
+			}
+			finally
+			{
+				SolutionHub.SetLocalStorageDefaultDirectory(originalDirectory);
+			}
+		}
+
+		[AvaloniaTest]
 		public async Task Import_FEM_results_dialog_creates_solution_and_opens_it()
 		{
 			var window = showMainWindow();

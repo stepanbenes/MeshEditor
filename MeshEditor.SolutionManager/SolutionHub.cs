@@ -33,7 +33,12 @@ namespace MeshEditor.SolutionManager
 
 		public static string GetLocalStorageDefaultDirectory()
 		{
-			var folder = LocalStorageConfiguration.Directory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			if (!string.IsNullOrEmpty(LocalStorageConfiguration.Directory))
+				return LocalStorageConfiguration.Directory;
+			// MyDocuments is empty when the folder doesn't exist (e.g. WSL or a server without ~/Documents)
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			if (string.IsNullOrEmpty(folder))
+				folder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 			return folder;
 		}
 
