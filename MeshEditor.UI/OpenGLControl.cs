@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.GLControl;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 
 using MeshEditor.CoreInterface;
 using System.IO;
@@ -37,7 +38,6 @@ namespace MeshEditor.WinUI
 		public event EventHandler<ScreenshotNeededEventArgs> ScreenshotNeeded;
 
 		private SceneFacade sceneFacade;
-		private bool openGlInitialized;
 
 		// ---------------------------------------
 		private ProgressViewForm progressViewForm;
@@ -55,60 +55,46 @@ namespace MeshEditor.WinUI
 
 		#region Constructors
 
-		/// <summary>
-		/// Parameterless constructor, creates own object Scene
-		/// </summary>
 		private OpenGLControl(SceneFacade sceneToCopy, MouseEventHandler mouseDownHandler)
+			: base(createSettings(getShareRootContext()))
 		{
 			initializeControl(sceneToCopy, mouseDownHandler);
 		}
 
-		private OpenGLControl(SceneFacade sceneToCopy, MouseEventHandler mouseDownHandler, bool callBase)
-			// ten radek s volanim konstruktoru predka zpusoboval nefunkcnost na linuxu
-			: base(new GLControlSettings
-			{
-				RedBits = SceneFacade.COLOR_BITS / 4,
-				GreenBits = SceneFacade.COLOR_BITS / 4,
-				BlueBits = SceneFacade.COLOR_BITS / 4,
-				AlphaBits = SceneFacade.COLOR_BITS / 4,
-				DepthBits = SceneFacade.DEPTH_BITS,
-				Profile = ContextProfile.Compatability
-			})
-		{
-			initializeControl(sceneToCopy, mouseDownHandler);
-		}
+		/// <summary>
+		/// Hidden control whose context every viewport context shares its objects (VBOs, shader programs, textures) with,
+		/// like GraphicsContext.ShareContexts in OpenTK 3: a split view draws the buffers of the shared mesh, and they
+		/// outlive the view that created them. The root is never destroyed.
+		/// </summary>
+		private static GLControl shareRoot;
 
-		private static bool callBaseConstructor;
-
-		static OpenGLControl()
+		private static IGLFWGraphicsContext getShareRootContext()
 		{
-			callBaseConstructor = false;
-			try
+			if (shareRoot == null)
 			{
-				using (GLControl glc = new GLControl())
-				{
-					glc.MakeCurrent();
-					int depth;
-					GL.GetInteger(GetPName.DepthBits, out depth);
-					if (depth <= 16)
-						callBaseConstructor = true;
-				}
+				shareRoot = new GLControl(createSettings(null));
+				shareRoot.MakeCurrent(); // creates the context
 			}
-			catch (Exception)
-			{ }
+			return shareRoot.Context;
 		}
+
+		/// <summary>
+		/// The core uses the fixed-function pipeline (GL.Begin/End, matrix stack, GLSL without #version):
+		/// the default GLControlSettings (Core profile 3.3) don't support it.
+		/// </summary>
+		private static GLControlSettings createSettings(IGLFWGraphicsContext sharedContext) => new GLControlSettings
+		{
+			RedBits = SceneFacade.COLOR_BITS / 4,
+			GreenBits = SceneFacade.COLOR_BITS / 4,
+			BlueBits = SceneFacade.COLOR_BITS / 4,
+			AlphaBits = SceneFacade.COLOR_BITS / 4,
+			DepthBits = SceneFacade.DEPTH_BITS,
+			Profile = ContextProfile.Compatability,
+			SharedContext = sharedContext,
+		};
 
 		public static OpenGLControl Create(SceneFacade sceneToCopy, MouseEventHandler mouseDownHandler)
 		{
-			if (callBaseConstructor)
-			{
-				try
-				{
-					return new OpenGLControl(sceneToCopy, mouseDownHandler, true);
-				}
-				catch (Exception)
-				{ }
-			}
 			return new OpenGLControl(sceneToCopy, mouseDownHandler);
 		}
 
@@ -152,13 +138,12 @@ namespace MeshEditor.WinUI
 		{
 			base.OnHandleCreated(e);
 
-			if (openGlInitialized)
-				return;
-
+			// GLControl creates a new context with every handle (RecreateHandle): set up its state again,
+			// the objects (mesh buffers) are kept by the share root
 			MakeCurrent();
 			SceneFacade.InitializeGL();
 			editorModeChangedHandler(null, null);
-			openGlInitialized = true;
+			OpenGLControl_Resize(null, null);
 		}
 
 		// =======================================================

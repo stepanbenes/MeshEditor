@@ -25,6 +25,7 @@ namespace MeshEditor.DataVisualizer.Data
 		private readonly Dictionary<Guid, Scene> layerSceneMap;
 		private readonly HashSet<Guid> visibleLayers;
 		private readonly Dictionary<Guid, (DataSelection DataSelection, IVisualizerSettings Settings)> removedLayerStates; // data selection and settings of layers whose mesh was removed
+		private readonly bool drawOnlyVisibleLayers;
 
 		private Guid? selectedLayer;
 		private Scene currentScene;
@@ -32,14 +33,19 @@ namespace MeshEditor.DataVisualizer.Data
 		private Vector3? positionOffset;
 		private float? resizeFactor;
 
-		public PostprocessScene()
-			: this(new Scene() /*empty scene*/)
+		/// <param name="drawOnlyVisibleLayers">
+		/// True: only the visible (checked) layers are drawn, a loaded but unchecked layer is not (Avalonia UI).
+		/// False: every loaded layer is drawn, the selected layer even if unchecked (WinForms UI).
+		/// </param>
+		public PostprocessScene(bool drawOnlyVisibleLayers = false)
+			: this(new Scene() /*empty scene*/, drawOnlyVisibleLayers)
 		{ }
 
-		private PostprocessScene(Scene emptyScene)
+		private PostprocessScene(Scene emptyScene, bool drawOnlyVisibleLayers)
 		{
 			Debug.Assert(emptyScene != null);
 			this.emptyScene = emptyScene;
+			this.drawOnlyVisibleLayers = drawOnlyVisibleLayers;
 			currentScene = this.emptyScene;
 			layerSceneMap = new Dictionary<Guid, Scene>();
 			visibleLayers = new HashSet<Guid>();
@@ -173,7 +179,7 @@ namespace MeshEditor.DataVisualizer.Data
 
 		IScene IScene.Copy()
 		{
-			var result = new PostprocessScene((Scene)emptyScene.Copy())
+			var result = new PostprocessScene((Scene)emptyScene.Copy(), drawOnlyVisibleLayers)
 			{
 				positionOffset = positionOffset,
 				resizeFactor = resizeFactor,
@@ -417,9 +423,10 @@ namespace MeshEditor.DataVisualizer.Data
 		private IEnumerable<Mesh> enumerateAllMeshes() => enumerateAllScenesWithMesh().Select(scene => scene.Mesh);
 
 		/// <summary>
-		/// Scenes of the visible (checked) layers; meshes of the other layers are loaded but not drawn.
+		/// Scenes that are drawn: with drawOnlyVisibleLayers those of the visible (checked) layers (meshes of the other
+		/// layers are loaded but not drawn), otherwise all loaded ones.
 		/// </summary>
-		private IEnumerable<Scene> enumerateVisibleScenesWithMesh() => layerSceneMap.Where(pair => pair.Value.Mesh != null && visibleLayers.Contains(pair.Key)).Select(pair => pair.Value);
+		private IEnumerable<Scene> enumerateVisibleScenesWithMesh() => layerSceneMap.Where(pair => pair.Value.Mesh != null && (!drawOnlyVisibleLayers || visibleLayers.Contains(pair.Key))).Select(pair => pair.Value);
 
 		/// <summary>
 		/// Order layer scenes: write outlines at the end because of blending.

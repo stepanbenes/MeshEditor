@@ -63,4 +63,4 @@ This file lists what still needs work before the port can replace the WinForms a
 
 ## 8. Security
 
-- [ ] The Azure storage key that was in `linux-deployment/mesheditor/package/usr/lib/mesheditor/config.json` has been removed from the file. It is still in the git history, so **rotate or revoke the key**.
+- [x] The Azure storage key that was in `linux-deployment/mesheditor/package/usr/lib/mesheditor/config.json` has been removed from the file. It is still in the git history, so the key has been rotated (2026-10-09).

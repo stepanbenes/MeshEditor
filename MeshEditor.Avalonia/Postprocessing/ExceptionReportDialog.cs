@@ -72,13 +72,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		public static Task Show(string taskName, Exception exception, MemoryLogger logger)
 		{
 			var dialog = new ExceptionReportDialog(taskName, exception, logger);
-			var owner = DialogOwner.Current;
-			if (owner != null)
-				return dialog.ShowDialog(owner);
-			var closed = new TaskCompletionSource();
-			dialog.Closed += (s, e) => closed.TrySetResult();
-			dialog.Show();
-			return closed.Task;
+			return dialog.ShowModalAsync(null);
 		}
 	}
 }

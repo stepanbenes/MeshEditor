@@ -588,6 +588,48 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Checking_layers_quickly_loads_all_of_them()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var layersTree = postprocessView.layersTreeView;
+			var rootNode = layersTree.RootNodes.Single();
+			var postprocessScene = (PostprocessScene)postprocessView.ActiveScene.GetUnderlyingSceneObject();
+
+			// two filter layers
+			for (int i = 1; i <= 2; i++)
+			{
+				layersTree.SetSelectedLayer(rootNode.Layer.Id);
+				await waitUntil(() => postprocessScene.IsLayerLoaded(rootNode.Layer.Id), "parent layer is loaded");
+				Dispatcher.UIThread.RunJobs();
+				click((MenuItem)((MenuItem)layersTree.LayerContextMenu.Items[0]).Items[0]);
+				var dialog = await waitForWindow<DeformationFilterParamsDialog>();
+				dialog.textBoxLayerName.Text = $"filter {i}";
+				click(dialog.buttonOK);
+				await waitUntil(() => rootNode.Children.Count == i && postprocessScene.IsLayerLoaded(rootNode.Children[i - 1].Layer.Id), $"filter layer {i} is loaded");
+				Dispatcher.UIThread.RunJobs();
+			}
+			var filterNodes = rootNode.Children.ToList();
+
+			// uncheck both and select the parent layer: their meshes are unloaded
+			foreach (var node in filterNodes)
+				mouseClick(window, layerCheckBoxOf(layersTree, node));
+			mouseClick(window, layerNameLabelOf(layersTree, rootNode));
+			await waitUntil(() => filterNodes.All(n => !postprocessScene.IsLayerLoaded(n.Layer.Id)), "filter layers are unloaded");
+			await Task.Delay(200);
+			Dispatcher.UIThread.RunJobs();
+
+			// check both right after each other: the load of the second one cancels the load of the first one, which must be retried
+			// (not by mouse clicks: headless input runs the dispatcher jobs, so the first load would finish before the second click)
+			foreach (var node in filterNodes)
+				layersTree.SetCheckedFlagOfLayer(node.Layer.Id, true);
+			await waitUntil(() => filterNodes.All(n => postprocessScene.IsLayerLoaded(n.Layer.Id)), "both checked layers are loaded");
+			Assert.That(filterNodes.All(n => n.IsChecked), Is.True);
+			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "parent layer stays selected");
+		}
+
+		[AvaloniaTest]
 		public async Task Solution_browser_lists_local_solutions_and_returns_selection()
 		{
 			string solutionFileName = importSolution();

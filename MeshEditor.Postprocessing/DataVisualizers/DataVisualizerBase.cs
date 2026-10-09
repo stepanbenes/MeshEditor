@@ -140,15 +140,18 @@ namespace MeshEditor.DataVisualizer
 
 			// -----------------------------------------------------------------------
 
+			// sizes in device pixels (the text is measured in device pixels already)
+			static int scale(int logicalPixels) => (int)MathF.Round(MeshEditor.Graphics.DeviceScaling.Scale(logicalPixels));
+
 			Point startLocation;
-			Size tableCellSize = new Size(20, 40);
+			Size tableCellSize = new Size(scale(20), scale(40));
 			SizeF captionSize = Utilities.Functions.MeasureTextLines(description);
-			
-			int captionHeight = (int)captionSize.Height + 20;
+
+			int captionHeight = (int)captionSize.Height + scale(20);
 
 			int tableHeight = tableCellSize.Height * (controlPoints.Length - 1);
 			var tableWidth = new Lazy<int>(() => calculateTableWidth());
-			const int margin = 10;
+			int margin = scale(10);
 
 			int calculateTableWidth()
 			{
@@ -252,7 +255,7 @@ namespace MeshEditor.DataVisualizer
 
 			// DRAW NUMBERS
 			float valueTextHeight = Utilities.Functions.MeasureText("0").Height;
-			textPosition = new Vector2(startLocation.X + tableCellSize.Width + 6, startLocation.Y - valueTextHeight / 2);
+			textPosition = new Vector2(startLocation.X + tableCellSize.Width + scale(6), startLocation.Y - valueTextHeight / 2);
 			for (int i = 0; i < controlPoints.Length; i++)
 			{
 				Utilities.Functions.DrawText(getControlPointValueText(controlPoints[i]), textPosition, contrastColor);

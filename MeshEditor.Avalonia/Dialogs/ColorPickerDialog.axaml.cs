@@ -28,17 +28,7 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 		/// </summary>
 		public new async Task<bool> ShowDialog(Window owner)
 		{
-			owner ??= DialogOwner.Current;
-			if (owner != null)
-				await base.ShowDialog(owner);
-			else
-			{
-				var closed = new TaskCompletionSource();
-				Closed += (s, e) => closed.TrySetResult();
-				WindowStartupLocation = WindowStartupLocation.CenterScreen;
-				Show();
-				await closed.Task;
-			}
+			await this.ShowModalAsync(owner);
 			return dialogResultOK;
 		}
 
