@@ -124,6 +124,21 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Context_menu_has_default_cursor_instead_of_editor_mode_cursor()
+		{
+			var window = await openWindowWithSample();
+			var viewport = window.ActiveViewport;
+			Assert.That(viewport.Cursor, Is.Not.SameAs(Avalonia.Input.Cursor.Default), "the viewport shows the cursor of the editor mode");
+
+			var contextMenu = viewport.ContextMenu;
+			contextMenu.Open(viewport);
+			Dispatcher.UIThread.RunJobs();
+			var closeWindow = contextMenu.Items.OfType<MenuItem>().Single(i => (string)i.Header == "_Close window");
+			Assert.That(closeWindow.Cursor, Is.SameAs(Avalonia.Input.Cursor.Default));
+			contextMenu.Close();
+		}
+
+		[AvaloniaTest]
 		public async Task Close_window_from_context_menu_removes_split_viewport()
 		{
 			var window = await openWindowWithSample();

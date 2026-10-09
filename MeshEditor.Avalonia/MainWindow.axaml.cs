@@ -1755,7 +1755,8 @@ namespace MeshEditor.AvaloniaUI
 			selectMenu.Items.Add(items.Beams);
 			selectMenu.SubmenuOpened += (s, e) => { contextMenuItems = items; selectToolStripMenuItem_DropDownOpening(s, e); };
 
-			var contextMenu = new ContextMenu();
+			// Cursor is inherited from the viewport (the logical parent of the menu): don't show the cursor of the editor mode over the menu
+			var contextMenu = new ContextMenu { Cursor = Cursor.Default };
 			contextMenu.Items.Add(selectMenu);
 			contextMenu.Items.Add(new Separator());
 			contextMenu.Items.Add(items.Orbit);
