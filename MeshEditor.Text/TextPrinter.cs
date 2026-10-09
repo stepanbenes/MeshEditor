@@ -33,6 +33,7 @@ namespace MeshEditor.Text
 
 		private readonly FontFamily fontFamily;
 		private readonly Dictionary<float, GlyphAtlas> atlases = new Dictionary<float, GlyphAtlas>();
+		private GlyphAtlas batchAtlas; // atlas of the open GL.Begin(Quads) batch (strings between Begin and End are drawn in one batch)
 
 		private TextPrinter()
 		{
@@ -41,8 +42,12 @@ namespace MeshEditor.Text
 			fontFamily = fontCollection.Add(stream);
 		}
 
+		/// <summary>
+		/// Starts printing. Between Begin and End no other GL calls may be made (the quads of all strings are emitted in one GL.Begin/End).
+		/// </summary>
 		public void Begin()
 		{
+			batchAtlas = null;
 			int[] viewport = new int[4];
 			GL.GetInteger(GetPName.Viewport, viewport);
 
@@ -61,6 +66,7 @@ namespace MeshEditor.Text
 
 		public void End()
 		{
+			endBatch();
 			GL.BindTexture(TextureTarget.Texture2D, 0);
 			GL.Disable(EnableCap.Texture2D);
 
@@ -72,22 +78,15 @@ namespace MeshEditor.Text
 
 		public void Print(string text, Vector2 position, System.Drawing.Color color, int fontSize = defaultFontSize)
 		{
-			var atlas = GetAtlas(fontSize);
-			atlas.Bind();
-
+			var atlas = beginBatch(fontSize);
 			GL.Color3(color.R, color.G, color.B);
-			GL.Begin(PrimitiveType.Quads);
 			atlas.PrintLine(text, position.X, position.Y);
-			GL.End();
 		}
 
 		public void PrintLines(string text, Vector2 position, System.Drawing.Color color, int fontSize = defaultFontSize)
 		{
-			var atlas = GetAtlas(fontSize);
-			atlas.Bind();
-
+			var atlas = beginBatch(fontSize);
 			GL.Color3(color.R, color.G, color.B);
-			GL.Begin(PrimitiveType.Quads);
 			float charPosY = position.Y;
 			using var reader = new StringReader(text);
 			while (reader.ReadLine() is string line)
@@ -95,7 +94,30 @@ namespace MeshEditor.Text
 				atlas.PrintLine(line, position.X, charPosY);
 				charPosY += atlas.LineHeight + betweenLineDistance * Scale;
 			}
+		}
+
+		/// <summary>
+		/// Continues the open batch if it uses the atlas of the font size, otherwise binds the atlas and opens a new one.
+		/// </summary>
+		private GlyphAtlas beginBatch(int fontSize)
+		{
+			var atlas = GetAtlas(fontSize);
+			if (atlas != batchAtlas)
+			{
+				endBatch();
+				atlas.Bind(); // texture binding is not allowed inside GL.Begin/End
+				GL.Begin(PrimitiveType.Quads);
+				batchAtlas = atlas;
+			}
+			return atlas;
+		}
+
+		private void endBatch()
+		{
+			if (batchAtlas == null)
+				return;
 			GL.End();
+			batchAtlas = null;
 		}
 
 		public (float width, float height) Measure(string text, int fontSize = defaultFontSize)
