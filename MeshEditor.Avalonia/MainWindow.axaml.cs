@@ -512,7 +512,8 @@ namespace MeshEditor.AvaloniaUI
 
 		private void contextMenuStrip_Closed(object sender, RoutedEventArgs e)
 		{
-			activeControl.SceneFacade.MakeToComputeVisibleNodes();
+			// null when "Close window" removed the viewport: the menu is closed by detaching it, before the remaining viewport is activated
+			activeControl?.SceneFacade.MakeToComputeVisibleNodes();
 		}
 
 		private async void cutMeshToolStripMenuItem_Click(object sender, RoutedEventArgs e)

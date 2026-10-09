@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
@@ -120,6 +121,31 @@ namespace MeshEditor.AvaloniaUI.Tests
 			byte[] pixels = window.Viewports[1].TakeScreenshot(System.Drawing.Rectangle.Empty, out int width, out int height);
 			var center = pixel(pixels, width, width / 2, height / 2);
 			Assert.That(center.r > 200 && center.g > 200 && center.b > 200, Is.True, $"second viewport renders the mesh, got {center}");
+		}
+
+		[AvaloniaTest]
+		public async Task Close_window_from_context_menu_removes_split_viewport()
+		{
+			var window = await openWindowWithSample();
+			window.splitActiveWindowToolStripMenuItem.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(window.Viewports.Count, Is.EqualTo(2));
+			var closed = window.ActiveViewport;
+			var remaining = window.Viewports.Single(v => v != closed);
+
+			var contextMenu = closed.ContextMenu;
+			contextMenu.Open(closed);
+			Dispatcher.UIThread.RunJobs();
+			var closeWindow = contextMenu.Items.OfType<MenuItem>().Single(i => (string)i.Header == "_Close window");
+			closeWindow.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+			Dispatcher.UIThread.RunJobs();
+			contextMenu.Close();
+			await Task.Delay(100);
+			Dispatcher.UIThread.RunJobs();
+
+			Assert.That(window.Viewports, Is.EqualTo(new[] { remaining }));
+			Assert.That(window.ActiveViewport, Is.SameAs(remaining));
+			Assert.That(remaining.SceneFacade.ContainsMesh, Is.True);
 		}
 	}
 }
