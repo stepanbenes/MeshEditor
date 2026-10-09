@@ -23,7 +23,6 @@ using MeshEditor.AvaloniaUI.Rendering;
 using MeshEditor.Common;
 using MeshEditor.CoreInterface;
 using MeshEditor.Data;
-using SixLabors.ImageSharp; // Image.Save(path) extension
 using Image = Avalonia.Controls.Image;
 using MeshEditor.Graphics;
 using MeshEditor.WinUI;
@@ -1576,17 +1575,14 @@ namespace MeshEditor.AvaloniaUI
 				return;
 
 			string extension = Path.GetExtension(fileName).ToLowerInvariant();
-			if (extension != ".png" && extension != ".jpg" && extension != ".jpeg" && extension != ".bmp")
+			if (!ScreenshotFile.IsSupportedExtension(extension))
 			{
 				await MessageBox.Show("This file extension (image format) is not supported.", "Can't take screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
 			byte[] pixels = control.TakeScreenshot(screenshotWindow, out int width, out int height);
-			using (var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Bgra32>(pixels, width, height))
-			{
-				image.Save(fileName); // image format is chosen according to the file extension
-			}
+			ScreenshotFile.Save(fileName, pixels, width, height); // image format is chosen according to the file extension
 
 			this.takeScreenshotLastFilterIndex = extension == ".png" ? 1 : extension == ".bmp" ? 3 : 2;
 			this.takeScreenshotLastFilename = Path.GetFileName(fileName);

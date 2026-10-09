@@ -345,8 +345,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 			{
 				if (frame != null)
 				{
-					using var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Bgra32>(frame, width, height);
-					SixLabors.ImageSharp.ImageExtensions.SaveAsPng(image, path);
+					MeshEditor.AvaloniaUI.Rendering.ScreenshotFile.Save(path, frame, width, height);
 					TestContext.Out.WriteLine(path);
 				}
 			}

@@ -3,12 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using SixLabors.Fonts;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace MeshEditor.Text
 {
@@ -31,15 +26,14 @@ namespace MeshEditor.Text
 		/// </summary>
 		public static float Scale { get; set; } = 1f;
 
-		private readonly FontFamily fontFamily;
+		private readonly SKTypeface typeface;
 		private readonly Dictionary<float, GlyphAtlas> atlases = new Dictionary<float, GlyphAtlas>();
 		private GlyphAtlas batchAtlas; // atlas of the open GL.Begin(Quads) batch (strings between Begin and End are drawn in one batch)
 
 		private TextPrinter()
 		{
-			var fontCollection = new FontCollection();
 			using var stream = typeof(TextPrinter).Assembly.GetManifestResourceStream("MeshEditor.Text.Resources.Inter-Medium.ttf");
-			fontFamily = fontCollection.Add(stream);
+			typeface = SKTypeface.FromStream(stream);
 		}
 
 		/// <summary>
@@ -146,7 +140,7 @@ namespace MeshEditor.Text
 			float pixelSize = MathF.Round(fontSize * Scale * 4f) / 4f;
 			if (!atlases.TryGetValue(pixelSize, out var atlas))
 			{
-				atlas = new GlyphAtlas(fontFamily.CreateFont(pixelSize, FontStyle.Regular));
+				atlas = new GlyphAtlas(typeface, pixelSize);
 				atlases.Add(pixelSize, atlas);
 			}
 			return atlas;
@@ -162,7 +156,7 @@ namespace MeshEditor.Text
 			private const char fallbackCharacter = '?';
 
 			private readonly Dictionary<char, Glyph> glyphs = new Dictionary<char, Glyph>();
-			private Image<Rgba32> image; // released after upload to the texture
+			private byte[] pixels; // RGBA, released after upload to the texture
 			private readonly int textureHeight;
 			private int textureId;
 
@@ -186,11 +180,11 @@ namespace MeshEditor.Text
 				public int Height { get; }
 			}
 
-			public GlyphAtlas(Font font)
+			public GlyphAtlas(SKTypeface typeface, float pixelSize)
 			{
-				var metrics = font.FontMetrics.HorizontalMetrics;
-				float unitsToPixels = font.Size / font.FontMetrics.UnitsPerEm;
-				LineHeight = MathF.Ceiling((metrics.Ascender - metrics.Descender) * unitsToPixels);
+				using var font = new SKFont(typeface, pixelSize) { Edging = SKFontEdging.Antialias, Subpixel = false };
+				var metrics = font.Metrics;
+				LineHeight = MathF.Ceiling(metrics.Descent - metrics.Ascent); // Ascent is negative (above the baseline)
 				int cellHeight = (int)LineHeight + 2 * padding;
 
 				// printable ASCII, Latin-1 Supplement and Latin Extended-A (e.g. Czech characters)
@@ -200,15 +194,13 @@ namespace MeshEditor.Text
 				for (char ch = ' '; ch <= 'ſ'; ch++)
 					characters.Add(ch);
 
-				var textOptions = new TextOptions(font);
 				var layout = new List<(char ch, float advance, int x, int y, int width)>();
 				int cellX = 0, cellY = 0;
 				foreach (char ch in characters)
 				{
-					string s = ch.ToString();
-					if (!font.TryGetGlyphs(new SixLabors.Fonts.Unicode.CodePoint(ch), out _))
+					if (!typeface.ContainsGlyph(ch))
 						continue;
-					float advance = TextMeasurer.MeasureAdvance(s, textOptions).Width;
+					float advance = font.MeasureText(ch.ToString());
 					int cellWidth = (int)MathF.Ceiling(advance) + 2 * padding;
 					if (cellX + cellWidth > atlasWidth)
 					{
@@ -220,17 +212,29 @@ namespace MeshEditor.Text
 				}
 
 				textureHeight = cellY + cellHeight;
-				image = new Image<Rgba32>(atlasWidth, textureHeight, new Rgba32(255, 255, 255, 0));
-				image.Mutate(context =>
+
+				// glyph coverage, expanded to white texels with coverage as alpha (the text color comes from GL.Color)
+				using (var coverage = new SKBitmap(new SKImageInfo(atlasWidth, textureHeight, SKColorType.Alpha8, SKAlphaType.Premul)))
 				{
-					foreach (var (ch, advance, x, y, width) in layout)
+					using (var canvas = new SKCanvas(coverage))
+					using (var paint = new SKPaint { Color = SKColors.White, IsAntialias = true })
 					{
-						if (char.IsWhiteSpace(ch))
-							continue;
-						var options = new RichTextOptions(font) { Origin = new System.Numerics.Vector2(x + padding, y + padding) };
-						context.DrawText(options, ch.ToString(), SixLabors.ImageSharp.Color.White);
+						float baseline = MathF.Floor(-metrics.Ascent); // whole pixel: sharp horizontal edges
+						canvas.Clear(SKColors.Transparent);
+						foreach (var (ch, advance, x, y, width) in layout)
+						{
+							if (!char.IsWhiteSpace(ch))
+								canvas.DrawText(ch.ToString(), x + padding, y + padding + baseline, SKTextAlign.Left, font, paint);
+						}
 					}
-				});
+					byte[] alpha = coverage.Bytes; // rows are tightly packed (RowBytes == width for Alpha8)
+					pixels = new byte[4 * atlasWidth * textureHeight];
+					for (int i = 0; i < alpha.Length; i++)
+					{
+						pixels[4 * i] = pixels[4 * i + 1] = pixels[4 * i + 2] = 255;
+						pixels[4 * i + 3] = alpha[i];
+					}
+				}
 
 				foreach (var (ch, advance, x, y, width) in layout)
 					glyphs.Add(ch, new Glyph(advance, x, y, width, cellHeight));
@@ -288,13 +292,10 @@ namespace MeshEditor.Text
 
 			private int UploadTexture()
 			{
-				var pixels = new byte[4 * image.Width * image.Height];
-				image.CopyPixelDataTo(pixels);
-
 				int texID = GL.GenTexture();
 				GL.BindTexture(TextureTarget.Texture2D, texID);
 				GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
-				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
+				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, atlasWidth, textureHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
 
 				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
 				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
@@ -303,8 +304,7 @@ namespace MeshEditor.Text
 				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
 				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
 
-				image.Dispose();
-				image = null;
+				pixels = null;
 				return texID;
 			}
 		}
