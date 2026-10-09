@@ -32,16 +32,7 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 
 		public new async Task ShowDialog(Window owner)
 		{
-			owner ??= DialogOwner.Current;
-			if (owner != null)
-				await base.ShowDialog(owner);
-			else
-			{
-				var closed = new TaskCompletionSource();
-				Closed += (s, e) => closed.TrySetResult();
-				Show();
-				await closed.Task;
-			}
+			await this.ShowModalAsync(owner);
 		}
 
 		private void checkBox1_CheckedChanged(object sender, RoutedEventArgs e)

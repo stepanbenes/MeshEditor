@@ -160,7 +160,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		/// </summary>
 		public new async Task<bool> ShowDialog(Window owner)
 		{
-			await base.ShowDialog(owner);
+			await this.ShowModalAsync(owner);
 			return dialogResult;
 		}
 

@@ -152,17 +152,7 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 			MessageBoxIcon icon = MessageBoxIcon.None, int defaultButtonIndex = 0, Window owner = null)
 		{
 			var box = new MessageBox(text, caption, buttons, icon, defaultButtonIndex);
-			owner ??= DialogOwner.Current;
-			if (owner != null)
-				await box.ShowDialog(owner);
-			else
-			{
-				var closed = new TaskCompletionSource();
-				box.Closed += (s, e) => closed.TrySetResult();
-				box.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-				box.Show();
-				await closed.Task;
-			}
+			await box.ShowModalAsync(owner);
 			if (box.result == MessageBoxResult.None)
 				box.result = box.escapeResult == MessageBoxResult.None ? MessageBoxResult.Cancel : box.escapeResult;
 			return box.result;
@@ -187,6 +177,25 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 				}
 				return null;
 			}
+		}
+
+		/// <summary>
+		/// Shows the window modally to the owner (<see cref="Current"/> if null). Without any owner window it is shown
+		/// as a normal window and the task completes when it is closed.
+		/// </summary>
+		public static async Task ShowModalAsync(this Window window, Window owner)
+		{
+			owner ??= Current;
+			if (owner != null)
+			{
+				await window.ShowDialog(owner);
+				return;
+			}
+			var closed = new TaskCompletionSource();
+			window.Closed += (s, e) => closed.TrySetResult();
+			window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+			window.Show();
+			await closed.Task;
 		}
 	}
 }
