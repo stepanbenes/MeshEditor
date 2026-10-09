@@ -461,14 +461,17 @@ namespace MeshEditor.AvaloniaUI
 				return false;
 			bool saveWithoutHiddenElements = withoutHiddenResult == MessageBoxResult.Yes;
 
-			var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			var fileTypes = FileDialogFilter.Parse(SceneFacade.OutputFileFormatFilter);
+			var result = await StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
 			{
 				Title = "Save As", // default title of the WinForms SaveFileDialog
 				SuggestedFileName = Utilities.Functions.MakeTextValidFilename(control.SceneFacade.MeshName),
-				FileTypeChoices = FileDialogFilter.Parse(SceneFacade.OutputFileFormatFilter),
+				FileTypeChoices = fileTypes,
+				DefaultExtension = FileDialogFilter.GetExtension(fileTypes.FirstOrDefault()),
 				ShowOverwritePrompt = true,
 			});
-			string fileName = file?.TryGetLocalPath();
+			// the format is chosen by the extension: without one the mesh would silently be saved in the default format
+			string fileName = FileDialogFilter.AddExtension(result.File?.TryGetLocalPath(), result.SelectedFileType ?? fileTypes.FirstOrDefault());
 			if (fileName == null)
 				return false;
 
@@ -1557,15 +1560,17 @@ namespace MeshEditor.AvaloniaUI
 			if (suggestedFileName == null && control.SceneFacade.ContainsMesh)
 				suggestedFileName = Utilities.Functions.MakeTextValidFilename(control.SceneFacade.MeshName);
 
-			var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			var suggestedFileType = fileTypes[Math.Clamp(takeScreenshotLastFilterIndex - 1, 0, fileTypes.Count - 1)];
+			var result = await StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
 			{
 				Title = "Save As",
 				SuggestedFileName = suggestedFileName,
 				FileTypeChoices = fileTypes,
-				SuggestedFileType = fileTypes[Math.Clamp(takeScreenshotLastFilterIndex - 1, 0, fileTypes.Count - 1)],
+				SuggestedFileType = suggestedFileType,
+				DefaultExtension = FileDialogFilter.GetExtension(suggestedFileType),
 				ShowOverwritePrompt = true,
 			});
-			string fileName = file?.TryGetLocalPath();
+			string fileName = FileDialogFilter.AddExtension(result.File?.TryGetLocalPath(), result.SelectedFileType ?? suggestedFileType);
 			if (fileName == null)
 				return;
 

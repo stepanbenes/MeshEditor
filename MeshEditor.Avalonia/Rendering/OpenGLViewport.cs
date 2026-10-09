@@ -50,6 +50,7 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private bool isActive;
 		private SceneFacade sceneFacade;
 		private double renderScaling = 1.0;
+		private bool disposed;
 
 		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler ActionPerformed;
@@ -164,7 +165,8 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private void renderNow()
 		{
 			Interlocked.Exchange(ref renderRequested, 0);
-			if (sceneFacade == null || glContext == null)
+			// a render posted before DisposeScene would draw into another viewport's context
+			if (disposed || sceneFacade == null || glContext == null)
 				return;
 			sceneFacade.DrawScene(isActive, true);
 		}
@@ -241,6 +243,8 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		private void resizeScene()
 		{
+			if (disposed)
+				return;
 			int width = Math.Max(1, (int)Math.Round(Bounds.Width * renderScaling));
 			int height = Math.Max(1, (int)Math.Round(Bounds.Height * renderScaling));
 			Diag($"resize bounds={Bounds} scaling={renderScaling} -> {width}x{height}");
@@ -1001,6 +1005,9 @@ namespace MeshEditor.AvaloniaUI.Rendering
 
 		public void DisposeScene()
 		{
+			if (disposed)
+				return;
+			disposed = true;
 			glContext.MakeCurrent();
 			sceneFacade.DisposeScene();
 			SceneFacade.EditorModeChanged -= editorModeChangedHandler;

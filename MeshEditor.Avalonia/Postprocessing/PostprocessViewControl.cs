@@ -8,6 +8,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using MeshEditor.Common.Logging;
 using MeshEditor.CoreInterface;
 using MeshEditor.DataVisualizer;
@@ -36,6 +37,9 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		private readonly Dictionary<Guid, SummaryFile> layerSummaryCache = new Dictionary<Guid, SummaryFile>();
 		private readonly LongOpNotifier longOpNotifier;
 		private CancellationTokenSource currentOperationCancellationTokenSource;
+		private LongOpNotifier.Token currentOperationToken;
+		private CancellationToken userCancelledOperation; // the last operation cancelled by the user (not superseded by another operation)
+		private readonly List<(ILayerInfo Layer, SceneFacade Scene)> postponedLayerLoads = new List<(ILayerInfo, SceneFacade)>(); // loads superseded by another operation
 
 		internal readonly LayersTreeViewControl layersTreeView = new LayersTreeViewControl();
 		internal readonly DataSelectionControl dataSelectionControl = new DataSelectionControl();
@@ -62,7 +66,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			SetColumn(contentHost, 2);
 			Children.Add(contentHost);
 
-			activeScene = new SceneFacade(new PostprocessScene());
+			activeScene = new SceneFacade(new PostprocessScene(drawOnlyVisibleLayers: true));
 			this.longOpNotifier = longOpNotifier;
 			this.longOpNotifier.CancellationRequested += longOpNotifier_CancellationRequested;
 
@@ -126,8 +130,10 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		/// </summary>
 		public void Detach()
 		{
+			postponedLayerLoads.Clear();
 			if (currentOperationCancellationTokenSource != null)
 			{
+				userCancelledOperation = currentOperationCancellationTokenSource.Token;
 				currentOperationCancellationTokenSource.Cancel();
 				currentOperationCancellationTokenSource.Dispose();
 				currentOperationCancellationTokenSource = null;
@@ -318,8 +324,13 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 		private void longOpNotifier_CancellationRequested(LongOpNotifier.Token operationToken)
 		{
+			// the user doesn't want the layers whose load was postponed either
+			foreach (var (layer, scene) in postponedLayerLoads)
+				uncheckLayerIfNotLoaded(layer.Id, scene);
+			postponedLayerLoads.Clear();
 			if (currentOperationCancellationTokenSource != null)
 			{
+				userCancelledOperation = currentOperationCancellationTokenSource.Token;
 				currentOperationCancellationTokenSource.Cancel();
 				currentOperationCancellationTokenSource.Dispose();
 				currentOperationCancellationTokenSource = null;
@@ -423,13 +434,18 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			try
 			{
 				LongOpNotifier.Token operationToken = beginLongOperation(taskName);
+				var cancellationToken = currentOperationCancellationTokenSource.Token;
 				try
 				{
-					var cancellationToken = currentOperationCancellationTokenSource.Token;
 					await loadLayerAsync(layerInfo, targetScene, operationToken, cancellationToken);
 				}
 				catch (OperationCanceledException)
-				{ }
+				{
+					if (cancellationToken == userCancelledOperation)
+						uncheckLayerIfNotLoaded(layerInfo.Id, targetScene); // don't leave a checked layer without mesh
+					else
+						postponedLayerLoads.Add((layerInfo, targetScene)); // superseded by another operation (e.g. checking another layer): load it after that one
+				}
 				finally
 				{
 					endLongOperation(operationToken);
@@ -513,17 +529,52 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			logger.ClearHistory(); // clear records from previous operation
 			var operationToken = longOpNotifier.Begin(taskName, isCancellable: true, logger: logger);
 			currentOperationCancellationTokenSource = new CancellationTokenSource();
+			currentOperationToken = operationToken;
 			return operationToken;
 		}
 
 		private void endLongOperation(LongOpNotifier.Token operationToken)
 		{
 			longOpNotifier.End(operationToken);
+			if (operationToken != currentOperationToken)
+				return; // superseded: the cancellation token source belongs to the operation that replaced this one
+			currentOperationToken = LongOpNotifier.Token.None;
 			if (currentOperationCancellationTokenSource != null)
 			{
 				currentOperationCancellationTokenSource.Dispose();
 				currentOperationCancellationTokenSource = null;
 			}
+			if (postponedLayerLoads.Count > 0)
+				Dispatcher.UIThread.Post(loadPostponedLayers);
+		}
+
+		/// <summary>
+		/// Loads the layers whose load was cancelled by a newer operation, if they are still checked or selected.
+		/// </summary>
+		private async void loadPostponedLayers()
+		{
+			while (postponedLayerLoads.Count > 0)
+			{
+				if (currentOperationCancellationTokenSource != null)
+					return; // another operation is running, its end posts this again
+				var (layer, scene) = postponedLayerLoads[0];
+				postponedLayerLoads.RemoveAt(0);
+				var visibleLayerIds = scene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+				bool wanted = visibleLayerIds.Contains(layer.Id) || scene.GetValue(AvailableValue.SelectedLayerId) as Guid? == layer.Id;
+				if (wanted && !((PostprocessScene)scene.GetUnderlyingSceneObject()).IsLayerLoaded(layer.Id))
+					await loadLayerWithErrorHandlingAsync(layer, scene);
+			}
+		}
+
+		private void uncheckLayerIfNotLoaded(Guid layerId, SceneFacade scene)
+		{
+			var visibleLayerIds = scene.GetValue(AvailableValue.VisibleLayersIds) as ICollection<Guid>;
+			if (!visibleLayerIds.Contains(layerId) || ((PostprocessScene)scene.GetUnderlyingSceneObject()).IsLayerLoaded(layerId) || scene.GetValue(AvailableValue.SelectedLayerId) as Guid? == layerId)
+				return;
+			if (scene == ActiveScene)
+				layersTreeView.SetCheckedFlagOfLayer(layerId, false); // raises LayerUnchecked
+			else
+				visibleLayerIds.Remove(layerId);
 		}
 
 		#endregion

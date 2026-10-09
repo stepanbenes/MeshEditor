@@ -33,6 +33,9 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private int msaaDepthRenderbuffer;
 		private bool msaaFrameUnresolved;
 
+		// read back buffer, reused between frames (a new one per frame would be a large object heap allocation)
+		private byte[] readBuffer;
+
 		/// <summary>
 		/// Number of MSAA samples requested (environment variable MESHEDITOR_MSAA_SAMPLES overrides, 0 disables).
 		/// </summary>
@@ -166,6 +169,8 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		private void createMultisampledFramebuffer(int width, int height)
 		{
 			GL.GetInteger(GetPName.MaxSamples, out int maxSamples);
+			// error flags stay set until read: clear the ones left by earlier rendering, so they are not blamed on the framebuffer
+			for (int i = 0; i < 16 && GL.GetError() != ErrorCode.NoError; i++) { }
 			for (int samples = Math.Min(requestedSamples, maxSamples); samples > 1; samples /= 2)
 			{
 				msaaFramebuffer = GL.GenFramebuffer();
@@ -214,9 +219,10 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		public void ReadPixelsBgra(int x, int yFromTop, int width, int height, IntPtr destination, int destinationStride)
 		{
 			MakeCurrent();
-			GL.Finish();
 			int rowBytes = width * 4;
-			byte[] buffer = new byte[rowBytes * height];
+			if (readBuffer == null || readBuffer.Length < rowBytes * height)
+				readBuffer = new byte[rowBytes * height];
+			byte[] buffer = readBuffer;
 			GL.PixelStore(PixelStoreParameter.PackAlignment, 4);
 			GL.ReadPixels(x, Height - yFromTop - height, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, buffer);
 			for (int row = 0; row < height; row++)

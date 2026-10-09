@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,7 +17,8 @@ namespace MeshEditor.WinUI
 
 		public static string MeshEditorUpdateUri => @"https://feastorage.blob.core.windows.net/mesheditor-update";
 
-		public static bool IsUpdateServiceAvailableForThisPlatform => (Environment.OSVersion.Platform == PlatformID.Unix && Environment.Is64BitOperatingSystem);
+		// only linux/x64 packages are published (PlatformID.Unix would also match macOS, Is64BitOperatingSystem also arm64)
+		public static bool IsUpdateServiceAvailableForThisPlatform => OperatingSystem.IsLinux() && RuntimeInformation.OSArchitecture == Architecture.X64;
 
 		public UpdateChecker()
 		{
@@ -34,22 +36,10 @@ namespace MeshEditor.WinUI
 			ServerVersion = null;
 			PackageFileUri = null;
 
-			string clientFolder;
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Unix:
-					clientFolder = "linux";
-					break;
-				default:
-					throw new NotSupportedException($"Updates are not available for this platform ({Environment.OSVersion.Platform}).");
-			}
-
-			string architectureFolder;
-			if (Environment.Is64BitOperatingSystem)
-				architectureFolder = "x64";
-			else
-				throw new NotSupportedException($"Updates are not available for this platform (x86).");
-			//architectureFolder = "x86";
+			if (!IsUpdateServiceAvailableForThisPlatform)
+				throw new NotSupportedException($"Updates are not available for this platform ({RuntimeInformation.OSDescription}, {RuntimeInformation.OSArchitecture}).");
+			string clientFolder = "linux";
+			string architectureFolder = "x64";
 
 			string releasesFileUri = $"{MeshEditorUpdateUri}/{clientFolder}/{architectureFolder}/releases.txt";
 			string releasesFileContent = await HttpClient.GetStringAsync(releasesFileUri);

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Threading;
 using Avalonia;
+using Avalonia.Threading;
 
 namespace MeshEditor.AvaloniaUI
 {
@@ -19,6 +20,18 @@ namespace MeshEditor.AvaloniaUI
 
 			AppDomain.CurrentDomain.UnhandledException += (s, e) =>
 				Console.Error.WriteLine("Unhandled exception: " + e.ExceptionObject);
+
+			if (!System.Diagnostics.Debugger.IsAttached)
+			{
+				// report UI thread exceptions (e.g. from async void handlers) and keep running, like
+				// Application.ThreadException + UnhandledExceptionMode.CatchException in the WinForms UI
+				Dispatcher.UIThread.UnhandledException += (s, e) =>
+				{
+					e.Handled = true;
+					Console.Error.WriteLine("Thread exception: " + e.Exception);
+					_ = Dialogs.MessageBox.Show($"{e.Exception.GetType()}: {e.Exception.Message}", "Thread exception", Dialogs.MessageBoxButtons.OK, Dialogs.MessageBoxIcon.Error);
+				};
+			}
 
 			return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 		}
