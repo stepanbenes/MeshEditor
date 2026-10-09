@@ -23,15 +23,10 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Dependencies\MeshEditor.LayerManager.dll.config">
-      <Link>MeshEditor.LayerManager.dll.config</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>
