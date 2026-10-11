@@ -34,8 +34,8 @@ namespace MeshEditor.DataVisualizer.Data
 		private float? resizeFactor;
 
 		/// <param name="drawOnlyVisibleLayers">
-		/// True: only the visible (checked) layers are drawn, a loaded but unchecked layer is not (Avalonia UI).
-		/// False: every loaded layer is drawn, the selected layer even if unchecked (WinForms UI).
+		/// True: only the visible (checked) layers and the selected layer are drawn, a loaded but unchecked layer is not (Avalonia UI).
+		/// False: every loaded layer is drawn (WinForms UI).
 		/// </param>
 		public PostprocessScene(bool drawOnlyVisibleLayers = false)
 			: this(new Scene() /*empty scene*/, drawOnlyVisibleLayers)
@@ -423,10 +423,11 @@ namespace MeshEditor.DataVisualizer.Data
 		private IEnumerable<Mesh> enumerateAllMeshes() => enumerateAllScenesWithMesh().Select(scene => scene.Mesh);
 
 		/// <summary>
-		/// Scenes that are drawn: with drawOnlyVisibleLayers those of the visible (checked) layers (meshes of the other
-		/// layers are loaded but not drawn), otherwise all loaded ones.
+		/// Scenes that are drawn: with drawOnlyVisibleLayers those of the visible (checked) layers and of the selected layer
+		/// (meshes of the other layers are loaded but not drawn), otherwise all loaded ones.
+		/// The selected layer is always drawn, selection and the status bar act on it.
 		/// </summary>
-		private IEnumerable<Scene> enumerateVisibleScenesWithMesh() => layerSceneMap.Where(pair => pair.Value.Mesh != null && (!drawOnlyVisibleLayers || visibleLayers.Contains(pair.Key))).Select(pair => pair.Value);
+		private IEnumerable<Scene> enumerateVisibleScenesWithMesh() => layerSceneMap.Where(pair => pair.Value.Mesh != null && (!drawOnlyVisibleLayers || visibleLayers.Contains(pair.Key) || pair.Key == selectedLayer)).Select(pair => pair.Value);
 
 		/// <summary>
 		/// Order layer scenes: write outlines at the end because of blending.

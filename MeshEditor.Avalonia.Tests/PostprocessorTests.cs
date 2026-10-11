@@ -598,7 +598,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
-		public async Task Layer_visibility_follows_check_boxes_independently_of_selection()
+		public async Task Layer_visibility_follows_check_boxes_and_selected_layer_is_always_shown()
 		{
 			string solutionFileName = importSolution();
 			var window = showMainWindow();
@@ -612,15 +612,15 @@ namespace MeshEditor.AvaloniaUI.Tests
 			Assert.That(rootNode.IsChecked, Is.True, "first layer is checked");
 			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "first layer is shown");
 
-			// unchecking the selected layer hides it immediately
+			// the selected layer stays shown when it is unchecked
 			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
 			Assert.That(rootNode.IsChecked, Is.False);
 			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "layer stays selected");
-			Assert.That(countMeshPixels(window), Is.LessThan(100), "unchecked selected layer is hidden");
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "unchecked selected layer is shown");
 			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
 			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "checked selected layer is shown");
 
-			// a new filter layer is selected and shown
+			// a new filter layer is selected and shown, the parent layer is switched to border lines
 			click((MenuItem)((MenuItem)layersTree.LayerContextMenu.Items[0]).Items[0]);
 			var dialog = await waitForWindow<DeformationFilterParamsDialog>();
 			click(dialog.buttonOK);
@@ -630,19 +630,23 @@ namespace MeshEditor.AvaloniaUI.Tests
 			Dispatcher.UIThread.RunJobs();
 			Assert.That(filterNode.IsChecked, Is.True, "new filter layer is checked");
 
-			// both layers are hidden by unchecking them (the parent layer is not selected)
+			// unchecking both layers keeps the selected filter layer shown (the parent layer is not selected)
 			mouseClick(window, layerCheckBoxOf(layersTree, rootNode));
 			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
 			Assert.That(rootNode.IsChecked || filterNode.IsChecked, Is.False);
 			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(filterNode.Layer.Id), "selection is not changed by the check boxes");
-			Assert.That(countMeshPixels(window), Is.LessThan(100), "no layer is shown");
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "unchecked selected layer is shown");
 
-			// select the parent layer (stays hidden; the mesh of the unchecked filter layer is unloaded)
+			// select the unchecked parent layer: the mesh of the unchecked filter layer is unloaded, only the border lines of the parent are drawn
 			mouseClick(window, layerNameLabelOf(layersTree, rootNode));
 			await waitUntil(() => postprocessScene.IsLayerLoaded(rootNode.Layer.Id) && !postprocessScene.IsLayerLoaded(filterNode.Layer.Id), "parent layer is selected");
 			await Task.Delay(200);
 			Dispatcher.UIThread.RunJobs();
-			Assert.That(countMeshPixels(window), Is.LessThan(100), "unchecked selected layer is hidden");
+			Assert.That(postprocessView.ActiveScene.GetValue(AvailableValue.RenderMode), Is.EqualTo(MeshEditor.Graphics.RenderMode.BorderLines));
+			Assert.That(countMeshPixels(window), Is.LessThan(100), "no faces are drawn");
+			postprocessView.ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.FacesLines);
+			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "unchecked selected layer is shown");
+			postprocessView.ActiveScene.SetValue(AvailableValue.RenderMode, MeshEditor.Graphics.RenderMode.BorderLines);
 
 			// checking the non-selected (unloaded) filter layer loads and shows it, the parent layer stays selected
 			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
@@ -652,6 +656,11 @@ namespace MeshEditor.AvaloniaUI.Tests
 			Assert.That(countMeshPixels(window), Is.GreaterThan(1000), "checked non-selected layer is shown");
 			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "parent layer stays selected");
 			Assert.That(postprocessView.ActiveScene.GetValue(AvailableValue.SelectedLayerId), Is.EqualTo(rootNode.Layer.Id));
+
+			// unchecking the non-selected filter layer hides it, its mesh stays loaded
+			mouseClick(window, layerCheckBoxOf(layersTree, filterNode));
+			Assert.That(postprocessScene.IsLayerLoaded(filterNode.Layer.Id), Is.True);
+			Assert.That(countMeshPixels(window), Is.LessThan(100), "unchecked non-selected layer is hidden");
 		}
 
 		[AvaloniaTest]

@@ -159,6 +159,8 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 			if (!((PostprocessScene)targetScene.GetUnderlyingSceneObject()).IsLayerLoaded(e.Layer.Id))
 				await loadLayerWithErrorHandlingAsync(e.Layer, targetScene);
+			else
+				targetScene.PerformAction(AvailableAction.Refresh); // the previously selected layer is no longer drawn if unchecked
 		}
 
 		private async void layersTreeView_LayerChecked(object sender, LayerSelectionEventArgs e)
