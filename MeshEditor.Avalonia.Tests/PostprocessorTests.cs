@@ -84,7 +84,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 
 		private static void click(Control control) => control.RaiseEvent(new RoutedEventArgs(control is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
 
-		private string importSolution()
+		private string importSolution(string solutionName = "props", params string[] compressionParameters)
 		{
 			var analysisResults = new[]
 			{
@@ -95,8 +95,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 					DataRecordNames = new[] { testDataPath("props.res") },
 				}
 			};
-			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(tempDirectory, "props"), analysisResults, "props");
-			solutionHub.Import(Enumerable.Empty<decimal>(), Enumerable.Empty<string>(), "Nearest");
+			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(tempDirectory, solutionName), analysisResults, solutionName);
+			solutionHub.Import(Enumerable.Empty<decimal>(), compressionParameters, "Nearest");
 			return solutionHub.GetSolutionDescription().Location;
 		}
 
@@ -247,6 +247,45 @@ namespace MeshEditor.AvaloniaUI.Tests
 			await waitUntil(() => window.LayoutMode == LayoutMode.Preprocessor, "preprocessor layout");
 			Assert.That(window.getCurrentPostprocessView(), Is.Null);
 			Assert.That(window.ActiveViewport.SceneFacade.ContainsMesh, Is.False);
+		}
+
+		[AvaloniaTest]
+		public async Task Results_imported_with_SVD_compression_match_uncompressed_results()
+		{
+			// SVD used a native library (redsvd) that was not shipped with the .NET build (issue #11)
+			async Task<(double Minimum, double Maximum)> temperatureRange(string solutionFileName)
+			{
+				var window = showMainWindow();
+				var postprocessView = await openSolution(window, solutionFileName);
+				var dataSelection = postprocessView.dataSelectionControl;
+				dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == "Temperature");
+				IDataVisualizer dataVisualizer = null;
+				await waitUntil(() => dataSelection.CurrentDataSelection.FieldName == "Temperature"
+					&& (dataVisualizer = window.ActiveViewport.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer) != null
+					&& !double.IsNaN(dataVisualizer.GetMinimumDataValue()), "Temperature data is displayed");
+				window.ActiveViewport.Refresh();
+				byte[] frame = window.ActiveViewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out _, out _);
+				Assert.That(countColoredPixels(frame), Is.GreaterThan(1000), "mesh is colored by the selected field");
+				var range = (dataVisualizer.GetMinimumDataValue(), dataVisualizer.GetMaximumDataValue());
+				window.Close();
+				return range;
+			}
+
+			var (minimum, maximum) = await temperatureRange(importSolution("uncompressed"));
+			Assert.That(maximum, Is.GreaterThan(minimum));
+			double tolerance = 1e-9 * (maximum - minimum);
+
+			var exact = await temperatureRange(importSolution("svd", "SVD"));
+			Assert.That(exact.Minimum, Is.EqualTo(minimum).Within(tolerance), "full-rank SVD is lossless");
+			Assert.That(exact.Maximum, Is.EqualTo(maximum).Within(tolerance), "full-rank SVD is lossless");
+
+			foreach (var parameters in new[] { new[] { "SVD", "error", "0.01" }, new[] { "SVD", "error", "0.01", "randomized" }, new[] { "SVD", "size", "0.5", "randomized" } })
+			{
+				var compressed = await temperatureRange(importSolution(string.Join("-", parameters), parameters));
+				Assert.That(compressed.Minimum, Is.Not.NaN, string.Join(" ", parameters));
+				Assert.That(compressed.Maximum, Is.Not.NaN, string.Join(" ", parameters));
+			}
+			Assert.That(ErrorReports(), Is.Null);
 		}
 
 		[AvaloniaTest]

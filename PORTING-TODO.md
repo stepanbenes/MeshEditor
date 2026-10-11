@@ -24,11 +24,8 @@ This file lists what still needs work before the port can replace the WinForms a
 
 ## 2. Native randomized SVD (`redsvd`)
 
-- [ ] `MeshEditor.LayerManager/Compression/RedSvdDriver.cs` calls `[DllImport("redsvd.dll")]`. It is used by the "Use Randomized SVD" option of the import/compression settings.
-  - The repository has only the Linux sources and `linux-deployment/redsvd/redsvd.so`.
-  - Nothing is copied to the .NET 10 build output, and there is no Windows binary.
-- [ ] Build and ship the native library for each platform, for example as `runtimes/<rid>/native`. Map `redsvd.dll` to `redsvd.so` on Linux with `NativeLibrary.SetDllImportResolver`.
-- [ ] Add a test that imports results with SVD + randomized compression.
+- [x] `RedSvdDriver` no longer calls the native `redsvd.dll`, which was missing from the .NET 10 build on every platform (issue #11). It is now managed code that uses MathNet.Numerics: a thin QR followed by an SVD of R for the exact SVD, and a port of the RedSVD algorithm for the randomized one. The native sources and `redsvd.so` were removed.
+- [x] Tests: `SvdTests` and `PostprocessorTests.Results_imported_with_SVD_compression_match_uncompressed_results`.
 
 ## 3. Update check and user guide link
 
