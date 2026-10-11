@@ -91,6 +91,25 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public void CheckedInputValueDialog_check_box_is_not_clipped()
+		{
+			// issue #26: the check box was moved up by a negative margin and the top of its box was clipped
+			var dialog = new CheckedInputValueDialog("Insert property number", "Select elements by property:", "add to selection");
+			dialog.Show();
+			Dispatcher.UIThread.RunJobs();
+
+			var host = (Visual)dialog.CheckBox.GetVisualParent();
+			Rect box = dialog.CheckBox.Bounds;
+			Assert.That(box.Top, Is.GreaterThanOrEqualTo(0), "check box lies inside its host");
+			Assert.That(box.Bottom, Is.LessThanOrEqualTo(host.Bounds.Height));
+			double labelBottom = dialog.labelText.TranslatePoint(new Point(0, dialog.labelText.Bounds.Height), dialog).Value.Y;
+			double textBoxTop = dialog.textBoxValue.TranslatePoint(default, dialog).Value.Y;
+			double checkBoxTop = dialog.CheckBox.TranslatePoint(default, dialog).Value.Y;
+			Assert.That(checkBoxTop, Is.GreaterThanOrEqualTo(labelBottom), "check box does not overlap the text");
+			Assert.That(checkBoxTop + box.Height, Is.LessThanOrEqualTo(textBoxTop), "check box does not overlap the value");
+		}
+
+		[AvaloniaTest]
 		public void PropertyInputDialog_remembers_its_own_value()
 		{
 			InputValueDialog.SavedValue = "1";

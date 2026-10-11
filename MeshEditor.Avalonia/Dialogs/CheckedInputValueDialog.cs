@@ -25,7 +25,9 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 			{
 				Name = "checkBox",
 				Content = checkBoxText,
-				Margin = new Thickness(0, -6, 0, 6),
+				// the Fluent theme reserves 32 px of height; a negative margin to compensate clipped the box (issue #26)
+				MinHeight = 0,
+				Margin = new Thickness(0, 0, 0, 12),
 			};
 			ContentAboveValue = checkBox;
 		}
