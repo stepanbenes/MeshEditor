@@ -47,6 +47,7 @@ namespace MeshEditor.Data
 
 		// -------------------------------
 		private CrossHatchShader crossHatchShader;
+		private TwoSidedLightingShader twoSidedLightingShader;
 		// -------------------------------
 		// -- parametry noveho souradneho systemu site
 		private Vector3 positionOffset;
@@ -510,6 +511,7 @@ namespace MeshEditor.Data
 
 				bool drawData = content.DataVisualizer != null & !facePropertyColors & !elementPropertyColors;
 				bool userCrossHatching = HasTwinElements & (elementPropertyColors | facePropertyColors);
+				bool useTwoSidedLightingShader = false;
 
 				if (drawData) // iso-areas shader
 				{
@@ -520,6 +522,13 @@ namespace MeshEditor.Data
 					initializeCrossHatchShader(); // multiple property colors hatching shader
 					crossHatchShader.Use(statistics.GetElementPropertyColorsPalette());
 				}
+				else if (Scene.FaceLighting)
+				{
+					twoSidedLightingShader ??= new TwoSidedLightingShader(); // the fixed-function two-sided lighting is slow
+					useTwoSidedLightingShader = twoSidedLightingShader.IsReady;
+					if (useTwoSidedLightingShader)
+						twoSidedLightingShader.Use();
+				}
 
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, camera);
 
@@ -528,6 +537,8 @@ namespace MeshEditor.Data
 					content.DataVisualizer.EndDraw();
 				else if (userCrossHatching)
 					crossHatchShader.Unuse();
+				else if (useTwoSidedLightingShader)
+					twoSidedLightingShader.Unuse();
 
 				if (showElementNumbers)
 					content.DrawVisibleElementNumbers(selectedItems);
@@ -728,6 +739,9 @@ namespace MeshEditor.Data
 				crossHatchShader.Dispose();
 				crossHatchShader = null;
 			}
+
+			twoSidedLightingShader?.Dispose();
+			twoSidedLightingShader = null;
 		}
 
 		public void RecreateBuffers()

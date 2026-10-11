@@ -45,7 +45,10 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		#region Fields
 
 		private readonly OffscreenGlContext glContext;
+		// frames are written into the back bitmap and then swapped: the compositor draws the front bitmap on the render thread
+		// under its lock, writing into it would make the compositor wait for the GPU (glReadPixels) and miss frames
 		private WriteableBitmap frontBuffer;
+		private WriteableBitmap backBuffer;
 		private int renderRequested; // 0/1, accessed from timer threads of SceneFacade
 		private bool isActive;
 		private SceneFacade sceneFacade;
@@ -143,10 +146,15 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		/// <summary>
 		/// Schedules a redraw (Control.Invalidate in WinForms). Can be called from any thread.
 		/// </summary>
+		/// <remarks>
+		/// Render priority, not Background: on Windows Avalonia defers jobs below Input while input is pending and runs them
+		/// later from a timer, which made frames skip for up to 100 ms while the mouse was dragging the camera.
+		/// The pending render is not posted again, so it is still one render per batch of requests.
+		/// </remarks>
 		public void Invalidate()
 		{
 			if (Interlocked.Exchange(ref renderRequested, 1) == 0)
-				Dispatcher.UIThread.Post(renderNow, DispatcherPriority.Background);
+				Dispatcher.UIThread.Post(renderNow, DispatcherPriority.Render);
 		}
 
 		/// <summary>
@@ -183,22 +191,30 @@ namespace MeshEditor.AvaloniaUI.Rendering
 				OpenTK.Graphics.OpenGL.GL.GetInteger(OpenTK.Graphics.OpenGL.GetPName.Viewport, viewport);
 				Diag($"present msaa={glContext.Samples}x fbo={width}x{height} glViewport={string.Join(",", viewport)} bounds={Bounds}");
 			}
-			if (frontBuffer == null || frontBuffer.PixelSize.Width != width || frontBuffer.PixelSize.Height != height)
+			if (backBuffer == null || backBuffer.PixelSize.Width != width || backBuffer.PixelSize.Height != height)
 			{
-				frontBuffer?.Dispose();
-				frontBuffer = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
+				backBuffer?.Dispose();
+				backBuffer = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
 			}
-			using (var locked = frontBuffer.Lock())
+			using (var locked = backBuffer.Lock())
 			{
-				glContext.ReadPixelsBgra(0, 0, width, height, locked.Address, locked.RowBytes);
+				if (locked.RowBytes == width * 4)
+					glContext.ReadFrameBottomUp(locked.Address); // Render flips the rows
+				else // padded rows: copy them bottom-up
+					glContext.ReadPixelsBgra(0, 0, width, height, locked.Address + (height - 1) * locked.RowBytes, -locked.RowBytes);
 			}
+			(frontBuffer, backBuffer) = (backBuffer, frontBuffer);
 			InvalidateVisual();
 		}
 
 		public override void Render(DrawingContext context)
 		{
 			if (frontBuffer != null) // the bitmap has device pixel size; stretch exactly the whole bitmap over the control
-				context.DrawImage(frontBuffer, new Rect(0, 0, frontBuffer.PixelSize.Width, frontBuffer.PixelSize.Height), new Rect(Bounds.Size));
+			{
+				// the rows are bottom-up (OpenGL order): flip vertically
+				using (context.PushTransform(Matrix.CreateScale(1, -1) * Matrix.CreateTranslation(0, Bounds.Height)))
+					context.DrawImage(frontBuffer, new Rect(0, 0, frontBuffer.PixelSize.Width, frontBuffer.PixelSize.Height), new Rect(Bounds.Size));
+			}
 			else
 				context.FillRectangle(Brushes.Black, new Rect(Bounds.Size));
 		}
@@ -1014,6 +1030,8 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			unhookSceneEvents();
 			frontBuffer?.Dispose();
 			frontBuffer = null;
+			backBuffer?.Dispose();
+			backBuffer = null;
 			glContext.Dispose();
 		}
 

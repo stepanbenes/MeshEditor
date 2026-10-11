@@ -232,6 +232,16 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			}
 		}
 
+		/// <summary>
+		/// Reads the whole frame as BGRA rows bottom-up (OpenGL order), saving the row flip of <see cref="ReadPixelsBgra"/>.
+		/// </summary>
+		public void ReadFrameBottomUp(IntPtr destination)
+		{
+			MakeCurrent();
+			GL.PixelStore(PixelStoreParameter.PackAlignment, 4);
+			GL.ReadPixels(0, 0, Width, Height, PixelFormat.Bgra, PixelType.UnsignedByte, destination);
+		}
+
 		private void deleteFramebuffer()
 		{
 			deleteMultisampledFramebuffer();
