@@ -229,6 +229,18 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			(cancellationToken, logger) => SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken, logger);
 
 		/// <summary>
+		/// Uploads the local solution to the remote storage (tests replace it).
+		/// </summary>
+		internal static Func<string, IProgress<RemoteOperationProgress>, CancellationToken, MemoryLogger, Task<ISolutionInfo>> UploadLocalSolutionToRemoteAsync { get; set; } =
+			(solutionFileName, progress, cancellationToken, logger) => SolutionHub.UploadLocalSolutionToRemoteAsync(solutionFileName, cancellationToken, logger, progress);
+
+		/// <summary>
+		/// Deletes the remote solution (tests replace it).
+		/// </summary>
+		internal static Func<int, IProgress<RemoteOperationProgress>, CancellationToken, MemoryLogger, Task> DeleteRemoteSolutionAsync { get; set; } =
+			(solutionId, progress, cancellationToken, logger) => SolutionHub.DeleteRemoteSolutionAsync(solutionId, cancellationToken, logger, progress);
+
+		/// <summary>
 		/// Shows the dialog, returns true if a solution was chosen (DialogResult.OK).
 		/// </summary>
 		public new async Task<bool> ShowDialog(Window owner)
@@ -501,29 +513,57 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 						return;
 				}
 
-				object buttonText = buttonUploadLocalSolution.Content;
-				buttonUploadLocalSolution.IsEnabled = false;
-				buttonUploadLocalSolution.Content = "Uploading...";
-				localSolutionListView.IsEnabled = false;
 				var logger = new MemoryLogger();
+				ISolutionInfo remoteSolution = null;
 				try
 				{
-					var remoteSolution = await SolutionHub.UploadLocalSolutionToRemoteAsync(selectedSolution.Location, formClosedCancellationSource.Token, logger);
-					remoteSolutionsTabOpened = false; // reload the remote solutions
-					await MessageBox.Show($"Solution '{selectedSolution.ProjectName}' was uploaded as remote solution {remoteSolution.Id} of {RemoteUser}.", "Upload to remote", MessageBoxButtons.OK, MessageBoxIcon.Information, owner: this);
+					await runRemoteOperationAsync($"Uploading solution '{selectedSolution.ProjectName}'", async (progress, cancellationToken) =>
+						remoteSolution = await UploadLocalSolutionToRemoteAsync(selectedSolution.Location, progress, cancellationToken, logger));
 				}
 				catch (OperationCanceledException)
-				{ }
+				{
+					return; // no remote solution was created and the uploaded layer files were deleted
+				}
 				catch (Exception ex)
 				{
 					await ExceptionReportDialog.Show("Uploading solution to remote storage", ex, logger);
+					return;
 				}
-				finally
-				{
-					buttonUploadLocalSolution.Content = buttonText;
-					localSolutionListView.IsEnabled = true;
-					updateButtonStates();
-				}
+				remoteSolutionsTabOpened = false; // reload the remote solutions
+				await MessageBox.Show($"Solution '{selectedSolution.ProjectName}' was uploaded as remote solution {remoteSolution.Id} of {RemoteUser}.", "Upload to remote", MessageBoxButtons.OK, MessageBoxIcon.Information, owner: this);
+			}
+		}
+
+		/// <summary>
+		/// Runs an upload or a deletion in the remote storage with a progress window, which can cancel it. Nothing else can be done
+		/// in the dialog meanwhile (the progress window is modal and the content of the dialog is disabled).
+		/// </summary>
+		private async Task runRemoteOperationAsync(string caption, Func<IProgress<RemoteOperationProgress>, CancellationToken, Task> operation)
+		{
+			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(formClosedCancellationSource.Token);
+			var progressView = new ProgressViewDialog(caption, enableCancellation: true) { WindowStartupLocation = WindowStartupLocation.CenterOwner };
+			progressView.OperationName = caption + "...";
+			progressView.SetProgressState(-1);
+			progressView.Cancel += (s, e) => cancellationSource.Cancel();
+			var progress = new Progress<RemoteOperationProgress>(p =>
+			{
+				progressView.OperationName = p.Message;
+				progressView.SetProgressState(p.PercentDone);
+			});
+
+			var content = (Control)Content;
+			content.IsEnabled = false;
+			Task progressViewClosed = progressView.ShowModalAsync(this);
+			try
+			{
+				await operation(progress, cancellationSource.Token);
+			}
+			finally
+			{
+				progressView.Quit();
+				await progressViewClosed;
+				content.IsEnabled = true;
+				updateButtonStates();
 			}
 		}
 
@@ -536,25 +576,23 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				if (await MessageBox.Show($"Delete remote solution {selectedSolution.Id} ('{selectedSolution.ProjectName}') with all its layers?", "Delete remote solution", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, owner: this) != MessageBoxResult.Yes)
 					return;
 
-				object buttonText = buttonDeleteRemoteSolution.Content;
-				buttonDeleteRemoteSolution.IsEnabled = false;
-				buttonDeleteRemoteSolution.Content = "Deleting...";
-				remoteSolutionListView.IsEnabled = false;
 				var logger = new MemoryLogger();
 				try
 				{
-					var solutionHub = SolutionHub.OpenRemote(selectedSolution.Id, logger);
-					await solutionHub.DeleteAsync(layerIdOrName: null, deleteAll: true, cancellationToken: formClosedCancellationSource.Token);
+					await runRemoteOperationAsync($"Deleting remote solution {selectedSolution.Id}", (progress, cancellationToken) =>
+						DeleteRemoteSolutionAsync(selectedSolution.Id, progress, cancellationToken, logger));
+				}
+				catch (OperationCanceledException) when (!formClosedCancellationSource.IsCancellationRequested)
+				{
+					await MessageBox.Show($"Deletion of remote solution {selectedSolution.Id} was cancelled. Some of its layers may already be deleted; delete the solution again to delete the rest.", "Delete remote solution", MessageBoxButtons.OK, MessageBoxIcon.Warning, owner: this);
+				}
+				catch (OperationCanceledException)
+				{
+					return; // the dialog was closed
 				}
 				catch (Exception ex)
 				{
 					await ExceptionReportDialog.Show("Deleting remote solution", ex, logger);
-				}
-				finally
-				{
-					buttonDeleteRemoteSolution.Content = buttonText;
-					remoteSolutionListView.IsEnabled = true;
-					updateButtonStates();
 				}
 
 				RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);

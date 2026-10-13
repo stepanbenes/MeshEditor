@@ -146,15 +146,20 @@ namespace MeshEditor.SolutionManager
 		{
 			var user = getSignedInRemoteUser();
 			var serviceClient = RemoteStorageConnection.CreateServiceClient(user);
-			var layerStorage = new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName), user.Id);
-			return new SolutionHub(
+			var solutionController = createRemoteSolutionController(serviceClient, user);
+			SolutionHub solutionHub = null;
+			// the layers are in the layer folder of the solution: known when the solution is read (not here, this can run on the UI thread)
+			var layerStorage = new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName),
+				() => solutionController.GetLayerFolder(solutionHub.Solution));
+			solutionHub = new SolutionHub(
 				solutionLocator: solutionId,
-				solutionController: createRemoteSolutionController(serviceClient, user),
+				solutionController: solutionController,
 				importStorage: new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.ResultsBlobContainerName), user.Id),
 				layerSourceStorage: layerStorage,
 				layerDestinationStorage: layerStorage,
 				logger: logger
 			);
+			return solutionHub;
 		}
 
 		/// <summary>
@@ -178,18 +183,55 @@ namespace MeshEditor.SolutionManager
 		/// <summary>
 		/// Copies the local solution with all its layers to the remote storage as a solution of the signed-in user. Returns the new remote solution.
 		/// </summary>
-		public static async Task<ISolutionInfo> UploadLocalSolutionToRemoteAsync(string solutionFileName, CancellationToken cancellationToken, ILogger logger = null)
+		public static async Task<ISolutionInfo> UploadLocalSolutionToRemoteAsync(string solutionFileName, CancellationToken cancellationToken, ILogger logger = null, IProgress<RemoteOperationProgress> progress = null)
 		{
 			Debug.Assert(solutionFileName != null);
 			var user = await GetRemoteUserAsync(cancellationToken) ?? throw signInRequired();
 			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
 			var localSolution = await new LocalSolutionController(solutionDirectory).GetAsync(solutionFileName, cancellationToken);
 
-			var progress = logger == null ? null : new Progress<string>(message => logger.LogOperationProgress(message));
 			var controller = createRemoteSolutionController(RemoteStorageConnection.CreateServiceClient(user), user);
-			var remoteSolution = await controller.UploadAsync(localSolution, solutionDirectory, progress, cancellationToken);
+			var remoteSolution = await controller.UploadAsync(localSolution, solutionDirectory, new LoggedRemoteProgress(progress, logger), cancellationToken);
 			logger?.LogMessage($"Uploaded as remote solution {remoteSolution.Id} of {user} ({remoteSolution.Location})");
 			return remoteSolution;
+		}
+
+		/// <summary>
+		/// Deletes the remote solution of the signed-in user with all its layers. When cancelled, the solution can be partially deleted
+		/// (some of its layers), but it is still listed and can be deleted again.
+		/// </summary>
+		public static async Task DeleteRemoteSolutionAsync(int solutionId, CancellationToken cancellationToken, ILogger logger = null, IProgress<RemoteOperationProgress> progress = null)
+		{
+			var user = await GetRemoteUserAsync(cancellationToken) ?? throw signInRequired();
+			var controller = createRemoteSolutionController(RemoteStorageConnection.CreateServiceClient(user), user);
+			await controller.DeleteAsync(solutionId, new LoggedRemoteProgress(progress, logger), cancellationToken);
+			logger?.LogMessage($"Deleted remote solution {solutionId} of {user}");
+		}
+
+		/// <summary>
+		/// Progress of a remote operation for the caller, each step is logged once (the progress of a step is reported repeatedly).
+		/// </summary>
+		private sealed class LoggedRemoteProgress : IProgress<RemoteOperationProgress>
+		{
+			private readonly IProgress<RemoteOperationProgress> progress;
+			private readonly ILogger logger;
+			private string loggedMessage;
+
+			public LoggedRemoteProgress(IProgress<RemoteOperationProgress> progress, ILogger logger)
+			{
+				this.progress = progress;
+				this.logger = logger;
+			}
+
+			public void Report(RemoteOperationProgress value)
+			{
+				if (value.Message != loggedMessage)
+				{
+					loggedMessage = value.Message;
+					logger?.LogOperationProgress(value.Message);
+				}
+				progress?.Report(value);
+			}
 		}
 
 		private static RemoteUser getSignedInRemoteUser()

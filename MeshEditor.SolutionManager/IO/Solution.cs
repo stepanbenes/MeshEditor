@@ -37,6 +37,14 @@ namespace MeshEditor.SolutionManager.IO
 		public AnalysisResult[] Results { get; set; }
 		public Layer[] Layers { get; set; }
 
+		/// <summary>
+		/// Folder of the layers of a remote solution, in the owner's folder of the layers container. Each remote solution has its own,
+		/// so that solutions uploaded from the same local solution (same layer ids) don't share layer files. Null for local solutions
+		/// and for remote solutions uploaded before, whose layers are directly in the owner's folder.
+		/// </summary>
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		public string LayerFolder { get; set; }
+
 		IReadOnlyList<ILayerInfo> ISolutionDescription.Layers => Layers;
 
 		#endregion
@@ -95,7 +103,8 @@ namespace MeshEditor.SolutionManager.IO
 				Location = toCopy.Location,
 				Owner = toCopy.Owner,
 				Results = toCopy.Results,
-				Layers = toCopy.Layers
+				Layers = toCopy.Layers,
+				LayerFolder = toCopy.LayerFolder
 			};
 			return newSolution;
 		}
