@@ -1,0 +1,30 @@
+@* Key time steps: all time steps, or merged into the listed ones (the desktop's "Merge time steps"). *@
+<div class="field">
+    <span class="flabel">Time steps</span>
+    <label class="check"><input type="checkbox" @bind="merge" /> Merge time steps into key time steps</label>
+    @if (merge)
+    {
+        <input class="input mono" id="@Id" placeholder="e.g. 1 5 10" @bind="text" aria-label="Key time steps" />
+        @if (Available.Length > 0)
+        {
+            <p class="hint">Time steps of the layer: @string.Join(" ", Available.Select(t => t.ToString(CultureInfo.InvariantCulture)))</p>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "keyTimeSteps";
+    [Parameter] public decimal[] Available { get; set; } = Array.Empty<decimal>();
+
+    private bool merge;
+    private string text = "";
+
+    public decimal[] GetKeyTimeSteps()
+    {
+        if (!merge)
+            return Array.Empty<decimal>();
+        return text.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => decimal.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? (decimal?)v : null)
+            .Where(v => v.HasValue).Select(v => v!.Value).ToArray();
+    }
+}

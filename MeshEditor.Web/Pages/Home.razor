@@ -1,0 +1,170 @@
+@page "/"
+@inject RemoteStorage Storage
+@inject NavigationManager Navigation
+
+<PageTitle>MeshEditor Online</PageTitle>
+
+@if (loading)
+{
+    <div class="boot"><span class="spin"></span></div>
+}
+else if (!Storage.IsConfigured)
+{
+    <div class="signin">
+        <div class="signcard">
+            <h1>The remote storage is not set up</h1>
+            <p>Put the storage account and the app registration into <code>wwwroot/appsettings.json</code> (section <code>AzureBlobStorage</code>), or enable the development storage in <code>DevelopmentStorage</code>.</p>
+        </div>
+    </div>
+}
+else if (error != null && Storage.User == null)
+{
+    <div class="signin">
+        <div class="signcard">
+            <h1>The storage could not be opened</h1>
+            <div class="note error">@error</div>
+            @if (Storage.IsDevelopment)
+            {
+                <p>Start Azurite and set it up for this site: see <code>MeshEditor.Web/README.md</code>.</p>
+            }
+            <button class="btn primary" type="button" @onclick="loadAsync">Try again</button>
+        </div>
+    </div>
+}
+else if (Storage.User == null)
+{
+    <div class="signin">
+        <div class="signcard">
+            <div class="brand"><span class="logo"></span>MeshEditor Online</div>
+            <h1>Your FEM solutions, in the browser</h1>
+            <p>Open the solutions you stored from MeshEditor, add sub layers and import new results. The layers are computed on your computer, in this browser tab.</p>
+            <button class="ms" type="button" @onclick="Storage.SignInAsync">
+                <svg viewBox="0 0 21 21" aria-hidden="true"><rect x="1" y="1" width="9" height="9" fill="#f25022" /><rect x="11" y="1" width="9" height="9" fill="#7fba00" /><rect x="1" y="11" width="9" height="9" fill="#00a4ef" /><rect x="11" y="11" width="9" height="9" fill="#ffb900" /></svg>
+                Sign in with Microsoft account
+            </button>
+            <div class="fine">Solutions are stored in <code>@Storage.StorageName</code>. You see only the solutions in your own folder, the same ones as in the desktop app.</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="content">
+        <div class="toolbar">
+            <h1>Remote solutions</h1>
+            <a class="btn primary" href="import">Import FEM results</a>
+            <label class="btn" for="uploadFolder">Upload local solution</label>
+            <input id="uploadFolder" type="file" webkitdirectory multiple hidden @onchange="uploadFolderAsync" />
+            <div class="spacer"></div>
+            <button class="btn" type="button" @onclick="refreshAsync" disabled="@refreshing">Refresh</button>
+        </div>
+
+        <JobList />
+
+        @if (error != null)
+        {
+            <div class="note error">@error</div>
+        }
+
+        <div class="tablebox">
+            <table>
+                <thead><tr><th>ID</th><th>Project</th><th>Results</th><th>Layers</th><th></th></tr></thead>
+                <tbody>
+                    @if (solutions == null)
+                    {
+                        <tr><td colspan="5" class="empty"><span class="spin"></span> Loading your solutions…</td></tr>
+                    }
+                    else if (solutions.Length == 0)
+                    {
+                        <tr><td colspan="5" class="empty">No remote solutions yet. Import FEM results or upload a local solution folder.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var s in solutions)
+                        {
+                            <tr @key="s.Id">
+                                <td class="num">@s.Id</td>
+                                <td><a class="proj" href="solutions/@s.Id">@s.ProjectName</a><span class="sub">@s.Location</span></td>
+                                <td><span class="sub">@string.Join(", ", s.ResultFiles)</span></td>
+                                <td><span class="tag">@s.LayerCount @(s.LayerCount == 1 ? "layer" : "layers")</span></td>
+                                <td class="actions">
+                                    @if (confirmDelete == s.Id)
+                                    {
+                                        <span class="sub" style="display:inline">Delete with all layers?</span>
+                                        <button class="btn sm danger" type="button" @onclick="() => deleteAsync(s)">Delete</button>
+                                        <button class="btn sm" type="button" @onclick="() => confirmDelete = null">Keep</button>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn sm primary" href="solutions/@s.Id">Open</a>
+                                        <button class="btn sm danger" type="button" @onclick="() => confirmDelete = s.Id">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="hint">A cancelled deletion leaves the solution listed, so that it can be deleted again.</p>
+    </div>
+}
+
+@code {
+    private bool loading = true, refreshing;
+    private string? error;
+    private SolutionSummary[]? solutions;
+    private int? confirmDelete;
+
+    protected override Task OnInitializedAsync() => loadAsync();
+
+    private async Task loadAsync()
+    {
+        loading = true;
+        error = null;
+        try
+        {
+            await Storage.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        loading = false;
+        if (Storage.User != null)
+            await refreshAsync();
+    }
+
+    private async Task refreshAsync()
+    {
+        refreshing = true;
+        try
+        {
+            solutions = await Storage.CallAsync<SolutionSummary[]>("listSolutions");
+            error = null;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            solutions ??= Array.Empty<SolutionSummary>();
+        }
+        refreshing = false;
+    }
+
+    private async Task deleteAsync(SolutionSummary solution)
+    {
+        confirmDelete = null;
+        await Storage.RunJobAsync<object>($"Deleting {solution.ProjectName} ({solution.Id})", "deleteSolution", new { solutionId = solution.Id });
+        await refreshAsync();
+    }
+
+    private async Task uploadFolderAsync(ChangeEventArgs e)
+    {
+        var files = await Storage.GetPickedFilesAsync("uploadFolder");
+        if (files.Length == 0)
+            return;
+        string folder = files[0].RelativePath.Split('/')[0];
+        await Storage.RunJobAsync<CreatedItem>($"Uploading {folder}", "uploadLocalSolution", fileInputIds: new[] { "uploadFolder" });
+        await Storage.ClearPickedFilesAsync("uploadFolder");
+        await refreshAsync();
+    }
+}

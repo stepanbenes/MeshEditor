@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+	<!-- .NET runtime of the web app's background worker: remote solutions, layer generation and 3D buffers.
+	     Published into the web app (MeshEditor.Web/wwwroot/worker) by the web app's build. -->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- the layer files are (de)serialized by reflection (Newtonsoft.Json) -->
+		<TrimMode>partial</TrimMode>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<!-- the assemblies with reflection are kept whole (TrimmerRootAssembly) -->
+		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+		<!-- the worker serializes its messages and the solutions with reflection -->
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<TrimmerRootAssembly Include="Newtonsoft.Json" />
+		<TrimmerRootAssembly Include="MeshEditor.LayerManager" />
+		<TrimmerRootAssembly Include="MeshEditor.SolutionManager" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj" />
+		<ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj" />
+	</ItemGroup>
+
+</Project>

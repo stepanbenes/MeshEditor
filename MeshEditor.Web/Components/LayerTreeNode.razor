@@ -1,0 +1,33 @@
+<li>
+    <button type="button" class="node @(Layer.Id == SelectedId ? "sel" : "")" @onclick="() => OnSelect.InvokeAsync(Layer)" title="@Layer.Name">
+        <span class="ico @(Layer.FilterType ?? "Master")">@icon(Layer.FilterType)</span>
+        <span class="nm">@Layer.Name</span>
+    </button>
+    @if (Layer.Children.Length > 0)
+    {
+        <ul>
+            @foreach (var child in Layer.Children)
+            {
+                <LayerTreeNode Layer="child" SelectedId="SelectedId" OnSelect="OnSelect" @key="child.Id" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired] public LayerNode Layer { get; set; } = default!;
+    [Parameter] public Guid? SelectedId { get; set; }
+    [Parameter] public EventCallback<LayerNode> OnSelect { get; set; }
+
+    private static string icon(string? filterType) => filterType switch
+    {
+        null => "M",
+        "Surface" => "S",
+        "Slice" => "C",
+        "IsoSurface" => "I",
+        "Deformation" => "D",
+        "TimeCompression" => "T",
+        "AttributeSelection" => "A",
+        _ => filterType[..1]
+    };
+}

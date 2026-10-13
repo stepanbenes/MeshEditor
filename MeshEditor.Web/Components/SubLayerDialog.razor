@@ -1,0 +1,252 @@
+@* New sub layer of a layer: one of the layer generator's filters, or compression only. Parameters as in the desktop filter dialogs. *@
+<div class="scrim" @onclick="cancel">
+    <div class="dialog" role="dialog" aria-labelledby="subLayerTitle" @onclick:stopPropagation="true">
+        <header>
+            <div>
+                <h2 id="subLayerTitle">New sub layer of “@Parent.Name”</h2>
+                <p>The layer is computed in this browser tab and saved to your remote solution.</p>
+            </div>
+            <button class="btn sm ghost" type="button" @onclick="cancel" aria-label="Close">✕</button>
+        </header>
+        <div class="body">
+            <div class="field">
+                <span class="flabel">Filter</span>
+                <div class="seg">
+                    @foreach (var (type, label) in FilterTypes)
+                    {
+                        <button type="button" class="@(filterType == type ? "on" : "")" @onclick="() => select(type)">@label</button>
+                    }
+                </div>
+            </div>
+
+            <div class="box">
+                @switch (filterType)
+                {
+                    case "Surface":
+                        <div class="field"><label for="edgeAngles">Edge angle limits (degrees)</label><input class="input mono" id="edgeAngles" @bind="edgeAngles" /></div>
+                        <p class="hint">The outer surface of the volume cells. Edges sharper than the angle are kept as feature edges.</p>
+                        break;
+                    case "Slice":
+                        <div class="row">
+                            <div class="field"><label for="nx">Normal X</label><input class="input mono" id="nx" @bind="normalX" /></div>
+                            <div class="field"><label for="ny">Normal Y</label><input class="input mono" id="ny" @bind="normalY" /></div>
+                            <div class="field"><label for="nz">Normal Z</label><input class="input mono" id="nz" @bind="normalZ" /></div>
+                            <div class="field"><label for="offset">Offset</label><input class="input mono" id="offset" @bind="offset" /></div>
+                        </div>
+                        @if (Bounds != null)
+                        {
+                            <p class="hint">The layer spans x @fmt(Bounds[0]) … @fmt(Bounds[3]), y @fmt(Bounds[1]) … @fmt(Bounds[4]), z @fmt(Bounds[2]) … @fmt(Bounds[5]).</p>
+                        }
+                        break;
+                    case "IsoSurface":
+                        <div class="row">
+                            <div class="field">
+                                <label for="isoField">Field</label>
+                                <select class="input" id="isoField" @bind="isoField" @bind:after="isoFieldChanged">
+                                    @foreach (var f in Fields)
+                                    {
+                                        <option value="@f.Name">@f.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="isoComponent">Component</label>
+                                <select class="input" id="isoComponent" @bind="isoComponent">
+                                    @foreach (var c in Fields.FirstOrDefault(f => f.Name == isoField)?.Components ?? Array.Empty<string>())
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="field"><label for="isoValue">Value</label><input class="input mono" id="isoValue" @bind="isoValue" /></div>
+                        </div>
+                        break;
+                    case "Deformation":
+                        <div class="row">
+                            <div class="field">
+                                <label for="defField">Displacement field</label>
+                                <select class="input" id="defField" @bind="deformationField">
+                                    @foreach (var f in Fields.Where(f => f.Components.Length > 1))
+                                    {
+                                        <option value="@f.Name">@f.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="field"><label for="defScale">Relative scale (optional)</label><input class="input mono" id="defScale" @bind="deformationScale" /></div>
+                        </div>
+                        break;
+                    case "AttributeSelection":
+                        <div class="row">
+                            <div class="field"><label for="attrName">Attribute</label><input class="input mono" id="attrName" @bind="attributeName" /></div>
+                            <div class="field"><label for="attrValues">Selected values</label><input class="input mono" id="attrValues" @bind="attributeValues" /></div>
+                        </div>
+                        <p class="hint">Keeps the cells whose attribute (e.g. ElementProperty) has one of the values.</p>
+                        break;
+                    case "TimeCompression":
+                        <div class="field">
+                            <label for="tcField">Field (optional)</label>
+                            <select class="input" id="tcField" @bind="timeCompressionField">
+                                <option value="">All fields</option>
+                                @foreach (var f in Fields)
+                                {
+                                    <option value="@f.Name">@f.Name</option>
+                                }
+                            </select>
+                        </div>
+                        break;
+                    case "Compress":
+                        <p class="hint">A copy of the layer with its data compressed.</p>
+                        break;
+                }
+            </div>
+
+            <KeyTimeSteps @ref="keyTimeSteps" Id="subKeyTimeSteps" Available="TimeSteps" />
+            @if (filterType == "Compress")
+            {
+                <CompressionOptions @ref="compression" IdPrefix="subCompression" AllowNone="false" />
+            }
+            else
+            {
+                <CompressionOptions @ref="compression" IdPrefix="subCompression" />
+            }
+            <div class="row">
+                <div class="field">
+                    <label for="onlyField">Fields</label>
+                    <select class="input" id="onlyField" @bind="onlyField">
+                        <option value="">All fields</option>
+                        @foreach (var f in Fields)
+                        {
+                            <option value="@f.Name">Only @f.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="field"><label for="layerName">Layer name</label><input class="input" id="layerName" @bind="name" /></div>
+            </div>
+            @if (error != null)
+            {
+                <div class="note error">@error</div>
+            }
+        </div>
+        <footer>
+            <button class="btn" type="button" @onclick="cancel">Cancel</button>
+            <button class="btn primary" type="button" @onclick="create">Create layer</button>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private static readonly (string type, string label)[] FilterTypes =
+    {
+        ("Surface", "Surface"), ("Slice", "Slice"), ("IsoSurface", "Iso-surface"), ("Deformation", "Deformation"),
+        ("AttributeSelection", "Attribute selection"), ("TimeCompression", "Time compression"), ("Compress", "Compress only")
+    };
+
+    [Parameter, EditorRequired] public int SolutionId { get; set; }
+    [Parameter, EditorRequired] public LayerNode Parent { get; set; } = default!;
+    [Parameter] public FieldInfo[] Fields { get; set; } = Array.Empty<FieldInfo>();
+    [Parameter] public decimal[] TimeSteps { get; set; } = Array.Empty<decimal>();
+    /// <summary>min x, y, z, max x, y, z of the parent layer, when known</summary>
+    [Parameter] public float[]? Bounds { get; set; }
+    [Parameter] public double? ValueMin { get; set; }
+    [Parameter] public double? ValueMax { get; set; }
+    [Parameter] public string? CurrentField { get; set; }
+    [Parameter] public string? CurrentComponent { get; set; }
+    [Parameter] public EventCallback<object> OnCreate { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private KeyTimeSteps? keyTimeSteps;
+    private CompressionOptions? compression;
+    private string filterType = "Surface";
+    private string name = "surface";
+    private string edgeAngles = "45";
+    private string normalX = "0", normalY = "0", normalZ = "1", offset = "0";
+    private string isoField = "", isoComponent = "", isoValue = "0";
+    private string deformationField = "", deformationScale = "";
+    private string attributeName = "ElementProperty", attributeValues = "1";
+    private string timeCompressionField = "";
+    private string onlyField = "";
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (Bounds != null)
+            offset = fmt((Bounds[2] + Bounds[5]) / 2);
+        var field = Fields.FirstOrDefault(f => f.Name == CurrentField) ?? Fields.FirstOrDefault();
+        isoField = field?.Name ?? "";
+        isoComponent = field == null ? "" : (field.Components.Contains(CurrentComponent) ? CurrentComponent! : field.Components.FirstOrDefault() ?? "");
+        if (ValueMin.HasValue && ValueMax.HasValue)
+            isoValue = fmt((ValueMin.Value + ValueMax.Value) / 2);
+        deformationField = Fields.FirstOrDefault(f => f.Components.Length > 1)?.Name ?? "";
+    }
+
+    private void select(string type)
+    {
+        filterType = type;
+        name = type switch
+        {
+            "Surface" => "surface",
+            "Slice" => $"slice {normalX} {normalY} {normalZ} {offset}",
+            "IsoSurface" => $"iso {isoField} {isoValue}",
+            "Deformation" => "deformation",
+            "AttributeSelection" => "selection",
+            "TimeCompression" => "time compression",
+            _ => ""
+        };
+        error = null;
+    }
+
+    private void isoFieldChanged() => isoComponent = Fields.FirstOrDefault(f => f.Name == isoField)?.Components.FirstOrDefault() ?? "";
+
+    private async Task create()
+    {
+        string[] parameters;
+        string n(string s) => s.Trim().Replace(',', '.');
+        bool number(string s) => double.TryParse(n(s), NumberStyles.Float, CultureInfo.InvariantCulture, out _);
+        switch (filterType)
+        {
+            case "Surface":
+                parameters = edgeAngles.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(n).ToArray();
+                if (parameters.Length == 0 || !parameters.All(number)) { error = "Enter the edge angle in degrees, e.g. 45."; return; }
+                break;
+            case "Slice":
+                parameters = new[] { normalX, normalY, normalZ, offset }.Select(n).ToArray();
+                if (!parameters.All(number)) { error = "The normal and the offset must be numbers."; return; }
+                break;
+            case "IsoSurface":
+                if (string.IsNullOrEmpty(isoField) || string.IsNullOrEmpty(isoComponent) || !number(isoValue)) { error = "Choose a field and a component, and enter the value."; return; }
+                parameters = new[] { isoField, isoComponent, n(isoValue) };
+                break;
+            case "Deformation":
+                if (string.IsNullOrEmpty(deformationField)) { error = "The layer has no vector field."; return; }
+                if (deformationScale.Trim().Length > 0 && !number(deformationScale)) { error = "The scale must be a number."; return; }
+                parameters = deformationScale.Trim().Length > 0 ? new[] { deformationField, n(deformationScale) } : new[] { deformationField };
+                break;
+            case "AttributeSelection":
+                var values = attributeValues.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                if (string.IsNullOrWhiteSpace(attributeName) || values.Length == 0 || !values.All(v => int.TryParse(v, out _))) { error = "Enter the attribute name and whole-number values."; return; }
+                parameters = values.Prepend(attributeName.Trim()).ToArray();
+                break;
+            case "TimeCompression":
+                parameters = string.IsNullOrEmpty(timeCompressionField) ? Array.Empty<string>() : new[] { timeCompressionField };
+                break;
+            default:
+                parameters = Array.Empty<string>();
+                break;
+        }
+        await OnCreate.InvokeAsync(new
+        {
+            solutionId = SolutionId,
+            parentLayerId = Parent.Id,
+            filterType,
+            filterParameters = parameters,
+            keyTimeSteps = keyTimeSteps?.GetKeyTimeSteps() ?? Array.Empty<decimal>(),
+            compression = compression?.GetParameters() ?? Array.Empty<string>(),
+            fieldName = string.IsNullOrEmpty(onlyField) ? null : onlyField,
+            name = string.IsNullOrWhiteSpace(name) ? null : name.Trim()
+        });
+    }
+
+    private Task cancel() => OnCancel.InvokeAsync();
+
+    private static string fmt(double v) => Math.Round(v, 4).ToString(CultureInfo.InvariantCulture);
+}

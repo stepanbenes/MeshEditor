@@ -1,0 +1,460 @@
+@page "/solutions/{SolutionId:int}"
+@implements IAsyncDisposable
+@inject RemoteStorage Storage
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>@(solution?.ProjectName ?? "Solution") · MeshEditor Online</PageTitle>
+<SectionContent SectionName="crumbs"><a href="">Remote solutions</a> / <b>@SolutionId · @(solution?.ProjectName ?? "…")</b></SectionContent>
+
+<div class="ws">
+    <aside class="side">
+        <h3>
+            Layers
+            @if (selected != null)
+            {
+                <button class="btn sm" type="button" @onclick="() => showSubLayerDialog = true" disabled="@(detail == null)">+ Sub layer</button>
+            }
+        </h3>
+        @if (solution == null)
+        {
+            <p class="hint" style="padding:0 14px"><span class="spin"></span> Loading the solution…</p>
+        }
+        else if (solution.Layers.Length == 0)
+        {
+            <p class="hint" style="padding:0 14px">The solution has no layers.</p>
+        }
+        else
+        {
+            <ul class="tree">
+                @foreach (var layer in solution.Layers)
+                {
+                    <LayerTreeNode Layer="layer" SelectedId="selected?.Id" OnSelect="selectAsync" @key="layer.Id" />
+                }
+            </ul>
+        }
+        <div style="padding:8px 10px">
+            <JobList />
+        </div>
+    </aside>
+
+    <div class="vpwrap">
+        <div class="vp-canvas" @ref="viewportHost"></div>
+        <div class="vpbar">
+            @if (detail != null && detail.Fields.Length > 0)
+            {
+                <div class="vpgroup">
+                    <label for="field">Field</label>
+                    <select id="field" @bind="fieldName" @bind:after="fieldChangedAsync">
+                        <option value="">No colors</option>
+                        @foreach (var f in detail.Fields)
+                        {
+                            <option value="@f.Name">@f.Name</option>
+                        }
+                    </select>
+                    @if (currentField != null && currentField.Components.Length > 1)
+                    {
+                        <select id="component" aria-label="Component" @bind="component" @bind:after="showAsync">
+                            <option value="magnitude">|magnitude|</option>
+                            @foreach (var c in currentField.Components)
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        </select>
+                    }
+                </div>
+            }
+            @if (timeSteps.Length > 1)
+            {
+                <div class="vpgroup">
+                    <label for="step">Step</label>
+                    <input id="step" type="range" min="0" max="@(timeSteps.Length - 1)" @bind="stepIndex" @bind:event="oninput" @bind:after="showAsync" />
+                    <span class="val">@timeSteps[Math.Clamp(stepIndex, 0, timeSteps.Length - 1)].ToString(CultureInfo.InvariantCulture)</span>
+                    <button class="vpbtn @(playing ? "on" : "")" type="button" @onclick="togglePlay">@(playing ? "Pause" : "Play")</button>
+                </div>
+            }
+            @if (vectorFields.Length > 0)
+            {
+                <div class="vpgroup">
+                    <label for="deform">Deform</label>
+                    <select id="deform" @bind="deformField" @bind:after="showAsync">
+                        <option value="">None</option>
+                        @foreach (var f in vectorFields)
+                        {
+                            <option value="@f.Name">@f.Name</option>
+                        }
+                    </select>
+                    @if (!string.IsNullOrEmpty(deformField))
+                    {
+                        <label for="scale">×</label>
+                        <input id="scale" type="number" step="any" min="0" @bind="scaleText" @bind:after="scaleChangedAsync" placeholder="auto" />
+                    }
+                </div>
+            }
+            <div class="vpgroup">
+                <select aria-label="Colormap" @bind="colormap" @bind:after="showAsync">
+                    <option value="spectrum">Light spectrum</option>
+                    <option value="heat">Heat gradient</option>
+                    <option value="grayscale">Grayscale</option>
+                </select>
+                <button class="vpbtn @(bands ? "on" : "")" type="button" @onclick="toggleBands">Iso bands</button>
+                <button class="vpbtn @(edges ? "on" : "")" type="button" @onclick="toggleEdges">Mesh</button>
+                <button class="vpbtn" type="button" @onclick="resetCameraAsync">Fit</button>
+            </div>
+        </div>
+        @if (viewError != null)
+        {
+            <div class="vp-empty"><div class="note error">@viewError</div></div>
+        }
+        else if (selected == null && solution != null)
+        {
+            <div class="vp-empty">Select a layer to show it.</div>
+        }
+    </div>
+
+    <aside class="side right">
+        <h3>Layer</h3>
+        @if (detail == null)
+        {
+            <p class="hint" style="padding:0 14px">@(selected == null ? "No layer selected." : "Loading…")</p>
+        }
+        else
+        {
+            <dl class="kv">
+                <dt>Name</dt><dd>@detail.Name</dd>
+                <dt>Filter</dt><dd>@(detail.FilterType ?? "none (master layer)")</dd>
+                @if (filterParameters != null)
+                {
+                    <dt>Parameters</dt><dd>@filterParameters</dd>
+                }
+                @if (summary != null)
+                {
+                    <dt>Points</dt><dd>@summary.Points.ToString("N0", CultureInfo.InvariantCulture)</dd>
+                    <dt>Cells</dt><dd>@summary.Cells.ToString("N0", CultureInfo.InvariantCulture)</dd>
+                    <dt>Triangles drawn</dt><dd>@summary.Triangles.ToString("N0", CultureInfo.InvariantCulture)</dd>
+                }
+                <dt>Meshes</dt><dd>@detail.Meshes.Length</dd>
+                <dt>Time steps</dt><dd>@(timeSteps.Length == 0 ? "–" : $"{timeSteps.First().ToString(CultureInfo.InvariantCulture)} … {timeSteps.Last().ToString(CultureInfo.InvariantCulture)} ({timeSteps.Length})")</dd>
+            </dl>
+            <div class="sep"></div>
+            <h3>Fields</h3>
+            <dl class="kv">
+                @foreach (var f in detail.Fields)
+                {
+                    <dt>@f.Name</dt><dd>@string.Join(", ", f.Components)</dd>
+                }
+                @if (detail.Fields.Length == 0)
+                {
+                    <dt>none</dt><dd></dd>
+                }
+            </dl>
+            @if (summary?.Min != null)
+            {
+                <div class="sep"></div>
+                <h3>Shown values</h3>
+                <dl class="kv">
+                    <dt>Minimum</dt><dd>@fmt(summary.Min.Value)</dd>
+                    <dt>Maximum</dt><dd>@fmt(summary.Max!.Value)</dd>
+                    @if (!string.IsNullOrEmpty(deformField))
+                    {
+                        <dt>Deformation scale</dt><dd>×@fmt(summary.Scale)</dd>
+                    }
+                </dl>
+            }
+            <div class="sep"></div>
+            <div class="layer-actions">
+                <button class="btn sm primary" type="button" @onclick="() => showSubLayerDialog = true">New sub layer</button>
+                @if (confirmDelete)
+                {
+                    <span class="hint">Delete “@detail.Name” and its sub layers?</span>
+                    <button class="btn sm danger" type="button" @onclick="deleteLayerAsync">Delete</button>
+                    <button class="btn sm" type="button" @onclick="() => confirmDelete = false">Keep</button>
+                }
+                else
+                {
+                    <button class="btn sm danger" type="button" @onclick="() => confirmDelete = true">Delete layer</button>
+                }
+            </div>
+        }
+    </aside>
+</div>
+
+@if (showSubLayerDialog && selected != null && detail != null)
+{
+    <SubLayerDialog SolutionId="SolutionId" Parent="selected" Fields="detail.Fields" TimeSteps="allTimeSteps" Bounds="summary?.Bounds"
+                    ValueMin="summary?.Min" ValueMax="summary?.Max" CurrentField="@fieldName" CurrentComponent="@component"
+                    OnCreate="createLayerAsync" OnCancel="() => showSubLayerDialog = false" />
+}
+
+@code {
+    [Parameter] public int SolutionId { get; set; }
+
+    private SolutionDetail? solution;
+    private LayerNode? selected;
+    private LayerDetail? detail;
+    private ViewSummary? summary;
+    private string? viewError, filterParameters;
+    private ElementReference viewportHost;
+    private IJSObjectReference? viewerModule, viewer;
+
+    private string fieldName = "", component = "magnitude", deformField = "", scaleText = "", colormap = "spectrum";
+    private bool bands = true, edges = true, playing, showSubLayerDialog, confirmDelete;
+    private decimal[] timeSteps = Array.Empty<decimal>(), allTimeSteps = Array.Empty<decimal>();
+    private int stepIndex;
+    private FieldInfo[] vectorFields = Array.Empty<FieldInfo>();
+    private FieldInfo? currentField => detail?.Fields.FirstOrDefault(f => f.Name == fieldName);
+    private CancellationTokenSource? playback;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (await Storage.InitializeAsync() == null)
+            {
+                Navigation.NavigateTo("");
+                return;
+            }
+            await loadSolutionAsync(selectId: null);
+        }
+        catch (Exception ex)
+        {
+            viewError = ex.Message;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (viewer == null && solution != null)
+        {
+            viewerModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/viewer.js");
+            viewer = await viewerModule.InvokeAsync<IJSObjectReference>("create", viewportHost);
+            if (selected != null)
+                await showAsync();
+        }
+    }
+
+    private async Task loadSolutionAsync(Guid? selectId)
+    {
+        solution = await Storage.CallAsync<SolutionDetail>("getSolution", new { solutionId = SolutionId });
+        var all = solution.Layers.SelectMany(flatten).ToList();
+        var toSelect = all.FirstOrDefault(l => l.Id == (selectId ?? selected?.Id)) ?? all.FirstOrDefault();
+        if (toSelect != null)
+            await selectAsync(toSelect);
+        else
+        {
+            selected = null;
+            detail = null;
+            if (viewer != null)
+                await viewer.InvokeVoidAsync("clear");
+        }
+    }
+
+    private static IEnumerable<LayerNode> flatten(LayerNode layer) => layer.Children.SelectMany(flatten).Prepend(layer);
+
+    private async Task selectAsync(LayerNode layer)
+    {
+        stopPlayback();
+        bool sameLayer = selected?.Id == layer.Id && detail != null;
+        selected = layer;
+        confirmDelete = false;
+        viewError = null;
+        if (!sameLayer)
+        {
+            detail = null;
+            summary = null;
+            StateHasChanged();
+            try
+            {
+                detail = await Storage.CallAsync<LayerDetail>("getLayer", new { solutionId = SolutionId, layerId = layer.Id });
+            }
+            catch (RemoteStorageException ex)
+            {
+                viewError = ex.Message;
+                return;
+            }
+            filterParameters = describeFilter(detail.Filter);
+            vectorFields = detail.Fields.Where(f => f.Components.Length is 2 or 3).ToArray();
+            if (!vectorFields.Any(f => f.Name == deformField))
+                deformField = "";
+            allTimeSteps = detail.Fields.SelectMany(f => f.TimeSteps).Concat(detail.Meshes.SelectMany(m => m.TimeSteps)).Distinct().OrderBy(t => t).ToArray();
+            if (detail.Fields.All(f => f.Name != fieldName))
+                fieldName = detail.Fields.FirstOrDefault(f => f.Components.Length == 1)?.Name ?? detail.Fields.FirstOrDefault()?.Name ?? "";
+            await fieldChangedAsync(keepStep: false);
+        }
+        else
+        {
+            await showAsync();
+        }
+    }
+
+    private Task fieldChangedAsync() => fieldChangedAsync(keepStep: true);
+
+    private async Task fieldChangedAsync(bool keepStep)
+    {
+        var f = currentField;
+        if (f != null && component != "magnitude" && !f.Components.Contains(component))
+            component = "magnitude";
+        if (f != null && f.Components.Length == 1)
+            component = f.Components[0];
+        decimal? current = timeSteps.Length > 0 ? timeSteps[Math.Clamp(stepIndex, 0, timeSteps.Length - 1)] : null;
+        timeSteps = f?.TimeSteps ?? detail?.Meshes.FirstOrDefault()?.TimeSteps ?? Array.Empty<decimal>();
+        stepIndex = keepStep && current.HasValue && Array.IndexOf(timeSteps, current.Value) >= 0 ? Array.IndexOf(timeSteps, current.Value) : Math.Max(0, timeSteps.Length - 1);
+        await showAsync();
+    }
+
+    private async Task showAsync()
+    {
+        if (viewer == null || selected == null || detail == null)
+            return;
+        decimal? step = timeSteps.Length > 0 ? timeSteps[Math.Clamp(stepIndex, 0, timeSteps.Length - 1)] : null;
+        int meshIndex = detail.Meshes.FirstOrDefault(m => step.HasValue && m.TimeSteps.Contains(step.Value))?.Index ?? detail.Meshes.FirstOrDefault()?.Index ?? 1;
+        double? scale = double.TryParse(scaleText, NumberStyles.Float, CultureInfo.InvariantCulture, out var s) ? s : null;
+        var vectorField = vectorFields.FirstOrDefault(f => f.Name == deformField);
+        bool vectorHasStep = vectorField != null && step.HasValue && vectorField.TimeSteps.Contains(step.Value);
+        var result = await viewer.InvokeAsync<ViewSummary?>("show", new
+        {
+            solutionId = SolutionId,
+            layerId = selected.Id,
+            meshIndex,
+            field = string.IsNullOrEmpty(fieldName) || !step.HasValue ? null : fieldName,
+            component,
+            timeStep = step ?? 0,
+            vectorField = vectorHasStep ? deformField : null,
+            scale,
+            colormap,
+            bands,
+            showEdges = edges
+        });
+        if (result == null)
+            return; // superseded by a newer request
+        if (result.Error != null)
+        {
+            viewError = result.Error;
+            summary = null;
+        }
+        else
+        {
+            viewError = null;
+            summary = result;
+        }
+        StateHasChanged();
+    }
+
+    private async Task scaleChangedAsync() => await showAsync();
+
+    private async Task toggleBands()
+    {
+        bands = !bands;
+        await showAsync();
+    }
+
+    private async Task toggleEdges()
+    {
+        edges = !edges;
+        await showAsync();
+    }
+
+    private async Task resetCameraAsync()
+    {
+        if (viewer != null)
+            await viewer.InvokeVoidAsync("resetCamera");
+    }
+
+    private async Task togglePlay()
+    {
+        if (playing)
+        {
+            stopPlayback();
+            return;
+        }
+        playing = true;
+        playback = new CancellationTokenSource();
+        var token = playback.Token;
+        while (!token.IsCancellationRequested && timeSteps.Length > 1)
+        {
+            stepIndex = (stepIndex + 1) % timeSteps.Length;
+            await showAsync();
+            try
+            {
+                await Task.Delay(400, token);
+            }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private void stopPlayback()
+    {
+        playing = false;
+        playback?.Cancel();
+        playback = null;
+    }
+
+    private async Task createLayerAsync(object request)
+    {
+        showSubLayerDialog = false;
+        string parentName = selected?.Name ?? "";
+        var created = await Storage.RunJobAsync<CreatedLayer>($"New sub layer of {parentName}", "createLayer", request);
+        if (created != null)
+            await loadSolutionAsync(created.Id);
+    }
+
+    private async Task deleteLayerAsync()
+    {
+        if (selected == null)
+            return;
+        confirmDelete = false;
+        var layer = selected;
+        var parent = solution?.Layers.SelectMany(flatten).FirstOrDefault(l => l.Children.Any(c => c.Id == layer.Id));
+        var deleted = await Storage.RunJobAsync<object>($"Deleting layer {layer.Name}", "deleteLayer", new { solutionId = SolutionId, layerId = layer.Id });
+        if (deleted != null)
+        {
+            selected = null;
+            detail = null;
+            if (viewer != null)
+                await viewer.InvokeVoidAsync("clear");
+            await loadSolutionAsync(parent?.Id);
+        }
+    }
+
+    private static string? describeFilter(string? filterJson)
+    {
+        if (string.IsNullOrEmpty(filterJson))
+            return null;
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(filterJson);
+            var parts = document.RootElement.EnumerateObject()
+                .Where(p => p.Name != "Type" && p.Name != "$type" && p.Value.ValueKind != System.Text.Json.JsonValueKind.Null)
+                .Select(p => $"{p.Name} {(p.Value.ValueKind == System.Text.Json.JsonValueKind.Array ? string.Join(" ", p.Value.EnumerateArray().Select(v => v.ToString())) : p.Value.ToString())}");
+            return string.Join(", ", parts);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return filterJson;
+        }
+    }
+
+    private static string fmt(double v) => Math.Abs(v) is > 0 and (< 1e-3 or >= 1e5) ? v.ToString("0.###e+0", CultureInfo.InvariantCulture) : Math.Round(v, 4).ToString(CultureInfo.InvariantCulture);
+
+    private sealed record CreatedLayer(Guid Id, string Name);
+
+    public async ValueTask DisposeAsync()
+    {
+        stopPlayback();
+        try
+        {
+            if (viewer != null)
+            {
+                await viewer.InvokeVoidAsync("dispose");
+                await viewer.DisposeAsync();
+            }
+            if (viewerModule != null)
+                await viewerModule.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        { }
+    }
+}

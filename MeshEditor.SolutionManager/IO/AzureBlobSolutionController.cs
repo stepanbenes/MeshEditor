@@ -116,8 +116,13 @@ namespace MeshEditor.SolutionManager.IO
 
 		public Solution AddLayer(object solutionLocator, Solution.Layer parentLayer, Solution.Layer newLayer)
 		{
+			return runSynchronously(() => AddLayerAsync(solutionLocator, parentLayer?.Id, newLayer, CancellationToken.None));
+		}
+
+		public Task<Solution> AddLayerAsync(object solutionLocator, Guid? parentLayerId, Solution.Layer newLayer, CancellationToken cancellationToken)
+		{
 			int solutionId = getSolutionId(solutionLocator);
-			return runSynchronously(() => updateAsync(solutionId, solution => Solution.CreateNewByAddingLayer(solution, newLayer, parentLayer?.Id), CancellationToken.None));
+			return updateAsync(solutionId, solution => Solution.CreateNewByAddingLayer(solution, newLayer, parentLayerId), cancellationToken);
 		}
 
 		public Solution DeleteLayer(object solutionLocator, Solution.Layer layerToDelete) => runSynchronously(() => DeleteLayerAsync(solutionLocator, layerToDelete, CancellationToken.None));
@@ -140,6 +145,22 @@ namespace MeshEditor.SolutionManager.IO
 
 		private static string createLayerFolderName() => Guid.NewGuid().ToString("N");
 
+		/// <summary>
+		/// Solution with a new layer folder, not stored yet: its layers are uploaded into <see cref="GetLayerFolder"/> before it is created by <see cref="CreateAsync"/>.
+		/// </summary>
+		public Solution PrepareNew(string projectName, AnalysisResult[] results) => new Solution
+		{
+			ProjectName = projectName,
+			Results = results,
+			Layers = new Solution.Layer[0],
+			LayerFolder = createLayerFolderName()
+		};
+
+		/// <summary>
+		/// Stores the solution as a new remote solution of the owner (with a new solution id).
+		/// </summary>
+		public Task<Solution> CreateAsync(Solution solution, CancellationToken cancellationToken) => createAsync(solution, cancellationToken);
+
 		#endregion
 
 		#region Upload
@@ -151,7 +172,34 @@ namespace MeshEditor.SolutionManager.IO
 		/// When the upload of the layers fails or is cancelled, the uploaded layer files are deleted. Once the layers are uploaded,
 		/// the solution blob is created even if cancelled: when its request is interrupted, it is not known whether it was created.
 		/// </summary>
-		public async Task<Solution> UploadAsync(Solution localSolution, string localSolutionDirectory, IProgress<RemoteOperationProgress> progress, CancellationToken cancellationToken)
+		public Task<Solution> UploadAsync(Solution localSolution, string localSolutionDirectory, IProgress<RemoteOperationProgress> progress, CancellationToken cancellationToken)
+		{
+			// all files are found first: a missing layer is reported before anything is uploaded, and the total size is known
+			var files = new List<LayerFile>();
+			foreach (var layer in localSolution.Layers.EmptyIfNull().SelectMany(Solution.TraverseLayerTreePostOrder))
+			{
+				string layerDirectory = Path.Combine(localSolutionDirectory, layer.Id.ToString());
+				if (!Directory.Exists(layerDirectory))
+					throw new DirectoryNotFoundException($"Files of layer '{layer.Name}' ({layer.Id}) not found in '{localSolutionDirectory}'.");
+
+				foreach (string file in Directory.EnumerateFiles(layerDirectory, "*", SearchOption.AllDirectories))
+				{
+					files.Add(new LayerFile(Path.GetRelativePath(localSolutionDirectory, file), new FileInfo(file).Length, _ => Task.FromResult<Stream>(File.OpenRead(file))));
+				}
+			}
+			return UploadAsync(localSolution, files, progress, cancellationToken);
+		}
+
+		/// <summary>
+		/// Layer file of a local solution: path relative to the solution directory ("{layerId}/..."), length and how to read it.
+		/// </summary>
+		public sealed record LayerFile(string RelativePath, long Length, Func<CancellationToken, Task<Stream>> OpenAsync);
+
+		/// <summary>
+		/// Copies the local solution and the given layer files (e.g. read by a web browser) to the blob storage as a new remote solution of the owner.
+		/// Same as uploading from a solution directory. Every layer of the solution must have at least one file.
+		/// </summary>
+		public async Task<Solution> UploadAsync(Solution localSolution, IReadOnlyList<LayerFile> layerFiles, IProgress<RemoteOperationProgress> progress, CancellationToken cancellationToken)
 		{
 			var remoteSolution = new Solution
 			{
@@ -162,30 +210,28 @@ namespace MeshEditor.SolutionManager.IO
 			};
 			string layerFolder = GetLayerFolder(remoteSolution);
 
-			// all files are found first: a missing layer is reported before anything is uploaded, and the total size is known
-			var files = new List<(Solution.Layer layer, string path, string blobName, long length)>();
+			var files = new List<(Solution.Layer layer, LayerFile file, string blobName)>();
 			foreach (var layer in localSolution.Layers.EmptyIfNull().SelectMany(Solution.TraverseLayerTreePostOrder))
 			{
-				string layerDirectory = Path.Combine(localSolutionDirectory, layer.Id.ToString());
-				if (!Directory.Exists(layerDirectory))
-					throw new DirectoryNotFoundException($"Files of layer '{layer.Name}' ({layer.Id}) not found in '{localSolutionDirectory}'.");
-
-				foreach (string file in Directory.EnumerateFiles(layerDirectory, "*", SearchOption.AllDirectories))
-				{
-					string blobName = AzureBlobStorageService.ToBlobName(layerFolder, Path.GetRelativePath(localSolutionDirectory, file));
-					files.Add((layer, file, blobName, new FileInfo(file).Length));
-				}
+				string layerPrefix = layer.Id.ToString() + "/";
+				var filesOfLayer = layerFiles.Where(f => f.RelativePath.Replace('\\', '/').StartsWith(layerPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
+				if (filesOfLayer.Count == 0)
+					throw new DirectoryNotFoundException($"Files of layer '{layer.Name}' ({layer.Id}) not found.");
+				files.AddRange(filesOfLayer.Select(f => (layer, f, AzureBlobStorageService.ToBlobName(layerFolder, f.RelativePath))));
 			}
 
-			var steps = new StepProgress(progress, totalSize: files.Sum(f => f.length));
+			var steps = new StepProgress(progress, totalSize: files.Sum(f => f.file.Length));
 			try
 			{
 				for (int i = 0; i < files.Count; i++)
 				{
-					var (layer, file, blobName, length) = files[i];
-					steps.Start($"Uploading layer '{layer.Name}', file {i + 1} of {files.Count}", size: length);
+					var (layer, file, blobName) = files[i];
+					steps.Start($"Uploading layer '{layer.Name}', file {i + 1} of {files.Count}", size: file.Length);
 					var options = new BlobUploadOptions { ProgressHandler = steps }; // no conditions: overwrites
-					await layerContainer.GetBlobClient(blobName).UploadAsync(file, options, cancellationToken).ConfigureAwait(false);
+					using (var stream = await file.OpenAsync(cancellationToken).ConfigureAwait(false))
+					{
+						await layerContainer.GetBlobClient(blobName).UploadAsync(stream, options, cancellationToken).ConfigureAwait(false);
+					}
 				}
 			}
 			catch (Exception)
