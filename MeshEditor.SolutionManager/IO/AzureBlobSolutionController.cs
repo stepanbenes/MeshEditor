@@ -17,9 +17,11 @@ using MeshEditor.SolutionManager.AzureStorage;
 namespace MeshEditor.SolutionManager.IO
 {
 	/// <summary>
-	/// Solutions stored in Azure Blob Storage. Every solution is a JSON blob "{id}.solution.json" in the solutions container
-	/// (same format as the local solution file), its layers are in the layers container (blobs "{layerId}/...").
-	/// Solution locator is the integer solution id. Concurrent modifications are detected using blob ETags.
+	/// Remote solutions of one user stored in Azure Blob Storage. Everything of the user is under the folder named by the user's id:
+	/// solution "{owner}/{id}.solution.json" in the solutions container (same format as the local solution file, with the owner recorded),
+	/// layers "{owner}/{layerId}/..." in the layers container. Solution locator is the integer solution id (unique per user).
+	/// Only the solutions of the owner are visible. Concurrent modifications are detected using blob ETags.
+	/// The containers are not created here, they are set up together with the access rights of the users.
 	/// </summary>
 	class AzureBlobSolutionController : ISolutionController
 	{
@@ -30,12 +32,18 @@ namespace MeshEditor.SolutionManager.IO
 
 		private readonly BlobContainerClient solutionContainer;
 		private readonly BlobContainerClient layerContainer;
+		private readonly RemoteUser owner;
+		private readonly string ownerFolder;
 		private readonly ISerializationService serializer;
 
-		public AzureBlobSolutionController(BlobContainerClient solutionContainer, BlobContainerClient layerContainer)
+		public AzureBlobSolutionController(BlobContainerClient solutionContainer, BlobContainerClient layerContainer, RemoteUser owner)
 		{
 			this.solutionContainer = solutionContainer ?? throw new ArgumentNullException(nameof(solutionContainer));
 			this.layerContainer = layerContainer ?? throw new ArgumentNullException(nameof(layerContainer));
+			this.owner = owner ?? throw new ArgumentNullException(nameof(owner));
+			if (string.IsNullOrWhiteSpace(owner.Id))
+				throw new ArgumentException("Owner id is not specified", nameof(owner));
+			ownerFolder = owner.Id + "/";
 			serializer = new JsonSerializationService();
 		}
 
@@ -60,16 +68,7 @@ namespace MeshEditor.SolutionManager.IO
 
 		public async Task<IEnumerable<ISolutionInfo>> GetAllAsync(CancellationToken cancellationToken)
 		{
-			if (!await solutionContainer.ExistsAsync(cancellationToken).ConfigureAwait(false))
-				return Enumerable.Empty<ISolutionInfo>();
-
-			var solutionIds = new List<int>();
-			await foreach (var blob in solutionContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix: null, cancellationToken).ConfigureAwait(false))
-			{
-				if (tryParseSolutionId(blob.Name, out int solutionId))
-					solutionIds.Add(solutionId);
-			}
-
+			var solutionIds = await getSolutionIdsAsync(cancellationToken).ConfigureAwait(false);
 			var solutions = await Task.WhenAll(solutionIds.Select(async solutionId =>
 			{
 				var (solution, _) = await downloadAsync<SolutionInfo>(solutionId, cancellationToken).ConfigureAwait(false);
@@ -119,13 +118,11 @@ namespace MeshEditor.SolutionManager.IO
 		#region Upload
 
 		/// <summary>
-		/// Copies the local solution (solution file and all layer files) to the blob storage as a new remote solution.
+		/// Copies the local solution (solution file and all layer files) to the blob storage as a new remote solution of the owner.
 		/// The solution blob is created last so that a listed remote solution is always complete.
 		/// </summary>
 		public async Task<Solution> UploadAsync(Solution localSolution, string localSolutionDirectory, IProgress<string> progress, CancellationToken cancellationToken)
 		{
-			await layerContainer.CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
 			foreach (var layer in localSolution.Layers.EmptyIfNull().SelectMany(Solution.TraverseLayerTreePostOrder))
 			{
 				string layerDirectory = Path.Combine(localSolutionDirectory, layer.Id.ToString());
@@ -134,7 +131,7 @@ namespace MeshEditor.SolutionManager.IO
 
 				foreach (string file in Directory.EnumerateFiles(layerDirectory, "*", SearchOption.AllDirectories))
 				{
-					string blobName = AzureBlobStorageService.ToBlobName(Path.GetRelativePath(localSolutionDirectory, file));
+					string blobName = AzureBlobStorageService.ToBlobName(owner.Id, Path.GetRelativePath(localSolutionDirectory, file));
 					progress?.Report($"Uploading {blobName}");
 					await layerContainer.GetBlobClient(blobName).UploadAsync(file, overwrite: true, cancellationToken).ConfigureAwait(false);
 				}
@@ -153,23 +150,28 @@ namespace MeshEditor.SolutionManager.IO
 
 		#region Private methods
 
+		private async Task<List<int>> getSolutionIdsAsync(CancellationToken cancellationToken)
+		{
+			var solutionIds = new List<int>();
+			await foreach (var blob in solutionContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, ownerFolder, cancellationToken).ConfigureAwait(false))
+			{
+				if (tryParseSolutionId(blob.Name, out int solutionId))
+					solutionIds.Add(solutionId);
+			}
+			return solutionIds;
+		}
+
 		private async Task<Solution> createAsync(Solution solution, CancellationToken cancellationToken)
 		{
-			await solutionContainer.CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
+			solution.Owner = owner;
 			for (int attempt = 0; ; attempt++)
 			{
-				var existingIds = new List<int>();
-				await foreach (var blob in solutionContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix: null, cancellationToken).ConfigureAwait(false))
-				{
-					if (tryParseSolutionId(blob.Name, out int existingId))
-						existingIds.Add(existingId);
-				}
+				var existingIds = await getSolutionIdsAsync(cancellationToken).ConfigureAwait(false);
 				solution.Id = existingIds.Count > 0 ? existingIds.Max() + 1 : 1;
 
 				try
 				{
-					// fails if another client has just created a solution with the same id
+					// fails if another client of the same user has just created a solution with the same id
 					await uploadAsync(solution, new BlobRequestConditions { IfNoneMatch = ETag.All }, cancellationToken).ConfigureAwait(false);
 					solution.Location = getLocation(solution.Id);
 					return solution;
@@ -208,6 +210,7 @@ namespace MeshEditor.SolutionManager.IO
 				Id = solution.Id,
 				ProjectName = solution.ProjectName,
 				Location = null, // location is not stored, it is the blob address
+				Owner = owner,
 				Results = solution.Results,
 				Layers = solution.Layers
 			};
@@ -226,6 +229,8 @@ namespace MeshEditor.SolutionManager.IO
 			{
 				var response = await getSolutionBlob(solutionId).DownloadContentAsync(cancellationToken).ConfigureAwait(false);
 				T solution = serializer.Deserialize<T>(response.Value.Content.ToStream());
+				if (solution.Owner?.Id != owner.Id)
+					return (null, default); // not a solution of this user
 				solution.Id = solutionId;
 				solution.Location = getLocation(solutionId);
 				return (solution, response.Value.Details.ETag);
@@ -238,12 +243,9 @@ namespace MeshEditor.SolutionManager.IO
 
 		private async Task deleteAllLayerBlobsOfLayerTreeAsync(Solution.Layer rootLayer, CancellationToken cancellationToken)
 		{
-			if (!await layerContainer.ExistsAsync(cancellationToken).ConfigureAwait(false))
-				return;
-
 			foreach (var layer in Solution.TraverseLayerTreePostOrder(rootLayer))
 			{
-				string prefix = layer.Id + "/";
+				string prefix = ownerFolder + layer.Id + "/";
 				var blobNames = new List<string>();
 				await foreach (var blob in layerContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix, cancellationToken).ConfigureAwait(false))
 				{
@@ -256,10 +258,10 @@ namespace MeshEditor.SolutionManager.IO
 			}
 		}
 
-		private BlobClient getSolutionBlob(int solutionId) => solutionContainer.GetBlobClient(getSolutionBlobName(solutionId));
+		private BlobClient getSolutionBlob(int solutionId) => solutionContainer.GetBlobClient(ownerFolder + getSolutionBlobName(solutionId));
 
 		/// <summary>
-		/// Address of the solution blob without the shared access signature.
+		/// Address of the solution blob (without a shared access signature, if any).
 		/// </summary>
 		private string getLocation(int solutionId)
 		{
@@ -269,11 +271,13 @@ namespace MeshEditor.SolutionManager.IO
 
 		private static string getSolutionBlobName(int solutionId) => solutionId.ToString(CultureInfo.InvariantCulture) + SolutionBlobSuffix;
 
-		private static bool tryParseSolutionId(string blobName, out int solutionId)
+		private bool tryParseSolutionId(string blobName, out int solutionId)
 		{
 			solutionId = 0;
-			return blobName.EndsWith(SolutionBlobSuffix, StringComparison.OrdinalIgnoreCase) &&
-				int.TryParse(blobName.Substring(0, blobName.Length - SolutionBlobSuffix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out solutionId);
+			if (!blobName.StartsWith(ownerFolder, StringComparison.Ordinal) || !blobName.EndsWith(SolutionBlobSuffix, StringComparison.OrdinalIgnoreCase))
+				return false;
+			string idPart = blobName.Substring(ownerFolder.Length, blobName.Length - ownerFolder.Length - SolutionBlobSuffix.Length);
+			return int.TryParse(idPart, NumberStyles.None, CultureInfo.InvariantCulture, out solutionId);
 		}
 
 		private static int getSolutionId(object solutionLocator)

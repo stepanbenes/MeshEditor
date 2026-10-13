@@ -15,5 +15,11 @@ namespace MeshEditor.SolutionManager.IO
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
 		public string Location { get; set; }
+
+		/// <summary>
+		/// User who owns the remote solution (null for local solutions).
+		/// </summary>
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		public RemoteUser Owner { get; set; }
 	}
 }

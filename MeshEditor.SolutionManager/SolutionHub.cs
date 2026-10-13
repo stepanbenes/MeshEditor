@@ -105,84 +105,109 @@ namespace MeshEditor.SolutionManager
 		}
 
 		/// <summary>
-		/// True if the remote (Azure Blob Storage) solution storage is configured.
+		/// Access to the remote storage, Microsoft account sign-in (tests replace it).
 		/// </summary>
-		public static bool IsRemoteStorageConfigured
+		internal static IRemoteStorageConnection RemoteStorageConnection
 		{
-			get
-			{
-				try
-				{
-					return AzureStorageCredentialStore.GetConnectionString() != null;
-				}
-				catch (Exception)
-				{
-					return false; // secure storage of the operating system is not accessible
-				}
-			}
+			get => remoteStorageConnection ?? (remoteStorageConnection = new MicrosoftAccountStorageConnection(AzureBlobStorageConfiguration));
+			set => remoteStorageConnection = value;
 		}
+		static IRemoteStorageConnection remoteStorageConnection;
 
 		/// <summary>
-		/// Checks that the connection string is valid and the storage account is accessible. Throws otherwise.
+		/// True if the remote (Azure Blob Storage) solution storage is set up in the configuration.
 		/// </summary>
-		public static async Task TestRemoteStorageConnectionAsync(string connectionString, CancellationToken cancellationToken)
-		{
-			var serviceClient = new BlobServiceClient(connectionString);
-			await serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.SolutionsBlobContainerName).ExistsAsync(cancellationToken);
-		}
+		public static bool IsRemoteStorageConfigured => RemoteStorageConnection.IsConfigured;
 
+		/// <summary>
+		/// User signed in to the remote storage with a Microsoft account (the sign-in is remembered across program runs), or null.
+		/// </summary>
+		public static Task<RemoteUser> GetRemoteUserAsync(CancellationToken cancellationToken) => RemoteStorageConnection.GetSignedInUserAsync(cancellationToken);
+
+		/// <summary>
+		/// Sign-in with a Microsoft account in the system web browser. Falls back to the device code flow when no browser can be opened,
+		/// <paramref name="showDeviceCodeMessage"/> then tells the user where to enter the code.
+		/// </summary>
+		public static Task<RemoteUser> SignInToRemoteStorageAsync(Func<string, Task> showDeviceCodeMessage, CancellationToken cancellationToken) =>
+			RemoteStorageConnection.SignInInteractiveAsync(showDeviceCodeMessage, cancellationToken);
+
+		/// <summary>
+		/// Sign-in with a Microsoft account using a code entered in a web browser, possibly on another device (command line).
+		/// </summary>
+		public static Task<RemoteUser> SignInToRemoteStorageWithDeviceCodeAsync(Func<string, Task> showDeviceCodeMessage, CancellationToken cancellationToken) =>
+			RemoteStorageConnection.SignInWithDeviceCodeAsync(showDeviceCodeMessage, cancellationToken);
+
+		public static Task SignOutFromRemoteStorageAsync() => RemoteStorageConnection.SignOutAsync();
+
+		/// <summary>
+		/// Remote solution of the signed-in user.
+		/// </summary>
 		public static SolutionHub OpenRemote(int solutionId, ILogger logger = null)
 		{
-			var serviceClient = createRemoteServiceClient();
-			var layerStorage = new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName));
+			var user = getSignedInRemoteUser();
+			var serviceClient = RemoteStorageConnection.CreateServiceClient(user);
+			var layerStorage = new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName), user.Id);
 			return new SolutionHub(
 				solutionLocator: solutionId,
-				solutionController: createRemoteSolutionController(serviceClient),
-				importStorage: new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.ResultsBlobContainerName)),
+				solutionController: createRemoteSolutionController(serviceClient, user),
+				importStorage: new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.ResultsBlobContainerName), user.Id),
 				layerSourceStorage: layerStorage,
 				layerDestinationStorage: layerStorage,
 				logger: logger
 			);
 		}
 
+		/// <summary>
+		/// Remote solutions of the signed-in user (solutions of other users are not visible).
+		/// </summary>
 		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
 		{
-			return createRemoteSolutionController(createRemoteServiceClient()).GetAll();
-		}
-
-		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
-		{
-			return await createRemoteSolutionController(createRemoteServiceClient()).GetAllAsync(cancellationToken);
+			var user = getSignedInRemoteUser();
+			return createRemoteSolutionController(RemoteStorageConnection.CreateServiceClient(user), user).GetAll();
 		}
 
 		/// <summary>
-		/// Copies the local solution with all its layers to the remote storage. Returns the new remote solution.
+		/// Remote solutions of the signed-in user (solutions of other users are not visible).
+		/// </summary>
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
+		{
+			var user = await GetRemoteUserAsync(cancellationToken) ?? throw signInRequired();
+			return await createRemoteSolutionController(RemoteStorageConnection.CreateServiceClient(user), user).GetAllAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Copies the local solution with all its layers to the remote storage as a solution of the signed-in user. Returns the new remote solution.
 		/// </summary>
 		public static async Task<ISolutionInfo> UploadLocalSolutionToRemoteAsync(string solutionFileName, CancellationToken cancellationToken, ILogger logger = null)
 		{
 			Debug.Assert(solutionFileName != null);
+			var user = await GetRemoteUserAsync(cancellationToken) ?? throw signInRequired();
 			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
 			var localSolution = await new LocalSolutionController(solutionDirectory).GetAsync(solutionFileName, cancellationToken);
 
 			var progress = logger == null ? null : new Progress<string>(message => logger.LogOperationProgress(message));
-			var remoteSolution = await createRemoteSolutionController(createRemoteServiceClient()).UploadAsync(localSolution, solutionDirectory, progress, cancellationToken);
-			logger?.LogMessage($"Uploaded as remote solution {remoteSolution.Id} ({remoteSolution.Location})");
+			var controller = createRemoteSolutionController(RemoteStorageConnection.CreateServiceClient(user), user);
+			var remoteSolution = await controller.UploadAsync(localSolution, solutionDirectory, progress, cancellationToken);
+			logger?.LogMessage($"Uploaded as remote solution {remoteSolution.Id} of {user} ({remoteSolution.Location})");
 			return remoteSolution;
 		}
 
-		private static BlobServiceClient createRemoteServiceClient()
+		private static RemoteUser getSignedInRemoteUser()
 		{
-			string connectionString = AzureStorageCredentialStore.GetConnectionString();
-			if (connectionString == null)
-				throw new InvalidOperationException($"Remote storage is not configured. Set the Azure Storage connection string in the application or in the environment variable {AzureStorageCredentialStore.ConnectionStringEnvironmentVariable}.");
-			return new BlobServiceClient(connectionString);
+			// synchronous callers (command line, opening a solution): read the token cache on the thread pool
+			return Task.Run(() => GetRemoteUserAsync(CancellationToken.None)).GetAwaiter().GetResult() ?? throw signInRequired();
 		}
 
-		private static AzureBlobSolutionController createRemoteSolutionController(BlobServiceClient serviceClient)
+		private static Exception signInRequired() => IsRemoteStorageConfigured
+			? new RemoteSignInRequiredException("Sign in with your Microsoft account to use the remote storage.")
+			: new InvalidOperationException("Remote storage is not configured (AccountUrl, TenantId and ClientId in the AzureBlobStorage section of config.json).");
+
+		private static AzureBlobSolutionController createRemoteSolutionController(BlobServiceClient serviceClient, RemoteUser user)
 		{
 			return new AzureBlobSolutionController(
 				serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.SolutionsBlobContainerName),
-				serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName));
+				serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName),
+				user);
 		}
 
 		#endregion

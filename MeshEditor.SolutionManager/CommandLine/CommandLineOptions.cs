@@ -15,7 +15,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 		[Option("solution", Required = false, HelpText = "Solution file path (local solutions) or solution id (remote solutions)")]
 		public string Solution { get; set; }
 
-		[Option("remote", Required = false, HelpText = "Use the remote solution storage (Azure Blob Storage, see the remote-storage command)")]
+		[Option("remote", Required = false, HelpText = "Use the remote solutions of the signed-in user (Azure Blob Storage, see the remote-storage command)")]
 		public bool UseRemoteStorage { get; set; }
 
 		[Option("pressanykey", Required = false, HelpText = "Require pressing any key before quitting the program")]
@@ -82,16 +82,16 @@ namespace MeshEditor.SolutionManager.CommandLine
 		public bool DeleteAll { get; set; }
 	}
 
-	[Verb("remote-storage", HelpText = "Configure the remote solution storage (Azure Blob Storage). The connection string is kept in the secure storage of the operating system.")]
+	[Verb("remote-storage", HelpText = "Sign in to the remote solution storage (Azure Blob Storage) with a Microsoft account, upload solutions. Without options prints the signed-in user.")]
 	class RemoteStorageOptions
 	{
-		[Option("set", Required = false, SetName = "set", HelpText = "Read the Azure Storage connection string from standard input and store it")]
-		public bool SetConnectionString { get; set; }
+		[Option("login", Required = false, SetName = "login", HelpText = "Sign in with a Microsoft account (enter the printed code in a web browser, on any device)")]
+		public bool Login { get; set; }
 
-		[Option("clear", Required = false, SetName = "clear", HelpText = "Remove the stored connection string")]
-		public bool ClearConnectionString { get; set; }
+		[Option("logout", Required = false, SetName = "logout", HelpText = "Sign out (removes the cached sign-in)")]
+		public bool Logout { get; set; }
 
-		[Option("upload", Required = false, SetName = "upload", HelpText = "Upload the local solution (solution file path) to the remote storage")]
+		[Option("upload", Required = false, SetName = "upload", HelpText = "Upload the local solution (solution file path) to the remote storage as a solution of the signed-in user")]
 		public string UploadSolution { get; set; }
 	}
 

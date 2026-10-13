@@ -93,6 +93,7 @@ namespace MeshEditor.SolutionManager.IO
 				Id = toCopy.Id,
 				ProjectName = toCopy.ProjectName,
 				Location = toCopy.Location,
+				Owner = toCopy.Owner,
 				Results = toCopy.Results,
 				Layers = toCopy.Layers
 			};

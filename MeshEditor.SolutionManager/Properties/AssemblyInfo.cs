@@ -20,6 +20,9 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
+// UI tests replace the Microsoft account sign-in by a test storage connection
+[assembly: InternalsVisibleTo("MeshEditor.Avalonia.Tests")]
+
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("551f7428-7a4e-4ee2-9681-5de0105bf887")]
 
