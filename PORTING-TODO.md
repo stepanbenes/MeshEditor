@@ -5,7 +5,14 @@ The cross-platform app `MeshEditor.Avalonia` (Avalonia 12.1, .NET 10) covers eve
 - all dialogs from `MeshEditor.Forms`
 - the postprocessor (`MeshEditor.Avalonia/Postprocessing`)
 
-The remote solution storage (Azure Blob Storage / REST API) was removed on purpose.
+The remote solution storage is back (issue #23), now based only on Azure Blob Storage (`Azure.Storage.Blobs` 12) without the old REST API:
+- Solutions are JSON blobs `{id}.solution.json` in the `fea-solutions` container. Layers are in `fea-layers` and results in `fea-results`. The container names can be changed in the `AzureBlobStorage` section of `config.json`.
+- The connection string is never stored in `config.json`. It is kept in the secure storage of the OS: DPAPI on Windows, Keychain on macOS, the libsecret keyring on Linux. Without a keyring, Linux falls back to a file readable only by the user. The environment variable `MESHEDITOR_AZURE_STORAGE_CONNECTION_STRING` takes precedence.
+- To configure it, use *Open solution → Remote storage...* or `fem-format-converter remote-storage --set`, which reads the connection string from stdin.
+- The *Remote solutions* tab is shown only when the storage is configured. Local solutions can be uploaded with *Upload to remote* or `remote-storage --upload <file>`.
+- Remote solutions that were created by the old REST API (metadata in its database) are not listed.
+- The WinForms `SolutionBrowserForm` was not updated.
+- `RemoteSolutionsTests` run against Azurite (`npx azurite-blob --inMemoryPersistence --skipApiVersionCheck`) and are skipped when it is not running.
 The headless UI tests in `MeshEditor.Avalonia.Tests` pass on Windows and Linux (WSL).
 
 This file lists what still needs work before the port can replace the WinForms app.

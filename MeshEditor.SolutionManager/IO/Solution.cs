@@ -59,6 +59,29 @@ namespace MeshEditor.SolutionManager.IO
 			return newSolution;
 		}
 
+		/// <summary>
+		/// All layers of the layer tree, children before their parents.
+		/// </summary>
+		public static IEnumerable<Layer> TraverseLayerTreePostOrder(Layer root)
+		{
+			Stack<Layer> result = new Stack<Layer>();
+			Stack<Layer> children = new Stack<Layer>();
+			children.Push(root);
+			while (children.Count > 0)
+			{
+				var layer = children.Pop();
+				result.Push(layer);
+				if (layer.Children != null)
+				{
+					foreach (var child in layer.Children)
+					{
+						children.Push(child);
+					}
+				}
+			}
+			return result;
+		}
+
 		#endregion
 
 		#region Private methods

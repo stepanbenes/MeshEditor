@@ -193,7 +193,7 @@ namespace MeshEditor.SolutionManager.IO
 
 		private static void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer, IWriteStorageService storageService)
 		{
-			foreach (var childLayer in traverseLayerTreePostOrder(rootLayer))
+			foreach (var childLayer in Solution.TraverseLayerTreePostOrder(rootLayer))
 			{
 				storageService.DeleteDirectory(childLayer.Id.ToString()); // WARNING: deletes all content in layer directory
 			}
@@ -237,26 +237,6 @@ namespace MeshEditor.SolutionManager.IO
 			// NOTE: nested directories are joined using '\' (backslash) instead of '/' (forward slash)
 			return enumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, maxDepth);
 			//return Directory.EnumerateFiles(solutionDirectory, "*" + SolutionFileSuffix + serializer.FileExtension, includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-		}
-
-		private static IEnumerable<Solution.Layer> traverseLayerTreePostOrder(Solution.Layer root)
-		{
-			Stack<Solution.Layer> result = new Stack<Solution.Layer>();
-			Stack<Solution.Layer> children = new Stack<Solution.Layer>();
-			children.Push(root);
-			while (children.Count > 0)
-			{
-				var layer = children.Pop();
-				result.Push(layer);
-				if (layer.Children != null)
-				{
-					foreach (var child in layer.Children)
-					{
-						children.Push(child);
-					}
-				}
-			}
-			return result;
 		}
 
 		private void deleteAllLayerFilesOfLayerTree(Solution.Layer rootLayer)

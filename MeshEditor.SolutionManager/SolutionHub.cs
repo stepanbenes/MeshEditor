@@ -13,7 +13,9 @@ using MeshEditor.LayerManager.Data;
 using MeshEditor.LayerManager.Filters;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.LayerManager.Storage;
+using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.IO;
+using Azure.Storage.Blobs;
 
 namespace MeshEditor.SolutionManager
 {
@@ -23,7 +25,10 @@ namespace MeshEditor.SolutionManager
 
 		static LocalStorageConfiguration localStorageConfiguration;
 
+		static AzureBlobStorageConfiguration azureBlobStorageConfiguration;
+
 		static LocalStorageConfiguration LocalStorageConfiguration => localStorageConfiguration ?? (localStorageConfiguration = ConfigurationManager.GetConfigurationObject<LocalStorageConfiguration>("LocalStorage") ?? new LocalStorageConfiguration());
+		static AzureBlobStorageConfiguration AzureBlobStorageConfiguration => azureBlobStorageConfiguration ?? (azureBlobStorageConfiguration = ConfigurationManager.GetConfigurationObject<AzureBlobStorageConfiguration>("AzureBlobStorage") ?? new AzureBlobStorageConfiguration());
 
 		readonly static string DefaultMasterLayerName = "master";
 
@@ -97,6 +102,87 @@ namespace MeshEditor.SolutionManager
 		{
 			var controller = new LocalSolutionController(solutionDirectory);
 			return await controller.GetAllAsync(includeOneSubDirectory, cancellationToken);
+		}
+
+		/// <summary>
+		/// True if the remote (Azure Blob Storage) solution storage is configured.
+		/// </summary>
+		public static bool IsRemoteStorageConfigured
+		{
+			get
+			{
+				try
+				{
+					return AzureStorageCredentialStore.GetConnectionString() != null;
+				}
+				catch (Exception)
+				{
+					return false; // secure storage of the operating system is not accessible
+				}
+			}
+		}
+
+		/// <summary>
+		/// Checks that the connection string is valid and the storage account is accessible. Throws otherwise.
+		/// </summary>
+		public static async Task TestRemoteStorageConnectionAsync(string connectionString, CancellationToken cancellationToken)
+		{
+			var serviceClient = new BlobServiceClient(connectionString);
+			await serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.SolutionsBlobContainerName).ExistsAsync(cancellationToken);
+		}
+
+		public static SolutionHub OpenRemote(int solutionId, ILogger logger = null)
+		{
+			var serviceClient = createRemoteServiceClient();
+			var layerStorage = new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName));
+			return new SolutionHub(
+				solutionLocator: solutionId,
+				solutionController: createRemoteSolutionController(serviceClient),
+				importStorage: new AzureBlobStorageService(serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.ResultsBlobContainerName)),
+				layerSourceStorage: layerStorage,
+				layerDestinationStorage: layerStorage,
+				logger: logger
+			);
+		}
+
+		public static IEnumerable<ISolutionInfo> EnumerateAllRemoteSolutions(ILogger logger = null)
+		{
+			return createRemoteSolutionController(createRemoteServiceClient()).GetAll();
+		}
+
+		public static async Task<IEnumerable<ISolutionInfo>> EnumerateAllRemoteSolutionsAsync(CancellationToken cancellationToken, ILogger logger = null)
+		{
+			return await createRemoteSolutionController(createRemoteServiceClient()).GetAllAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Copies the local solution with all its layers to the remote storage. Returns the new remote solution.
+		/// </summary>
+		public static async Task<ISolutionInfo> UploadLocalSolutionToRemoteAsync(string solutionFileName, CancellationToken cancellationToken, ILogger logger = null)
+		{
+			Debug.Assert(solutionFileName != null);
+			string solutionDirectory = Path.GetDirectoryName(solutionFileName);
+			var localSolution = await new LocalSolutionController(solutionDirectory).GetAsync(solutionFileName, cancellationToken);
+
+			var progress = logger == null ? null : new Progress<string>(message => logger.LogOperationProgress(message));
+			var remoteSolution = await createRemoteSolutionController(createRemoteServiceClient()).UploadAsync(localSolution, solutionDirectory, progress, cancellationToken);
+			logger?.LogMessage($"Uploaded as remote solution {remoteSolution.Id} ({remoteSolution.Location})");
+			return remoteSolution;
+		}
+
+		private static BlobServiceClient createRemoteServiceClient()
+		{
+			string connectionString = AzureStorageCredentialStore.GetConnectionString();
+			if (connectionString == null)
+				throw new InvalidOperationException($"Remote storage is not configured. Set the Azure Storage connection string in the application or in the environment variable {AzureStorageCredentialStore.ConnectionStringEnvironmentVariable}.");
+			return new BlobServiceClient(connectionString);
+		}
+
+		private static AzureBlobSolutionController createRemoteSolutionController(BlobServiceClient serviceClient)
+		{
+			return new AzureBlobSolutionController(
+				serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.SolutionsBlobContainerName),
+				serviceClient.GetBlobContainerClient(AzureBlobStorageConfiguration.LayersBlobContainerName));
 		}
 
 		#endregion
