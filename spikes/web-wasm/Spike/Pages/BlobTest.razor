@@ -1,0 +1,44 @@
+@page "/azure"
+@using Azure.Storage.Blobs
+@using Azure.Storage.Blobs.Models
+@using MeshEditor.LayerManager
+@using MeshEditor.LayerManager.Filters
+@inject NavigationManager Nav
+<pre id="log">@log</pre>
+@code {
+	string log = "";
+	protected override async Task OnAfterRenderAsync(bool first)
+	{
+		if (!first) return;
+		try
+		{
+			var q = System.Web.HttpUtility.ParseQueryString(new Uri(Nav.Uri).Query);
+			var container = new BlobContainerClient(new Uri(q["sas"]!));
+			var master = Guid.Parse(q["layer"]!);
+			string folder = "user1/folder/";
+			var sw = System.Diagnostics.Stopwatch.StartNew();
+			var names = new List<string>();
+			await foreach (var b in container.GetBlobsAsync(BlobTraits.None, BlobStates.None, folder + master + "/", default)) names.Add(b.Name);
+			Add($"List {names.Count} blobs: {sw.ElapsedMilliseconds} ms");
+			sw.Restart();
+			var source = new MemoryStorage();
+			var sem = new SemaphoreSlim(8);
+			await Task.WhenAll(names.Select(async n => { await sem.WaitAsync(); try { var r = await container.GetBlobClient(n).DownloadContentAsync(); source.Records[n.Substring(folder.Length)] = r.Value.Content.ToArray(); } finally { sem.Release(); } }));
+			Add($"Download parent layer ({source.TotalBytes / 1024} KiB): {sw.ElapsedMilliseconds} ms");
+			sw.Restart();
+			var dest = new MemoryStorage();
+			var gen = new LayerGenerator(source, dest);
+			var s = gen.GenerateFilterLayer(master, FilterFactory.Create(FilterType.Surface, new[] { "45" }), "surface (web)", Enumerable.Empty<decimal>());
+			Add($"Surface filter in WASM: {sw.ElapsedMilliseconds} ms, {dest.Records.Count} records");
+			sw.Restart();
+			await Task.WhenAll(dest.Records.Select(async kv => { await sem.WaitAsync(); try { await container.GetBlobClient(folder + kv.Key).UploadAsync(BinaryData.FromBytes(kv.Value), overwrite: true); } finally { sem.Release(); } }));
+			Add($"Upload new layer {s.Id} ({dest.TotalBytes / 1024} KiB): {sw.ElapsedMilliseconds} ms");
+			var reader = new LayerGenerator(dest, null);
+			var g = reader.LoadGeometry(s.Id, s.MeshFallbackLayerId, s.Meshes[0].Index);
+			Add($"Geometry for three.js: {g.NumberOfPoints} points, {g.NumberOfCells} cells");
+		}
+		catch (Exception ex) { Add("ERROR " + ex); }
+		Add("DONE");
+	}
+	void Add(string s) { log += s + "\n"; StateHasChanged(); }
+}

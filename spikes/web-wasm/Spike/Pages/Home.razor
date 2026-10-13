@@ -1,0 +1,21 @@
+@page "/"
+@inject HttpClient Http
+<h1>LayerManager in WASM</h1>
+<pre id="log">@log</pre>
+@code {
+	string log = "";
+	protected override async Task OnAfterRenderAsync(bool first)
+	{
+		if (!first) return;
+		var imp = new MemoryStorage();
+		var sw = System.Diagnostics.Stopwatch.StartNew();
+		imp.Records["grid.msh"] = await Http.GetByteArrayAsync("data/grid.msh");
+		imp.Records["grid.res"] = await Http.GetByteArrayAsync("data/grid.res");
+		Add($"Download: {sw.ElapsedMilliseconds} ms");
+		Add($"Runtime: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture} {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
+		await Task.Delay(10);
+		Bench.Run(imp, "grid.msh", "grid.res", Add);
+		Add("DONE");
+	}
+	void Add(string s) { log += s + "\n"; Console.WriteLine(s); StateHasChanged(); }
+}
