@@ -24,6 +24,8 @@
   <Target Name="PublishWorker" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <!-- the file names carry hashes: stale ones would pile up -->
     <RemoveDir Directories="$(WorkerPublishDir)" />
+    <!-- restored here, since nothing references it; the restore runs in its own evaluation -->
+    <MSBuild Projects="$(WorkerProject)" Targets="Restore" Properties="Configuration=$(Configuration);MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
     <MSBuild Projects="$(WorkerProject)" Targets="Publish" Properties="Configuration=$(Configuration);PublishDir=$(WorkerPublishDir)" />
     <ItemGroup>
       <_WorkerFile Include="$(WorkerPublishDir)wwwroot\**\*" Exclude="$(WorkerPublishDir)wwwroot\**\*.br;$(WorkerPublishDir)wwwroot\**\*.gz" />
@@ -32,6 +34,13 @@
     <Copy SourceFiles="@(_WorkerFile)" DestinationFiles="@(_WorkerFile->'$(WorkerOutputDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <ItemGroup>
       <Content Include="wwwroot\worker\**" />
+    </ItemGroup>
+  </Target>
+
+  <!-- the worker is published as static web assets; its own dotnet.js must not be taken for the app's -->
+  <Target Name="RemoveWorkerFromPublishList" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').Replace('\','/').StartsWith('wwwroot/worker/'))" />
     </ItemGroup>
   </Target>
 
