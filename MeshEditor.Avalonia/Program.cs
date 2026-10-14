@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Avalonia;
 using Avalonia.Threading;
@@ -33,7 +34,26 @@ namespace MeshEditor.AvaloniaUI
 				};
 			}
 
+			if (OperatingSystem.IsLinux() && !AreX11SessionManagementLibrariesInstalled())
+			{
+				Console.Error.WriteLine("MeshEditor needs the X11 session management libraries libICE and libSM. Install them with: sudo apt install libice6 libsm6");
+				return 1;
+			}
+
 			return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+		}
+
+		// Avalonia's X11 backend always connects to the session manager and crashes at startup without libICE and libSM,
+		// which are not installed on WSL or a minimal Ubuntu
+		private static bool AreX11SessionManagementLibrariesInstalled()
+		{
+			foreach (string library in new[] { "libICE.so.6", "libSM.so.6" })
+			{
+				if (!NativeLibrary.TryLoad(library, out IntPtr handle))
+					return false;
+				NativeLibrary.Free(handle);
+			}
+			return true;
 		}
 
 		public static AppBuilder BuildAvaloniaApp()

@@ -15,7 +15,7 @@ This file lists what still needs work before the port can replace the WinForms a
 - [ ] **Remove the Mono dependency.** `linux-deployment/mesheditor/package/DEBIAN/control` still declares `Depends: mono-complete (>=4.2)`.
   - Build a self-contained `dotnet publish -r linux-x64` of `MeshEditor.Avalonia` and of the console tools (`fem-format-converter`, `layer`).
   - Bump the package version.
-- [ ] **Declare the native runtime dependencies.** Avalonia's X11 backend needs `libice6` and `libsm6`; the app crashes at startup without them. It also needs an OpenGL driver (`libgl1`).
+- [ ] **Declare the native runtime dependencies.** Avalonia's X11 backend needs `libice6` and `libsm6` (WSL does not have them by default). Without them, the app prints the `apt install` command and exits at startup. It also needs an OpenGL driver (`libgl1`).
 - [ ] **Restore the launcher scripts.** `linux-deployment/mesheditor/build` chmods `package/usr/bin/mesheditor`, `fem-format-converter` and `layer`, but these files are not in git.
   - Recreate them so they start the .NET executables.
   - Update `mesheditor.desktop` if needed.
