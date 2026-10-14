@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using MeshEditor.AvaloniaUI.Dialogs;
 using MeshEditor.Common.Logging;
 using MeshEditor.CoreInterface;
@@ -79,7 +80,8 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 	/// <summary>
 	/// Selection of a local or remote solution to open (port of MeshEditor.DataVisualizer.UI.SolutionBrowserForm).
-	/// The remote solutions tab is shown only when the remote storage (Azure Blob Storage) is configured.
+	/// The remote solutions tab is shown only when the remote storage (Azure Blob Storage) is configured. It lists the remote solutions
+	/// of the user signed in with a Microsoft account.
 	/// </summary>
 	public class SolutionBrowserDialog : Window
 	{
@@ -99,8 +101,11 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		internal readonly Button buttonUploadLocalSolution = new Button { Content = "Upload to remote", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
 		internal readonly Button buttonDeleteRemoteSolution = new Button { Content = "Delete", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
 		internal readonly Button buttonRefreshRemoteSolutions = new Button { Content = "Refresh", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
-		internal readonly Button buttonRemoteStorage = new Button { Content = "Remote storage...", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
+		internal readonly TextBlock labelRemoteUser = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+		internal readonly Button buttonSignIn = new Button { Content = "Sign in with Microsoft account", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
+		internal readonly Button buttonSignOut = new Button { Content = "Sign out", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
 		private bool remoteSolutionsTabOpened = false;
+		private CancellationTokenSource signInCancellationSource;
 		internal readonly Button buttonOk = new Button { Content = "OK", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsDefault = true };
 		internal readonly Button buttonCancel = new Button { Content = "Cancel", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsCancel = true };
 		internal readonly Button buttonBrowse = new Button { Content = "Browse...", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
@@ -137,8 +142,15 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			remotePageButtons.Children.Add(buttonRefreshRemoteSolutions);
 			remotePageButtons.Children.Add(buttonDeleteRemoteSolution);
 			remotePageButtons.Children.Add(new Panel());
+			var remoteUserBar = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
+			var signInOutButtons = new StackPanel { Orientation = Orientation.Horizontal, Children = { buttonSignIn, buttonSignOut } };
+			DockPanel.SetDock(signInOutButtons, Dock.Right);
+			remoteUserBar.Children.Add(signInOutButtons);
+			remoteUserBar.Children.Add(labelRemoteUser);
 			var remotePage = new DockPanel();
+			DockPanel.SetDock(remoteUserBar, Dock.Top);
 			DockPanel.SetDock(remotePageButtons, Dock.Bottom);
+			remotePage.Children.Add(remoteUserBar);
 			remotePage.Children.Add(remotePageButtons);
 			remotePage.Children.Add(remoteSolutionListView);
 
@@ -147,9 +159,8 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			tabControl = new TabControl { Margin = new Thickness(12, 12, 12, 0), Padding = new Thickness(0, 6, 0, 0), Items = { tabPageLocalSolutions, tabPageRemoteSolutions } };
 
 			var bottom = new DockPanel { Margin = new Thickness(12, 8, 12, 12) };
-			var bottomLeftButtons = new StackPanel { Orientation = Orientation.Horizontal, Children = { buttonBrowse, buttonRemoteStorage } };
-			DockPanel.SetDock(bottomLeftButtons, Dock.Left);
-			bottom.Children.Add(bottomLeftButtons);
+			DockPanel.SetDock(buttonBrowse, Dock.Left);
+			bottom.Children.Add(buttonBrowse);
 			var okCancel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { buttonOk, buttonCancel } };
 			bottom.Children.Add(okCancel);
 			var root = new DockPanel();
@@ -172,7 +183,8 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			buttonUploadLocalSolution.Click += buttonUploadLocalSolution_Click;
 			buttonDeleteRemoteSolution.Click += buttonDeleteRemoteSolution_Click;
 			buttonRefreshRemoteSolutions.Click += (s, e) => RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
-			buttonRemoteStorage.Click += buttonRemoteStorage_Click;
+			buttonSignIn.Click += buttonSignIn_Click;
+			buttonSignOut.Click += buttonSignOut_Click;
 			remoteSolutionListView.SelectedSolutionChanged += (s, e) => updateSelectedSolution();
 			remoteSolutionListView.SolutionListDoubleClick += (s, e) =>
 			{
@@ -182,7 +194,12 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			tabControl.SelectionChanged += tabControl_SelectionChanged;
 
 			LoadingTask = initLocalSolutionListAsync(formClosedCancellationSource.Token); // start loading LOCAL solutions
-			updateRemoteStorageVisibility();
+
+			// remote solutions only when the remote storage is set up (they are loaded when the tab is opened)
+			bool remoteStorageConfigured = SolutionHub.IsRemoteStorageConfigured;
+			tabPageRemoteSolutions.IsVisible = remoteStorageConfigured;
+			buttonUploadLocalSolution.IsVisible = remoteStorageConfigured;
+			setRemoteUser(null);
 			updateButtonStates();
 		}
 
@@ -191,19 +208,19 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		public int? RemoteSolutionId { get; private set; }
 
 		/// <summary>
+		/// User signed in to the remote storage (null until the remote solutions tab is opened or when nobody is signed in).
+		/// </summary>
+		public RemoteUser RemoteUser { get; private set; }
+
+		/// <summary>
 		/// Loading of the local solution list (for UI tests).
 		/// </summary>
 		internal Task LoadingTask { get; private set; }
 
 		/// <summary>
-		/// Loading of the remote solution list (for UI tests), null until the remote solutions tab is opened.
+		/// Sign-in check and loading of the remote solution list (for UI tests), null until the remote solutions tab is opened.
 		/// </summary>
 		internal Task RemoteLoadingTask { get; private set; }
-
-		/// <summary>
-		/// Decides whether the remote storage is configured (tests replace it).
-		/// </summary>
-		internal static Func<bool> IsRemoteStorageConfigured { get; set; } = () => SolutionHub.IsRemoteStorageConfigured;
 
 		/// <summary>
 		/// Loads the remote solution list (tests replace it).
@@ -229,6 +246,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		protected override void OnClosed(EventArgs e)
 		{
 			formClosedCancellationSource.Cancel();
+			signInCancellationSource?.Cancel();
 			base.OnClosed(e);
 		}
 
@@ -267,6 +285,11 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			}
 			catch (OperationCanceledException)
 			{ }
+			catch (RemoteSignInRequiredException)
+			{
+				setRemoteUser(null); // the sign-in expired or was revoked
+				return;
+			}
 			catch (Exception ex)
 			{
 				await ExceptionReportDialog.Show(taskName, ex, logger);
@@ -276,22 +299,136 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		}
 
 		/// <summary>
-		/// Shows the remote solutions tab and the upload button only when the remote storage is configured.
+		/// Checks who is signed in (the sign-in is remembered), then loads the remote solutions of the user.
 		/// </summary>
-		private void updateRemoteStorageVisibility()
+		private async Task initRemoteSolutionsTabAsync(CancellationToken cancellationToken)
 		{
-			bool remoteStorageConfigured = IsRemoteStorageConfigured();
-			tabPageRemoteSolutions.IsVisible = remoteStorageConfigured;
-			buttonUploadLocalSolution.IsVisible = remoteStorageConfigured;
-			if (!remoteStorageConfigured && tabControl.SelectedItem == tabPageRemoteSolutions)
+			remoteSolutionListView.SetSolutions(Enumerable.Empty<ISolutionInfo>());
+			remoteSolutionListView.Notification = "Loading remote solutions...";
+			RemoteUser user = null;
+			try
 			{
-				tabControl.SelectedItem = tabPageLocalSolutions;
+				user = await SolutionHub.GetRemoteUserAsync(cancellationToken);
 			}
-			remoteSolutionsTabOpened = false; // reload when the tab is opened (the storage could change)
-			if (remoteStorageConfigured && tabControl.SelectedItem == tabPageRemoteSolutions)
+			catch (OperationCanceledException)
 			{
-				openRemoteSolutionsTab();
+				return;
 			}
+			catch (Exception ex)
+			{
+				await ExceptionReportDialog.Show("Reading the Microsoft account sign-in", ex, new MemoryLogger());
+			}
+			setRemoteUser(user);
+			if (user != null)
+			{
+				await initRemoteSolutionListAsync(cancellationToken);
+			}
+		}
+
+		private void setRemoteUser(RemoteUser user)
+		{
+			RemoteUser = user;
+			labelRemoteUser.Text = user != null ? $"Signed in as {user}" : "Not signed in";
+			buttonSignIn.IsVisible = user == null;
+			buttonSignOut.IsVisible = user != null;
+			if (user == null)
+			{
+				remoteSolutionListView.SetSolutions(Enumerable.Empty<ISolutionInfo>());
+				remoteSolutionListView.Notification = "Sign in with your Microsoft account to see your remote solutions";
+			}
+			updateButtonStates();
+		}
+
+		/// <summary>
+		/// Sign-in in the web browser (or with a device code when no browser can be opened). Returns false if it failed or was cancelled.
+		/// </summary>
+		private async Task<bool> signInAsync()
+		{
+			if (signInCancellationSource != null)
+			{
+				signInCancellationSource.Cancel(); // the button cancels the sign-in in progress
+				return false;
+			}
+
+			signInCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(formClosedCancellationSource.Token);
+			object buttonText = buttonSignIn.Content;
+			buttonSignIn.Content = "Cancel sign-in";
+			buttonUploadLocalSolution.IsEnabled = false;
+			labelRemoteUser.Text = "Signing in, continue in the web browser...";
+			Window deviceCodeWindow = null;
+			try
+			{
+				var user = await SolutionHub.SignInToRemoteStorageAsync(message => Dispatcher.UIThread.InvokeAsync(() =>
+				{
+					// no web browser could be opened: the user enters the code in a browser on another device
+					deviceCodeWindow = createDeviceCodeWindow(message);
+					deviceCodeWindow.Show(this);
+				}).GetTask(), signInCancellationSource.Token);
+				setRemoteUser(user);
+				return user != null;
+			}
+			catch (OperationCanceledException)
+			{ }
+			catch (Exception ex)
+			{
+				await ExceptionReportDialog.Show("Signing in with Microsoft account", ex, new MemoryLogger());
+			}
+			finally
+			{
+				deviceCodeWindow?.Close();
+				signInCancellationSource.Dispose();
+				signInCancellationSource = null;
+				buttonSignIn.Content = buttonText;
+			}
+			setRemoteUser(RemoteUser); // restore the state before the sign-in
+			return false;
+		}
+
+		private static Window createDeviceCodeWindow(string message)
+		{
+			return new Window
+			{
+				Title = "Sign in with Microsoft account",
+				SizeToContent = SizeToContent.WidthAndHeight,
+				MaxWidth = 560,
+				CanResize = false,
+				CanMinimize = false,
+				ShowInTaskbar = false,
+				WindowStartupLocation = WindowStartupLocation.CenterOwner,
+				Content = new StackPanel
+				{
+					Margin = new Thickness(16),
+					Spacing = 8,
+					Children =
+					{
+						new SelectableTextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+						new TextBlock { Text = "This window closes when the sign-in is finished.", Foreground = Brushes.Gray },
+					},
+				},
+			};
+		}
+
+		private async void buttonSignIn_Click(object sender, RoutedEventArgs e)
+		{
+			if (await signInAsync())
+			{
+				RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+				await RemoteLoadingTask;
+			}
+		}
+
+		private async void buttonSignOut_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				await SolutionHub.SignOutFromRemoteStorageAsync();
+			}
+			catch (Exception ex)
+			{
+				await ExceptionReportDialog.Show("Signing out", ex, new MemoryLogger());
+			}
+			setRemoteUser(null);
+			updateSelectedSolution();
 		}
 
 		private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -309,7 +446,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		private void openRemoteSolutionsTab()
 		{
 			remoteSolutionsTabOpened = true;
-			RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+			RemoteLoadingTask = initRemoteSolutionsTabAsync(formClosedCancellationSource.Token);
 		}
 
 		private void updateSelectedSolution()
@@ -335,17 +472,11 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		{
 			bool localSelected = localSolutionListView.IsEnabled && localSolutionListView.SelectedSolution != null;
 			bool remoteSelected = remoteSolutionListView.IsEnabled && remoteSolutionListView.SelectedSolution != null;
-			buttonDeleteLocalSolution.IsEnabled = buttonUploadLocalSolution.IsEnabled = localSelected;
+			buttonDeleteLocalSolution.IsEnabled = localSelected;
+			buttonUploadLocalSolution.IsEnabled = localSelected && signInCancellationSource == null;
 			buttonDeleteRemoteSolution.IsEnabled = remoteSelected;
-			buttonRefreshRemoteSolutions.IsEnabled = remoteSolutionListView.IsEnabled;
+			buttonRefreshRemoteSolutions.IsEnabled = remoteSolutionListView.IsEnabled && RemoteUser != null;
 			buttonOk.IsEnabled = tabControl.SelectedItem == tabPageRemoteSolutions ? remoteSelected : localSelected;
-		}
-
-		private async void buttonRemoteStorage_Click(object sender, RoutedEventArgs e)
-		{
-			await new RemoteStorageDialog().ShowDialog(this);
-			updateRemoteStorageVisibility();
-			updateSelectedSolution();
 		}
 
 		private async void buttonUploadLocalSolution_Click(object sender, RoutedEventArgs e)
@@ -354,6 +485,22 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			Debug.Assert(selectedSolution != null);
 			if (selectedSolution != null)
 			{
+				// the solution is uploaded as a solution of the signed-in user: sign in first if needed
+				if (RemoteUser == null)
+				{
+					try
+					{
+						setRemoteUser(await SolutionHub.GetRemoteUserAsync(formClosedCancellationSource.Token));
+					}
+					catch (Exception ex)
+					{
+						await ExceptionReportDialog.Show("Reading the Microsoft account sign-in", ex, new MemoryLogger());
+						return;
+					}
+					if (RemoteUser == null && !await signInAsync())
+						return;
+				}
+
 				object buttonText = buttonUploadLocalSolution.Content;
 				buttonUploadLocalSolution.IsEnabled = false;
 				buttonUploadLocalSolution.Content = "Uploading...";
@@ -363,7 +510,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				{
 					var remoteSolution = await SolutionHub.UploadLocalSolutionToRemoteAsync(selectedSolution.Location, formClosedCancellationSource.Token, logger);
 					remoteSolutionsTabOpened = false; // reload the remote solutions
-					await MessageBox.Show($"Solution '{selectedSolution.ProjectName}' was uploaded as remote solution {remoteSolution.Id}.", "Upload to remote", MessageBoxButtons.OK, MessageBoxIcon.Information, owner: this);
+					await MessageBox.Show($"Solution '{selectedSolution.ProjectName}' was uploaded as remote solution {remoteSolution.Id} of {RemoteUser}.", "Upload to remote", MessageBoxButtons.OK, MessageBoxIcon.Information, owner: this);
 				}
 				catch (OperationCanceledException)
 				{ }

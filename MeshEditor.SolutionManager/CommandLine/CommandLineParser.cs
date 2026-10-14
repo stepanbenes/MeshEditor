@@ -9,7 +9,6 @@ using MeshEditor.SolutionManager.IO;
 using CommandLine;
 using System.IO;
 using MeshEditor.Common.Extensions;
-using MeshEditor.SolutionManager.AzureStorage;
 using System.Threading;
 
 namespace MeshEditor.SolutionManager.CommandLine
@@ -107,31 +106,35 @@ namespace MeshEditor.SolutionManager.CommandLine
 
 		private int runRemoteStorageCommand(RemoteStorageOptions options)
 		{
-			if (options.SetConnectionString)
+			if (!SolutionHub.IsRemoteStorageConfigured)
 			{
-				if (!Console.IsInputRedirected)
-					Console.Write("Azure Storage connection string: ");
-				string connectionString = Console.ReadLine();
-				if (string.IsNullOrWhiteSpace(connectionString))
-					throw new ArgumentException("Connection string is empty.");
-				SolutionHub.TestRemoteStorageConnectionAsync(connectionString, CancellationToken.None).GetAwaiter().GetResult();
-				AzureStorageCredentialStore.SetConnectionString(connectionString);
-				logger?.LogMessage("Connection string stored.");
+				logger?.LogMessage("Remote storage is not configured (AccountUrl, TenantId and ClientId in the AzureBlobStorage section of config.json).");
+				return 2;
 			}
-			else if (options.ClearConnectionString)
+
+			if (options.Login)
 			{
-				AzureStorageCredentialStore.Clear();
-				logger?.LogMessage("Stored connection string removed.");
+				// device code flow: works without a web browser on this machine (SSH, headless Linux)
+				var user = SolutionHub.SignInToRemoteStorageWithDeviceCodeAsync(message =>
+				{
+					using (new ConsoleBrush(ConsoleColor.Yellow))
+						Console.WriteLine(message);
+					return Task.CompletedTask;
+				}, CancellationToken.None).GetAwaiter().GetResult();
+				logger?.LogMessage($"Signed in as {user}.");
+			}
+			else if (options.Logout)
+			{
+				SolutionHub.SignOutFromRemoteStorageAsync().GetAwaiter().GetResult();
+				logger?.LogMessage("Signed out.");
 			}
 			else if (options.UploadSolution != null)
 			{
 				SolutionHub.UploadLocalSolutionToRemoteAsync(Path.GetFullPath(options.UploadSolution), CancellationToken.None, logger).GetAwaiter().GetResult();
 			}
 
-			if (AzureStorageCredentialStore.IsProvidedByEnvironment)
-				logger?.LogMessage($"Remote storage is configured by the environment variable {AzureStorageCredentialStore.ConnectionStringEnvironmentVariable}.");
-			else
-				logger?.LogMessage(SolutionHub.IsRemoteStorageConfigured ? "Remote storage is configured." : "Remote storage is not configured.");
+			var signedInUser = SolutionHub.GetRemoteUserAsync(CancellationToken.None).GetAwaiter().GetResult();
+			logger?.LogMessage(signedInUser != null ? $"Signed in to the remote storage as {signedInUser}." : "Not signed in to the remote storage (use --login).");
 			return 0;
 		}
 

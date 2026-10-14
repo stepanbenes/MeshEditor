@@ -5,14 +5,18 @@ The cross-platform app `MeshEditor.Avalonia` (Avalonia 12.1, .NET 10) covers eve
 - all dialogs from `MeshEditor.Forms`
 - the postprocessor (`MeshEditor.Avalonia/Postprocessing`)
 
-The remote solution storage is back (issue #23), now based only on Azure Blob Storage (`Azure.Storage.Blobs` 12) without the old REST API:
-- Solutions are JSON blobs `{id}.solution.json` in the `fea-solutions` container. Layers are in `fea-layers` and results in `fea-results`. The container names can be changed in the `AzureBlobStorage` section of `config.json`.
-- The connection string is never stored in `config.json`. It is kept in the secure storage of the OS: DPAPI on Windows, Keychain on macOS, the libsecret keyring on Linux. Without a keyring, Linux falls back to a file readable only by the user. The environment variable `MESHEDITOR_AZURE_STORAGE_CONNECTION_STRING` takes precedence.
-- To configure it, use *Open solution → Remote storage...* or `fem-format-converter remote-storage --set`, which reads the connection string from stdin.
-- The *Remote solutions* tab is shown only when the storage is configured. Local solutions can be uploaded with *Upload to remote* or `remote-storage --upload <file>`.
-- Remote solutions that were created by the old REST API (metadata in its database) are not listed.
+The remote solution storage is back (issue #23). It now uses only Azure Blob Storage (`Azure.Storage.Blobs` 12), without the old REST API. The Azure setup is described in `REMOTE-STORAGE.md`.
+- Users sign in with a Microsoft account (Entra ID, MSAL). There is no storage key.
+  - The app signs in through the system browser. Without a browser it falls back to a device code.
+  - The command line uses `fem-format-converter remote-storage --login`.
+  - Tokens are cached in the OS secure storage.
+- Each user's solutions and layers are in a folder named by the user's object id. Every solution records its owner, and the app lists only the signed-in user's solutions.
+- `AccountUrl`, `TenantId` and `ClientId` in the `AzureBlobStorage` section of `config.json` enable the *Remote solutions* tab and the *Upload to remote* button.
+- Remote solutions created by the old REST API are not listed.
 - The WinForms `SolutionBrowserForm` was not updated.
-- `RemoteSolutionsTests` run against Azurite (`npx azurite-blob --inMemoryPersistence --skipApiVersionCheck`) and are skipped when it is not running.
+- `RemoteSolutionsTests` replace the sign-in with a test connection. The storage tests run against Azurite (`npx azurite-blob --inMemoryPersistence --skipApiVersionCheck`) and are skipped when it is not running.
+- [ ] The real sign-in (browser, device code, keyring) has not been tried against an Entra ID tenant. Try it on Windows and Linux once the app registration exists.
+
 The headless UI tests in `MeshEditor.Avalonia.Tests` pass on Windows and Linux (WSL).
 
 This file lists what still needs work before the port can replace the WinForms app.
