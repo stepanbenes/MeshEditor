@@ -9,12 +9,15 @@ using MeshEditor.SolutionManager.IO;
 using CommandLine;
 using System.IO;
 using MeshEditor.Common.Extensions;
+using MeshEditor.SolutionManager.AzureStorage;
+using System.Threading;
 
 namespace MeshEditor.SolutionManager.CommandLine
 {
 	public enum StorageType
 	{
-		Local
+		Local,
+		Remote
 	}
 
 	public class CommandLineParser
@@ -40,7 +43,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 
 		public int Run(IEnumerable<string> args)
 		{
-			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions, DiffOptions>(args)
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions, DiffOptions, RemoteStorageOptions>(args)
 					.MapResult(
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
@@ -48,6 +51,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 						(ListOptions options) => runListCommand(options),
 						(DeleteOptions options) => runDeleteCommand(options),
 						(DiffOptions options) => runDiffCommand(options),
+						(RemoteStorageOptions options) => runRemoteStorageCommand(options),
 						errors => 1);
 		}
 
@@ -101,6 +105,36 @@ namespace MeshEditor.SolutionManager.CommandLine
 			return 0;
 		}
 
+		private int runRemoteStorageCommand(RemoteStorageOptions options)
+		{
+			if (options.SetConnectionString)
+			{
+				if (!Console.IsInputRedirected)
+					Console.Write("Azure Storage connection string: ");
+				string connectionString = Console.ReadLine();
+				if (string.IsNullOrWhiteSpace(connectionString))
+					throw new ArgumentException("Connection string is empty.");
+				SolutionHub.TestRemoteStorageConnectionAsync(connectionString, CancellationToken.None).GetAwaiter().GetResult();
+				AzureStorageCredentialStore.SetConnectionString(connectionString);
+				logger?.LogMessage("Connection string stored.");
+			}
+			else if (options.ClearConnectionString)
+			{
+				AzureStorageCredentialStore.Clear();
+				logger?.LogMessage("Stored connection string removed.");
+			}
+			else if (options.UploadSolution != null)
+			{
+				SolutionHub.UploadLocalSolutionToRemoteAsync(Path.GetFullPath(options.UploadSolution), CancellationToken.None, logger).GetAwaiter().GetResult();
+			}
+
+			if (AzureStorageCredentialStore.IsProvidedByEnvironment)
+				logger?.LogMessage($"Remote storage is configured by the environment variable {AzureStorageCredentialStore.ConnectionStringEnvironmentVariable}.");
+			else
+				logger?.LogMessage(SolutionHub.IsRemoteStorageConfigured ? "Remote storage is configured." : "Remote storage is not configured.");
+			return 0;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -112,7 +146,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 				logger.Level = TraceLevel.Verbose;
 			}
 
-			StorageType requestedStorageType = this.storageType;
+			StorageType requestedStorageType = options.UseRemoteStorage ? StorageType.Remote : this.storageType;
 
 			switch (requestedStorageType)
 			{
@@ -141,6 +175,20 @@ namespace MeshEditor.SolutionManager.CommandLine
 							return SolutionHub.OpenLocal(options.Solution, logger);
 						}
 					}
+				case StorageType.Remote:
+					{
+						int solutionId;
+						if (options.Solution == null)
+						{
+							var solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
+							solutionId = solutions[chooseSolution(solutions)].Id;
+						}
+						else if (!int.TryParse(options.Solution, NumberStyles.Integer, CultureInfo.InvariantCulture, out solutionId))
+						{
+							throw new FormatException("Remote solution must be specified by its id (integer).");
+						}
+						return SolutionHub.OpenRemote(solutionId, logger);
+					}
 				default:
 					throw new NotSupportedException();
 			}
@@ -154,7 +202,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 				throw new FileNotFoundException("No solution found.");
 
 			if (solutions.Count == 1)
-				return solutions[0].Id;
+				return 0;
 
 			// otherwise show menu:
 			Console.WriteLine("Choose solution:");

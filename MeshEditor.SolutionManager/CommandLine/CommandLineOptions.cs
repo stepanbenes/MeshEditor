@@ -12,9 +12,11 @@ namespace MeshEditor.SolutionManager.CommandLine
 		[Option(Required = false, HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("solution", Required = false, HelpText = "Solution file path")]
+		[Option("solution", Required = false, HelpText = "Solution file path (local solutions) or solution id (remote solutions)")]
 		public string Solution { get; set; }
 
+		[Option("remote", Required = false, HelpText = "Use the remote solution storage (Azure Blob Storage, see the remote-storage command)")]
+		public bool UseRemoteStorage { get; set; }
 
 		[Option("pressanykey", Required = false, HelpText = "Require pressing any key before quitting the program")]
 		public bool PressAnyKeyToQuit { get; set; }
@@ -78,6 +80,19 @@ namespace MeshEditor.SolutionManager.CommandLine
 
 		[Option("all", Required = false, HelpText = "Delete all layers in solution")]
 		public bool DeleteAll { get; set; }
+	}
+
+	[Verb("remote-storage", HelpText = "Configure the remote solution storage (Azure Blob Storage). The connection string is kept in the secure storage of the operating system.")]
+	class RemoteStorageOptions
+	{
+		[Option("set", Required = false, SetName = "set", HelpText = "Read the Azure Storage connection string from standard input and store it")]
+		public bool SetConnectionString { get; set; }
+
+		[Option("clear", Required = false, SetName = "clear", HelpText = "Remove the stored connection string")]
+		public bool ClearConnectionString { get; set; }
+
+		[Option("upload", Required = false, SetName = "upload", HelpText = "Upload the local solution (solution file path) to the remote storage")]
+		public string UploadSolution { get; set; }
 	}
 
 	[Verb("diff", HelpText = "Compare layer with its parent")]

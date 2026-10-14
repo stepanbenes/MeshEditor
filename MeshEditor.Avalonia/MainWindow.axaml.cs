@@ -1613,7 +1613,7 @@ namespace MeshEditor.AvaloniaUI
 
 			if (await solutionBrowserForm.ShowDialog(this))
 			{
-				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserDialog.SolutionLocationType.Local);
+				Debug.Assert(solutionBrowserForm.SolutionLocation == SolutionBrowserDialog.SolutionLocationType.Local || solutionBrowserForm.SolutionLocation == SolutionBrowserDialog.SolutionLocationType.Remote);
 
 				await setPostprocessorLayoutMode();
 				var postprocessView = getCurrentPostprocessView();
@@ -1623,6 +1623,10 @@ namespace MeshEditor.AvaloniaUI
 					case SolutionBrowserDialog.SolutionLocationType.Local:
 						Debug.Assert(solutionBrowserForm.LocalSolutionFileName != null);
 						await postprocessView.LoadLocalSolutionAsync(solutionBrowserForm.LocalSolutionFileName);
+						break;
+					case SolutionBrowserDialog.SolutionLocationType.Remote:
+						Debug.Assert(solutionBrowserForm.RemoteSolutionId.HasValue);
+						await postprocessView.LoadRemoteSolutionAsync(solutionBrowserForm.RemoteSolutionId.Value);
 						break;
 				}
 			}

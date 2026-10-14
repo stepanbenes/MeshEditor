@@ -125,6 +125,21 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			_ = await loadSolutionWithErrorHandlingAsync();
 		}
 
+		public async Task LoadRemoteSolutionAsync(int solutionId)
+		{
+			logger = new MemoryLogger();
+			try
+			{
+				solutionHub = SolutionHub.OpenRemote(solutionId, logger);
+			}
+			catch (Exception ex)
+			{
+				await ExceptionReportDialog.Show("Opening remote solution", ex, logger);
+				return;
+			}
+			_ = await loadSolutionWithErrorHandlingAsync();
+		}
+
 		/// <summary>
 		/// Releases the long operation notification (control is removed from the main window).
 		/// </summary>

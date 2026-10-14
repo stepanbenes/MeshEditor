@@ -78,18 +78,29 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 	}
 
 	/// <summary>
-	/// Selection of a local solution to open (port of MeshEditor.DataVisualizer.UI.SolutionBrowserForm without the remote solutions).
+	/// Selection of a local or remote solution to open (port of MeshEditor.DataVisualizer.UI.SolutionBrowserForm).
+	/// The remote solutions tab is shown only when the remote storage (Azure Blob Storage) is configured.
 	/// </summary>
 	public class SolutionBrowserDialog : Window
 	{
 		public enum SolutionLocationType
 		{
 			Undefined,
-			Local
+			Local,
+			Remote
 		}
 
 		private readonly CancellationTokenSource formClosedCancellationSource = new CancellationTokenSource();
+		internal readonly TabControl tabControl;
+		internal readonly TabItem tabPageLocalSolutions;
+		internal readonly TabItem tabPageRemoteSolutions;
 		internal readonly SolutionListView localSolutionListView = new SolutionListView();
+		internal readonly SolutionListView remoteSolutionListView = new SolutionListView();
+		internal readonly Button buttonUploadLocalSolution = new Button { Content = "Upload to remote", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+		internal readonly Button buttonDeleteRemoteSolution = new Button { Content = "Delete", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
+		internal readonly Button buttonRefreshRemoteSolutions = new Button { Content = "Refresh", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
+		internal readonly Button buttonRemoteStorage = new Button { Content = "Remote storage...", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
+		private bool remoteSolutionsTabOpened = false;
 		internal readonly Button buttonOk = new Button { Content = "OK", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsDefault = true };
 		internal readonly Button buttonCancel = new Button { Content = "Cancel", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsCancel = true };
 		internal readonly Button buttonBrowse = new Button { Content = "Browse...", Width = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
@@ -110,19 +121,35 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 			var localPageButtons = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
 			DockPanel.SetDock(buttonChangeDefaultSolutionDirectory, Dock.Left);
-			DockPanel.SetDock(buttonDeleteLocalSolution, Dock.Right);
+			var localPageRightButtons = new StackPanel { Orientation = Orientation.Horizontal, Children = { buttonUploadLocalSolution, buttonDeleteLocalSolution } };
+			DockPanel.SetDock(localPageRightButtons, Dock.Right);
 			localPageButtons.Children.Add(buttonChangeDefaultSolutionDirectory);
-			localPageButtons.Children.Add(buttonDeleteLocalSolution);
+			localPageButtons.Children.Add(localPageRightButtons);
 			localPageButtons.Children.Add(new Panel());
 			var localPage = new DockPanel();
 			DockPanel.SetDock(localPageButtons, Dock.Bottom);
 			localPage.Children.Add(localPageButtons);
 			localPage.Children.Add(localSolutionListView);
-			var tabControl = new TabControl { Margin = new Thickness(12, 12, 12, 0), Padding = new Thickness(0, 6, 0, 0), Items = { new TabItem { Header = "Local solutions", Content = localPage } } };
+
+			var remotePageButtons = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
+			DockPanel.SetDock(buttonRefreshRemoteSolutions, Dock.Left);
+			DockPanel.SetDock(buttonDeleteRemoteSolution, Dock.Right);
+			remotePageButtons.Children.Add(buttonRefreshRemoteSolutions);
+			remotePageButtons.Children.Add(buttonDeleteRemoteSolution);
+			remotePageButtons.Children.Add(new Panel());
+			var remotePage = new DockPanel();
+			DockPanel.SetDock(remotePageButtons, Dock.Bottom);
+			remotePage.Children.Add(remotePageButtons);
+			remotePage.Children.Add(remoteSolutionListView);
+
+			tabPageLocalSolutions = new TabItem { Header = "Local solutions", Content = localPage };
+			tabPageRemoteSolutions = new TabItem { Header = "Remote solutions", Content = remotePage };
+			tabControl = new TabControl { Margin = new Thickness(12, 12, 12, 0), Padding = new Thickness(0, 6, 0, 0), Items = { tabPageLocalSolutions, tabPageRemoteSolutions } };
 
 			var bottom = new DockPanel { Margin = new Thickness(12, 8, 12, 12) };
-			DockPanel.SetDock(buttonBrowse, Dock.Left);
-			bottom.Children.Add(buttonBrowse);
+			var bottomLeftButtons = new StackPanel { Orientation = Orientation.Horizontal, Children = { buttonBrowse, buttonRemoteStorage } };
+			DockPanel.SetDock(bottomLeftButtons, Dock.Left);
+			bottom.Children.Add(bottomLeftButtons);
 			var okCancel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { buttonOk, buttonCancel } };
 			bottom.Children.Add(okCancel);
 			var root = new DockPanel();
@@ -142,18 +169,47 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				if (localSolutionListView.SelectedSolution != null)
 					close(true);
 			};
+			buttonUploadLocalSolution.Click += buttonUploadLocalSolution_Click;
+			buttonDeleteRemoteSolution.Click += buttonDeleteRemoteSolution_Click;
+			buttonRefreshRemoteSolutions.Click += (s, e) => RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+			buttonRemoteStorage.Click += buttonRemoteStorage_Click;
+			remoteSolutionListView.SelectedSolutionChanged += (s, e) => updateSelectedSolution();
+			remoteSolutionListView.SolutionListDoubleClick += (s, e) =>
+			{
+				if (remoteSolutionListView.SelectedSolution != null)
+					close(true);
+			};
+			tabControl.SelectionChanged += tabControl_SelectionChanged;
 
 			LoadingTask = initLocalSolutionListAsync(formClosedCancellationSource.Token); // start loading LOCAL solutions
+			updateRemoteStorageVisibility();
 			updateButtonStates();
 		}
 
 		public SolutionLocationType SolutionLocation { get; private set; }
 		public string LocalSolutionFileName { get; private set; }
+		public int? RemoteSolutionId { get; private set; }
 
 		/// <summary>
 		/// Loading of the local solution list (for UI tests).
 		/// </summary>
 		internal Task LoadingTask { get; private set; }
+
+		/// <summary>
+		/// Loading of the remote solution list (for UI tests), null until the remote solutions tab is opened.
+		/// </summary>
+		internal Task RemoteLoadingTask { get; private set; }
+
+		/// <summary>
+		/// Decides whether the remote storage is configured (tests replace it).
+		/// </summary>
+		internal static Func<bool> IsRemoteStorageConfigured { get; set; } = () => SolutionHub.IsRemoteStorageConfigured;
+
+		/// <summary>
+		/// Loads the remote solution list (tests replace it).
+		/// </summary>
+		internal static Func<CancellationToken, MemoryLogger, Task<IEnumerable<ISolutionInfo>>> EnumerateRemoteSolutionsAsync { get; set; } =
+			(cancellationToken, logger) => SolutionHub.EnumerateAllRemoteSolutionsAsync(cancellationToken, logger);
 
 		/// <summary>
 		/// Shows the dialog, returns true if a solution was chosen (DialogResult.OK).
@@ -197,9 +253,166 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			updateButtonStates();
 		}
 
+		private async Task initRemoteSolutionListAsync(CancellationToken cancellationToken)
+		{
+			string taskName = "Loading remote solutions";
+			remoteSolutionListView.SetSolutions(Enumerable.Empty<ISolutionInfo>());
+			remoteSolutionListView.Notification = taskName + "...";
+
+			var logger = new MemoryLogger();
+			IEnumerable<ISolutionInfo> solutions = Enumerable.Empty<ISolutionInfo>();
+			try
+			{
+				solutions = await EnumerateRemoteSolutionsAsync(cancellationToken, logger);
+			}
+			catch (OperationCanceledException)
+			{ }
+			catch (Exception ex)
+			{
+				await ExceptionReportDialog.Show(taskName, ex, logger);
+			}
+			remoteSolutionListView.SetSolutions(solutions);
+			updateButtonStates();
+		}
+
+		/// <summary>
+		/// Shows the remote solutions tab and the upload button only when the remote storage is configured.
+		/// </summary>
+		private void updateRemoteStorageVisibility()
+		{
+			bool remoteStorageConfigured = IsRemoteStorageConfigured();
+			tabPageRemoteSolutions.IsVisible = remoteStorageConfigured;
+			buttonUploadLocalSolution.IsVisible = remoteStorageConfigured;
+			if (!remoteStorageConfigured && tabControl.SelectedItem == tabPageRemoteSolutions)
+			{
+				tabControl.SelectedItem = tabPageLocalSolutions;
+			}
+			remoteSolutionsTabOpened = false; // reload when the tab is opened (the storage could change)
+			if (remoteStorageConfigured && tabControl.SelectedItem == tabPageRemoteSolutions)
+			{
+				openRemoteSolutionsTab();
+			}
+		}
+
+		private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (!ReferenceEquals(e.Source, tabControl))
+				return; // bubbled from the solution grids
+
+			if (tabControl.SelectedItem == tabPageRemoteSolutions && !remoteSolutionsTabOpened)
+			{
+				openRemoteSolutionsTab();
+			}
+			updateSelectedSolution();
+		}
+
+		private void openRemoteSolutionsTab()
+		{
+			remoteSolutionsTabOpened = true;
+			RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+		}
+
+		private void updateSelectedSolution()
+		{
+			LocalSolutionFileName = null;
+			RemoteSolutionId = null;
+			SolutionLocation = SolutionLocationType.Undefined;
+
+			if (tabControl.SelectedItem == tabPageLocalSolutions && localSolutionListView.SelectedSolution is ISolutionInfo localSolution)
+			{
+				LocalSolutionFileName = localSolution.Location;
+				SolutionLocation = SolutionLocationType.Local;
+			}
+			else if (tabControl.SelectedItem == tabPageRemoteSolutions && remoteSolutionListView.SelectedSolution is ISolutionInfo remoteSolution)
+			{
+				RemoteSolutionId = remoteSolution.Id;
+				SolutionLocation = SolutionLocationType.Remote;
+			}
+			updateButtonStates();
+		}
+
 		private void updateButtonStates()
 		{
-			buttonOk.IsEnabled = buttonDeleteLocalSolution.IsEnabled = localSolutionListView.IsEnabled && localSolutionListView.SelectedSolution != null;
+			bool localSelected = localSolutionListView.IsEnabled && localSolutionListView.SelectedSolution != null;
+			bool remoteSelected = remoteSolutionListView.IsEnabled && remoteSolutionListView.SelectedSolution != null;
+			buttonDeleteLocalSolution.IsEnabled = buttonUploadLocalSolution.IsEnabled = localSelected;
+			buttonDeleteRemoteSolution.IsEnabled = remoteSelected;
+			buttonRefreshRemoteSolutions.IsEnabled = remoteSolutionListView.IsEnabled;
+			buttonOk.IsEnabled = tabControl.SelectedItem == tabPageRemoteSolutions ? remoteSelected : localSelected;
+		}
+
+		private async void buttonRemoteStorage_Click(object sender, RoutedEventArgs e)
+		{
+			await new RemoteStorageDialog().ShowDialog(this);
+			updateRemoteStorageVisibility();
+			updateSelectedSolution();
+		}
+
+		private async void buttonUploadLocalSolution_Click(object sender, RoutedEventArgs e)
+		{
+			ISolutionInfo selectedSolution = localSolutionListView.SelectedSolution;
+			Debug.Assert(selectedSolution != null);
+			if (selectedSolution != null)
+			{
+				object buttonText = buttonUploadLocalSolution.Content;
+				buttonUploadLocalSolution.IsEnabled = false;
+				buttonUploadLocalSolution.Content = "Uploading...";
+				localSolutionListView.IsEnabled = false;
+				var logger = new MemoryLogger();
+				try
+				{
+					var remoteSolution = await SolutionHub.UploadLocalSolutionToRemoteAsync(selectedSolution.Location, formClosedCancellationSource.Token, logger);
+					remoteSolutionsTabOpened = false; // reload the remote solutions
+					await MessageBox.Show($"Solution '{selectedSolution.ProjectName}' was uploaded as remote solution {remoteSolution.Id}.", "Upload to remote", MessageBoxButtons.OK, MessageBoxIcon.Information, owner: this);
+				}
+				catch (OperationCanceledException)
+				{ }
+				catch (Exception ex)
+				{
+					await ExceptionReportDialog.Show("Uploading solution to remote storage", ex, logger);
+				}
+				finally
+				{
+					buttonUploadLocalSolution.Content = buttonText;
+					localSolutionListView.IsEnabled = true;
+					updateButtonStates();
+				}
+			}
+		}
+
+		private async void buttonDeleteRemoteSolution_Click(object sender, RoutedEventArgs e)
+		{
+			ISolutionInfo selectedSolution = remoteSolutionListView.SelectedSolution;
+			Debug.Assert(selectedSolution != null);
+			if (selectedSolution != null)
+			{
+				if (await MessageBox.Show($"Delete remote solution {selectedSolution.Id} ('{selectedSolution.ProjectName}') with all its layers?", "Delete remote solution", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, owner: this) != MessageBoxResult.Yes)
+					return;
+
+				object buttonText = buttonDeleteRemoteSolution.Content;
+				buttonDeleteRemoteSolution.IsEnabled = false;
+				buttonDeleteRemoteSolution.Content = "Deleting...";
+				remoteSolutionListView.IsEnabled = false;
+				var logger = new MemoryLogger();
+				try
+				{
+					var solutionHub = SolutionHub.OpenRemote(selectedSolution.Id, logger);
+					await solutionHub.DeleteAsync(layerIdOrName: null, deleteAll: true, cancellationToken: formClosedCancellationSource.Token);
+				}
+				catch (Exception ex)
+				{
+					await ExceptionReportDialog.Show("Deleting remote solution", ex, logger);
+				}
+				finally
+				{
+					buttonDeleteRemoteSolution.Content = buttonText;
+					remoteSolutionListView.IsEnabled = true;
+					updateButtonStates();
+				}
+
+				RemoteLoadingTask = initRemoteSolutionListAsync(formClosedCancellationSource.Token);
+				await RemoteLoadingTask;
+			}
 		}
 
 		private async void buttonDeleteLocalSolution_Click(object sender, RoutedEventArgs e)
@@ -235,18 +448,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 
 		private void localSolutionListView_SelectedSolutionChanged(object sender, EventArgs e)
 		{
-			ISolutionInfo selectedSolution = localSolutionListView.SelectedSolution;
-			if (selectedSolution != null)
-			{
-				LocalSolutionFileName = selectedSolution.Location;
-				SolutionLocation = SolutionLocationType.Local;
-			}
-			else
-			{
-				LocalSolutionFileName = null;
-				SolutionLocation = SolutionLocationType.Undefined;
-			}
-			updateButtonStates();
+			updateSelectedSolution();
 		}
 
 		private async void buttonChangeDefaultSolutionDirectory_Click(object sender, RoutedEventArgs e)
@@ -280,6 +482,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			if (path != null)
 			{
 				LocalSolutionFileName = path;
+				RemoteSolutionId = null;
 				SolutionLocation = SolutionLocationType.Local;
 				close(true);
 			}
