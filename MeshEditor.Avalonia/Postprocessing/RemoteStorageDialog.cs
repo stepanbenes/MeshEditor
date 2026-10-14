@@ -19,7 +19,7 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 	public class RemoteStorageDialog : Window
 	{
 		private readonly CancellationTokenSource formClosedCancellationSource = new CancellationTokenSource();
-		internal readonly TextBox textBoxConnectionString = new TextBox { PasswordChar = '•', RevealPassword = false, Watermark = "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net" };
+		internal readonly TextBox textBoxConnectionString = new TextBox { PasswordChar = '•', RevealPassword = false, PlaceholderText ="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net" };
 		internal readonly TextBlock labelStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) };
 		internal readonly Button buttonSave = new Button { Content = "Test and save", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center, IsDefault = true };
 		internal readonly Button buttonRemove = new Button { Content = "Remove", MinWidth = 100, HorizontalContentAlignment = HorizontalAlignment.Center };
