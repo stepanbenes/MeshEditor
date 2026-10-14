@@ -14,7 +14,7 @@ Remote solutions are stored in Azure Blob Storage. Users sign in with their Micr
 - The app calls Blob Storage directly with the user's token. Access is granted by Azure roles.
 - Everything a user stores is in a folder named by the user's object id (the object id from the user's home account). The folder exists in each container:
   - `fea-solutions/<object id>/<n>.solution.json`: the solution. It records its owner (object id and e-mail).
-  - `fea-layers/<object id>/<layer id>/...`: the layer data.
+  - `fea-layers/<object id>/<layer folder>/<layer id>/...`: the layer data. Each solution has its own layer folder (recorded in the solution), so solutions uploaded from the same local solution don't share layers. Solutions uploaded before the layer folders have their layers directly in `fea-layers/<object id>/<layer id>/...`.
   - `fea-results/<object id>/...`: the FEM results for imports into a remote solution.
 - The app lists and opens only the solutions in the folder of the signed-in user.
 

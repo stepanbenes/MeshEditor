@@ -12,12 +12,14 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using MeshEditor.AvaloniaUI.Dialogs;
 using MeshEditor.AvaloniaUI.Postprocessing;
 using MeshEditor.Common.Logging;
 using MeshEditor.LayerManager.Import;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.IO;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace MeshEditor.AvaloniaUI.Tests
@@ -43,6 +45,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 		private string originalConfigurationDirectory;
 		private IRemoteStorageConnection originalConnection;
 		private Func<CancellationToken, MemoryLogger, Task<IEnumerable<ISolutionInfo>>> originalEnumerateRemoteSolutions;
+		private Func<string, IProgress<RemoteOperationProgress>, CancellationToken, MemoryLogger, Task<ISolutionInfo>> originalUploadLocalSolutionToRemote;
+		private Func<int, IProgress<RemoteOperationProgress>, CancellationToken, MemoryLogger, Task> originalDeleteRemoteSolution;
 
 		[SetUp]
 		public void SetUp()
@@ -56,6 +60,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 			MeshEditor.Common.ConfigurationManager.ConfigurationDirectory = Path.Combine(tempDirectory, "config");
 			originalConnection = SolutionHub.RemoteStorageConnection;
 			originalEnumerateRemoteSolutions = SolutionBrowserDialog.EnumerateRemoteSolutionsAsync;
+			originalUploadLocalSolutionToRemote = SolutionBrowserDialog.UploadLocalSolutionToRemoteAsync;
+			originalDeleteRemoteSolution = SolutionBrowserDialog.DeleteRemoteSolutionAsync;
 		}
 
 		[TearDown]
@@ -63,6 +69,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 		{
 			SolutionHub.RemoteStorageConnection = originalConnection;
 			SolutionBrowserDialog.EnumerateRemoteSolutionsAsync = originalEnumerateRemoteSolutions;
+			SolutionBrowserDialog.UploadLocalSolutionToRemoteAsync = originalUploadLocalSolutionToRemote;
+			SolutionBrowserDialog.DeleteRemoteSolutionAsync = originalDeleteRemoteSolution;
 			MeshEditor.Common.ConfigurationManager.ConfigurationDirectory = originalConfigurationDirectory;
 			foreach (var window in openedWindows.Where(w => w.IsVisible).ToList())
 				window.Close();
@@ -106,6 +114,16 @@ namespace MeshEditor.AvaloniaUI.Tests
 			public int Id { get; set; }
 			public string ProjectName { get; set; }
 			public string Location { get; set; }
+		}
+
+		/// <summary>
+		/// Progress reported on the reporting thread (<see cref="Progress{T}"/> posts it later).
+		/// </summary>
+		private class SynchronousProgress<T> : IProgress<T>
+		{
+			private readonly Action<T> report;
+			public SynchronousProgress(Action<T> report) => this.report = report;
+			public void Report(T value) => report(value);
 		}
 
 		/// <summary>
@@ -185,6 +203,21 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		private static void click(Control control) => control.RaiseEvent(new RoutedEventArgs(control is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
+
+		private static Button findButton(Window window, string name) => window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == name);
+
+		private static BlobClient getSolutionBlob(BlobServiceClient serviceClient, RemoteUser user, int solutionId) =>
+			serviceClient.GetBlobContainerClient("fea-solutions").GetBlobClient($"{user.Id}/{solutionId}.solution.json");
+
+		/// <summary>
+		/// Folder of the layer blobs of the remote solution, as recorded in the solution blob.
+		/// </summary>
+		private static async Task<string> getLayerFolderAsync(BlobServiceClient serviceClient, RemoteUser user, int solutionId)
+		{
+			var solutionJson = JObject.Parse((await getSolutionBlob(serviceClient, user, solutionId).DownloadContentAsync()).Value.Content.ToString());
+			string layerFolder = solutionJson.Value<string>("LayerFolder");
+			return layerFolder == null ? user.Id : $"{user.Id}/{layerFolder}";
+		}
 
 		private static async Task<SolutionBrowserDialog> showSolutionBrowserOnRemoteTab()
 		{
@@ -315,6 +348,102 @@ namespace MeshEditor.AvaloniaUI.Tests
 			dialog.Close();
 		}
 
+		[AvaloniaTest]
+		public async Task Upload_shows_progress_disables_the_dialog_and_can_be_cancelled()
+		{
+			SolutionHub.RemoteStorageConnection = new TestStorageConnection { User = Alice };
+			string localSolutionFileName = importLocalSolution();
+			IProgress<RemoteOperationProgress> uploadProgress = null;
+			CancellationToken uploadCancellation = default;
+			SolutionBrowserDialog.UploadLocalSolutionToRemoteAsync = async (solutionFileName, progress, cancellationToken, logger) =>
+			{
+				Assert.That(Path.GetFullPath(solutionFileName), Is.EqualTo(Path.GetFullPath(localSolutionFileName)));
+				uploadProgress = progress;
+				uploadCancellation = cancellationToken;
+				await Task.Delay(Timeout.Infinite, cancellationToken); // until cancelled
+				return null;
+			};
+			string originalDirectory = SolutionHub.GetLocalStorageDefaultDirectory();
+			SolutionHub.SetLocalStorageDefaultDirectory(tempDirectory);
+			try
+			{
+				var dialog = new SolutionBrowserDialog();
+				dialog.Show();
+				await dialog.LoadingTask;
+				Dispatcher.UIThread.RunJobs();
+				dialog.localSolutionListView.listView.SelectedItem = dialog.localSolutionListView.listView.ItemsSource.Cast<object>().Single();
+				click(dialog.buttonUploadLocalSolution);
+
+				var progressView = await waitForWindow<ProgressViewDialog>();
+				Assert.That(progressView.Title, Is.EqualTo("Uploading solution 'props'"));
+				Assert.That(progressView.progressBar.IsIndeterminate, Is.True, "nothing is reported yet");
+				Assert.That(dialog.tabControl.IsEffectivelyEnabled, Is.False, "the tabs can't be switched during the upload");
+				Assert.That(dialog.buttonOk.IsEffectivelyEnabled || dialog.buttonCancel.IsEffectivelyEnabled || dialog.buttonUploadLocalSolution.IsEffectivelyEnabled, Is.False);
+
+				uploadProgress.Report(new RemoteOperationProgress("Uploading layer 'master', file 2 of 4", 42));
+				await waitUntil(() => progressView.progressBar.Value == 42, "progress is shown");
+				Assert.That(progressView.progressBar.IsIndeterminate, Is.False);
+				Assert.That(progressView.labelOperationName.Text, Is.EqualTo("Uploading layer 'master', file 2 of 4"));
+				Assert.That(progressView.Title, Is.EqualTo("Uploading solution 'props' (42%)"));
+
+				click(progressView.buttonCancel);
+				await waitUntil(() => !progressView.IsVisible && dialog.tabControl.IsEffectivelyEnabled, "upload is cancelled");
+				Assert.That(uploadCancellation.IsCancellationRequested, Is.True);
+				Assert.That(openedWindows.Where(w => w.IsVisible).OfType<MessageBox>(), Is.Empty, "nothing to report, no remote solution was created");
+				Assert.That(dialog.buttonUploadLocalSolution.IsEnabled, Is.True);
+				dialog.Close();
+			}
+			finally
+			{
+				SolutionHub.SetLocalStorageDefaultDirectory(originalDirectory);
+			}
+		}
+
+		[AvaloniaTest]
+		public async Task Remote_solution_deletion_shows_progress_and_cancelling_it_is_reported()
+		{
+			SolutionHub.RemoteStorageConnection = new TestStorageConnection { User = Alice };
+			int enumerations = 0;
+			SolutionBrowserDialog.EnumerateRemoteSolutionsAsync = (cancellationToken, logger) =>
+			{
+				enumerations++;
+				return Task.FromResult<IEnumerable<ISolutionInfo>>(new[] { new TestSolutionInfo { Id = 7, ProjectName = "props", Location = $"https://account.blob.core.windows.net/fea-solutions/{Alice.Id}/7.solution.json" } });
+			};
+			IProgress<RemoteOperationProgress> deleteProgress = null;
+			SolutionBrowserDialog.DeleteRemoteSolutionAsync = async (solutionId, progress, cancellationToken, logger) =>
+			{
+				Assert.That(solutionId, Is.EqualTo(7));
+				deleteProgress = progress;
+				await Task.Delay(Timeout.Infinite, cancellationToken); // until cancelled
+			};
+
+			var dialog = await showSolutionBrowserOnRemoteTab();
+			dialog.remoteSolutionListView.listView.SelectedItem = dialog.remoteSolutionListView.listView.ItemsSource.Cast<object>().Single();
+			click(dialog.buttonDeleteRemoteSolution);
+			var confirmation = await waitForWindow<MessageBox>();
+			click(findButton(confirmation, "ButtonYes"));
+
+			var progressView = await waitForWindow<ProgressViewDialog>();
+			Assert.That(progressView.Title, Is.EqualTo("Deleting remote solution 7"));
+			Assert.That(dialog.tabControl.IsEffectivelyEnabled, Is.False, "the tabs can't be switched during the deletion");
+			deleteProgress.Report(new RemoteOperationProgress("Deleting layer 'master', file 1 of 3", 25));
+			await waitUntil(() => progressView.progressBar.Value == 25, "progress is shown");
+			Assert.That(progressView.labelOperationName.Text, Is.EqualTo("Deleting layer 'master', file 1 of 3"));
+
+			// cancelled: some layers can be deleted already, the solution is listed to be deleted again
+			click(progressView.buttonCancel);
+			var cancelledMessage = await waitForWindow<MessageBox>(w => w != confirmation);
+			Assert.That(progressView.IsVisible, Is.False);
+			string text = string.Join(" ", cancelledMessage.GetVisualDescendants().OfType<SelectableTextBlock>().Select(t => t.Text));
+			Assert.That(text, Does.Contain("was cancelled").And.Contain("delete the solution again"));
+			click(findButton(cancelledMessage, "ButtonOK"));
+			await waitUntil(() => enumerations == 2, "remote solutions are reloaded");
+			await dialog.RemoteLoadingTask;
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(dialog.tabControl.IsEffectivelyEnabled, Is.True);
+			dialog.Close();
+		}
+
 		[Test]
 		public async Task Uploaded_solution_is_owned_by_the_user_and_can_be_opened_modified_and_deleted()
 		{
@@ -328,11 +457,13 @@ namespace MeshEditor.AvaloniaUI.Tests
 				Assert.That(remoteSolution.ProjectName, Is.EqualTo("props"));
 				Assert.That(remoteSolution.Location, Does.EndWith($"/fea-solutions/{Alice.Id}/{remoteSolution.Id}.solution.json"));
 
-				// owner is written to the solution, the layers are in the folder of the user
+				// owner is written to the solution, the layers are in the layer folder of the solution, in the folder of the user
 				var serviceClient = new BlobServiceClient(connection.ConnectionString);
-				string solutionJson = (await serviceClient.GetBlobContainerClient("fea-solutions").GetBlobClient($"{Alice.Id}/{remoteSolution.Id}.solution.json").DownloadContentAsync()).Value.Content.ToString();
+				string solutionJson = (await getSolutionBlob(serviceClient, Alice, remoteSolution.Id).DownloadContentAsync()).Value.Content.ToString();
 				Assert.That(solutionJson, Does.Contain(Alice.Id).And.Contain(Alice.Name));
-				var layerBlobs = serviceClient.GetBlobContainerClient("fea-layers").GetBlobs(BlobTraits.None, BlobStates.None, $"{Alice.Id}/{localDescription.Layers[0].Id}/", CancellationToken.None).ToList();
+				string layerFolder = await getLayerFolderAsync(serviceClient, Alice, remoteSolution.Id);
+				Assert.That(layerFolder, Does.StartWith($"{Alice.Id}/").And.Length.GreaterThan(Alice.Id.Length + 1));
+				var layerBlobs = serviceClient.GetBlobContainerClient("fea-layers").GetBlobs(BlobTraits.None, BlobStates.None, $"{layerFolder}/{localDescription.Layers[0].Id}/", CancellationToken.None).ToList();
 				Assert.That(layerBlobs, Is.Not.Empty);
 
 				var remoteSolutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None);
@@ -355,9 +486,10 @@ namespace MeshEditor.AvaloniaUI.Tests
 				Assert.That(reopenedDescription.Layers[0].Children.Select(l => l.Id), Is.EqualTo(new[] { compressedLayer.Id }));
 				var compressedGeometry = await SolutionHub.OpenRemote(remoteSolution.Id).LoadGeometryAsync(compressedLayer.Id, meshIndex, CancellationToken.None);
 				Assert.That(compressedGeometry.NumberOfPoints, Is.EqualTo(geometry.NumberOfPoints));
-				Assert.That(serviceClient.GetBlobContainerClient("fea-layers").GetBlobs(BlobTraits.None, BlobStates.None, $"{Alice.Id}/{compressedLayer.Id}/", CancellationToken.None).Any(), Is.True);
-				solutionJson = (await serviceClient.GetBlobContainerClient("fea-solutions").GetBlobClient($"{Alice.Id}/{remoteSolution.Id}.solution.json").DownloadContentAsync()).Value.Content.ToString();
+				Assert.That(serviceClient.GetBlobContainerClient("fea-layers").GetBlobs(BlobTraits.None, BlobStates.None, $"{layerFolder}/{compressedLayer.Id}/", CancellationToken.None).Any(), Is.True);
+				solutionJson = (await getSolutionBlob(serviceClient, Alice, remoteSolution.Id).DownloadContentAsync()).Value.Content.ToString();
 				Assert.That(solutionJson, Does.Contain(Alice.Name), "owner is kept when the solution is modified");
+				Assert.That(await getLayerFolderAsync(serviceClient, Alice, remoteSolution.Id), Is.EqualTo(layerFolder), "layer folder is kept when the solution is modified");
 
 				await remoteHub.DeleteAsync(compressedLayer.Id.ToString(), deleteAll: false, CancellationToken.None);
 				reopenedDescription = await SolutionHub.OpenRemote(remoteSolution.Id).GetSolutionDescriptionAsync(CancellationToken.None);
@@ -424,6 +556,150 @@ namespace MeshEditor.AvaloniaUI.Tests
 				await SolutionHub.OpenRemote(aliceSolution.Id).DeleteAsync(layerIdOrName: null, deleteAll: true);
 				connection.User = Bob;
 				await SolutionHub.OpenRemote(bobSolution.Id).DeleteAsync(layerIdOrName: null, deleteAll: true);
+			}
+		}
+
+		[Test]
+		public async Task Remote_solutions_uploaded_from_the_same_local_solution_do_not_share_layers()
+		{
+			var connection = await useTestStorageAccountAsync(Alice);
+			string localSolutionFileName = importLocalSolution();
+			var first = await SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, CancellationToken.None);
+			var second = await SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, CancellationToken.None);
+			try
+			{
+				var serviceClient = new BlobServiceClient(connection.ConnectionString);
+				Assert.That(await getLayerFolderAsync(serviceClient, Alice, first.Id), Is.Not.EqualTo(await getLayerFolderAsync(serviceClient, Alice, second.Id)));
+
+				// the layers of the second one are kept when the first one is deleted
+				await SolutionHub.DeleteRemoteSolutionAsync(first.Id, CancellationToken.None);
+				var secondHub = SolutionHub.OpenRemote(second.Id);
+				var masterLayerId = (await secondHub.GetSolutionDescriptionAsync(CancellationToken.None)).Layers[0].Id;
+				var summary = await secondHub.LoadLayerSummaryAsync(masterLayerId, CancellationToken.None);
+				var geometry = await secondHub.LoadGeometryAsync(masterLayerId, summary.Meshes[0].Index, CancellationToken.None);
+				Assert.That(geometry.NumberOfPoints, Is.GreaterThan(0));
+			}
+			finally
+			{
+				foreach (var solution in new[] { first, second })
+				{
+					try
+					{
+						await SolutionHub.DeleteRemoteSolutionAsync(solution.Id, CancellationToken.None);
+					}
+					catch (FileNotFoundException)
+					{ }
+				}
+			}
+		}
+
+		[Test]
+		public async Task Remote_solution_with_layers_in_the_folder_of_the_user_is_opened_and_deleted()
+		{
+			// solutions uploaded before each solution got its own layer folder: no layer folder, layers directly in the folder of the user
+			var connection = await useTestStorageAccountAsync(Alice);
+			var remoteSolution = await SolutionHub.UploadLocalSolutionToRemoteAsync(importLocalSolution(), CancellationToken.None);
+			var serviceClient = new BlobServiceClient(connection.ConnectionString);
+			var layers = serviceClient.GetBlobContainerClient("fea-layers");
+			string layerFolder = await getLayerFolderAsync(serviceClient, Alice, remoteSolution.Id);
+			foreach (var blob in layers.GetBlobs(BlobTraits.None, BlobStates.None, layerFolder + "/", CancellationToken.None).ToList())
+			{
+				var content = (await layers.GetBlobClient(blob.Name).DownloadContentAsync()).Value.Content;
+				await layers.GetBlobClient(Alice.Id + blob.Name.Substring(layerFolder.Length)).UploadAsync(content, overwrite: true);
+				await layers.GetBlobClient(blob.Name).DeleteAsync();
+			}
+			var solutionBlob = getSolutionBlob(serviceClient, Alice, remoteSolution.Id);
+			var solutionJson = JObject.Parse((await solutionBlob.DownloadContentAsync()).Value.Content.ToString());
+			solutionJson.Remove("LayerFolder");
+			await solutionBlob.UploadAsync(BinaryData.FromString(solutionJson.ToString()), overwrite: true);
+			Assert.That(await getLayerFolderAsync(serviceClient, Alice, remoteSolution.Id), Is.EqualTo(Alice.Id));
+
+			Guid masterLayerId;
+			try
+			{
+				var hub = SolutionHub.OpenRemote(remoteSolution.Id);
+				masterLayerId = (await hub.GetSolutionDescriptionAsync(CancellationToken.None)).Layers[0].Id;
+				var summary = await hub.LoadLayerSummaryAsync(masterLayerId, CancellationToken.None);
+				Assert.That(summary.Fields, Is.Not.Empty);
+			}
+			finally
+			{
+				await SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, CancellationToken.None);
+			}
+			Assert.That(layers.GetBlobs(BlobTraits.None, BlobStates.None, $"{Alice.Id}/{masterLayerId}/", CancellationToken.None).Any(), Is.False, "layers are deleted");
+		}
+
+		[Test]
+		public async Task Cancelled_upload_deletes_the_uploaded_layer_files()
+		{
+			var connection = await useTestStorageAccountAsync(Alice);
+			string localSolutionFileName = importLocalSolution();
+			var layerIds = SolutionHub.OpenLocal(localSolutionFileName).GetSolutionDescription().Layers.Select(l => l.Id).ToList();
+			int fileCount = layerIds.Sum(id => Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(localSolutionFileName), id.ToString()), "*", SearchOption.AllDirectories).Count());
+			Assume.That(fileCount, Is.GreaterThanOrEqualTo(2), "a file is uploaded before the upload is cancelled");
+			var solutionsBefore = (await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None)).Select(s => s.Id).ToList();
+
+			// cancelled when the second file starts: the first one is uploaded
+			var progress = new List<RemoteOperationProgress>();
+			using var cancellationSource = new CancellationTokenSource();
+			Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
+			{
+				progress.Add(p);
+				if (p.Message.Contains("file 2 of "))
+					cancellationSource.Cancel();
+			})));
+
+			Assert.That(progress.Select(p => p.Message), Has.Some.StartsWith("Deleting uploaded files, file 1 of "));
+			var layerBlobNames = new BlobServiceClient(connection.ConnectionString).GetBlobContainerClient("fea-layers")
+				.GetBlobs(BlobTraits.None, BlobStates.None, $"{Alice.Id}/", CancellationToken.None).Select(b => b.Name).ToList();
+			Assert.That(layerBlobNames.Where(name => layerIds.Any(id => name.Contains($"/{id}/"))), Is.Empty, "uploaded files are deleted");
+			Assert.That((await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None)).Select(s => s.Id), Is.EquivalentTo(solutionsBefore), "no solution is created");
+		}
+
+		[Test]
+		public async Task Upload_and_deletion_report_progress_and_cancelled_deletion_can_be_finished()
+		{
+			await useTestStorageAccountAsync(Alice);
+			string localSolutionFileName = importLocalSolution();
+			string layerName = SolutionHub.OpenLocal(localSolutionFileName).GetSolutionDescription().Layers[0].Name;
+
+			var uploadProgress = new List<RemoteOperationProgress>();
+			var logger = new MemoryLogger();
+			var remoteSolution = await SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, CancellationToken.None, logger, new SynchronousProgress<RemoteOperationProgress>(uploadProgress.Add));
+			try
+			{
+				Assert.That(uploadProgress.First().Message, Does.StartWith($"Uploading layer '{layerName}', file 1 of "));
+				Assert.That(uploadProgress.Last(), Is.EqualTo(new RemoteOperationProgress("Creating the remote solution", 100)));
+				Assert.That(uploadProgress.Select(p => p.PercentDone), Is.Ordered, "the percentage never goes back");
+				var loggedSteps = logger.GetRecordHistory().Where(r => r.Type == RecordType.OperationProgress).Select(r => r.Content);
+				Assert.That(loggedSteps, Is.EqualTo(uploadProgress.Select(p => p.Message).Distinct()), "each step is logged once");
+
+				// cancelled at the last step: all layers are deleted, but the solution is still listed
+				var deleteProgress = new List<RemoteOperationProgress>();
+				using var cancellationSource = new CancellationTokenSource();
+				Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
+				{
+					deleteProgress.Add(p);
+					if (p.Message == "Deleting the solution")
+						cancellationSource.Cancel();
+				})));
+				Assert.That(deleteProgress.First(), Is.EqualTo(new RemoteOperationProgress("Listing layer files", -1)));
+				Assert.That(deleteProgress[1].Message, Does.StartWith($"Deleting layer '{layerName}', file 1 of "));
+				Assert.That(deleteProgress.Skip(1).Select(p => p.PercentDone), Is.Ordered.And.All.InRange(0, 99));
+				Assert.That((await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None)).Select(s => s.Id), Does.Contain(remoteSolution.Id));
+
+				// deleted again: the rest is deleted
+				await SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, CancellationToken.None);
+				Assert.That((await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None)).Select(s => s.Id), Does.Not.Contain(remoteSolution.Id));
+			}
+			finally
+			{
+				try
+				{
+					await SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, CancellationToken.None);
+				}
+				catch (FileNotFoundException)
+				{ }
 			}
 		}
 
