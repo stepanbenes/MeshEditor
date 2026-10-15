@@ -25,5 +25,7 @@
 		<None Update="TestData\sample.obj" CopyToOutputDirectory="PreserveNewest" />
 		<None Update="TestData\props.msh" CopyToOutputDirectory="PreserveNewest" />
 		<None Update="TestData\props.res" CopyToOutputDirectory="PreserveNewest" />
+		<!-- JSON written and read by the previous Newtonsoft.Json implementation (JsonCompatibilityTests) -->
+		<None Update="TestData\NewtonsoftJsonReference.txt" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 </Project>

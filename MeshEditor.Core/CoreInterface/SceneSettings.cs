@@ -8,7 +8,9 @@ using System.IO;
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
 using MeshEditor.Common;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.CoreInterface
 {
@@ -54,7 +56,7 @@ namespace MeshEditor.CoreInterface
 			{
 				using (var writer = new StreamWriter(mem, Encoding.UTF8, 1024, leaveOpen: true))
 				{
-					writer.Write(JsonConvert.SerializeObject(Instance));
+					writer.Write(JsonSerializer.Serialize(Instance, JsonOptions.Compact));
 					writer.Flush();
 				}
 				mem.Position = 0;
@@ -76,7 +78,7 @@ namespace MeshEditor.CoreInterface
 				using (var reader = new StreamReader(mem, Encoding.UTF8, true, 1024, true))
 				{
 					string json = reader.ReadToEnd();
-					instance = JsonConvert.DeserializeObject<SceneSettings>(json);
+					instance = JsonSerializer.Deserialize<SceneSettings>(json, JsonOptions.Compact);
 					instance?.update();
 				}
 			}
@@ -212,6 +214,7 @@ namespace MeshEditor.CoreInterface
 		/// <summary>
 		/// Private constructor
 		/// </summary>
+		[JsonConstructor] // private constructor is used for deserialization (as by Newtonsoft.Json)
 		private SceneSettings()
 		{
 			lineSmooth = LineSmooth;
