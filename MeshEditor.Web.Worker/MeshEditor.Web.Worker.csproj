@@ -8,7 +8,7 @@
 		<Nullable>disable</Nullable>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<!-- the layer files are (de)serialized by reflection (Newtonsoft.Json) -->
+		<!-- the layer files are (de)serialized by reflection (System.Text.Json) -->
 		<TrimMode>partial</TrimMode>
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<!-- the assemblies with reflection are kept whole (TrimmerRootAssembly) -->
@@ -18,7 +18,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<TrimmerRootAssembly Include="Newtonsoft.Json" />
 		<TrimmerRootAssembly Include="MeshEditor.LayerManager" />
 		<TrimmerRootAssembly Include="MeshEditor.SolutionManager" />
 	</ItemGroup>

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MeshEditor.Common.Extensions;
 using MeshEditor.Common.Logging;
+using MeshEditor.Common.Serialization;
 using MeshEditor.LayerManager;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Data;
@@ -94,7 +96,7 @@ namespace MeshEditor.Web.Worker
 				name = summary.Name,
 				parentId = summary.ParentId,
 				filterType = summary.Filter?.Type.ToString(),
-				filter = summary.Filter == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(summary.Filter),
+				filter = summary.Filter == null ? null : JsonSerializer.Serialize(summary.Filter, summary.Filter.GetType(), JsonOptions.Compact),
 				meshes = summary.Meshes.EmptyIfNull().Select(m => new { index = m.Index, timeSteps = m.TimeSteps.EmptyIfNull() }).ToArray(),
 				fields = summary.Fields.EmptyIfNull().Select(f => new
 				{
