@@ -13,12 +13,17 @@ function toUser(account) {
 export function init(clientId, tenantId) {
     if (!initPromise) {
         initPromise = (async () => {
+            // The redirect URI is a page of its own (Pages/SignIn.razor): Entra ignores the port of localhost redirect URIs,
+            // so http://localhost:5280/ would be taken for the desktop app's http://localhost. The path tells them apart.
+            // MSAL takes the response there and returns to the page where the sign-in started.
+            const signInPage = new URL('signin', document.baseURI).href;
             app = new msal.PublicClientApplication({
                 auth: {
                     clientId,
                     authority: `https://login.microsoftonline.com/${tenantId}`,
-                    redirectUri: new URL('.', document.baseURI).href,
-                    postLogoutRedirectUri: new URL('.', document.baseURI).href
+                    redirectUri: signInPage,
+                    // must be a registered redirect URI as well
+                    postLogoutRedirectUri: signInPage
                 },
                 cache: { cacheLocation: 'localStorage' }
             });

@@ -52,8 +52,10 @@ The app uses the same storage account, containers and user folders as the deskto
 
 The web app can use the desktop app's registration. In **Authentication**:
 
-1. **Add a platform → Single-page application**, with the redirect URI of each place the app runs: the deployed URL (for example `https://<name>.azurestaticapps.net/`) and, for testing against Azure, `http://localhost:5280/`.
+1. **Add a platform → Single-page application**, with the redirect URI of each place the app runs: the app's `signin` page at the deployed URL (for example `https://<name>.azurestaticapps.net/signin`) and, for testing against Azure, `http://localhost:5280/signin`.
 2. The app asks for the `https://storage.azure.com/.default` scope. The registration already has the Azure Storage `user_impersonation` permission.
+
+Keep the `/signin` path. Entra ignores the port of `localhost` redirect URIs, so `http://localhost:5280/` would be the same as the desktop app's `http://localhost`. Entra then takes either of the two, and the sign-in fails with AADSTS9002326 (web app) or the desktop sign-in breaks.
 
 ### CORS
 
