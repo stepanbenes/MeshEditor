@@ -6,14 +6,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.Common
 {
 	public static class ConfigurationManager
 	{
-		static readonly ConcurrentDictionary<string, JToken> configurations = new ConcurrentDictionary<string, JToken>();
+		static readonly ConcurrentDictionary<string, JsonNode> configurations = new ConcurrentDictionary<string, JsonNode>();
 		static string configurationFileFullPath;
 
 		/// <summary>
@@ -41,8 +42,9 @@ namespace MeshEditor.Common
 			}
 
 			// check if this is updated version compared to saved version of configuration file
-			if (!configurations.TryGetValue("AssemblyVersion", out JToken assemblyVersionToken) ||
-				!Version.TryParse(assemblyVersionToken.ToObject<string>(), out Version previousAssemblyVersion) ||
+			if (!configurations.TryGetValue("AssemblyVersion", out JsonNode assemblyVersionNode) ||
+				!(assemblyVersionNode is JsonValue assemblyVersionValue && assemblyVersionValue.TryGetValue(out string assemblyVersionText)) ||
+				!Version.TryParse(assemblyVersionText, out Version previousAssemblyVersion) ||
 				currentAssemblyVersion > previousAssemblyVersion)
 			{
 				// if configuration file is of older version, try to copy template configurations from installation directory
@@ -55,33 +57,36 @@ namespace MeshEditor.Common
 			}
 
 			// write current assembly version
-			configurations["AssemblyVersion"] = JToken.FromObject(currentAssemblyVersion.ToString());
+			configurations["AssemblyVersion"] = JsonValue.Create(currentAssemblyVersion.ToString());
 		}
 
-		private static Dictionary<string, JToken> readConfigurations(string configurationFileFullPath)
+		private static Dictionary<string, JsonNode> readConfigurations(string configurationFileFullPath)
 		{
 			if (!File.Exists(configurationFileFullPath))
-				return new Dictionary<string, JToken>();
+				return new Dictionary<string, JsonNode>();
 			string json = File.ReadAllText(configurationFileFullPath);
-			return JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json);
+			if (string.IsNullOrWhiteSpace(json))
+				return new Dictionary<string, JsonNode>();
+			return JsonSerializer.Deserialize<Dictionary<string, JsonNode>>(json, JsonOptions.Compact) ?? new Dictionary<string, JsonNode>();
 		}
 
 		public static T GetConfigurationObject<T>(string key /*propertyName*/)
 		{
-			JToken jToken;
-			if (!configurations.TryGetValue(key, out jToken))
+			JsonNode jsonNode;
+			if (!configurations.TryGetValue(key, out jsonNode) || jsonNode == null)
 				return default(T);
-			return jToken.ToObject<T>();
+			return jsonNode.Deserialize<T>(JsonOptions.Compact);
 		}
 
 		public static void SetConfigurationObject(string key /*propertyName*/, object configurationObject)
 		{
-			configurations[key] = JToken.FromObject(configurationObject);
+			// serialized as its runtime type, as by Newtonsoft.Json
+			configurations[key] = configurationObject == null ? null : JsonSerializer.SerializeToNode(configurationObject, configurationObject.GetType(), JsonOptions.Compact);
 		}
 
 		public static void Save()
 		{
-			var json = JsonConvert.SerializeObject(configurations, Formatting.Indented);
+			var json = JsonSerializer.Serialize(configurations, JsonOptions.Indented);
 			File.WriteAllText(configurationFileFullPath, json);
 		}
 	}
