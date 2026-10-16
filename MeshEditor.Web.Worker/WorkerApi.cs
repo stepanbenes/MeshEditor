@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 using System.Text.Json;
@@ -156,8 +157,10 @@ namespace MeshEditor.Web.Worker
 				}
 				return $"Storage request failed ({requestFailed.Status} {requestFailed.ErrorCode}).";
 			}
-			if (ex is AggregateException aggregate && aggregate.InnerExceptions.Count == 1)
-				return describe(aggregate.InnerException);
+			// also the failed retries of a storage request ("Retry failed after 6 tries"): the last one tells why
+			if (ex is AggregateException aggregate && aggregate.InnerExceptions.Count > 0
+				&& (aggregate.InnerExceptions.Count == 1 || aggregate.InnerExceptions.All(e => e is Azure.RequestFailedException)))
+				return describe(aggregate.InnerExceptions[^1]);
 			return ex.Message;
 		}
 

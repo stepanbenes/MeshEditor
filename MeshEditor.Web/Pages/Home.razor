@@ -6,7 +6,10 @@
 
 @if (loading)
 {
-    <div class="boot"><span class="spin"></span></div>
+    <div class="boot">
+        <span class="spin"></span>
+        <span>@(Storage.IsDevelopment ? "Connecting to the development storage (Azurite)…" : "Signing in…")</span>
+    </div>
 }
 else if (!Storage.IsConfigured)
 {
@@ -23,10 +26,6 @@ else if (error != null && Storage.User == null)
         <div class="signcard">
             <h1>The storage could not be opened</h1>
             <div class="note error">@error</div>
-            @if (Storage.IsDevelopment)
-            {
-                <p>Start Azurite and set it up for this site: see <code>MeshEditor.Web/README.md</code>.</p>
-            }
             <button class="btn primary" type="button" @onclick="loadAsync">Try again</button>
         </div>
     </div>

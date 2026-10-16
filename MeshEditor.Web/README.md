@@ -19,10 +19,10 @@ Needs the .NET 10 SDK and Node.js.
 1. Start Azurite (the blob service is enough):
 
    ```sh
-   npx --package azurite azurite-blob --blobHost 127.0.0.1 --blobPort 10000 --inMemoryPersistence --loose
+   npx --package azurite azurite-blob --blobHost 127.0.0.1 --blobPort 10000 --inMemoryPersistence --loose --skipApiVersionCheck
    ```
 
-   Leave out `--inMemoryPersistence` to keep the data between runs.
+   Leave out `--inMemoryPersistence` to keep the data between runs. `--skipApiVersionCheck` is needed because the Azure SDK of the app uses a newer storage API version than Azurite knows.
 
 2. Create the containers and allow the app's origin (CORS). Run it again after each restart of an in-memory Azurite:
 
@@ -42,7 +42,7 @@ Needs the .NET 10 SDK and Node.js.
 
 The development storage is enabled by `wwwroot/appsettings.Development.json`, which is used when the app runs in the Development environment (`dotnet run`).
 
-To test with data, import a GiD `.msh` with its `.res` (for example `MeshEditor.Avalonia.Tests/TestData/props.msh` and `props.res`), or upload a local solution folder made by the desktop app.
+The start page lists the solutions. Open one to see its layer tree and the 3D view. A new Azurite has no solutions: import a GiD `.msh` with its `.res` (for example `MeshEditor.Avalonia.Tests/TestData/props.msh` and `props.res`), or upload a local solution folder made by the desktop app.
 
 ## Azure
 

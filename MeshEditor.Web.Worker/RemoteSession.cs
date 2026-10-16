@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Core;
 using Azure.Storage.Blobs;
 using MeshEditor.SolutionManager;
@@ -69,15 +70,31 @@ namespace MeshEditor.Web.Worker
 		public void ForgetViewStore(int solutionId) => layerStores.Remove(solutionId);
 
 		/// <summary>
-		/// Development storage only: creates the containers if they don't exist.
+		/// Development storage only: creates the containers if they don't exist. Tells what to do when the emulator is not
+		/// running or not set up for the web app.
 		/// </summary>
 		public async Task EnsureContainersAsync(CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(Settings.ConnectionString))
 				return;
-			await SolutionsContainer.CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-			await LayersContainer.CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-			await ResultsContainer.CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+			// the emulator runs on this computer: when it doesn't answer, the retries would only delay the message by half a minute
+			var options = new BlobClientOptions();
+			options.Retry.MaxRetries = 0;
+			var client = new BlobServiceClient(Settings.ConnectionString, options);
+			try
+			{
+				foreach (string container in new[] { Settings.SolutionsContainer, Settings.LayersContainer, Settings.ResultsContainer })
+					await client.GetBlobContainerClient(container).CreateIfNotExistsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+			}
+			catch (RequestFailedException ex) when (ex.Status == 0)
+			{
+				// the browser doesn't tell a stopped emulator from a missing CORS rule
+				throw new InvalidOperationException($"The development storage (Azurite) at {client.Uri} can't be reached. Start Azurite, then run MeshEditor.Web.DevSetup, which allows this site (CORS). See MeshEditor.Web/README.md.", ex);
+			}
+			catch (RequestFailedException ex) when (ex.ErrorCode == "InvalidHeaderValue" && ex.Message.Contains("API version", StringComparison.Ordinal))
+			{
+				throw new InvalidOperationException("Azurite doesn't know the storage API version of this app. Start it with --skipApiVersionCheck (see MeshEditor.Web/README.md).", ex);
+			}
 		}
 	}
 

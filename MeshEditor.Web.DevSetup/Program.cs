@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
@@ -15,8 +16,25 @@ for (int i = 0; i < args.Length; i++)
 if (origins.Count == 0)
 	origins.Add("http://localhost:5280");
 
-var service = new BlobServiceClient(connectionString);
-var properties = (await service.GetPropertiesAsync()).Value;
+// the emulator runs on this computer: when it doesn't answer, the retries would only delay the message by half a minute
+var options = new BlobClientOptions();
+options.Retry.MaxRetries = 0;
+var service = new BlobServiceClient(connectionString, options);
+BlobServiceProperties properties;
+try
+{
+	properties = (await service.GetPropertiesAsync()).Value;
+}
+catch (RequestFailedException ex) when (ex.Status == 0)
+{
+	Console.Error.WriteLine($"Azurite is not running at {service.Uri}. Start it first, see MeshEditor.Web/README.md.");
+	return 1;
+}
+catch (RequestFailedException ex) when (ex.ErrorCode == "InvalidHeaderValue" && ex.Message.Contains("API version", StringComparison.Ordinal))
+{
+	Console.Error.WriteLine("Azurite doesn't know the storage API version of this app. Start it with --skipApiVersionCheck, see MeshEditor.Web/README.md.");
+	return 1;
+}
 properties.Cors = new List<BlobCorsRule>
 {
 	new BlobCorsRule
@@ -36,3 +54,4 @@ foreach (string container in new[] { "fea-solutions", "fea-layers", "fea-results
 	await service.GetBlobContainerClient(container).CreateIfNotExistsAsync();
 	Console.WriteLine($"Container {container} is ready");
 }
+return 0;
