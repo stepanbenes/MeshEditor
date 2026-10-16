@@ -503,7 +503,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 
 			var remainingSolutions = await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None);
 			Assert.That(remainingSolutions.Select(s => s.Id), Does.Not.Contain(remoteSolution.Id));
-			Assert.ThrowsAsync<FileNotFoundException>(() => SolutionHub.OpenRemote(remoteSolution.Id).GetSolutionDescriptionAsync(CancellationToken.None));
+			await Assert.ThrowsAsync<FileNotFoundException>(() => SolutionHub.OpenRemote(remoteSolution.Id).GetSolutionDescriptionAsync(CancellationToken.None));
 		}
 
 		[Test]
@@ -538,7 +538,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 				{
 					connection.User = Bob;
 					Assert.That((await SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None)).Select(s => s.Id), Does.Not.Contain(999));
-					Assert.ThrowsAsync<FileNotFoundException>(() => SolutionHub.OpenRemote(999).GetSolutionDescriptionAsync(CancellationToken.None));
+					await Assert.ThrowsAsync<FileNotFoundException>(() => SolutionHub.OpenRemote(999).GetSolutionDescriptionAsync(CancellationToken.None));
 				}
 				finally
 				{
@@ -547,7 +547,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 
 				// nobody signed in: no access
 				connection.User = null;
-				Assert.ThrowsAsync<RemoteSignInRequiredException>(() => SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None));
+				await Assert.ThrowsAsync<RemoteSignInRequiredException>(() => SolutionHub.EnumerateAllRemoteSolutionsAsync(CancellationToken.None));
 				Assert.Throws<RemoteSignInRequiredException>(() => SolutionHub.OpenRemote(aliceSolution.Id));
 			}
 			finally
@@ -642,7 +642,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// cancelled when the second file starts: the first one is uploaded
 			var progress = new List<RemoteOperationProgress>();
 			using var cancellationSource = new CancellationTokenSource();
-			Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
+			await Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.UploadLocalSolutionToRemoteAsync(localSolutionFileName, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
 			{
 				progress.Add(p);
 				if (p.Message.Contains("file 2 of "))
@@ -677,7 +677,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 				// cancelled at the last step: all layers are deleted, but the solution is still listed
 				var deleteProgress = new List<RemoteOperationProgress>();
 				using var cancellationSource = new CancellationTokenSource();
-				Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
+				await Assert.CatchAsync<OperationCanceledException>(() => SolutionHub.DeleteRemoteSolutionAsync(remoteSolution.Id, cancellationSource.Token, progress: new SynchronousProgress<RemoteOperationProgress>(p =>
 				{
 					deleteProgress.Add(p);
 					if (p.Message == "Deleting the solution")
