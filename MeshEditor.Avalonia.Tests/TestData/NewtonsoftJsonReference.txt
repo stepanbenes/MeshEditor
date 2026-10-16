@@ -1,0 +1,832 @@
+##### summary_slice
+{
+  "Id": "11111111-2222-3333-4444-555555555555",
+  "Name": "Řez <a> & 'b' \"q\" +/",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Slice",
+    "NormalX": 0.0,
+    "NormalY": 0.5,
+    "NormalZ": 1.0,
+    "Offset": -2.25
+  },
+  "Meshes": [
+    {
+      "Index": 0,
+      "TimeSteps": [
+        0.0,
+        0.5,
+        1.0,
+        1.0,
+        1.50,
+        0.00001,
+        123456789.123456789
+      ],
+      "Attributes": [
+        {
+          "FieldName": "f",
+          "ComponentName": null,
+          "Index": 2,
+          "Location": "CellPoints"
+        }
+      ]
+    }
+  ],
+  "Fields": {
+    "displacement": {
+      "Components": {
+        "x": {
+          "TimeSteps": {
+            "0": {
+              "MeshIndex": 0,
+              "DataIndex": 1
+            },
+            "1.0": {
+              "MeshIndex": 0,
+              "DataIndex": 0
+            },
+            "0.25": {
+              "MeshIndex": 0,
+              "DataIndex": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "MeshFallbackLayerId": "aaaaaaaa-2222-3333-4444-555555555555"
+}
+##### summary_Surface_2
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Surface",
+    "EdgeAngleLimits": [
+      30.0,
+      60.5
+    ]
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_AttributeSelection_4
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "AttributeSelection",
+    "AttributeName": "attr",
+    "AttributeSelection": [1,2,3]
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_TimeCompression_0
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "TimeCompression"
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_TimeCompression_1
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "TimeCompression",
+    "FieldName": "temp"
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_Deformation_1
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Deformation",
+    "DeformationFieldName": "disp",
+    "RelativeScale": null
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_Deformation_2
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Deformation",
+    "DeformationFieldName": "disp",
+    "RelativeScale": 2.5
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_IsoSurface_3
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "n",
+  "ParentId": null,
+  "Filter": {
+    "Type": "IsoSurface",
+    "FieldName": "temp",
+    "ComponentName": "x",
+    "Value": 1E-05
+  },
+  "Meshes": null,
+  "Fields": null
+}
+##### summary_nofilter
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": null,
+  "ParentId": null,
+  "Filter": null,
+  "Meshes": null,
+  "Fields": {}
+}
+##### datafile_0
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "Location": "Points",
+  "Compression": {
+    "Method": "Default",
+    "Rows": 3,
+    "Columns": 4
+  },
+  "Encoding": {
+    "DataType": "Default",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_1
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "ComponentName": "c",
+  "TimeSteps": [
+    1.0,
+    2.5
+  ],
+  "Location": "Points",
+  "Compression": {
+    "Method": "SVD",
+    "Rank": 2,
+    "CompressionFactor": 0.0,
+    "MaxDataValue": 0.0,
+    "MinDataValue": 0.0,
+    "MaxRelativeError": 0.0,
+    "Rows": 3,
+    "Columns": 4
+  },
+  "Encoding": {
+    "DataType": "Float64",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10,
+    "DefaultValue": "0"
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_2
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "Location": "Points",
+  "Compression": {
+    "Method": "WT",
+    "MinDataValue": -1.5,
+    "MaxDataValue": "NaN",
+    "Iterations": 3,
+    "Rows": 3,
+    "Columns": 4
+  },
+  "Encoding": {
+    "DataType": "Float32",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_3
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "ComponentName": "c",
+  "TimeSteps": [
+    1.0,
+    2.5
+  ],
+  "Location": "Points",
+  "Compression": {
+    "Method": "WT",
+    "MinDataValue": "-Infinity",
+    "MaxDataValue": "Infinity",
+    "Iterations": 0,
+    "Rows": 0,
+    "Columns": 0
+  },
+  "Encoding": {
+    "DataType": "Int32",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10,
+    "DefaultValue": "0"
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_4
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "Location": "Points",
+  "Compression": {
+    "Method": "WT",
+    "MinDataValue": 1E-300,
+    "MaxDataValue": 1.7976931348623157E+308,
+    "Iterations": 0,
+    "Rows": 0,
+    "Columns": 0
+  },
+  "Encoding": {
+    "DataType": "UInt8",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_5
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "MeshIndex": 2,
+  "FieldName": "f",
+  "ComponentName": "c",
+  "TimeSteps": [
+    1.0,
+    2.5
+  ],
+  "Location": "Points",
+  "Compression": {
+    "Method": "WT",
+    "MinDataValue": -0.0,
+    "MaxDataValue": 0.30000000000000004,
+    "Iterations": 0,
+    "Rows": 0,
+    "Columns": 0
+  },
+  "Encoding": {
+    "DataType": "Default",
+    "OriginalLength": 10,
+    "Offset": 0,
+    "Length": 10,
+    "DefaultValue": "0"
+  },
+  "Data": "AAEC+/8="
+}
+##### datafile_empty
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### meshfile
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 1,
+  "NumberOfPoints": 3,
+  "NumberOfCells": 1,
+  "NumberOfEdges": 0,
+  "Center": [
+    0.0,
+    0.1,
+    0.33333334,
+    1E+10,
+    -1E-10
+  ],
+  "Radius": 2.5,
+  "PointCoordinates": "AA+/",
+  "CellConnectivity": "BB==",
+  "EdgeConnectivity": "CC"
+}
+##### solution
+{
+  "Results": [
+    {
+      "MeshRecordNames": [
+        "m"
+      ],
+      "DataRecordNames": [
+        "d1",
+        "d2"
+      ]
+    },
+    {
+      "TimeStep": 0.1,
+      "MeshRecordNames": [],
+      "DataRecordNames": null
+    }
+  ],
+  "Layers": [
+    {
+      "Id": "00000000-0000-0000-0000-000000000001",
+      "Name": "L",
+      "FilterType": "Surface",
+      "Children": [
+        {
+          "Id": "00000000-0000-0000-0000-000000000002",
+          "Name": "C",
+          "FilterType": null
+        }
+      ]
+    }
+  ],
+  "LayerFolder": "folder",
+  "Id": 7,
+  "ProjectName": "Projekt č. 1 <x>",
+  "Owner": {
+    "Id": "id",
+    "Name": "a@b.c"
+  }
+}
+##### solutioninfo
+{
+  "Id": 1,
+  "ProjectName": "p"
+}
+##### read_lowercase
+{
+  "Id": "11111111-2222-3333-4444-555555555555",
+  "Name": "x",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Slice",
+    "NormalX": 1.5,
+    "NormalY": 0.0,
+    "NormalZ": 0.0,
+    "Offset": 0.0
+  },
+  "Meshes": null,
+  "Fields": {}
+}
+##### read_filter_type_last
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": null,
+  "ParentId": null,
+  "Filter": {
+    "Type": "Slice",
+    "NormalX": 1.5,
+    "NormalY": 0.0,
+    "NormalZ": 0.0,
+    "Offset": 0.0
+  },
+  "Meshes": null,
+  "Fields": {}
+}
+##### read_filter_type_lowercase_value
+EXCEPTION FormatException: 'slice' is not valid option of enum type MeshEditor.LayerManager.Filters.FilterType
+##### read_filter_type_number
+EXCEPTION FormatException: '1' is not valid option of enum type MeshEditor.LayerManager.Filters.FilterType
+##### read_filter_type_number_string
+EXCEPTION FormatException: '1' is not valid option of enum type MeshEditor.LayerManager.Filters.FilterType
+##### read_filter_type_missing
+EXCEPTION ArgumentNullException: Value cannot be null. (Parameter 'value')
+##### read_filter_null
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": null,
+  "ParentId": null,
+  "Filter": null,
+  "Meshes": null,
+  "Fields": {}
+}
+##### read_filter_unsupported
+EXCEPTION MissingMethodException: Cannot dynamically create an instance of type 'MeshEditor.LayerManager.Filters.Filter'. Reason: Cannot create an abstract class.
+##### read_compression_wt
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": {
+    "Method": "WT",
+    "MinDataValue": "NaN",
+    "MaxDataValue": "Infinity",
+    "Iterations": 2,
+    "Rows": 0,
+    "Columns": 0
+  },
+  "Encoding": null,
+  "Data": null
+}
+##### read_compression_default_alias
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": {
+    "Method": "Default",
+    "Rows": 0,
+    "Columns": 0
+  },
+  "Encoding": null,
+  "Data": null
+}
+##### read_location_number
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": "CellPoints",
+  "Compression": null,
+  "Encoding": {
+    "DataType": "Float32",
+    "OriginalLength": 0,
+    "Offset": 0,
+    "Length": 0
+  },
+  "Data": null
+}
+##### read_location_lowercase
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": "Cells",
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_numbers_as_strings
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "TimeSteps": [
+    1.5,
+    2.0
+  ],
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_float_into_int
+EXCEPTION JsonReaderException: Input string '5.0' is not a valid integer. Path 'Index', line 1, position 12.
+##### read_comments
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_trailing_comma
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "TimeSteps": [
+    1.0,
+    2.0
+  ],
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_unknown_props
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_decimal_exponent
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "TimeSteps": [
+    0.00001,
+    100.0
+  ],
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_decimal_keys
+EXCEPTION JsonSerializationException: Could not convert string '1E-05' to dictionary key type 'System.Decimal'. Create a TypeConverter to convert from the string to the key type object. Path 'Fields.f.Components.x.TimeSteps.1E-05', line 1, position 78.
+##### read_bom
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_single_quotes
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 5,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_nested_layers
+{
+  "Results": null,
+  "Layers": [
+    {
+      "Id": "00000000-0000-0000-0000-000000000001",
+      "Name": "a",
+      "FilterType": null,
+      "Children": [
+        {
+          "Id": "00000000-0000-0000-0000-000000000002",
+          "Name": "b",
+          "FilterType": null,
+          "Children": []
+        }
+      ]
+    }
+  ],
+  "Id": 3,
+  "ProjectName": null,
+  "Owner": {
+    "Id": "x",
+    "Name": null
+  }
+}
+##### read_solutioninfo_from_solution
+{
+  "Id": 7,
+  "ProjectName": "Projekt č. 1 <x>",
+  "Owner": {
+    "Id": "id",
+    "Name": "a@b.c"
+  }
+}
+##### read_solution_roundtrip
+{
+  "Results": [
+    {
+      "MeshRecordNames": [
+        "m"
+      ],
+      "DataRecordNames": [
+        "d1",
+        "d2"
+      ]
+    },
+    {
+      "TimeStep": 0.1,
+      "MeshRecordNames": [],
+      "DataRecordNames": null
+    }
+  ],
+  "Layers": [
+    {
+      "Id": "00000000-0000-0000-0000-000000000001",
+      "Name": "L",
+      "FilterType": "Surface",
+      "Children": [
+        {
+          "Id": "00000000-0000-0000-0000-000000000002",
+          "Name": "C",
+          "FilterType": null
+        }
+      ]
+    }
+  ],
+  "LayerFolder": "folder",
+  "Id": 7,
+  "ProjectName": "Projekt č. 1 <x>",
+  "Owner": {
+    "Id": "id",
+    "Name": "a@b.c"
+  }
+}
+##### read_summary_roundtrip
+{
+  "Id": "11111111-2222-3333-4444-555555555555",
+  "Name": "Řez <a> & 'b' \"q\" +/",
+  "ParentId": null,
+  "Filter": {
+    "Type": "Slice",
+    "NormalX": 0.0,
+    "NormalY": 0.5,
+    "NormalZ": 1.0,
+    "Offset": -2.25
+  },
+  "Meshes": [
+    {
+      "Index": 0,
+      "TimeSteps": [
+        0.0,
+        0.5,
+        1.0,
+        1.0,
+        1.50,
+        0.00001,
+        123456789.123456789
+      ],
+      "Attributes": [
+        {
+          "FieldName": "f",
+          "ComponentName": null,
+          "Index": 2,
+          "Location": "CellPoints"
+        }
+      ]
+    }
+  ],
+  "Fields": {
+    "displacement": {
+      "Components": {
+        "x": {
+          "TimeSteps": {
+            "0": {
+              "MeshIndex": 0,
+              "DataIndex": 1
+            },
+            "1.0": {
+              "MeshIndex": 0,
+              "DataIndex": 0
+            },
+            "0.25": {
+              "MeshIndex": 0,
+              "DataIndex": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "MeshFallbackLayerId": "aaaaaaaa-2222-3333-4444-555555555555"
+}
+##### read_empty
+True
+##### read_json_null
+True
+##### read_utf16_bom
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": "ž",
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_null_into_int
+EXCEPTION JsonSerializationException: Error converting value {null} to type 'System.Int32'. Path 'Index', line 1, position 13.
+##### read_duplicate_props
+{
+  "LayerId": "00000000-0000-0000-0000-000000000000",
+  "Index": 2,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### read_date_string_guid
+{
+  "LayerId": "11111111-2222-3333-4444-555555555555",
+  "Index": 0,
+  "MeshIndex": 0,
+  "FieldName": null,
+  "Location": 0,
+  "Compression": null,
+  "Encoding": null,
+  "Data": null
+}
+##### config_get_sample
+Color [Red] Color [A=255, R=10, G=20, B=30] Color [A=128, R=10, G=20, B=30] Color [Empty] Two 1 ž
+##### config_get_local
+C:\x
+##### config_get_azure
+u fea-solutions False
+##### config_get_missing
+True
+##### config_get_string_dict
+[directory, C:\x]
+##### config_saved
+{
+  "LocalStorage": {
+    "directory": "C:\\x"
+  },
+  "AssemblyVersion": "2.5.2.0",
+  "Azure": {
+    "AccountUrl": null,
+    "TenantId": null,
+    "ClientId": null,
+    "SolutionsBlobContainerName": "fea-solutions",
+    "LayersBlobContainerName": "fea-layers",
+    "ResultsBlobContainerName": "fea-results"
+  },
+  "AzureBlobStorage": {
+    "AccountUrl": "u",
+    "IsComplete": true
+  },
+  "Private": {
+    "Width": 5,
+    "State": 2,
+    "Last": "x"
+  },
+  "SystemColor": {
+    "C": "Control",
+    "K": "AliceBlue"
+  },
+  "Sample": {
+    "Named": "Red",
+    "Custom": "10, 20, 30",
+    "Translucent": "128, 10, 20, 30",
+    "Enum": "two",
+    "Float": 1,
+    "Text": "ž"
+  },
+  "Strings": {
+    "1": "FF00FF00"
+  },
+  "Sample2": {
+    "Named": "Red",
+    "Custom": "10, 20, 30",
+    "Translucent": "128, 10, 20, 30",
+    "Empty": "",
+    "Enum": 2,
+    "Float": 1.5,
+    "Double": 1.0,
+    "Decimal": 2.0,
+    "Text": "ž<>&'+",
+    "Numbers": [
+      1,
+      2
+    ],
+    "Date": "2020-01-02T03:04:05.678Z",
+    "Guid": "00000000-0000-0000-0000-000000000000",
+    "ReadOnly": "ro"
+  }
+}
+##### config_reload_private
+5 Two x
+##### config_reload
+Color [Red] Color [A=255, R=10, G=20, B=30] Color [A=128, R=10, G=20, B=30] Color [Empty] Two 1.5 1 2 ž<>&'+ 2020-01-02T03:04:05.6780000Z Utc

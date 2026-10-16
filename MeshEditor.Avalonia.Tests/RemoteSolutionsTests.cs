@@ -19,7 +19,7 @@ using MeshEditor.LayerManager.Import;
 using MeshEditor.SolutionManager;
 using MeshEditor.SolutionManager.AzureStorage;
 using MeshEditor.SolutionManager.IO;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 using NUnit.Framework;
 
 namespace MeshEditor.AvaloniaUI.Tests
@@ -214,8 +214,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 		/// </summary>
 		private static async Task<string> getLayerFolderAsync(BlobServiceClient serviceClient, RemoteUser user, int solutionId)
 		{
-			var solutionJson = JObject.Parse((await getSolutionBlob(serviceClient, user, solutionId).DownloadContentAsync()).Value.Content.ToString());
-			string layerFolder = solutionJson.Value<string>("LayerFolder");
+			var solutionJson = JsonNode.Parse((await getSolutionBlob(serviceClient, user, solutionId).DownloadContentAsync()).Value.Content.ToString()).AsObject();
+			string layerFolder = (string)solutionJson["LayerFolder"];
 			return layerFolder == null ? user.Id : $"{user.Id}/{layerFolder}";
 		}
 
@@ -609,9 +609,9 @@ namespace MeshEditor.AvaloniaUI.Tests
 				await layers.GetBlobClient(blob.Name).DeleteAsync();
 			}
 			var solutionBlob = getSolutionBlob(serviceClient, Alice, remoteSolution.Id);
-			var solutionJson = JObject.Parse((await solutionBlob.DownloadContentAsync()).Value.Content.ToString());
+			var solutionJson = JsonNode.Parse((await solutionBlob.DownloadContentAsync()).Value.Content.ToString()).AsObject();
 			solutionJson.Remove("LayerFolder");
-			await solutionBlob.UploadAsync(BinaryData.FromString(solutionJson.ToString()), overwrite: true);
+			await solutionBlob.UploadAsync(BinaryData.FromString(solutionJson.ToJsonString()), overwrite: true);
 			Assert.That(await getLayerFolderAsync(serviceClient, Alice, remoteSolution.Id), Is.EqualTo(Alice.Id));
 
 			Guid masterLayerId;

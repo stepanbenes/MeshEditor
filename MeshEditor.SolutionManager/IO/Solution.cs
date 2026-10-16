@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using MeshEditor.Common.Extensions;
 using MeshEditor.LayerManager.Import;
 
@@ -20,7 +20,7 @@ namespace MeshEditor.SolutionManager.IO
 			public Guid Id { get; set; }
 			public string Name { get; set; }
 			public string FilterType { get; set; }
-			[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+			[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 			public Layer[] Children { get; set; }
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
@@ -42,7 +42,7 @@ namespace MeshEditor.SolutionManager.IO
 		/// so that solutions uploaded from the same local solution (same layer ids) don't share layer files. Null for local solutions
 		/// and for remote solutions uploaded before, whose layers are directly in the owner's folder.
 		/// </summary>
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public string LayerFolder { get; set; }
 
 		IReadOnlyList<ILayerInfo> ISolutionDescription.Layers => Layers;

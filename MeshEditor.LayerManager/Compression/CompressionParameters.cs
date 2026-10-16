@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.LayerManager.Compression
 {
@@ -14,7 +14,7 @@ namespace MeshEditor.LayerManager.Compression
 	[EnumValueTypeSelector(CompressionMethod.WT, typeof(WaveletCompressionParameters), enumPropertyName: nameof(Method))]
 	public abstract class CompressionParameters
 	{
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumJsonConverter))]
 		public abstract CompressionMethod Method { get; }
 
 		public int Rows { get; set; }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MeshEditor.LayerManager.Filters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace MeshEditor.LayerManager.Data
 {
@@ -19,13 +19,13 @@ namespace MeshEditor.LayerManager.Data
 
 		public Dictionary<string, FieldDescriptor> Fields { get; set; } = new Dictionary<string, FieldDescriptor>();
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public Guid? MeshFallbackLayerId { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public Guid? AttributeFallbackLayerId { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public Guid? DataFallbackLayerId { get; set; }
 	}
 }

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace MeshEditor.LayerManager.Import
 {
 	public class AnalysisResult
 	{
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public decimal? TimeStep { get; set; }
 		public IEnumerable<string> MeshRecordNames { get; set; }
 		public IEnumerable<string> DataRecordNames { get; set; }
