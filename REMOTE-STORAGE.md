@@ -40,12 +40,23 @@ Then:
 
 ## 3. Users and access rights
 
-1. Users must be in the tenant. Invite people with personal Microsoft accounts (outlook.com and similar) as guests: **Users → Invite external user**.
-2. Assign the role **Storage Blob Data Contributor** to the users, or better to a group of them. Scope the role to the storage account or to the three containers.
+Users must be in the tenant. People from outside it (personal Microsoft accounts such as outlook.com, or other organizations) are invited as guests.
 
-**What enforces the separation:** with this role, a user can technically read the whole container. The separation into user folders is enforced by the app.
+Each user gets their own role assignment on the storage account, with a condition that limits it to their folder: blob paths must start with `<folder id>/`. The storage enforces it, so a user can't reach other users' folders even with their own token outside the apps. `scripts/onboard-user.sh` (Azure CLI, bash; also runs in Azure Cloud Shell) does it:
 
-**For separation enforced by the storage itself:** give each user their own role assignment with a condition. The condition limits blob paths to the user's folder: the path starts with `<object id>/`. This is a per-user setup. See [Azure role assignment conditions for Blob Storage](https://learn.microsoft.com/azure/storage/blobs/storage-auth-abac).
+```sh
+scripts/onboard-user.sh --account <storage account> --user jane@contoso.com
+```
+
+- **Members of the tenant:** the folder id is their object id; the script finds it.
+- **Guests:** the folder id is the object id of their home account (their own tenant or Microsoft account), which this tenant doesn't know. Ask them to sign in to MeshEditor Online: until they have access, it says that the storage refused access and shows their user id. Then pass it with `--folder-id <id>`.
+- **Not in the tenant yet:** `--invite <url of the web app>` invites them as a guest and sends the invitation e-mail.
+
+The script needs someone who can create role assignments on the subscription (e.g. an Owner). On the first run it creates the custom role **MeshEditor Storage User**: read, write and delete blobs, with no container actions. Storage Blob Data Contributor would also let a user delete a whole container through Azure Resource Manager, where the condition doesn't apply.
+
+**Don't also give users a role with blob data access on the account or the containers**, for example Storage Blob Data Contributor through a group. Role assignments add up, and that one would open every folder again. The script warns when the user has other roles on the account. To move from a group to per-user access, run the script for every member, then remove the group's role assignment.
+
+See [Azure role assignment conditions for Blob Storage](https://learn.microsoft.com/azure/storage/blobs/storage-auth-abac).
 
 ## 4. Application configuration
 

@@ -24,6 +24,8 @@ namespace MeshEditor.Web.Worker
 		private static readonly Dictionary<string, List<StagedFile>> StagedFiles = new Dictionary<string, List<StagedFile>>();
 		private static readonly Dictionary<string, byte[]> Buffers = new Dictionary<string, byte[]>();
 		private static Operations operations;
+		// the signed-in user's folder id, told to the user when the storage refuses access (the administrator needs it)
+		private static string userId;
 
 		[JSImport("progress", "worker")]
 		private static partial void ReportProgress(string jobId, string message, int percent);
@@ -94,6 +96,7 @@ namespace MeshEditor.Web.Worker
 			{
 				var settings = args.Deserialize<StorageSettings>(JsonOptions);
 				var session = new RemoteSession(settings, Credential);
+				userId = session.User.Id;
 				await session.EnsureContainersAsync(cancellationToken);
 				operations = new Operations(session);
 				return new { userId = session.User.Id, userName = session.User.Name };
@@ -151,7 +154,7 @@ namespace MeshEditor.Web.Worker
 				{
 					case 401:
 					case 403:
-						return "The storage refused access. Check that your account has the Storage Blob Data Contributor role on the storage account.";
+						return $"The storage refused access. Ask the administrator to give your account access to the storage, with your user id {userId}.";
 					case 0:
 						return "The storage could not be reached. Check the storage address and that CORS on the storage account allows this site.";
 				}

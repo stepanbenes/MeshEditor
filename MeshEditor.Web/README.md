@@ -100,7 +100,9 @@ The Free plan is enough: 100 GB of traffic a month, and it never bills overage. 
 
 ### Who can read what
 
-The app opens only the signed-in user's folder, but it runs in the user's browser with the user's own token. A user with **Storage Blob Data Contributor** on the containers can use that token outside the app (browser developer tools, Azure Storage Explorer, `az storage blob list --auth-mode login`) and read, change or delete every user's data. To have the storage enforce the user folders, give each user a role assignment with a condition on their folder instead of one assignment for everyone: see [REMOTE-STORAGE.md](../REMOTE-STORAGE.md#3-users-and-access-rights). People without a role assignment can't read anything, as long as the containers are private.
+The app opens only the signed-in user's folder, but it runs in the user's browser with the user's own token, which also works outside the app (browser developer tools, Azure Storage Explorer, `az storage blob list --auth-mode login`). So the storage has to enforce the user folders: each user gets a role assignment limited to their folder, made by `scripts/onboard-user.sh` (see [REMOTE-STORAGE.md](../REMOTE-STORAGE.md#3-users-and-access-rights)). A role such as Storage Blob Data Contributor on the containers, for example through a group, would let its users read, change or delete every user's data. People without a role assignment can't read anything, as long as the containers are private.
+
+When the storage refuses access, the app shows the user's id: the folder id that `scripts/onboard-user.sh --folder-id` needs for guests.
 
 ## Notes
 
