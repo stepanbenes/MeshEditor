@@ -89,6 +89,19 @@ dotnet publish MeshEditor.Web -c Release -o publish
 
 Deploy `publish/wwwroot` to any static host. For Azure Static Web Apps, `staticwebapp.config.json` sends the app's routes to `index.html`. The download is about 8 MB compressed. The browser caches it after the first visit.
 
+#### Azure Static Web Apps
+
+The Free plan is enough: 100 GB of traffic a month, and it never bills overage. The workflow `.github/workflows/deploy-web.yml` publishes the app on every push to `master`; any branch can be deployed from the Actions tab (**Deploy web app → Run workflow**).
+
+1. In the Azure portal, create a **Static Web App**: plan **Free**, deployment source **Other** (the workflow in this repository deploys it).
+2. Copy its deployment token (**Overview → Manage deployment token**) into the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN` (GitHub: **Settings → Secrets and variables → Actions**).
+3. Add `https://<name>.azurestaticapps.net/signin` as a redirect URI of the app registration (see [App registration](#app-registration)) and `https://<name>.azurestaticapps.net` to the storage account's CORS rule (see [CORS](#cors)). Do the same for a custom domain.
+4. Run the workflow.
+
+### Who can read what
+
+The app opens only the signed-in user's folder, but it runs in the user's browser with the user's own token. A user with **Storage Blob Data Contributor** on the containers can use that token outside the app (browser developer tools, Azure Storage Explorer, `az storage blob list --auth-mode login`) and read, change or delete every user's data. To have the storage enforce the user folders, give each user a role assignment with a condition on their folder instead of one assignment for everyone: see [REMOTE-STORAGE.md](../REMOTE-STORAGE.md#3-users-and-access-rights). People without a role assignment can't read anything, as long as the containers are private.
+
 ## Notes
 
 - The worker runs the .NET code interpreted, not AOT-compiled. Layer generation is about 3 to 4 times slower than in the desktop app.
