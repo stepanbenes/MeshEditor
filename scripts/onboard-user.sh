@@ -13,6 +13,24 @@
 
 set -euo pipefail
 
+# On Windows (Git Bash, or WSL using the Windows az), az runs a native Windows program: keep MSYS from turning the
+# /subscriptions/... ids into file paths, and drop the \r that ends each line it prints.
+export MSYS_NO_PATHCONV=1
+az() {
+	command az "$@" | tr -d '\r'
+}
+
+# a path az can open: for the Windows az a Windows path, not the MSYS or WSL one
+native_path() {
+	if command -v cygpath >/dev/null; then
+		cygpath -m "$1"
+	elif command -v wslpath >/dev/null && [[ "$(type -P az)" == /mnt/* ]]; then
+		wslpath -m "$1"
+	else
+		echo "$1"
+	fi
+}
+
 ROLE_NAME="MeshEditor Storage User"
 
 usage() {
@@ -72,10 +90,10 @@ echo "Storage account: $account_id"
 
 find_user() {
 	# a member by sign-in name, otherwise a guest by e-mail (a guest's sign-in name is mangled: jane_outlook.com#EXT#@...)
-	az ad user show --id "$user" --query '{id:id, type:userType, name:displayName}' --output tsv 2>/dev/null && return
+	az ad user show --id "$user" --query '{id:id, upn:userPrincipalName, name:displayName}' --output tsv 2>/dev/null && return
 	local escaped="${user//\'/\'\'}"
 	az ad user list --filter "mail eq '$escaped' or otherMails/any(m:m eq '$escaped')" \
-		--query '[0].{id:id, type:userType, name:displayName}' --output tsv 2>/dev/null
+		--query '[0].{id:id, upn:userPrincipalName, name:displayName}' --output tsv 2>/dev/null
 }
 
 user_info=$(find_user || true)
@@ -91,7 +109,9 @@ if [ -z "$user_info" ]; then
 	done
 	[ -n "$user_info" ] || fail "the invited user doesn't show up in the tenant yet; run the script again in a minute"
 fi
-IFS=$'\t' read -r object_id user_type display_name <<<"$user_info"
+IFS=$'\t' read -r object_id upn display_name <<<"$user_info"
+# by the sign-in name: az versions on the Graph API don't return userType unless asked with $select
+if [[ "$upn" == *'#EXT#'* ]]; then user_type="Guest"; else user_type="Member"; fi
 echo "User: $display_name ($user_type, object id $object_id)"
 
 # The folder is named by the object id of the user's home account (see REMOTE-STORAGE.md). For members it is the object id here;
@@ -136,7 +156,7 @@ if [ -z "$(az role definition list --name "$ROLE_NAME" --scope "$subscription_sc
   "AssignableScopes": ["$subscription_scope"]
 }
 EOF
-	az role definition create --role-definition "@$role_file" --output none
+	az role definition create --role-definition "@$(native_path "$role_file")" --output none
 fi
 
 # --- role assignment --------------------------------------------------------------------------------------------------
