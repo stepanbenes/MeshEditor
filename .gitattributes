@@ -1,0 +1,2 @@
+# Scripts run with a shebang, also on Linux and macOS: keep them LF in every checkout
+scripts/** text eol=lf
