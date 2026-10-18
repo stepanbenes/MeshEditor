@@ -1,0 +1,43 @@
+@implements IDisposable
+@inject RemoteStorage Storage
+
+@if (Storage.Jobs.Count > 0)
+{
+    <div class="jobs" aria-live="polite">
+        @foreach (var job in Storage.Jobs)
+        {
+            <div class="job @(job.Running ? "" : job.Failed ? "failed" : "done")" @key="job.Id">
+                @if (job.Running)
+                {
+                    <span class="spin"></span>
+                }
+                else
+                {
+                    <span>@(job.Failed ? "✕" : "✓")</span>
+                }
+                <b>@job.Title</b>
+                @if (job.Running)
+                {
+                    <button class="btn sm" type="button" @onclick="() => Storage.CancelAsync(job)">Cancel</button>
+                }
+                else
+                {
+                    <button class="btn sm ghost" type="button" @onclick="() => Storage.DismissJob(job)" aria-label="Dismiss">✕</button>
+                }
+                <span class="msg">@job.Message</span>
+                @if (job.Running)
+                {
+                    <div class="prog @(job.Percent < 0 ? "indeterminate" : "")"><i style="width:@(Math.Max(0, job.Percent))%"></i></div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    protected override void OnInitialized() => Storage.JobsChanged += onChanged;
+
+    private void onChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Storage.JobsChanged -= onChanged;
+}

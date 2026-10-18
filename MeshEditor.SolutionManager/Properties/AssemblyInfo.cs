@@ -22,6 +22,8 @@ using System.Runtime.InteropServices;
 
 // UI tests replace the Microsoft account sign-in by a test storage connection
 [assembly: InternalsVisibleTo("MeshEditor.Avalonia.Tests")]
+// the web app works with the remote solutions in the browser
+[assembly: InternalsVisibleTo("MeshEditor.Web.Worker")]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("551f7428-7a4e-4ee2-9681-5de0105bf887")]

@@ -1,0 +1,28 @@
+@page "/signin"
+@inject RemoteStorage Storage
+@inject NavigationManager Navigation
+
+@* The redirect URI of the sign-in and the sign-out (wwwroot/js/auth.js). After a sign-in, MSAL takes the response from the URL
+   and returns to the page where the sign-in started; without a response (after a sign-out), this page goes to the start page. *@
+
+<PageTitle>Signing in · MeshEditor Online</PageTitle>
+
+<div class="boot">
+    <span class="spin"></span>
+    <span>Signing in…</span>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Storage.InitializeAsync();
+        }
+        catch (Exception)
+        {
+            // the start page shows the error
+        }
+        Navigation.NavigateTo("", replace: true);
+    }
+}
