@@ -6,7 +6,7 @@ Everything runs in the browser. The app is a static site: there is no server of 
 
 - **MeshEditor.Web**: the Blazor WebAssembly UI. The 3D view is three.js (`wwwroot/js/viewer.js`). Sign-in is MSAL.js.
 - **MeshEditor.Web.Worker**: the layer code (`MeshEditor.LayerManager`, `MeshEditor.SolutionManager`) compiled to WebAssembly. It runs in a Web Worker, so long computations don't freeze the page. Building MeshEditor.Web publishes it into `wwwroot/worker`.
-- **MeshEditor.Web.DevSetup**: prepares Azurite for local testing.
+- **scripts/setup-azurite.cs**: prepares Azurite for local testing.
 
 The worker downloads the records of a layer into memory, runs the same layer generator as the desktop app, and uploads the new records. Solutions made in the web app open in the desktop app, and the other way round.
 
@@ -27,7 +27,7 @@ Needs the .NET 10 SDK and Node.js.
 2. Create the containers and allow the app's origin (CORS). Run it again after each restart of an in-memory Azurite:
 
    ```sh
-   dotnet run --project MeshEditor.Web.DevSetup
+   dotnet run scripts/setup-azurite.cs
    ```
 
    It allows `http://localhost:5280` by default. Pass other origins as arguments.

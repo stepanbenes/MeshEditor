@@ -1,9 +1,15 @@
+#!/usr/bin/env dotnet
+#:package Azure.Storage.Blobs@12.30.1
+
+// Prepares Azurite (the Azure Storage emulator) for the web app: creates the containers of the remote solutions and allows the
+// web app's origins (CORS) in the development storage. See MeshEditor.Web/README.md.
+//
+//   dotnet run scripts/setup-azurite.cs [origin ...] [--connection-string <value>]
+
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
-// Usage: dotnet run --project MeshEditor.Web.DevSetup [origin ...] [--connection-string <value>]
-// Creates the containers of the remote solutions and allows the web app's origins (CORS) in the development storage.
 var origins = new List<string>();
 string connectionString = "UseDevelopmentStorage=true";
 for (int i = 0; i < args.Length; i++)

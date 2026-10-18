@@ -89,7 +89,7 @@ namespace MeshEditor.Web.Worker
 			catch (RequestFailedException ex) when (ex.Status == 0)
 			{
 				// the browser doesn't tell a stopped emulator from a missing CORS rule
-				throw new InvalidOperationException($"The development storage (Azurite) at {client.Uri} can't be reached. Start Azurite, then run MeshEditor.Web.DevSetup, which allows this site (CORS). See MeshEditor.Web/README.md.", ex);
+				throw new InvalidOperationException($"The development storage (Azurite) at {client.Uri} can't be reached. Start Azurite, then run scripts/setup-azurite.cs, which allows this site (CORS). See MeshEditor.Web/README.md.", ex);
 			}
 			catch (RequestFailedException ex) when (ex.ErrorCode == "InvalidHeaderValue" && ex.Message.Contains("API version", StringComparison.Ordinal))
 			{
