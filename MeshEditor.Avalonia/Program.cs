@@ -42,6 +42,14 @@ namespace MeshEditor.AvaloniaUI
 				return 1;
 			}
 
+			// Avalonia's Linux backend is X11 only (XWayland in a Wayland session) and fails with "XOpenDisplay failed" without a display
+			if (OperatingSystem.IsLinux() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")))
+			{
+				Console.Error.WriteLine("MeshEditor needs an X11 display, but the DISPLAY environment variable is not set. "
+					+ "In a Wayland session, make sure XWayland is enabled; over SSH, connect with ssh -X.");
+				return 1;
+			}
+
 			return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 		}
 
