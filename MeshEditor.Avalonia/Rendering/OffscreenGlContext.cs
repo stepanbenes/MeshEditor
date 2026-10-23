@@ -3,6 +3,9 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
+using GLFW = OpenTK.Windowing.GraphicsLibraryFramework.GLFW;
+using InitHintPlatform = OpenTK.Windowing.GraphicsLibraryFramework.InitHintPlatform;
+using Platform = OpenTK.Windowing.GraphicsLibraryFramework.Platform;
 
 namespace MeshEditor.AvaloniaUI.Rendering
 {
@@ -19,6 +22,9 @@ namespace MeshEditor.AvaloniaUI.Rendering
 	internal sealed class OffscreenGlContext : IDisposable
 	{
 		private static NativeWindow rootWindow;
+
+		// last error reported by GLFW, used to explain why a context could not be created
+		private static string lastGlfwError;
 
 		private NativeWindow window;
 
@@ -52,13 +58,40 @@ namespace MeshEditor.AvaloniaUI.Rendering
 		/// <summary>
 		/// Root context all viewport contexts share their objects with. Created lazily on the UI thread.
 		/// </summary>
+		/// <exception cref="GraphicsInitializationException">No usable OpenGL context can be created.</exception>
 		public static IGLFWGraphicsContext Root
 		{
 			get
 			{
 				if (rootWindow == null)
+				{
+					initializeGlfw();
 					rootWindow = createHiddenWindow(null);
+				}
 				return rootWindow.Context;
+			}
+		}
+
+		private static void initializeGlfw()
+		{
+			try
+			{
+				// Avalonia runs on X11 (XWayland in a Wayland session). GLFW would pick its Wayland backend whenever
+				// WAYLAND_DISPLAY is set, and creating the hidden windows there crashes the process (SIGSEGV).
+				if (OperatingSystem.IsLinux())
+					GLFW.InitHint(InitHintPlatform.Platform, Platform.X11);
+				// OpenTK's default error callback throws from inside a native GLFW call; such an exception cannot be caught
+				// and aborts the process. Remember the error instead: NativeWindow then throws a managed exception.
+				GLFWProvider.SetErrorCallback((errorCode, description) =>
+				{
+					lastGlfwError = $"{description} ({errorCode})";
+					Console.Error.WriteLine("GLFW error: " + lastGlfwError);
+				});
+				GLFWProvider.EnsureInitialized();
+			}
+			catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
+			{
+				throw new GraphicsInitializationException("The GLFW library (libglfw.so.3) bundled with MeshEditor could not be loaded: " + ex.Message, ex);
 			}
 		}
 
@@ -84,7 +117,15 @@ namespace MeshEditor.AvaloniaUI.Rendering
 				Title = "MeshEditor offscreen GL context",
 				SharedContext = sharedContext,
 			};
-			return new NativeWindow(settings);
+			lastGlfwError = null;
+			try
+			{
+				return new NativeWindow(settings);
+			}
+			catch (Exception ex)
+			{
+				throw new GraphicsInitializationException(lastGlfwError ?? ex.Message, ex);
+			}
 		}
 
 		public bool IsCurrent => window?.Context.IsCurrent == true;
@@ -264,5 +305,28 @@ namespace MeshEditor.AvaloniaUI.Rendering
 			window.Dispose();
 			window = null;
 		}
+	}
+
+	/// <summary>
+	/// No usable OpenGL context can be created (missing or broken driver, no GLX, OpenGL older than 2.1).
+	/// </summary>
+	internal sealed class GraphicsInitializationException : Exception
+	{
+		/// <param name="reason">The error reported by GLFW.</param>
+		public GraphicsInitializationException(string reason, Exception innerException)
+			: base("MeshEditor could not create an OpenGL 2.1 context, which it needs to draw the mesh." + Environment.NewLine + Environment.NewLine
+				+ "Reason: " + reason + Environment.NewLine + Environment.NewLine
+				+ HelpText, innerException)
+		{
+			Reason = reason;
+		}
+
+		public string Reason { get; }
+
+		private static string HelpText => OperatingSystem.IsLinux()
+			? "Check that an OpenGL driver is installed (on Ubuntu/Debian: sudo apt install libgl1 libglx-mesa0 libgl1-mesa-dri) "
+				+ "and that glxinfo -B (package mesa-utils) shows a renderer. In a virtual machine or over remote desktop, "
+				+ "try starting MeshEditor with LIBGL_ALWAYS_SOFTWARE=1."
+			: "Check that the latest graphics card drivers are installed.";
 	}
 }
