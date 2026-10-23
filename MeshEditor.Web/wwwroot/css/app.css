@@ -30,7 +30,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .shell:has(.ws) { height: 100%; }
 .appbar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--fg); text-decoration: none; }
-.logo { width: 22px; height: 22px; border-radius: 5px; background: var(--ramp); }
+.logo { width: 22px; height: 22px; border-radius: 5px; background: url(../logo.png) center / cover; }
 .crumbs { color: var(--muted); font-size: 13px; min-width: 0; }
 .crumbs a { color: inherit; }
 .crumbs b { color: var(--fg); font-weight: 600; }
