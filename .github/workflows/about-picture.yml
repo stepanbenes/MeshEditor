@@ -29,25 +29,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends xvfb xauth libgl1 libglx-mesa0 libgl1-mesa-dri
 
-      - name: Render the variants of the picture
+      - name: Render the picture
         env:
           LIBGL_ALWAYS_SOFTWARE: 1
+          ABOUT_PICTURE_DIRECTORY: ${{ github.workspace }}/render-output
         run: |
+          mkdir -p render-output
           dotnet build MeshEditor.Avalonia.Tests
-          render() { # name, then the settings
-            name=$1; shift
-            mkdir -p "render-output/$name"
-            env ABOUT_PICTURE_DIRECTORY="$PWD/render-output/$name" "$@" xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --filter "FullyQualifiedName~AboutPictureTests.Render_About_picture" --logger "console;verbosity=normal"
-          }
-          render a
-          render b ABOUT_PICTURE_ZOOM=0.06 ABOUT_PICTURE_SHIFT=0.14
-          render c ABOUT_PICTURE_TILT=-35 ABOUT_PICTURE_TURN=22
-          render d ABOUT_PICTURE_COMPRESSION=0.5 ABOUT_PICTURE_TURN=-15 ABOUT_PICTURE_TILT=-50
+          xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --filter "FullyQualifiedName~AboutPictureTests"
+          sha256sum render-output/about.png MeshEditor.Avalonia/Assets/about.png
 
       - name: Print the pictures
         run: |
-          for file in render-output/*/about.png; do
-            name=$(basename "$(dirname "$file")").png
+          for file in render-output/about.png render-output/about-dialog.png; do
+            name=$(basename "$file")
             echo "BEGIN $name $(sha256sum "$file" | cut -d' ' -f1)"
             base64 -w 0 "$file" | fold -w 1000
             echo
