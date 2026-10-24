@@ -6,7 +6,7 @@ Installed-Size: @INSTALLED_SIZE@
 Section: graphics
 Priority: optional
 Homepage: https://github.com/stepanbenes/MeshEditor
-Depends: libc6, libgcc-s1, libstdc++6, libicu76 | libicu74 | libicu72 | libicu70, libssl3t64 | libssl3, libfontconfig1, libx11-6, libxcursor1, libxext6, libxfixes3, libxi6, libxinerama1, libxrandr2, libxrender1, libice6, libsm6, libgl1, libsecret-1-0
+Depends: libc6, libgcc-s1, libstdc++6, @LIBICU@, libssl3t64 | libssl3, libfontconfig1, libx11-6, libxcursor1, libxext6, libxfixes3, libxi6, libxinerama1, libxrandr2, libxrender1, libice6, libsm6, libgl1, libsecret-1-0
 Recommends: libglx-mesa0, libgl1-mesa-dri, libgtk-3-0t64 | libgtk-3-0, xdg-utils
 Description: 3D graphical editor of finite element meshes
  Postprocessor of the results from the Finite Element Method.

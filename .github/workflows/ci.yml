@@ -88,6 +88,35 @@ jobs:
           name: linux-package
           path: linux-deployment/mesheditor/out/*.deb
 
+  linux-package-install:
+    # Installs the Debian package on other distributions than the runner's, so that a dependency missing there (as the ICU
+    # package of the newer releases, issue #46) fails here. The converter also checks that the runtime finds ICU.
+    needs: linux-package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:22.04', 'ubuntu:rolling', 'debian:stable', 'debian:testing']
+    container: ${{ matrix.image }}
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-package
+
+      - name: Install the package
+        run: |
+          apt-get update
+          apt-get install -y ./mesheditor_*_amd64.deb
+          output=$(fem-format-converter version 2>&1 || true)
+          echo "$output"
+          grep 'FEM format converter' <<< "$output"
+
   windows-package:
     # The self-contained Windows zip (windows-deployment/build.ps1), downloadable from the run's artifacts
     runs-on: windows-latest
