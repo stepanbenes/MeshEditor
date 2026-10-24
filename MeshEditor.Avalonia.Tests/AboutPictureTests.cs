@@ -96,22 +96,60 @@ namespace MeshEditor.AvaloniaUI.Tests
 			scene.DrawAxisArrows = false;
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.CameraStandardView, CameraView.Front);
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.ZoomToFit);
-			// closer than the zoom to fit (a fraction of the distance to the mesh), the mesh a bit lower (under the legend)
-			var camera = scene.Camera;
-			float distance = (camera.Eye - scene.Mesh.CenterOfRotation).Length;
-			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.0));
-			camera.Move(camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.1));
+			// no legend
+			var dataVisualizer = (MeshEditor.DataVisualizer.LayerDataVisualizer)postprocessView.ActiveScene.GetValue(MeshEditor.CoreInterface.AvailableValue.DataVisualizer);
+			dataVisualizer.Settings.ShowColorScaleLegend = false;
 
 			byte[] frame = null;
 			int width = 0, height = 0;
-			for (int i = 0; i < 10; i++) // the color buffers are updated asynchronously
+			async Task render()
 			{
+				for (int i = 0; i < 5; i++) // the color buffers are updated asynchronously
+				{
+					viewport.Refresh();
+					await Task.Delay(100);
+					Dispatcher.UIThread.RunJobs();
+				}
 				viewport.Refresh();
-				await Task.Delay(100);
-				Dispatcher.UIThread.RunJobs();
+				frame = viewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out width, out height);
 			}
-			viewport.Refresh();
-			frame = viewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out width, out height);
+
+			// the mesh fills the picture: move the camera until the bounding box of the mesh pixels touches the margins
+			var camera = scene.Camera;
+			var background = settings.ActiveBackColor;
+			double margin = setting("ABOUT_PICTURE_MARGIN", 0.02);
+			for (int iteration = 0; iteration < 30; iteration++)
+			{
+				await render();
+				int left = width, right = -1, top = height, bottom = -1;
+				for (int y = 0; y < height; y++)
+					for (int x = 0; x < width; x++)
+					{
+						int k = (y * width + x) * 4;
+						if (Math.Abs(frame[k] - background.B) + Math.Abs(frame[k + 1] - background.G) + Math.Abs(frame[k + 2] - background.R) > 24)
+						{
+							left = Math.Min(left, x);
+							right = Math.Max(right, x);
+							top = Math.Min(top, y);
+							bottom = Math.Max(bottom, y);
+						}
+					}
+				Assert.That(right, Is.GreaterThanOrEqualTo(0), "the mesh is visible");
+				// the offset of the centre of the box from the centre of the picture, and the scale to the margins (fractions of the height)
+				double offsetX = ((left + right) / 2.0 - width / 2.0) / height, offsetY = ((top + bottom) / 2.0 - height / 2.0) / height;
+				double scale = Math.Min(width * (1 - 2 * margin) / (right - left + 1), height * (1 - 2 * margin) / (bottom - top + 1));
+				TestContext.Out.WriteLine($"fit {iteration}: box {left}..{right} x {top}..{bottom}, offset {offsetX:0.000} {offsetY:0.000}, scale {scale:0.000}");
+				if (Math.Abs(offsetX) < 0.003 && Math.Abs(offsetY) < 0.003 && Math.Abs(scale - 1) < 0.005)
+					break;
+				var direction = camera.GetDirection();
+				float distance = (camera.Eye - scene.Mesh.CenterOfRotation).Length;
+				var rightVector = OpenTK.Mathematics.Vector3.Normalize(OpenTK.Mathematics.Vector3.Cross(direction, camera.Up));
+				var upVector = OpenTK.Mathematics.Vector3.Normalize(camera.Up);
+				// about 0.8 of the distance is the visible height (the field of view)
+				camera.Move(rightVector * (float)(offsetX * distance * 0.8) - upVector * (float)(offsetY * distance * 0.8));
+				camera.MoveForward(distance * (float)(1 - 1 / Math.Max(0.5, Math.Min(scale, 2))) * 0.8f);
+			}
+			await render();
 			string path = Path.Combine(outputDirectory, "about.png");
 			MeshEditor.AvaloniaUI.Rendering.ScreenshotFile.Save(path, frame, width, height);
 			TestContext.Out.WriteLine($"{path} ({width} x {height})");
