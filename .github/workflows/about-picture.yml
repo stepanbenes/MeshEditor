@@ -40,9 +40,9 @@ jobs:
             env ABOUT_PICTURE_DIRECTORY="$PWD/render-output/$name" "$@" xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --filter "FullyQualifiedName~AboutPictureTests.Render_About_picture" --logger "console;verbosity=normal"
           }
           render a
-          render b ABOUT_PICTURE_COMPRESSION=1
-          render c ABOUT_PICTURE_HOLE=0.45 ABOUT_PICTURE_TILT=-35 ABOUT_PICTURE_ZOOM=0.05
-          render d ABOUT_PICTURE_COMPRESSION=0.5 ABOUT_PICTURE_TURN=-15 ABOUT_PICTURE_TILT=-55
+          render b ABOUT_PICTURE_ZOOM=0.06 ABOUT_PICTURE_SHIFT=0.14
+          render c ABOUT_PICTURE_TILT=-35 ABOUT_PICTURE_TURN=22
+          render d ABOUT_PICTURE_COMPRESSION=0.5 ABOUT_PICTURE_TURN=-15 ABOUT_PICTURE_TILT=-50
 
       - name: Print the pictures
         run: |

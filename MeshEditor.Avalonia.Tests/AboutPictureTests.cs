@@ -99,8 +99,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// closer than the zoom to fit (a fraction of the distance to the mesh), the mesh a bit lower (under the legend)
 			var camera = scene.Camera;
 			float distance = (camera.Eye - scene.Mesh.CenterOfRotation).Length;
-			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.12));
-			camera.Move(-camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.08));
+			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.0));
+			camera.Move(camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.1));
 
 			byte[] frame = null;
 			int width = 0, height = 0;
