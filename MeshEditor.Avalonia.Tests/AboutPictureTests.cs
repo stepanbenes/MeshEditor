@@ -30,9 +30,9 @@ namespace MeshEditor.AvaloniaUI.Tests
 			? directory
 			: TestContext.CurrentContext.WorkDirectory;
 
-		// a plate with a hole under tension in the y direction
+		// a plate with a hole under pure shear (tension in the y direction, compression in the x direction)
 		private const double holeRadius = 0.38, halfHeight = 1.7, thickness = 0.16;
-		private const int angleDivisions = 64, radialDivisions = 14, endDivisions = 6; // angleDivisions is a multiple of 8: rays go to the corners of the square
+		private const int angleDivisions = 48, radialDivisions = 10, endDivisions = 5; // angleDivisions is a multiple of 8: rays go to the corners of the square
 
 		private static async Task waitUntil(Func<bool> condition, string description, int timeoutSeconds = 60)
 		{
@@ -61,7 +61,15 @@ namespace MeshEditor.AvaloniaUI.Tests
 			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(directory, "plate"), analysisResults, "plate");
 			solutionHub.Import(Enumerable.Empty<decimal>(), Array.Empty<string>(), "Nearest");
 
-			var window = new MainWindow(Array.Empty<string>()) { WindowState = WindowState.Normal, Width = 1000, Height = 780 };
+			// dark background (the legend text gets the contrast color), dark edges
+			var settings = MeshEditor.CoreInterface.SceneSettings.Instance;
+			settings.ActiveBackColor = System.Drawing.Color.FromArgb(0x1C, 0x22, 0x30);
+			settings.NonActiveBackColor = settings.ActiveBackColor;
+			settings.OrdinaryEdgeColor = System.Drawing.Color.FromArgb(0x10, 0x14, 0x1C);
+			settings.FirstBorderColor = System.Drawing.Color.Black;
+			settings.SecondBorderColor = System.Drawing.Color.Black;
+
+			var window = new MainWindow(Array.Empty<string>()) { WindowState = WindowState.Normal, Width = 1000, Height = 600 };
 			window.Show();
 			Dispatcher.UIThread.RunJobs();
 			await window.openFiles(solutionHub.GetSolutionDescription().Location);
@@ -76,16 +84,20 @@ namespace MeshEditor.AvaloniaUI.Tests
 			const double aspectRatio = 0.66;
 			viewport.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
 			viewport.Width = Math.Round(viewport.Bounds.Height * aspectRatio);
-			TestContext.Out.WriteLine($"viewport {viewport.PixelSize}, bounds {viewport.Bounds}, window {window.Bounds}");
-			await waitUntil(() => Math.Abs(viewport.PixelSize.Width - viewport.PixelSize.Height * aspectRatio) < 2 || TestContext.Out.WriteLineAsync($"viewport {viewport.PixelSize}, bounds {viewport.Bounds}") == null, "viewport is resized", timeoutSeconds: 5);
+			await waitUntil(() => Math.Abs(viewport.PixelSize.Width - viewport.PixelSize.Height * aspectRatio) < 2, "viewport is resized", timeoutSeconds: 10);
 
 			var sceneFacade = viewport.SceneFacade;
 			var scene = sceneFacade.GetUnderlyingSceneObject();
 			scene.RenderMode = RenderMode.FacesLines;
 			scene.DrawAxes = false;
+			scene.DrawAxisArrows = false;
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.CameraStandardView, CameraView.Front);
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.ZoomToFit);
-			scene.Camera.MoveForward(float.Parse(Environment.GetEnvironmentVariable("ABOUT_PICTURE_ZOOM") ?? "0", CultureInfo.InvariantCulture));
+			// closer than the zoom to fit (a fraction of the distance to the mesh), the mesh a bit lower (under the legend)
+			var camera = scene.Camera;
+			float distance = (camera.Eye - scene.Mesh.CenterOfRotation).Length;
+			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.25));
+			camera.Move(-camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.06));
 
 			byte[] frame = null;
 			int width = 0, height = 0;
@@ -116,7 +128,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 
 		/// <summary>
 		/// GiD mesh (hexahedra) of the plate, deformed (exaggerated) and tilted towards the camera of the front view, and the von Mises stress
-		/// of the Kirsch solution (an infinite plate with a hole under the unit tension) in its nodes.
+		/// of the Kirsch solution (an infinite plate with a hole) in its nodes.
 		/// </summary>
 		private static void writePlate(string meshFile, string resultFile)
 		{
@@ -205,15 +217,30 @@ namespace MeshEditor.AvaloniaUI.Tests
 			File.WriteAllText(resultFile, results.ToString());
 		}
 
+		/// <summary>
+		/// Von Mises stress of an infinite plate with a hole under pure shear: the unit tension in the y direction and the unit compression
+		/// in the x direction (the sum of two Kirsch solutions).
+		/// </summary>
 		private static double vonMises((double x, double y) p)
 		{
 			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
-			double angle = Math.Atan2(p.x, p.y); // from the load direction
-			double q = holeRadius * holeRadius / (r * r);
-			double srr = 0.5 * (1 - q) + 0.5 * (1 - 4 * q + 3 * q * q) * Math.Cos(2 * angle);
-			double stt = 0.5 * (1 + q) - 0.5 * (1 + 3 * q * q) * Math.Cos(2 * angle);
-			double srt = -0.5 * (1 + 2 * q - 3 * q * q) * Math.Sin(2 * angle);
+			double angle = Math.Atan2(p.y, p.x);
+			var (srr1, stt1, srt1) = kirsch(r, angle - Math.PI / 2, 1); // tension along y
+			var (srr2, stt2, srt2) = kirsch(r, angle, -1); // compression along x
+			double srr = srr1 + srr2, stt = stt1 + stt2, srt = srt1 + srt2;
 			return Math.Sqrt(srr * srr - srr * stt + stt * stt + 3 * srt * srt);
+		}
+
+		/// <summary>
+		/// Polar stresses around a hole under the uniaxial stress <paramref name="load"/>; <paramref name="angle"/> from the load direction.
+		/// </summary>
+		private static (double srr, double stt, double srt) kirsch(double r, double angle, double load)
+		{
+			double q = holeRadius * holeRadius / (r * r);
+			double cos = Math.Cos(2 * angle), sin = Math.Sin(2 * angle);
+			return (load / 2 * (1 - q) + load / 2 * (1 - 4 * q + 3 * q * q) * cos,
+				load / 2 * (1 + q) - load / 2 * (1 + 3 * q * q) * cos,
+				-load / 2 * (1 + 2 * q - 3 * q * q) * sin);
 		}
 
 		private static (double x, double y, double z) deformAndTilt((double x, double y) p, double z)
@@ -221,17 +248,20 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// exaggerated: stretching along the load, the necking of the ligaments, a gentle bend out of the plane
 			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
 			double q = holeRadius * holeRadius / (r * r);
-			double x = p.x - 0.06 * p.x * (1 + q);
+			double x = p.x - 0.09 * p.x * (1 + q);
 			double y = p.y + 0.10 * p.y + 0.08 * p.y * q;
 			z += 0.22 * (p.y / halfHeight) * (p.y / halfHeight);
 			// the top tilted away from the camera, turned a bit around the vertical axis
-			double tilt = Angle("ABOUT_PICTURE_TILT", -50), turn = Angle("ABOUT_PICTURE_TURN", 18);
+			double tilt = setting("ABOUT_PICTURE_TILT", -45) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 18) * Math.PI / 180;
 			(y, z) = (y * Math.Cos(tilt) - z * Math.Sin(tilt), y * Math.Sin(tilt) + z * Math.Cos(tilt));
 			(x, z) = (x * Math.Cos(turn) + z * Math.Sin(turn), -x * Math.Sin(turn) + z * Math.Cos(turn));
 			return (x, y, z);
 		}
 
-		private static double Angle(string variable, double defaultDegrees) =>
-			double.Parse(Environment.GetEnvironmentVariable(variable) ?? defaultDegrees.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) * Math.PI / 180;
+		/// <summary>
+		/// A parameter of the picture: the environment variable, or the default.
+		/// </summary>
+		private static double setting(string variable, double defaultValue) =>
+			Environment.GetEnvironmentVariable(variable) is string value && value != "" ? double.Parse(value, CultureInfo.InvariantCulture) : defaultValue;
 	}
 }
