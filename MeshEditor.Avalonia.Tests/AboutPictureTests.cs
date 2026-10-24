@@ -96,8 +96,9 @@ namespace MeshEditor.AvaloniaUI.Tests
 			scene.DrawAxisArrows = false;
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.CameraStandardView, CameraView.Front);
 			sceneFacade.PerformAction(MeshEditor.CoreInterface.AvailableAction.ZoomToFit);
-			// no legend
+			// iso-areas, no legend
 			var dataVisualizer = (MeshEditor.DataVisualizer.LayerDataVisualizer)postprocessView.ActiveScene.GetValue(MeshEditor.CoreInterface.AvailableValue.DataVisualizer);
+			dataVisualizer.Settings.DrawIsoAreas = true;
 			dataVisualizer.Settings.ShowColorScaleLegend = false;
 
 			byte[] frame = null;
