@@ -189,6 +189,53 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task Import_with_invalid_key_time_step_is_reported_before_creating_the_solution()
+		{
+			var window = showMainWindow();
+			click(window.importFEMResultsToolStripMenuItem);
+			var dialog = await waitForWindow<ImportFEMResultsDialog>();
+			dialog.textBoxMeshFile.Text = testDataPath("props.msh");
+			dialog.textBoxResultFiles.Text = testDataPath("props.res");
+			dialog.textBoxLocation.Text = tempDirectory;
+			dialog.compressionParamsControl.comboBoxCompressionMethod.SelectedIndex = 1; // SVD merges time steps
+			dialog.compressionParamsControl.textBoxKeyTimeSteps.Text = "1 2,5";
+			Dispatcher.UIThread.RunJobs();
+
+			click(dialog.buttonImport);
+			var errorBox = await waitForWindow<Dialogs.MessageBox>();
+			Assert.That(errorBox.Title, Is.EqualTo("Invalid compression parameter"));
+			Assert.That(errorBox.GetVisualDescendants().OfType<SelectableTextBlock>().Single().Text, Does.Contain("'2,5'"));
+			Assert.That(dialog.tabControl.SelectedIndex, Is.EqualTo(1), "the Compression tab is shown");
+
+			errorBox.Close();
+			Dispatcher.UIThread.RunJobs();
+			Assert.That(dialog.IsVisible, Is.True, "the dialog stays open for correction");
+			Assert.That(Directory.Exists(tempDirectory) ? Directory.GetFileSystemEntries(tempDirectory) : Array.Empty<string>(), Is.Empty, "no solution is created");
+		}
+
+		[AvaloniaTest]
+		public void Compression_params_are_validated()
+		{
+			var control = new CompressionParamsControl();
+			Assert.That(control.ValidateParameters(), Is.Null);
+			control.textBoxNRMSD.Text = "abc";
+			Assert.That(control.ValidateParameters(), Is.Null, "NRMSD is not used without compression");
+
+			control.comboBoxCompressionMethod.SelectedIndex = 1;
+			Assert.That(control.ValidateParameters(), Does.Contain("NRMSD 'abc'"));
+			control.textBoxNRMSD.Text = "-1";
+			Assert.That(control.ValidateParameters(), Does.Contain("NRMSD '-1'"));
+			control.textBoxNRMSD.Text = "2.5E-3";
+			Assert.That(control.ValidateParameters(), Is.Null);
+
+			control.textBoxKeyTimeSteps.Text = "0.5 x 2";
+			Assert.That(control.ValidateParameters(), Does.Contain("key time step 'x'"));
+			control.textBoxKeyTimeSteps.Text = "0.5  1 2.5";
+			Assert.That(control.ValidateParameters(), Is.Null);
+			Assert.That(control.GetKeyTimeSteps(), Is.EqualTo(new[] { 0.5m, 1m, 2.5m }));
+		}
+
+		[AvaloniaTest]
 		public void Compression_params_match_WinForms_logic()
 		{
 			var control = new CompressionParamsControl();

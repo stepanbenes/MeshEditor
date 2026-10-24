@@ -119,14 +119,36 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			return parameters;
 		}
 
+		/// <summary>
+		/// Message for the user about the first invalid parameter, null if all are valid. The parameters are parsed only
+		/// during the import, after the solution is created, so they are checked before.
+		/// </summary>
+		public string ValidateParameters()
+		{
+			if (comboBoxCompressionMethod.SelectedIndex > 0 && radioButtonError.IsChecked == true
+				&& !(double.TryParse(textBoxNRMSD.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double nrmsd) && nrmsd >= 0))
+			{
+				return $"The NRMSD '{textBoxNRMSD.Text}' is not a valid number. Use a non-negative number, e.g. 1.0E-4.";
+			}
+			if (checkBoxMergeTimeSteps.IsChecked == true)
+			{
+				string invalidToken = keyTimeStepTokens().FirstOrDefault(token => !decimal.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out _));
+				if (invalidToken != null)
+					return $"The key time step '{invalidToken}' is not a number. Separate the key time steps by spaces, e.g. 0.5 1 2.5.";
+			}
+			return null;
+		}
+
+		private string[] keyTimeStepTokens() => (textBoxKeyTimeSteps.Text ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
 		public IEnumerable<decimal> GetKeyTimeSteps()
 		{
 			if (checkBoxMergeTimeSteps.IsChecked == true)
 			{
-				string[] tokens = (textBoxKeyTimeSteps.Text ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				string[] tokens = keyTimeStepTokens();
 				if (!tokens.Any())
 					return Enumerable.Repeat(decimal.MaxValue, 1); // NOTE: was double.PositiveInfinity, but decimal does not have infinity
-				return tokens.Select(token => decimal.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture)); // TODO: handle parsing errors better
+				return tokens.Select(token => decimal.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture)).ToList(); // checked by ValidateParameters
 			}
 			else
 			{
@@ -272,6 +294,14 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 		private async void buttonImport_Click(object sender, RoutedEventArgs e)
 		{
 			Debug.Assert(!string.IsNullOrWhiteSpace(textBoxMeshFile.Text));
+
+			string invalidParameter = compressionParamsControl.ValidateParameters();
+			if (invalidParameter != null)
+			{
+				tabControl.SelectedIndex = 1; // Compression
+				await MessageBox.Show(invalidParameter, "Invalid compression parameter", MessageBoxButtons.OK, MessageBoxIcon.Warning, owner: this);
+				return;
+			}
 
 			var logger = new MemoryLogger();
 			SolutionHub solutionHub = null;
