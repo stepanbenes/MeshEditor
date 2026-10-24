@@ -30,8 +30,11 @@ namespace MeshEditor.AvaloniaUI.Tests
 			? directory
 			: TestContext.CurrentContext.WorkDirectory;
 
-		// a plate with a hole under pure shear (tension in the y direction, compression in the x direction)
-		private const double holeRadius = 0.38, halfHeight = 1.7, thickness = 0.16;
+		// a plate with a hole under tension in the y direction (and compression in the x direction: pure shear)
+		private static double holeRadius => setting("ABOUT_PICTURE_HOLE", 0.55);
+		private static double halfHeight => setting("ABOUT_PICTURE_HALF_HEIGHT", 1.45);
+		private static double compression => setting("ABOUT_PICTURE_COMPRESSION", 0);
+		private const double thickness = 0.16;
 		private const int angleDivisions = 48, radialDivisions = 10, endDivisions = 5; // angleDivisions is a multiple of 8: rays go to the corners of the square
 
 		private static async Task waitUntil(Func<bool> condition, string description, int timeoutSeconds = 60)
@@ -96,8 +99,8 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// closer than the zoom to fit (a fraction of the distance to the mesh), the mesh a bit lower (under the legend)
 			var camera = scene.Camera;
 			float distance = (camera.Eye - scene.Mesh.CenterOfRotation).Length;
-			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.25));
-			camera.Move(-camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.06));
+			camera.MoveForward(distance * (float)setting("ABOUT_PICTURE_ZOOM", 0.12));
+			camera.Move(-camera.Up * distance * (float)setting("ABOUT_PICTURE_SHIFT", 0.08));
 
 			byte[] frame = null;
 			int width = 0, height = 0;
@@ -218,7 +221,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		/// <summary>
-		/// Von Mises stress of an infinite plate with a hole under pure shear: the unit tension in the y direction and the unit compression
+		/// Von Mises stress of an infinite plate with a hole under the unit tension in the y direction and the compression
 		/// in the x direction (the sum of two Kirsch solutions).
 		/// </summary>
 		private static double vonMises((double x, double y) p)
@@ -226,7 +229,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
 			double angle = Math.Atan2(p.y, p.x);
 			var (srr1, stt1, srt1) = kirsch(r, angle - Math.PI / 2, 1); // tension along y
-			var (srr2, stt2, srt2) = kirsch(r, angle, -1); // compression along x
+			var (srr2, stt2, srt2) = kirsch(r, angle, -compression); // compression along x
 			double srr = srr1 + srr2, stt = stt1 + stt2, srt = srt1 + srt2;
 			return Math.Sqrt(srr * srr - srr * stt + stt * stt + 3 * srt * srt);
 		}
@@ -248,11 +251,11 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// exaggerated: stretching along the load, the necking of the ligaments, a gentle bend out of the plane
 			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
 			double q = holeRadius * holeRadius / (r * r);
-			double x = p.x - 0.09 * p.x * (1 + q);
+			double x = p.x - (0.06 + 0.03 * compression) * p.x * (1 + q);
 			double y = p.y + 0.10 * p.y + 0.08 * p.y * q;
 			z += 0.22 * (p.y / halfHeight) * (p.y / halfHeight);
 			// the top tilted away from the camera, turned a bit around the vertical axis
-			double tilt = setting("ABOUT_PICTURE_TILT", -45) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 18) * Math.PI / 180;
+			double tilt = setting("ABOUT_PICTURE_TILT", -45) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 12) * Math.PI / 180;
 			(y, z) = (y * Math.Cos(tilt) - z * Math.Sin(tilt), y * Math.Sin(tilt) + z * Math.Cos(tilt));
 			(x, z) = (x * Math.Cos(turn) + z * Math.Sin(turn), -x * Math.Sin(turn) + z * Math.Cos(turn));
 			return (x, y, z);
