@@ -78,8 +78,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ./linux-deployment/mesheditor/out/mesheditor_*_amd64.deb
-          # the version command exits with 1 (as help does): check its output
-          output=$(fem-format-converter version || true)
+          # the version command prints to stderr and exits with 1 (as help does): check its output
+          output=$(fem-format-converter version 2>&1 || true)
           grep 'FEM format converter' <<< "$output"
           test -x /usr/lib/mesheditor/MeshEditor.Avalonia
 
