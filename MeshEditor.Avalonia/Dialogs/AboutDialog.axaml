@@ -6,19 +6,20 @@
         CanResize="False" CanMinimize="False" CanMaximize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-	<!-- layout of the WinForms AboutDialog: 2 columns (38 % / 62 %), rows 10/10/10/10/50/10 % -->
-	<Grid Margin="12,11" ColumnDefinitions="37.8*,62.2*" RowDefinitions="10*,10*,10*,10*,50*,10*">
-		<Image x:Name="logoPictureBox" Grid.RowSpan="6" Margin="4" Stretch="Fill"
-		       Source="avares://MeshEditor/Assets/hinkley.png" />
-		<TextBlock x:Name="labelProductName" Grid.Column="1" Grid.Row="0" Margin="8,0,4,0" VerticalAlignment="Center" Text="Product Name" />
-		<TextBlock x:Name="labelVersion" Grid.Column="1" Grid.Row="1" Margin="8,0,4,0" VerticalAlignment="Center" Text="Version" />
-		<TextBlock x:Name="labelCopyright" Grid.Column="1" Grid.Row="2" Margin="8,0,4,0" VerticalAlignment="Center" Text="Copyright" />
-		<TextBlock x:Name="labelCompanyName" Grid.Column="1" Grid.Row="3" Margin="8,0,4,0" VerticalAlignment="Center" Text="Company Name" />
-		<TextBox x:Name="textBoxDescription" Grid.Column="1" Grid.Row="4" Margin="8,4,4,4" Text="Description"
+	<!-- the picture on the left (scripts/about-image.py renders it); the text rows and the button take the height they need -->
+	<Grid Margin="12" ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+		<Border Grid.RowSpan="6" CornerRadius="4" ClipToBounds="True">
+			<Image x:Name="logoPictureBox" Stretch="UniformToFill" Source="avares://MeshEditor/Assets/about.png" />
+		</Border>
+		<TextBlock x:Name="labelProductName" Grid.Column="1" Grid.Row="0" Margin="12,2,0,4" FontSize="16" FontWeight="SemiBold" Text="Product Name" />
+		<TextBlock x:Name="labelVersion" Grid.Column="1" Grid.Row="1" Margin="12,4,0,4" Text="Version" />
+		<TextBlock x:Name="labelCopyright" Grid.Column="1" Grid.Row="2" Margin="12,4,0,4" Text="Copyright" />
+		<TextBlock x:Name="labelCompanyName" Grid.Column="1" Grid.Row="3" Margin="12,4,0,4" Text="Company Name" />
+		<TextBox x:Name="textBoxDescription" Grid.Column="1" Grid.Row="4" Margin="12,8,0,0" Text="Description"
 		         IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Focusable="False"
 		         ScrollViewer.VerticalScrollBarVisibility="Auto" />
-		<Button x:Name="okButton" Grid.Column="1" Grid.Row="5" Margin="4" Content="_OK" MinWidth="100"
-		        HorizontalAlignment="Right" VerticalAlignment="Bottom" HorizontalContentAlignment="Center"
+		<Button x:Name="okButton" Grid.Column="1" Grid.Row="5" Margin="0,12,0,0" Content="_OK" MinWidth="100"
+		        HorizontalAlignment="Right" HorizontalContentAlignment="Center"
 		        IsDefault="True" IsCancel="True" Click="okButton_Click" />
 	</Grid>
 </Window>
