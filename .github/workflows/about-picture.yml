@@ -1,0 +1,64 @@
+name: About picture (temporary)
+
+# Renders the picture of the About dialog in MeshEditor (AboutPictureTests) and a screenshot of the dialog,
+# and prints them base64-encoded to the log. Temporary: removed before the merge.
+on:
+  push:
+    branches: [claude/project-thread-obiv2c]
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Mesa and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth libgl1 libglx-mesa0 libgl1-mesa-dri
+
+      - name: Render the picture
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 1
+          ABOUT_PICTURE_DIRECTORY: ${{ github.workspace }}/MeshEditor.Avalonia/Assets
+        run: |
+          dotnet build MeshEditor.Avalonia.Tests
+          xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --filter "FullyQualifiedName~AboutPictureTests.Render_About_picture" --logger "console;verbosity=detailed"
+
+      - name: Screenshot of the dialog with the new picture
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 1
+          ABOUT_PICTURE_DIRECTORY: ${{ github.workspace }}/render-output
+        run: |
+          mkdir -p render-output
+          dotnet build MeshEditor.Avalonia.Tests
+          xvfb-run -a -s "-screen 0 1280x1024x24" dotnet test MeshEditor.Avalonia.Tests --no-build --filter "FullyQualifiedName~AboutPictureTests.Capture_About_dialog" --logger "console;verbosity=detailed"
+
+      - name: Print the pictures
+        run: |
+          for file in MeshEditor.Avalonia/Assets/about.png render-output/about-dialog.png; do
+            echo "BEGIN $(basename "$file") $(sha256sum "$file" | cut -d' ' -f1)"
+            base64 -w 0 "$file" | fold -w 1000
+            echo
+            echo "END $(basename "$file")"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: about-picture
+          path: |
+            MeshEditor.Avalonia/Assets/about.png
+            render-output

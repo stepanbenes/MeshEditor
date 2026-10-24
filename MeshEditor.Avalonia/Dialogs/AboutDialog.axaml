@@ -6,7 +6,7 @@
         CanResize="False" CanMinimize="False" CanMaximize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-	<!-- the picture on the left (scripts/about-image.py renders it); the text rows and the button take the height they need -->
+	<!-- the picture on the left is rendered by MeshEditor (AboutPictureTests); the text rows and the button take the height they need -->
 	<Grid Margin="12" ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
 		<Border Grid.RowSpan="6" CornerRadius="4" ClipToBounds="True">
 			<Image x:Name="logoPictureBox" Stretch="UniformToFill" Source="avares://MeshEditor/Assets/about.png" />
