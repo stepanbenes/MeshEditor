@@ -38,12 +38,6 @@ namespace MeshEditor.AvaloniaUI.Dialogs
 			Close();
 		}
 
-		private void pageTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
-		{
-			if (colorView != null && pageTabs.SelectedIndex >= 0)
-				colorView.SelectedIndex = pageTabs.SelectedIndex;
-		}
-
 		private void buttonCancel_Click(object sender, RoutedEventArgs e)
 		{
 			Close();
