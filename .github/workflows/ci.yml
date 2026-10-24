@@ -70,7 +70,11 @@ jobs:
         run: |
           $archive = Join-Path $env:RUNNER_TEMP mesa.7z
           Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/$env:MESA_VERSION/mesa3d-$env:MESA_VERSION-release-msvc.7z" -OutFile $archive
-          7z e $archive x64/opengl32.dll x64/libgallium_wgl.dll -oMeshEditor.Avalonia.Tests/bin/Debug/net10.0 -y
+          # with paths and without recursion: the archive has the same files for x86 and arm64 too
+          $mesa = Join-Path $env:RUNNER_TEMP mesa
+          7z x $archive "-o$mesa" x64/opengl32.dll x64/libgallium_wgl.dll -r- -y
+          Copy-Item "$mesa/x64/opengl32.dll", "$mesa/x64/libgallium_wgl.dll" MeshEditor.Avalonia.Tests/bin/Debug/net10.0
+          Get-ChildItem MeshEditor.Avalonia.Tests/bin/Debug/net10.0/opengl32.dll, MeshEditor.Avalonia.Tests/bin/Debug/net10.0/libgallium_wgl.dll
 
       - name: Test
         env:
