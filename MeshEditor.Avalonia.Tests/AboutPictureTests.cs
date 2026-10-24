@@ -74,8 +74,10 @@ namespace MeshEditor.AvaloniaUI.Tests
 			// a portrait viewport (the picture's column of the dialog)
 			var viewport = window.ActiveViewport;
 			const double aspectRatio = 0.66;
-			window.Width += viewport.PixelSize.Height * aspectRatio - viewport.PixelSize.Width;
-			await waitUntil(() => Math.Abs(viewport.PixelSize.Width - viewport.PixelSize.Height * aspectRatio) < 2, "viewport is resized", timeoutSeconds: 10);
+			viewport.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+			viewport.Width = Math.Round(viewport.Bounds.Height * aspectRatio);
+			TestContext.Out.WriteLine($"viewport {viewport.PixelSize}, bounds {viewport.Bounds}, window {window.Bounds}");
+			await waitUntil(() => Math.Abs(viewport.PixelSize.Width - viewport.PixelSize.Height * aspectRatio) < 2 || TestContext.Out.WriteLineAsync($"viewport {viewport.PixelSize}, bounds {viewport.Bounds}") == null, "viewport is resized", timeoutSeconds: 5);
 
 			var sceneFacade = viewport.SceneFacade;
 			var scene = sceneFacade.GetUnderlyingSceneObject();
