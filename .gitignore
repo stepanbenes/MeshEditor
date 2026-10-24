@@ -195,3 +195,6 @@ ModelManifest.xml
 
 # Azurite started by scripts/start-azurite.cs
 .azurite/
+
+# Debian package built by linux-deployment/mesheditor/build
+linux-deployment/mesheditor/package.deb

@@ -103,7 +103,7 @@ Deploy `publish/wwwroot` to any static host. For Azure Static Web Apps, `staticw
 The Free plan is enough: 100 GB of traffic a month, and it never bills overage. The workflow `.github/workflows/deploy-web.yml` publishes the app on every push to `master`; any branch can be deployed from the Actions tab (**Deploy web app → Run workflow**).
 
 1. In the Azure portal, create a **Static Web App**: plan **Free**, deployment source **Other** (the workflow in this repository deploys it).
-2. Copy its deployment token (**Overview → Manage deployment token**) into the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN` (GitHub: **Settings → Secrets and variables → Actions**).
+2. Copy its deployment token (**Overview → Manage deployment token**) into the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_PEBBLE_0F2FE9203` (GitHub: **Settings → Secrets and variables → Actions**).
 3. Add `https://<name>.azurestaticapps.net/signin` as a redirect URI of the app registration (see [App registration](#app-registration)) and `https://<name>.azurestaticapps.net` to the storage account's CORS rule (see [CORS](#cors)). Do the same for a custom domain.
 4. Run the workflow.
 
