@@ -10,6 +10,59 @@ const colormaps = {
     grayscale: [[0x10, 0x10, 0x10], [0xf0, 0xf0, 0xf0]]
 };
 const plainColor = [0.62, 0.7, 0.78];
+const undefinedColor = [0.4, 0.4, 0.4];
+const rampSize = 256;
+
+// The scalar value travels to the fragment shader as a vertex attribute and the color is looked up per pixel,
+// so iso bands have crisp boundaries instead of colors smeared across triangles, and changing the range,
+// colormap or band count only updates uniforms. Lighting stays Lambert's.
+const scalarVertexShader = {
+    head: `attribute float scalar;
+attribute float scalarDefined;
+varying float vScalar;
+varying float vScalarDefined;
+`,
+    body: `vScalar = scalar;
+vScalarDefined = scalarDefined;
+`
+};
+const scalarFragmentShader = {
+    head: `uniform bool hasScalars;
+uniform float scalarMin;
+uniform float scalarInvSpan;
+uniform float bandCount;
+uniform sampler2D colorRamp;
+uniform vec3 plainColor;
+uniform vec3 undefinedColor;
+varying float vScalar;
+varying float vScalarDefined;
+
+vec3 rampColor(float t) {
+    return texture2D(colorRamp, vec2((t * float(${rampSize - 1}) + 0.5) / float(${rampSize}), 0.5)).rgb;
+}
+
+vec3 bandColor(float band) {
+    return rampColor((clamp(band, 0.0, bandCount - 1.0) + 0.5) / bandCount);
+}
+
+vec3 scalarColor() {
+    if (!hasScalars) return plainColor;
+    // undefined corners carry 0 in both attributes: the half of a triangle nearer to them takes the undefined
+    // color and the rest interpolates the defined corners only
+    if (vScalarDefined < 0.5) return undefinedColor;
+    float value = vScalar / vScalarDefined;
+    float t = scalarInvSpan > 0.0 ? clamp((value - scalarMin) * scalarInvSpan, 0.0, 1.0) : 0.5;
+    if (bandCount < 1.0) return rampColor(t);
+    // blend the two bands over about one pixel around their boundary to avoid jagged edges
+    float x = t * bandCount;
+    float boundary = floor(x + 0.5);
+    float blend = clamp((x - boundary) / max(fwidth(x), 1e-6) + 0.5, 0.0, 1.0);
+    return mix(bandColor(boundary - 1.0), bandColor(boundary), blend);
+}
+`,
+    body: `diffuseColor.rgb *= scalarColor();
+`
+};
 
 function colorAt(stops, t) {
     const x = Math.min(1, Math.max(0, t)) * (stops.length - 1);
@@ -48,13 +101,29 @@ class Viewer {
         light.position.set(1, 1, 2);
         this.scene.add(this.camera);
 
-        this.material = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+        this.ramps = new Map();
+        this.uniforms = {
+            hasScalars: { value: false },
+            scalarMin: { value: 0 },
+            scalarInvSpan: { value: 0 },
+            bandCount: { value: 0 },
+            colorRamp: { value: this.ramp('spectrum') },
+            plainColor: { value: new THREE.Color(...plainColor) },
+            undefinedColor: { value: new THREE.Color(...undefinedColor) }
+        };
+        this.material = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+        this.material.onBeforeCompile = shader => {
+            Object.assign(shader.uniforms, this.uniforms);
+            shader.vertexShader = scalarVertexShader.head + shader.vertexShader.replace('#include <color_vertex>', '#include <color_vertex>\n' + scalarVertexShader.body);
+            shader.fragmentShader = scalarFragmentShader.head + shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n' + scalarFragmentShader.body);
+        };
         this.edgeMaterial = new THREE.LineBasicMaterial({ color: 0x0b1016, transparent: true, opacity: 0.35 });
         this.mesh = null;
         this.edges = null;
         this.key = null;         // solution/layer/mesh of the shown geometry
         this.layerKey = null;
         this.scalars = null;     // per corner
+        this.uploadedScalars = null;
         this.range = null;
         this.request = 0;
         this.vectorCache = new Map();
@@ -181,7 +250,10 @@ class Viewer {
         this.baseEdges = edgePositions;
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(positions.slice(), 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(positions.length), 3));
+        const corners = positions.length / 3;
+        geometry.setAttribute('scalar', new THREE.BufferAttribute(new Float32Array(corners), 1));
+        geometry.setAttribute('scalarDefined', new THREE.BufferAttribute(new Float32Array(corners), 1));
+        this.uploadedScalars = null;
         geometry.computeVertexNormals();
         this.mesh = new THREE.Mesh(geometry, this.material);
         const edgeGeometry = new THREE.BufferGeometry();
@@ -231,24 +303,48 @@ class Viewer {
         this.edges.geometry.computeBoundingSphere();
     }
 
-    colorize(colormap, bands, min, max) {
-        const colors = this.mesh.geometry.attributes.color.array;
-        const stops = colormaps[colormap] || colormaps.spectrum;
-        const values = this.scalars?.values;
-        const span = max - min;
-        for (let i = 0, n = colors.length / 3; i < n; i++) {
-            let rgb = plainColor;
-            if (values) {
-                let t = span > 0 ? (values[i] - min) / span : 0.5;
-                if (bands) t = (Math.min(bands - 1, Math.floor(Math.min(1, Math.max(0, t)) * bands)) + 0.5) / bands;
-                rgb = isNaN(values[i]) ? [0.4, 0.4, 0.4] : colorAt(stops, t);
+    // A small texture with the colormap sampled like the legend's gradient. Its texels are sRGB, as the legend's are.
+    ramp(colormap) {
+        let texture = this.ramps.get(colormap);
+        if (!texture) {
+            const stops = colormaps[colormap] || colormaps.spectrum;
+            const data = new Uint8Array(rampSize * 4);
+            for (let i = 0; i < rampSize; i++) {
+                const rgb = colorAt(stops, i / (rampSize - 1));
+                data.set([Math.round(rgb[0] * 255), Math.round(rgb[1] * 255), Math.round(rgb[2] * 255), 255], i * 4);
             }
-            colors[3 * i] = rgb[0];
-            colors[3 * i + 1] = rgb[1];
-            colors[3 * i + 2] = rgb[2];
+            texture = new THREE.DataTexture(data, rampSize, 1, THREE.RGBAFormat, THREE.UnsignedByteType);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.magFilter = texture.minFilter = THREE.LinearFilter;
+            texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+            texture.generateMipmaps = false;
+            texture.needsUpdate = true;
+            this.ramps.set(colormap, texture);
         }
-        this.mesh.geometry.attributes.color.needsUpdate = true;
-        this.colormap = { stops, bands, min, max };
+        return texture;
+    }
+
+    colorize(colormap, bands, min, max) {
+        const values = this.scalars?.values;
+        if (values && values !== this.uploadedScalars) {
+            const scalar = this.mesh.geometry.attributes.scalar, defined = this.mesh.geometry.attributes.scalarDefined;
+            for (let i = 0; i < values.length; i++) {
+                const v = values[i];
+                const isDefined = !isNaN(v);
+                scalar.array[i] = isDefined ? v : 0;
+                defined.array[i] = isDefined ? 1 : 0;
+            }
+            scalar.needsUpdate = defined.needsUpdate = true;
+            this.uploadedScalars = values;
+        }
+        const span = max - min;
+        const u = this.uniforms;
+        u.hasScalars.value = !!values;
+        u.scalarMin.value = min ?? 0;
+        u.scalarInvSpan.value = span > 0 ? 1 / span : 0;
+        u.bandCount.value = bands;
+        u.colorRamp.value = this.ramp(colormap);
+        this.colormap = { stops: colormaps[colormap] || colormaps.spectrum, bands, min, max };
     }
 
     updateLegend(o, min, max) {
@@ -316,6 +412,10 @@ class Viewer {
 
     dispose() {
         this.disposed = true;
+        this.clear();
+        this.material.dispose();
+        this.edgeMaterial.dispose();
+        for (const texture of this.ramps.values()) texture.dispose();
         this.resizeObserver.disconnect();
         this.renderer.dispose();
         this.renderer.domElement.remove();
