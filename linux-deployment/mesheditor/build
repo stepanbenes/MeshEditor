@@ -40,7 +40,7 @@ cp -r "$out/publish/fem-format-converter/." "$lib"
 
 find "$root" -type d -exec chmod 755 {} +
 find "$root" -type f -exec chmod 644 {} +
-chmod 755 "$root"/usr/bin/* "$lib/MeshEditor.Avalonia" "$lib/fem-format-converter" "$lib/createdump"
+chmod 755 "$root"/usr/bin/* "$lib/MeshEditor" "$lib/fem-format-converter" "$lib/createdump"
 
 sed -i -e "s/@VERSION@/$version/" -e "s/@INSTALLED_SIZE@/$(du -sk --exclude=DEBIAN "$root" | cut -f1)/" "$root/DEBIAN/control"
 

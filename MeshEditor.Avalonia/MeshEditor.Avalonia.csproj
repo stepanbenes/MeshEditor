@@ -3,7 +3,7 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>WinExe</OutputType>
 		<RootNamespace>MeshEditor.AvaloniaUI</RootNamespace>
-		<AssemblyName>MeshEditor.Avalonia</AssemblyName>
+		<AssemblyName>MeshEditor</AssemblyName>
 		<Nullable>disable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>

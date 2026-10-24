@@ -1728,7 +1728,7 @@ namespace MeshEditor.AvaloniaUI
 				if (checkable)
 					menuItem.ToggleType = MenuItemToggleType.CheckBox;
 				if (icon != null)
-					menuItem.Icon = new Image { Source = new Bitmap(AssetLoader.Open(new Uri($"avares://MeshEditor.Avalonia/Assets/Icons/{icon}.png"))) };
+					menuItem.Icon = new Image { Source = new Bitmap(AssetLoader.Open(new Uri($"avares://MeshEditor/Assets/Icons/{icon}.png"))) };
 				menuItem.Click += click;
 				return menuItem;
 			}

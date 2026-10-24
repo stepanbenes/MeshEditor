@@ -81,7 +81,7 @@ jobs:
           # the version command prints to stderr and exits with 1 (as help does): check its output
           output=$(fem-format-converter version 2>&1 || true)
           grep 'FEM format converter' <<< "$output"
-          test -x /usr/lib/mesheditor/MeshEditor.Avalonia
+          test -x /usr/lib/mesheditor/MeshEditor
 
       - uses: actions/upload-artifact@v4
         with:

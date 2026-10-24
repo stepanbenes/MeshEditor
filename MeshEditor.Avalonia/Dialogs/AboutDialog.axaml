@@ -9,7 +9,7 @@
 	<!-- layout of the WinForms AboutDialog: 2 columns (38 % / 62 %), rows 10/10/10/10/50/10 % -->
 	<Grid Margin="12,11" ColumnDefinitions="37.8*,62.2*" RowDefinitions="10*,10*,10*,10*,50*,10*">
 		<Image x:Name="logoPictureBox" Grid.RowSpan="6" Margin="4" Stretch="Fill"
-		       Source="avares://MeshEditor.Avalonia/Assets/hinkley.png" />
+		       Source="avares://MeshEditor/Assets/hinkley.png" />
 		<TextBlock x:Name="labelProductName" Grid.Column="1" Grid.Row="0" Margin="8,0,4,0" VerticalAlignment="Center" Text="Product Name" />
 		<TextBlock x:Name="labelVersion" Grid.Column="1" Grid.Row="1" Margin="8,0,4,0" VerticalAlignment="Center" Text="Version" />
 		<TextBlock x:Name="labelCopyright" Grid.Column="1" Grid.Row="2" Margin="8,0,4,0" VerticalAlignment="Center" Text="Copyright" />

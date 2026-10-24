@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="MeshEditor.AvaloniaUI.MainWindow"
         Title="MeshEditor"
-        Icon="avares://MeshEditor.Avalonia/Assets/appIcon.ico"
+        Icon="avares://MeshEditor/Assets/appIcon.ico"
         Width="800" Height="600"
         WindowStartupLocation="Manual">
 	<Window.Styles>
@@ -60,10 +60,10 @@
 		<Menu x:Name="menuStrip" DockPanel.Dock="Top">
 			<MenuItem x:Name="fileToolStripMenuItem" Header="_FILE" SubmenuOpened="fileToolStripMenuItem_DropDownOpening">
 				<MenuItem x:Name="openToolStripMenuItem" Header="_Open..." InputGesture="Ctrl+O" HotKey="Ctrl+O" Click="openToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/Open.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/Open.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="saveToolStripMenuItem" Header="_Save As..." InputGesture="Ctrl+S" HotKey="Ctrl+S" Click="saveToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/_active_ Save.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/_active_ Save.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="closeActiveMeshToolStripMenuItem" Header="_Unload file" Click="closeActiveMeshToolStripMenuItem_Click" />
 				<Separator />
@@ -77,10 +77,10 @@
 				<MenuItem x:Name="hideSelectedItemsToolStripMenuItem" Header="_Hide selected elements" InputGesture="Delete" HotKey="Delete" Click="deleteSelectedElementsToolStripMenuItem_Click" />
 				<Separator />
 				<MenuItem x:Name="setPropertyOfSelectedItemsToolStripMenuItem" Header="Set _property of selected entities" Click="setPropertyOfSelectedItemsToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/setPropertyOfSelectedItems.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/setPropertyOfSelectedItems.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="selectItemsByPropertyToolStripMenuItem" Header="Select en_tities by property" InputGesture="F6" HotKey="F6" Click="selectItemsByPropertyToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectItemsByProperty.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectItemsByProperty.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="invisibleSelectEntitiesByPropertyAddToolStripMenuItem" Header="[Invisible] Select entities by property Add" IsVisible="False" InputGesture="Shift+F6" Click="invisibleSelectEntitiesByPropertyAddToolStripMenuItem_Click" />
 				<MenuItem x:Name="selectIncidingItemsToolStripMenuItem" Header="Select items in_ciding with selected faces" Click="selectIncidingItemsToolStripMenuItem_Click" />
@@ -119,16 +119,16 @@
 
 			<MenuItem x:Name="renderToolStripMenuItem" Header="_RENDER">
 				<MenuItem x:Name="pointsToolStripMenuItem" Header="_Points" ToggleType="CheckBox" Click="renderMode_item_click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/points.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/points.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="borderLinesToolStripMenuItem" Header="_Border lines" ToggleType="CheckBox" Click="renderMode_item_click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/borderLines.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/borderLines.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="allLinesToolStripMenuItem" Header="_All lines" ToggleType="CheckBox" Click="renderMode_item_click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/allLines.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/allLines.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="facesRenderToolStripMenuItem" Header="_Faces" ToggleType="CheckBox" Click="renderMode_item_click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/faces.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/faces.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="allLinesPointsToolStripMenuItem" Header="All _lines + points" ToggleType="CheckBox" Click="renderMode_item_click" />
 				<MenuItem x:Name="facesBorderLinesToolStripMenuItem" Header="Face_s + border lines" ToggleType="CheckBox" Click="renderMode_item_click" />
@@ -138,20 +138,20 @@
 
 			<MenuItem x:Name="cameraToolStripMenuItem" Header="_CAMERA" SubmenuOpened="cameraToolStripMenuItem_DropDownOpened">
 				<MenuItem x:Name="orbitToolStripMenuItem1" Header="_Orbit" ToggleType="CheckBox" Click="cameraToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/orbit.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/orbit.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="panToolStripMenuItem1" Header="_Pan" ToggleType="CheckBox" Click="cameraToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/pan.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/pan.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="lookAroundToolStripMenuItem1" Header="Look _around" ToggleType="CheckBox" Click="cameraToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/lookAround.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/lookAround.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="zoomWindowToolStripMenuItem" Header="_Zoom window" ToggleType="CheckBox" Click="cameraToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/zoomWindow.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/zoomWindow.png" /></MenuItem.Icon>
 				</MenuItem>
 				<Separator />
 				<MenuItem x:Name="zoomToFitToolStripMenuItem" Header="Zoo_m to fit" Click="zoomToFitToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/zoomToFit.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/zoomToFit.png" /></MenuItem.Icon>
 				</MenuItem>
 				<Separator />
 				<MenuItem x:Name="frontToolStripMenuItem" Header="_Front (+Y up, +X right)" Click="cameraStandardViewToolStripMenuItem_Click" />
@@ -165,45 +165,45 @@
 
 			<MenuItem x:Name="selectToolStripMenuItem1" Header="_SELECT" SubmenuOpened="selectToolStripMenuItem_DropDownOpening">
 				<MenuItem x:Name="elementsToolStripMenuItem1" Header="_Elements" ToggleType="CheckBox" Click="selectToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectElements.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectElements.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="nodesToolStripMenuItem1" Header="_Nodes" ToggleType="CheckBox" Click="selectToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectNodes.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectNodes.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="selectFacesToolStripMenuItem" Header="_Faces" ToggleType="CheckBox" Click="selectToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectFaces.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectFaces.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="edgesToolStripMenuItem1" Header="E_dges" ToggleType="CheckBox" Click="selectToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectEdges.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectEdges.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="beamsToolStripMenuItem1" Header="_Beams" ToggleType="CheckBox" Click="selectToolChosen">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectBeams.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectBeams.png" /></MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
 
 			<MenuItem x:Name="toolsToolStripMenuItem" Header="_TOOLS" SubmenuOpened="toolsToolStripMenuItem_DropDownOpening">
 				<MenuItem x:Name="meshInfoToolStripMenuItem" Header="_Mesh info" InputGesture="F4" HotKey="F4" Click="meshInfoToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/About.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/About.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="listOfSelectedItemsToolStripMenuItem" Header="_List of selected entities" InputGesture="F3" HotKey="F3" Click="listOfSelectedItemsToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/listOfSelectedItems.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/listOfSelectedItems.png" /></MenuItem.Icon>
 				</MenuItem>
 				<Separator />
 				<MenuItem x:Name="cutsToolStripMenuItem" Header="_Cut / Select area" InputGesture="F8" HotKey="F8" Click="cutMeshToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/cutAndSelectArea.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/cutAndSelectArea.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="showHideElementsToolStripMenuItem" Header="Show / Hide _elements" InputGesture="F9" HotKey="F9" Click="showHideElementsToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/show_hide.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/show_hide.png" /></MenuItem.Icon>
 				</MenuItem>
 				<MenuItem x:Name="restoreCuttedItemsToolStripMenuItem" Header="_Restore mesh" InputGesture="F10" HotKey="F10" Click="restoreMeshToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/restore.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/restore.png" /></MenuItem.Icon>
 				</MenuItem>
 				<Separator />
 				<MenuItem x:Name="splitActiveWindowToolStripMenuItem" Header="Spli_t active window" Click="splitActiveWindowToolStripMenuItem_Click" />
 				<MenuItem x:Name="closeActiveWindowToolStripMenuItem" Header="Close active _window" Click="closeActiveMeshToolStripMenuItem_Click" />
 				<Separator />
 				<MenuItem x:Name="settingsToolStripMenuItem" Header="_Settings" InputGesture="F7" HotKey="F7" Click="settingsToolStripMenuItem_Click">
-					<MenuItem.Icon><Image Source="avares://MeshEditor.Avalonia/Assets/Icons/Settings.png" /></MenuItem.Icon>
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/Settings.png" /></MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
 
@@ -229,60 +229,60 @@
 		<Border x:Name="toolStrip" DockPanel.Dock="Top" BorderBrush="#DADADA" BorderThickness="0,0,0,1" Padding="4,1">
 			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 				<Button x:Name="openToolStripButton" Classes="tool" ToolTip.Tip="Open (Ctrl + O)" Click="openToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/Open.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/Open.png" />
 				</Button>
 				<Button x:Name="saveToolStripButton" Classes="tool" ToolTip.Tip="Save As... (Ctrl+S)" Click="saveToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/_active_ Save.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/_active_ Save.png" />
 				</Button>
 				<Separator Classes="tool" />
 				<Button x:Name="toolStripButtonPoints" Classes="tool" ToolTip.Tip="Show points" Click="toolStripButtonPoints_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/points.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/points.png" />
 				</Button>
 				<Button x:Name="toolStripButtonBorderLines" Classes="tool" ToolTip.Tip="Show border lines" Click="toolStripButtonBorderLines_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/borderLines.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/borderLines.png" />
 				</Button>
 				<Button x:Name="toolStripButtonAllLines" Classes="tool" ToolTip.Tip="Show all lines" Click="toolStripButtonAllLines_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/allLines.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/allLines.png" />
 				</Button>
 				<Button x:Name="toolStripButtonFaces" Classes="tool" ToolTip.Tip="Show faces" Click="toolStripButtonFaces_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/faces.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/faces.png" />
 				</Button>
 				<Separator Classes="tool" />
 				<Button x:Name="toolStripButtonOrbit" Classes="tool" ToolTip.Tip="Orbit (O)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/orbit.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/orbit.png" />
 				</Button>
 				<Button x:Name="toolStripButtonPan" Classes="tool" ToolTip.Tip="Pan (P)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/pan.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/pan.png" />
 				</Button>
 				<Button x:Name="toolStripButtonLookAround" Classes="tool" ToolTip.Tip="Look around (L)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/lookAround.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/lookAround.png" />
 				</Button>
 				<Button x:Name="toolStripButtonZoomWindow" Classes="tool" ToolTip.Tip="Zoom window (Z)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/zoomWindow.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/zoomWindow.png" />
 				</Button>
 				<Separator Classes="tool" Margin="3,0" />
 				<Button x:Name="toolStripButtonZoomToFit" Classes="tool" ToolTip.Tip="Zoom to fit" Click="zoomToFitToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/zoomToFit.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/zoomToFit.png" />
 				</Button>
 				<Separator Classes="tool" Margin="3,0" />
 				<Button x:Name="toolStripButtonSelectElements" Classes="tool" ToolTip.Tip="Select elements (E)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectElements.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectElements.png" />
 				</Button>
 				<Button x:Name="toolStripButtonSelectNodes" Classes="tool" ToolTip.Tip="Select nodes (N)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectNodes.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectNodes.png" />
 				</Button>
 				<Button x:Name="toolStripButtonSelectFaces" Classes="tool" ToolTip.Tip="Select faces (F)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectFaces.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectFaces.png" />
 				</Button>
 				<Button x:Name="toolStripButtonSelectEdges" Classes="tool" ToolTip.Tip="Select edges (G)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectEdges.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectEdges.png" />
 				</Button>
 				<Button x:Name="toolStripButtonSelectBeams" Classes="tool" ToolTip.Tip="Select beams (B)" Click="toolStripButtonEditorModeTool_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectBeams.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectBeams.png" />
 				</Button>
 				<Separator Classes="tool" />
 				<DropDownButton x:Name="propertyColorsTtoolStripDropDownButton" Classes="tool" ToolTip.Tip="Show property colors (Num 1-5)">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/propertyColors.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/propertyColors.png" />
 					<DropDownButton.Flyout>
 						<MenuFlyout Placement="BottomEdgeAlignedLeft" Opening="propertyColorsFlyout_Opening">
 							<MenuItem x:Name="elementPropertyColorsToolStripMenuItem2" Header="_Element property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
@@ -296,25 +296,25 @@
 					</DropDownButton.Flyout>
 				</DropDownButton>
 				<Button x:Name="toolStripButtonSetPropertyOfSelectedItems" Classes="tool" ToolTip.Tip="Set property of selected entities (Enter)" Click="setPropertyOfSelectedItemsToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/setPropertyOfSelectedItems.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/setPropertyOfSelectedItems.png" />
 				</Button>
 				<Button x:Name="toolStripButtonSelectItemsByProperty" Classes="tool" ToolTip.Tip="Select entities by property (F6)" Click="selectItemsByPropertyToolStripMenuItem_Click"
 				        PointerEntered="toolStripButtonSelectItemsByProperty_MouseEnter">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/selectItemsByProperty.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/selectItemsByProperty.png" />
 				</Button>
 				<Separator Classes="tool" />
 				<Button x:Name="toolStripButtonListOfSelectedItems" Classes="tool" ToolTip.Tip="Show list of selected entities (F3)" Click="listOfSelectedItemsToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/listOfSelectedItems.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/listOfSelectedItems.png" />
 				</Button>
 				<Button x:Name="toolStripButtonMeshInfo" Classes="tool" ToolTip.Tip="Mesh info (F4)" Click="meshInfoToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/About.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/About.png" />
 				</Button>
 				<Separator Classes="tool" Margin="3,0" />
 				<Button x:Name="toolStripButtonCutSelectArea" Classes="tool" ToolTip.Tip="Cut / Select area (F8)" Click="cutMeshToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/cutAndSelectArea.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/cutAndSelectArea.png" />
 				</Button>
 				<Button x:Name="toolStripButtonShowHideElements" Classes="tool" ToolTip.Tip="Show / hide elements (F9)" Click="showHideElementsToolStripMenuItem_Click">
-					<Image Source="avares://MeshEditor.Avalonia/Assets/Icons/show_hide.png" />
+					<Image Source="avares://MeshEditor/Assets/Icons/show_hide.png" />
 				</Button>
 			</StackPanel>
 		</Border>

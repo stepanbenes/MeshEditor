@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/lib/mesheditor/MeshEditor.Avalonia "$@"
+exec /usr/lib/mesheditor/MeshEditor "$@"

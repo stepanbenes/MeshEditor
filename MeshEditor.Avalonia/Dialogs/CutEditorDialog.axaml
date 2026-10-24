@@ -30,7 +30,7 @@
 				<StackPanel Margin="2,40,2,0" Spacing="4">
 					<TextBlock x:Name="labelExpression" Text="Insert equation specifying cutting area:" />
 					<TextBox x:Name="textBoxExpression" FontWeight="Bold" FontSize="15" />
-					<Image x:Name="pictureBoxHelp" Source="avares://MeshEditor.Avalonia/Assets/Icons/help32.png" Width="32" Height="32"
+					<Image x:Name="pictureBoxHelp" Source="avares://MeshEditor/Assets/Icons/help32.png" Width="32" Height="32"
 					       HorizontalAlignment="Right" Cursor="Hand" PointerPressed="pictureBoxHelp_Click" />
 				</StackPanel>
 			</TabItem>
