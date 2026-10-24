@@ -1,0 +1,10 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/_framework/*", "/worker/*", "/js/*", "/css/*", "/lib/*", "*.{json,wasm,dat,svg,png,ico,txt}"]
+  },
+  "globalHeaders": {
+    "tdm-reservation": "1",
+    "X-Robots-Tag": "noai, noimageai"
+  }
+}

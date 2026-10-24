@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.LayerManager.Data
 {
@@ -35,10 +35,10 @@ namespace MeshEditor.LayerManager.Data
 		public string ComponentName { get; set; }
 		public int Index { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public decimal[] TimeSteps { get; set; }
 
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumJsonConverter))]
 		public DataLocationType Location { get; set; }
 
 		public override int GetHashCode() => Index.GetHashCode();

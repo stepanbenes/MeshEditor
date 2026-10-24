@@ -17,8 +17,8 @@ namespace MeshEditor.Common
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				//Process.Start(new ProcessStartInfo("cmd", $"/c start {url.Replace("&", "^&")}") { CreateNoWindow = true });
-				Process.Start(url);
+				// .NET (Core) does not use the shell by default, so Process.Start(url) would fail
+				Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 				return true;
 			}
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))

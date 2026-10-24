@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Filters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using MeshEditor.Common.Extensions;
 using MeshEditor.LayerManager.Import;
 
@@ -20,7 +20,7 @@ namespace MeshEditor.SolutionManager.IO
 			public Guid Id { get; set; }
 			public string Name { get; set; }
 			public string FilterType { get; set; }
-			[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+			[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 			public Layer[] Children { get; set; }
 
 			string ILayerInfo.FilterType => FilterType ?? "<null>";
@@ -36,6 +36,14 @@ namespace MeshEditor.SolutionManager.IO
 
 		public AnalysisResult[] Results { get; set; }
 		public Layer[] Layers { get; set; }
+
+		/// <summary>
+		/// Folder of the layers of a remote solution, in the owner's folder of the layers container. Each remote solution has its own,
+		/// so that solutions uploaded from the same local solution (same layer ids) don't share layer files. Null for local solutions
+		/// and for remote solutions uploaded before, whose layers are directly in the owner's folder.
+		/// </summary>
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+		public string LayerFolder { get; set; }
 
 		IReadOnlyList<ILayerInfo> ISolutionDescription.Layers => Layers;
 
@@ -59,6 +67,29 @@ namespace MeshEditor.SolutionManager.IO
 			return newSolution;
 		}
 
+		/// <summary>
+		/// All layers of the layer tree, children before their parents.
+		/// </summary>
+		public static IEnumerable<Layer> TraverseLayerTreePostOrder(Layer root)
+		{
+			Stack<Layer> result = new Stack<Layer>();
+			Stack<Layer> children = new Stack<Layer>();
+			children.Push(root);
+			while (children.Count > 0)
+			{
+				var layer = children.Pop();
+				result.Push(layer);
+				if (layer.Children != null)
+				{
+					foreach (var child in layer.Children)
+					{
+						children.Push(child);
+					}
+				}
+			}
+			return result;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -70,8 +101,10 @@ namespace MeshEditor.SolutionManager.IO
 				Id = toCopy.Id,
 				ProjectName = toCopy.ProjectName,
 				Location = toCopy.Location,
+				Owner = toCopy.Owner,
 				Results = toCopy.Results,
-				Layers = toCopy.Layers
+				Layers = toCopy.Layers,
+				LayerFolder = toCopy.LayerFolder
 			};
 			return newSolution;
 		}

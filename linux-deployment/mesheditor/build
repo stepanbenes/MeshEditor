@@ -1,9 +1,56 @@
-#!/bin/bash 
-find package -type d -exec chmod 755 {} \;
-find package -type f -exec chmod 644 {} \;
-chmod 755 package/usr/bin/mesheditor
-chmod 755 package/usr/bin/fem-format-converter
-chmod 755 package/usr/bin/layer
-fakeroot dpkg -b package
-echo 'package created.'
-lintian package.deb
+#!/bin/bash
+# Builds the Debian package out/mesheditor_<version>_amd64.deb: self-contained .NET builds of MeshEditor
+# (MeshEditor.Avalonia) and of the command line tool fem-format-converter, so no .NET runtime is needed.
+# Needs the .NET 10 SDK and dpkg-deb; checks the package with lintian if it is installed.
+set -euo pipefail
+
+cd "$(dirname "$0")"
+repo=$(cd ../.. && pwd)
+out=out
+root=$out/package
+lib=$root/usr/lib/mesheditor
+
+# the package version is the assembly version (SharedAssemblyInfo.cs)
+version=$(tr -d '\r' < "$repo/SharedAssemblyInfo.cs" | sed -n 's/^\[assembly: AssemblyVersion("\(.*\)")\]$/\1/p')
+if [ -z "$version" ]; then
+	echo "AssemblyVersion not found in SharedAssemblyInfo.cs" >&2
+	exit 1
+fi
+
+rm -rf "$out"
+mkdir -p "$out"
+cp -r package "$root"
+cp "$repo/LICENSE.md" "$repo/NOTICE.md" "$root/usr/share/doc/mesheditor"
+
+publish() {
+	dotnet publish "$repo/$1" -c Release -r linux-x64 --self-contained -p:DebugType=None -o "$out/publish/$2"
+}
+publish MeshEditor.Avalonia mesheditor
+publish MeshEditor.FormatConverter.Console fem-format-converter
+
+# both builds go into one directory: the files they share (the .NET runtime, common assemblies) must be the same
+mkdir -p "$lib"
+cp -r "$out/publish/mesheditor/." "$lib"
+(cd "$out/publish/fem-format-converter" && find . -type f) | while read -r file; do
+	if [ -e "$lib/$file" ] && ! cmp -s "$out/publish/fem-format-converter/$file" "$lib/$file"; then
+		echo "fem-format-converter and MeshEditor need different versions of $file" >&2
+		exit 1
+	fi
+done
+cp -r "$out/publish/fem-format-converter/." "$lib"
+
+find "$root" -type d -exec chmod 755 {} +
+find "$root" -type f -exec chmod 644 {} +
+chmod 755 "$root"/usr/bin/* "$lib/MeshEditor" "$lib/fem-format-converter" "$lib/createdump"
+
+# Debian and Ubuntu have the ICU major version in the package name (libicu74, libicu77, ...), and every release has another one.
+# The .NET runtime loads any ICU version, so the package accepts all of them, also the ones of future releases.
+libicu=$(seq -f 'libicu%g' 99 -1 60 | paste -sd '|' | sed 's/|/ | /g')
+sed -i -e "s/@VERSION@/$version/" -e "s/@INSTALLED_SIZE@/$(du -sk --exclude=DEBIAN "$root" | cut -f1)/" -e "s/@LIBICU@/$libicu/" "$root/DEBIAN/control"
+
+deb=$out/mesheditor_${version}_amd64.deb
+dpkg-deb --root-owner-group -Zxz --build "$root" "$deb"
+echo "package created: $deb"
+if command -v lintian > /dev/null; then
+	lintian "$deb" || true
+fi

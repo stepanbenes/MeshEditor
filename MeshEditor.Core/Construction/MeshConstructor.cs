@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +6,7 @@ using MeshEditor.Data;
 using MeshEditor.IO;
 
 using MeshEditor.Utilities;
-using OpenTK;
+using OpenTK.Mathematics;
 
 using MeshEditor.Graphics;
 using MeshEditor.CoreInterface;

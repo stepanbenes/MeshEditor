@@ -1,1 +1,1 @@
-sudo dpkg -i package.deb
+sudo apt install ./out/mesheditor_*_amd64.deb

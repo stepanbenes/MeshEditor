@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.CutEditorDialog"
+        Title="Cutting area editor"
+        Width="501" Height="400" MinWidth="501" MinHeight="384"
+        CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False" Topmost="True"
+        WindowStartupLocation="CenterOwner">
+	<Grid Margin="12" RowDefinitions="*,Auto,Auto" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+		<TabControl x:Name="tabControl" Grid.ColumnSpan="5" Padding="0,6,0,0">
+			<TabItem x:Name="tabPageCuttingPlanes" Header="Cutting planes">
+				<Grid RowDefinitions="*,Auto,Auto" ColumnDefinitions="Auto,Auto,*" Margin="2,4">
+					<ListBox x:Name="listBoxCutPlanes" Grid.ColumnSpan="3" SelectionMode="Multiple" MinHeight="90"
+					         BorderBrush="#ABADB3" BorderThickness="1" SelectionChanged="listBoxCutPlanes_SelectedIndexChanged" />
+					<Button x:Name="buttonCreateNewCutPlane" Grid.Row="1" Content="Create new cut plane" MinWidth="164" Margin="0,6,6,0"
+					        HorizontalContentAlignment="Center" Click="buttonCreateCutPlane_Click" />
+					<Button x:Name="buttonInsertNextPoint" Grid.Row="1" Grid.Column="1" Content="Insert next point" MinWidth="161" Margin="0,6,6,0"
+					        HorizontalContentAlignment="Center" IsVisible="False" Click="buttonInsertNextPoint_Click" />
+					<StackPanel Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" VerticalAlignment="Bottom">
+						<TextBlock x:Name="labelCutType" Text="Cut type:" IsVisible="False" />
+						<ComboBox x:Name="comboBoxCutType" MinWidth="102" IsVisible="False" />
+					</StackPanel>
+					<Button x:Name="buttonInvertSelectedPlanes" Grid.Row="2" Content="Invert selected planes" MinWidth="164" Margin="0,6,6,0"
+					        HorizontalContentAlignment="Center" IsVisible="False" Click="buttonInvertSelectedPlanes_Click" />
+					<Button x:Name="buttonDeleteSelectedPlanes" Grid.Row="2" Grid.Column="1" Content="Delete selected planes" MinWidth="161" Margin="0,6,6,0"
+					        HorizontalContentAlignment="Center" IsVisible="False" Click="buttonDeleteSelectedPlanes_Click" />
+				</Grid>
+			</TabItem>
+			<TabItem x:Name="tabPageExpression" Header="Expression">
+				<StackPanel Margin="2,40,2,0" Spacing="4">
+					<TextBlock x:Name="labelExpression" Text="Insert equation specifying cutting area:" />
+					<TextBox x:Name="textBoxExpression" FontWeight="Bold" FontSize="15" />
+					<Image x:Name="pictureBoxHelp" Source="avares://MeshEditor/Assets/Icons/help32.png" Width="32" Height="32"
+					       HorizontalAlignment="Right" Cursor="Hand" PointerPressed="pictureBoxHelp_Click" />
+				</StackPanel>
+			</TabItem>
+		</TabControl>
+		<TextBlock x:Name="labelAction" Grid.Row="1" Text="Action:" VerticalAlignment="Center" Margin="0,8,6,0" />
+		<ComboBox x:Name="comboBoxAction" Grid.Row="1" Grid.Column="1" MinWidth="146" Margin="0,8,0,0" SelectionChanged="comboBoxAction_SelectedIndexChanged">
+			<ComboBoxItem>Cut</ComboBoxItem>
+			<ComboBoxItem>Select elements</ComboBoxItem>
+			<ComboBoxItem>Select nodes</ComboBoxItem>
+			<ComboBoxItem>Select faces</ComboBoxItem>
+			<ComboBoxItem>Select edges</ComboBoxItem>
+			<ComboBoxItem>Select beams</ComboBoxItem>
+		</ComboBox>
+		<Button x:Name="buttonRestoreMesh" Grid.Row="1" Grid.Column="3" Content="Restore mesh" MinWidth="107" Margin="0,8,6,0"
+		        HorizontalContentAlignment="Center" Click="buttonRestoreMesh_Click" />
+		<CheckBox x:Name="checkBoxFullEntityMatch" Grid.Row="2" Grid.Column="1" Content="Full entity match" IsChecked="True" Margin="0,4,0,0" />
+		<Button x:Name="buttonDoIt" Grid.Row="2" Grid.Column="3" Content="Cut" MinWidth="107" Margin="0,4,6,0"
+		        HorizontalContentAlignment="Center" IsDefault="True" Click="buttonDoIt_Click" />
+		<Button x:Name="buttonClose" Grid.Row="2" Grid.Column="4" Content="Close" MinWidth="75" Margin="0,4,0,0"
+		        HorizontalContentAlignment="Center" IsCancel="True" Click="buttonClose_Click" />
+	</Grid>
+</Window>

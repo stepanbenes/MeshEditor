@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.ListOfSelectedItemsDialog"
+        Title="List of selected items"
+        Width="574" Height="492" MinWidth="522" MinHeight="248"
+        CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+	<Grid Margin="12" RowDefinitions="Auto,Auto,Auto,*,Auto" ColumnDefinitions="Auto,Auto,*,Auto">
+		<TextBlock x:Name="labelShowListOf" Grid.Row="0" Grid.Column="0" Text="Show list of selected" VerticalAlignment="Center" Margin="0,0,12,0" />
+		<ComboBox x:Name="comboBoxEntityType" Grid.Row="0" Grid.Column="1" MinWidth="110" SelectionChanged="comboBoxEntityType_SelectedIndexChanged">
+			<ComboBoxItem>Nodes</ComboBoxItem>
+			<ComboBoxItem>Elements</ComboBoxItem>
+			<ComboBoxItem>Faces</ComboBoxItem>
+			<ComboBoxItem>Edges</ComboBoxItem>
+		</ComboBox>
+		<HyperlinkButton x:Name="linkLabelAddProperty" Grid.Row="0" Grid.Column="3" Content="Add property to nodes" Padding="0"
+		                 VerticalAlignment="Center" IsVisible="False" Click="linkLabelAddProperty_LinkClicked" />
+		<TextBlock x:Name="labelItems" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="(Nothing selected)" Margin="0,6,0,0" />
+		<HyperlinkButton x:Name="linkLabelRemoveProperty" Grid.Row="1" Grid.Column="3" Content="Remove property from nodes" Padding="0" Margin="0,6,0,0"
+		                 IsVisible="False" Click="linkLabelRemoveProperty_LinkClicked" />
+		<CheckBox x:Name="checkBoxShowCompleteInfo" Grid.Row="2" Grid.ColumnSpan="4" Content="Show complete info" IsChecked="True"
+		          Margin="0,8,0,6" IsCheckedChanged="checkBoxShowProperties_CheckedChanged" />
+		<TextBox x:Name="richTextBox" Grid.Row="3" Grid.ColumnSpan="4" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+		         VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto">
+			<TextBox.ContextMenu>
+				<ContextMenu Opening="textBoxContextMenuStrip_Opening">
+					<MenuItem x:Name="copySelectionToolStripMenuItem" Header="_Copy" Click="copyselectionToolStripMenuItem_Click" />
+					<MenuItem x:Name="copyAllToolStripMenuItem" Header="C_opy all" Click="copyToolStripMenuItem_Click" />
+					<Separator />
+					<MenuItem x:Name="selectallToolStripMenuItem" Header="Select _all" Click="selectallToolStripMenuItem_Click" />
+				</ContextMenu>
+			</TextBox.ContextMenu>
+		</TextBox>
+		<Button x:Name="buttonClose" Grid.Row="4" Grid.ColumnSpan="4" Content="Close" MinWidth="87" MinHeight="33" Margin="0,6,0,0"
+		        HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+		        IsDefault="True" IsCancel="True" Click="buttonClose_Click" />
+	</Grid>
+</Window>

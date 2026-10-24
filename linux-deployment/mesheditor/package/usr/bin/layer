@@ -1,0 +1,3 @@
+#!/bin/sh
+# the layer commands are in fem-format-converter
+exec /usr/lib/mesheditor/fem-format-converter "$@"

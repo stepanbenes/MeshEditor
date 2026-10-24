@@ -2,65 +2,89 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MeshEditor.LayerManager.Serialization
 {
-	internal class EnumValueTypeSelectorJsonConverter : JsonConverter
+	/// <summary>
+	/// Deserializes an abstract type as one of its derived types selected by the value of an enum property (<see cref="EnumValueTypeSelectorAttribute"/>),
+	/// serializes it as its runtime type.
+	/// </summary>
+	internal class EnumValueTypeSelectorJsonConverter : JsonConverterFactory
 	{
-		public override bool CanConvert(Type objectType)
+		public override bool CanConvert(Type typeToConvert)
 		{
-			return Attribute.GetCustomAttributes(objectType).Any(v => v is EnumValueTypeSelectorAttribute);
+			return Attribute.GetCustomAttributes(typeToConvert).Any(v => v is EnumValueTypeSelectorAttribute);
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
 		{
-			if (reader.TokenType == JsonToken.Null)
+			return (JsonConverter)Activator.CreateInstance(typeof(Converter<>).MakeGenericType(typeToConvert));
+		}
+
+		private class Converter<T> : JsonConverter<T> where T : class
+		{
+			private readonly EnumValueTypeSelectorAttribute[] attributes = Attribute.GetCustomAttributes(typeof(T)).OfType<EnumValueTypeSelectorAttribute>().ToArray();
+
+			public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
-				return null;
-			}
-
-			// Load JObject from stream
-			JObject jObject = JObject.Load(reader);
-
-			// Use reflection to find all EnumValueTypeSelectorAttributes, if any
-			foreach (EnumValueTypeSelectorAttribute attribute in Attribute.GetCustomAttributes(objectType).OfType<EnumValueTypeSelectorAttribute>())
-			{
-				string enumValueText = (string)jObject.GetValue(attribute.EnumPropertyName, StringComparison.OrdinalIgnoreCase);
-				Type enumType = attribute.EnumValue.GetType();
-
-				if (Enum.IsDefined(enumType, enumValueText))
+				using (JsonDocument document = JsonDocument.ParseValue(ref reader))
 				{
-					object parsedEnumValue = Enum.Parse(enumType, enumValueText, ignoreCase: true);
+					JsonElement element = document.RootElement;
+					if (element.ValueKind != JsonValueKind.Object)
+						throw new JsonException($"Unexpected JSON value {element.ValueKind} when parsing {typeof(T).FullName}.");
 
-					if (Equals(attribute.EnumValue, parsedEnumValue))
+					foreach (EnumValueTypeSelectorAttribute attribute in attributes)
 					{
-						var target = Activator.CreateInstance(attribute.TargetType);
-						serializer.Populate(jObject.CreateReader(), target);
-						return target;
+						string enumValueText = getPropertyValueText(element, attribute.EnumPropertyName);
+						Type enumType = attribute.EnumValue.GetType();
+
+						if (enumValueText != null && Enum.IsDefined(enumType, enumValueText))
+						{
+							object parsedEnumValue = Enum.Parse(enumType, enumValueText, ignoreCase: true);
+
+							if (Equals(attribute.EnumValue, parsedEnumValue))
+							{
+								return (T)element.Deserialize(attribute.TargetType, options);
+							}
+						}
+						else
+						{
+							throw new JsonException($"'{enumValueText}' is not valid option of enum type {enumType.FullName}");
+						}
 					}
-				}
-				else
-				{
-					throw new FormatException($"'{enumValueText}' is not valid option of enum type {enumType.FullName}");
+
+					throw new JsonException($"No type found for {typeof(T).FullName}.");
 				}
 			}
 
-			//throw new InvalidOperationException(); // no type found
-
-			// Otherwise, populate the base type object properties
+			public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
 			{
-				var target = Activator.CreateInstance(objectType);
-				serializer.Populate(jObject.CreateReader(), target);
-				return target;
+				JsonSerializer.Serialize(writer, value, value.GetType(), options);
 			}
-		}
 
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-		{
-			throw new NotImplementedException();
+			/// <summary>
+			/// Text of the property value, the property name is matched case-insensitively when there is no exact match (as Newtonsoft's JObject.GetValue).
+			/// </summary>
+			private static string getPropertyValueText(JsonElement element, string propertyName)
+			{
+				if (!element.TryGetProperty(propertyName, out JsonElement value))
+				{
+					value = element.EnumerateObject().FirstOrDefault(p => string.Equals(p.Name, propertyName, StringComparison.OrdinalIgnoreCase)).Value;
+				}
+				switch (value.ValueKind)
+				{
+					case JsonValueKind.String:
+						return value.GetString();
+					case JsonValueKind.Undefined:
+					case JsonValueKind.Null:
+						return null;
+					default:
+						return value.GetRawText();
+				}
+			}
 		}
 	}
 }

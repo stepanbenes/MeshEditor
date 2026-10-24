@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<RootNamespace>MeshEditor.AvaloniaUI</RootNamespace>
+		<AssemblyName>MeshEditor</AssemblyName>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>Assets\appIcon.ico</ApplicationIcon>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<!-- product information and version: ..\SharedAssemblyInfo.cs -->
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="MeshEditor.Avalonia.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+		<ProjectReference Include="..\MeshEditor.Postprocessing\MeshEditor.Postprocessing.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="12.1.4" />
+		<PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.4" />
+		<PackageReference Include="OpenTK" Version="4.9.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+		<!-- installation configuration (template of the user's configuration, see REMOTE-STORAGE.md); empty values are not used -->
+		<None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
+		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+		<None Include="..\MeshEditor.Core\OpenTK.dll.config" Condition="Exists('..\MeshEditor.Core\OpenTK.dll.config')" CopyToOutputDirectory="Never" />
+	</ItemGroup>
+</Project>

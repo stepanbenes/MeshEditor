@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Data;
 using MeshEditor.Construction;
-using OpenTK;
+using OpenTK.Mathematics;
 using System.Diagnostics;
 using MeshEditor.Utilities;
 using MeshEditor.CoreInterface;

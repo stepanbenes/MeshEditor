@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Drawing;
 using System.Timers;
@@ -8,7 +8,7 @@ using MeshEditor.IO;
 using MeshEditor.Construction;
 using MeshEditor.Graphics;
 
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 
 using Utils = MeshEditor.Utilities.Functions;
@@ -74,6 +74,11 @@ namespace MeshEditor.CoreInterface
 		public event EventHandler InvalidateNeeded;
 		public event EventHandler MeshReloaded;
 		public event EventHandler SwapBuffersNeeded;
+		/// <summary>
+		/// Raised by <see cref="DrawScene"/> right before the visible frame is drawn (after the auxiliary depth passes),
+		/// so that a UI can redirect the frame to another framebuffer (e.g. a multisampled one).
+		/// </summary>
+		public event EventHandler FrameDrawingStarted;
 		public event EventHandler<MeshNeedRefreshEventArgs> MeshNeedRefresh;
 		public event EventHandler CutPlaneDefinitionPointsChanged;
 		public event EventHandler ActionPerformed;
@@ -233,7 +238,7 @@ namespace MeshEditor.CoreInterface
 
 		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension);
 
-		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu)|*.msh;*.vtu|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|All files (*.*)|*.*";
+		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu, *.pvd)|*.msh;*.vtu;*.pvd|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|ParaView data collection, a time series of .vtu files (*.pvd)|*.pvd|All files (*.*)|*.*";
 
 		public static string ImportDataFileFormatFilter => "All supported files (*.res, *.vtu)|*.res;*.vtu|GiD data file format (*.res)|*.res|VTK XML unstructured grid data (*.vtu)|*.vtu|All files (*.*)|*.*";
 
@@ -422,6 +427,8 @@ namespace MeshEditor.CoreInterface
 				computeVisibleNodes();
 				needToComputeVisibleNodesFlag = false;
 			}
+
+			FrameDrawingStarted?.Invoke(this, EventArgs.Empty);
 
 			GL.ShadeModel(Scene.MeshShadingModel);
 
@@ -1575,7 +1582,7 @@ namespace MeshEditor.CoreInterface
 			GL.PushMatrix();
 			GL.LoadIdentity();
 
-			GL.LineWidth(1.0f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(1.0f);
 			GL.Disable(EnableCap.Lighting);
 			GL.Enable(EnableCap.Blend);
 
@@ -1664,7 +1671,7 @@ namespace MeshEditor.CoreInterface
 
 			GL.Enable(EnableCap.LineStipple);
 			GL.LineStipple(2, 52428);
-			GL.LineWidth(2.0f);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(2.0f);
 
 			Vector2[] windowCorners = { new Vector2(), new Vector2(clientWindowSize.Width, 0f), new Vector2(0f, clientWindowSize.Height), new Vector2(clientWindowSize.Width, clientWindowSize.Height) };
 

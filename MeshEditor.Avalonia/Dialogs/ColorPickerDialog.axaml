@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.ColorPickerDialog"
+        Title="Color"
+        SizeToContent="WidthAndHeight"
+        CanResize="False" CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+	<!-- replacement of the system ColorDialog (FullOpen) used by the WinForms UI -->
+	<StackPanel Margin="12" Spacing="10">
+		<ColorView x:Name="colorView" IsAlphaVisible="False" IsAlphaEnabled="False" />
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+			<Button x:Name="buttonOK" Content="OK" MinWidth="75" HorizontalContentAlignment="Center" IsDefault="True" Click="buttonOK_Click" />
+			<Button x:Name="buttonCancel" Content="Cancel" MinWidth="75" HorizontalContentAlignment="Center" IsCancel="True" Click="buttonCancel_Click" />
+		</StackPanel>
+	</StackPanel>
+</Window>

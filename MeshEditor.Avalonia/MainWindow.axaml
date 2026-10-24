@@ -1,0 +1,330 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.MainWindow"
+        Title="MeshEditor"
+        Icon="avares://MeshEditor/Assets/appIcon.ico"
+        Width="800" Height="600"
+        WindowStartupLocation="Manual">
+	<Window.Styles>
+		<!-- Flat tool strip buttons similar to WinForms ToolStripButton (checked = highlighted) -->
+		<Style Selector="Button.tool">
+			<Setter Property="Padding" Value="2" />
+			<Setter Property="Margin" Value="0" />
+			<Setter Property="MinWidth" Value="29" />
+			<Setter Property="MinHeight" Value="28" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="BorderBrush" Value="Transparent" />
+			<Setter Property="CornerRadius" Value="2" />
+			<Setter Property="HorizontalContentAlignment" Value="Center" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+		<Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#C2E0FF" />
+			<Setter Property="BorderBrush" Value="#3399FF" />
+		</Style>
+		<Style Selector="Button.tool.checked /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#CCE8FF" />
+			<Setter Property="BorderBrush" Value="#3399FF" />
+		</Style>
+		<Style Selector="Button.tool:disabled Image">
+			<Setter Property="Opacity" Value="0.4" />
+		</Style>
+		<Style Selector="Button.tool Image, DropDownButton.tool Image">
+			<Setter Property="Width" Value="24" />
+			<Setter Property="Height" Value="24" />
+		</Style>
+		<Style Selector="DropDownButton.tool">
+			<Setter Property="Padding" Value="2,2,0,2" />
+			<Setter Property="MinHeight" Value="28" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderBrush" Value="Transparent" />
+		</Style>
+		<Style Selector="Separator.tool">
+			<Setter Property="Width" Value="1" />
+			<Setter Property="Height" Value="22" />
+			<Setter Property="Margin" Value="8,0" />
+			<Setter Property="Background" Value="#BDBDBD" />
+		</Style>
+		<Style Selector="MenuItem Image">
+			<Setter Property="Width" Value="20" />
+			<Setter Property="Height" Value="20" />
+		</Style>
+		<Style Selector="Menu#menuStrip > MenuItem">
+			<Setter Property="Padding" Value="8,3" />
+		</Style>
+	</Window.Styles>
+
+	<DockPanel>
+		<!-- ======================= MENU ======================= -->
+		<Menu x:Name="menuStrip" DockPanel.Dock="Top">
+			<MenuItem x:Name="fileToolStripMenuItem" Header="_FILE" SubmenuOpened="fileToolStripMenuItem_DropDownOpening">
+				<MenuItem x:Name="openToolStripMenuItem" Header="_Open..." InputGesture="Ctrl+O" HotKey="Ctrl+O" Click="openToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/Open.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="saveToolStripMenuItem" Header="_Save As..." InputGesture="Ctrl+S" HotKey="Ctrl+S" Click="saveToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/_active_ Save.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="closeActiveMeshToolStripMenuItem" Header="_Unload file" Click="closeActiveMeshToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="exitToolStripMenuItem" Header="E_xit" Click="exitToolStripMenuItem_Click" />
+			</MenuItem>
+
+			<MenuItem x:Name="editToolStripMenuItem" Header="_EDIT" SubmenuOpened="editToolStripMenuItem_DropDownOpening">
+				<MenuItem x:Name="selectAllToolStripMenuItem" Header="_Select all" InputGesture="Ctrl+A" HotKey="Ctrl+A" Click="selectAllToolStripMenuItem_Click" />
+				<MenuItem x:Name="unselectAllToolStripMenuItem" Header="U_nselect all" Click="unselectAllToolStripMenuItem_Click" />
+				<MenuItem x:Name="invertSelectionToolStripMenuItem" Header="_Invert selection" Click="invertSelectionToolStripMenuItem_Click" />
+				<MenuItem x:Name="hideSelectedItemsToolStripMenuItem" Header="_Hide selected elements" InputGesture="Delete" HotKey="Delete" Click="deleteSelectedElementsToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="setPropertyOfSelectedItemsToolStripMenuItem" Header="Set _property of selected entities" Click="setPropertyOfSelectedItemsToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/setPropertyOfSelectedItems.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="selectItemsByPropertyToolStripMenuItem" Header="Select en_tities by property" InputGesture="F6" HotKey="F6" Click="selectItemsByPropertyToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectItemsByProperty.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="invisibleSelectEntitiesByPropertyAddToolStripMenuItem" Header="[Invisible] Select entities by property Add" IsVisible="False" InputGesture="Shift+F6" Click="invisibleSelectEntitiesByPropertyAddToolStripMenuItem_Click" />
+				<MenuItem x:Name="selectIncidingItemsToolStripMenuItem" Header="Select items in_ciding with selected faces" Click="selectIncidingItemsToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="takeScreenshotToolStripMenuItem" Header="Ta_ke screenshot" InputGesture="Ctrl+Alt+S" HotKey="Ctrl+Alt+S" Click="takeScreenshotToolStripMenuItem_Click" />
+			</MenuItem>
+
+			<MenuItem x:Name="viewToolStripMenuItem" Header="_VIEW" SubmenuOpened="viewToolStripMenuItem_DropDownOpened">
+				<MenuItem x:Name="axesToolStripMenuItem" Header="_Axes" ToggleType="CheckBox" Click="axesToolStripMenuItem_Click" />
+				<MenuItem x:Name="axisArrowsToolStripMenuItem" Header="A_xis arrows" ToggleType="CheckBox" Click="axisArrowsToolStripMenuItem_Click" />
+				<MenuItem x:Name="intermediateNodesToolStripMenuItem" Header="_Mid-side nodes" ToggleType="CheckBox" Click="midsideNodesToolStripMenuItem_Click"
+				          ToolTip.Tip="View nodes in the middle of edges (used in elements with quadratic approximation)" />
+				<MenuItem x:Name="beamsToolStripMenuItem2" Header="_Beams" ToggleType="CheckBox" Click="beamsToolStripMenuItem2_Click" />
+				<Separator />
+				<MenuItem x:Name="nodeNumbersToolStripMenuItem" Header="_Node numbers" ToggleType="CheckBox" Click="nodeNumbersToolStripMenuItem_Click" />
+				<MenuItem x:Name="elementNumbersToolStripMenuItem" Header="_Element numbers" ToggleType="CheckBox" Click="elementNumbersToolStripMenuItem_Click" />
+				<MenuItem x:Name="beamNumbersToolStripMenuItem" Header="Bea_m numbers" ToggleType="CheckBox" Click="beamNumbersToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="signalNodeToolStripMenuItem" Header="_Signal node(s)" ToggleType="CheckBox" InputGesture="Ctrl+Alt+N" HotKey="Ctrl+Alt+N"
+				          ToolTip.Tip="Highlight node with specified id" Click="signalNodeToolStripMenuItem_Click" />
+				<MenuItem x:Name="signalElementToolStripMenuItem" Header="Si_gnal element" ToggleType="CheckBox" InputGesture="Ctrl+Alt+E" HotKey="Ctrl+Alt+E"
+				          ToolTip.Tip="Highlight element with specified id" Click="signalElementToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="refreshToolStripMenuItem" Header="_Refresh scene" InputGesture="F5" HotKey="F5" Click="refreshToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="propertyColorsToolStripMenuItem" Header="_Property colors" SubmenuOpened="propertyColors_DropDownOpening">
+					<MenuItem x:Name="elementPropertyColorsToolStripMenuItem" Header="_Elements" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+					<MenuItem x:Name="nodePropertyColorsToolStripMenuItem" Header="_Nodes" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+					<MenuItem x:Name="facePropertyColorsToolStripMenuItem" Header="_Faces" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+					<MenuItem x:Name="edgePropertyColorsToolStripMenuItem" Header="Ed_ges" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+					<MenuItem x:Name="beamPropertyColorsToolStripMenuItem" Header="_Beams" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+					<Separator />
+					<MenuItem x:Name="configurePropertyColorsToolStripMenuItem" Header="Configure" Click="configurePropertyColorsToolStripMenuItem_Click" />
+				</MenuItem>
+			</MenuItem>
+
+			<MenuItem x:Name="renderToolStripMenuItem" Header="_RENDER">
+				<MenuItem x:Name="pointsToolStripMenuItem" Header="_Points" ToggleType="CheckBox" Click="renderMode_item_click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/points.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="borderLinesToolStripMenuItem" Header="_Border lines" ToggleType="CheckBox" Click="renderMode_item_click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/borderLines.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="allLinesToolStripMenuItem" Header="_All lines" ToggleType="CheckBox" Click="renderMode_item_click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/allLines.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="facesRenderToolStripMenuItem" Header="_Faces" ToggleType="CheckBox" Click="renderMode_item_click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/faces.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="allLinesPointsToolStripMenuItem" Header="All _lines + points" ToggleType="CheckBox" Click="renderMode_item_click" />
+				<MenuItem x:Name="facesBorderLinesToolStripMenuItem" Header="Face_s + border lines" ToggleType="CheckBox" Click="renderMode_item_click" />
+				<MenuItem x:Name="facesAllLinesToolStripMenuItem" Header="Fa_ces + all lines" ToggleType="CheckBox" Click="renderMode_item_click" />
+				<MenuItem x:Name="facesAllLinesPointsToolStripMenuItem" Header="Faces + all lines + p_oints" ToggleType="CheckBox" Click="renderMode_item_click" />
+			</MenuItem>
+
+			<MenuItem x:Name="cameraToolStripMenuItem" Header="_CAMERA" SubmenuOpened="cameraToolStripMenuItem_DropDownOpened">
+				<MenuItem x:Name="orbitToolStripMenuItem1" Header="_Orbit" ToggleType="CheckBox" Click="cameraToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/orbit.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="panToolStripMenuItem1" Header="_Pan" ToggleType="CheckBox" Click="cameraToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/pan.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="lookAroundToolStripMenuItem1" Header="Look _around" ToggleType="CheckBox" Click="cameraToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/lookAround.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="zoomWindowToolStripMenuItem" Header="_Zoom window" ToggleType="CheckBox" Click="cameraToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/zoomWindow.png" /></MenuItem.Icon>
+				</MenuItem>
+				<Separator />
+				<MenuItem x:Name="zoomToFitToolStripMenuItem" Header="Zoo_m to fit" Click="zoomToFitToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/zoomToFit.png" /></MenuItem.Icon>
+				</MenuItem>
+				<Separator />
+				<MenuItem x:Name="frontToolStripMenuItem" Header="_Front (+Y up, +X right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="backToolStripMenuItem" Header="_Back (+Y up, -X right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="topToolStripMenuItem" Header="_Top (-Z up, +X right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="bottomToolStripMenuItem" Header="Bo_ttom (+Z up, +X right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="rightToolStripMenuItem" Header="_Right (+Y up, -Z right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="leftToolStripMenuItem" Header="_Left (+Y up, +Z right)" Click="cameraStandardViewToolStripMenuItem_Click" />
+				<MenuItem x:Name="isoToolStripMenuItem" Header="_Iso" Click="cameraStandardViewToolStripMenuItem_Click" />
+			</MenuItem>
+
+			<MenuItem x:Name="selectToolStripMenuItem1" Header="_SELECT" SubmenuOpened="selectToolStripMenuItem_DropDownOpening">
+				<MenuItem x:Name="elementsToolStripMenuItem1" Header="_Elements" ToggleType="CheckBox" Click="selectToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectElements.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="nodesToolStripMenuItem1" Header="_Nodes" ToggleType="CheckBox" Click="selectToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectNodes.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="selectFacesToolStripMenuItem" Header="_Faces" ToggleType="CheckBox" Click="selectToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectFaces.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="edgesToolStripMenuItem1" Header="E_dges" ToggleType="CheckBox" Click="selectToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectEdges.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="beamsToolStripMenuItem1" Header="_Beams" ToggleType="CheckBox" Click="selectToolChosen">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/selectBeams.png" /></MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+
+			<MenuItem x:Name="toolsToolStripMenuItem" Header="_TOOLS" SubmenuOpened="toolsToolStripMenuItem_DropDownOpening">
+				<MenuItem x:Name="meshInfoToolStripMenuItem" Header="_Mesh info" InputGesture="F4" HotKey="F4" Click="meshInfoToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/About.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="listOfSelectedItemsToolStripMenuItem" Header="_List of selected entities" InputGesture="F3" HotKey="F3" Click="listOfSelectedItemsToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/listOfSelectedItems.png" /></MenuItem.Icon>
+				</MenuItem>
+				<Separator />
+				<MenuItem x:Name="cutsToolStripMenuItem" Header="_Cut / Select area" InputGesture="F8" HotKey="F8" Click="cutMeshToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/cutAndSelectArea.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="showHideElementsToolStripMenuItem" Header="Show / Hide _elements" InputGesture="F9" HotKey="F9" Click="showHideElementsToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/show_hide.png" /></MenuItem.Icon>
+				</MenuItem>
+				<MenuItem x:Name="restoreCuttedItemsToolStripMenuItem" Header="_Restore mesh" InputGesture="F10" HotKey="F10" Click="restoreMeshToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/restore.png" /></MenuItem.Icon>
+				</MenuItem>
+				<Separator />
+				<MenuItem x:Name="splitActiveWindowToolStripMenuItem" Header="Spli_t active window" Click="splitActiveWindowToolStripMenuItem_Click" />
+				<MenuItem x:Name="closeActiveWindowToolStripMenuItem" Header="Close active _window" Click="closeActiveMeshToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="settingsToolStripMenuItem" Header="_Settings" InputGesture="F7" HotKey="F7" Click="settingsToolStripMenuItem_Click">
+					<MenuItem.Icon><Image Source="avares://MeshEditor/Assets/Icons/Settings.png" /></MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+
+			<MenuItem x:Name="postprocessToolStripMenuItem" Header="_POSTPROCESS" SubmenuOpened="postprocessToolStripMenuItem_DropDownOpening">
+				<MenuItem x:Name="importFEMResultsToolStripMenuItem" Header="Import FEM results..." Click="importFEMResultsToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="openSolutionToolStripMenuItem" Header="Open solution..." Click="openSolutionToolStripMenuItem_Click" />
+				<MenuItem x:Name="closeSolutionToolStripMenuItem" Header="Close solution" Click="closeSolutionToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="signalDataMaximumToolStripMenuItem" Header="Signal data _maximum" Click="signalDataMaximumToolStripMenuItem_Click" />
+				<MenuItem x:Name="signalDataMinimumToolStripMenuItem" Header="Signal data mi_nimum" Click="signalDataMinimumToolStripMenuItem_Click" />
+			</MenuItem>
+
+			<MenuItem x:Name="aboutToolStripMenuItem" Header="_HELP">
+				<MenuItem x:Name="userGuideToolStripMenuItem" Header="_User guide" InputGesture="F1" HotKey="F1" Click="userGuideToolStripMenuItem_Click" />
+				<Separator />
+				<MenuItem x:Name="checkForUpdatesToolStripMenuItem" Header="_Check for updates" Click="checkForUpdatesToolStripMenuItem_Click" />
+				<MenuItem x:Name="aboutToolStripMenuItem1" Header="_About" Click="aboutToolStripMenuItem1_Click" />
+			</MenuItem>
+		</Menu>
+
+		<!-- ======================= TOOL STRIP ======================= -->
+		<Border x:Name="toolStrip" DockPanel.Dock="Top" BorderBrush="#DADADA" BorderThickness="0,0,0,1" Padding="4,1">
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<Button x:Name="openToolStripButton" Classes="tool" ToolTip.Tip="Open (Ctrl + O)" Click="openToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/Open.png" />
+				</Button>
+				<Button x:Name="saveToolStripButton" Classes="tool" ToolTip.Tip="Save As... (Ctrl+S)" Click="saveToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/_active_ Save.png" />
+				</Button>
+				<Separator Classes="tool" />
+				<Button x:Name="toolStripButtonPoints" Classes="tool" ToolTip.Tip="Show points" Click="toolStripButtonPoints_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/points.png" />
+				</Button>
+				<Button x:Name="toolStripButtonBorderLines" Classes="tool" ToolTip.Tip="Show border lines" Click="toolStripButtonBorderLines_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/borderLines.png" />
+				</Button>
+				<Button x:Name="toolStripButtonAllLines" Classes="tool" ToolTip.Tip="Show all lines" Click="toolStripButtonAllLines_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/allLines.png" />
+				</Button>
+				<Button x:Name="toolStripButtonFaces" Classes="tool" ToolTip.Tip="Show faces" Click="toolStripButtonFaces_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/faces.png" />
+				</Button>
+				<Separator Classes="tool" />
+				<Button x:Name="toolStripButtonOrbit" Classes="tool" ToolTip.Tip="Orbit (O)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/orbit.png" />
+				</Button>
+				<Button x:Name="toolStripButtonPan" Classes="tool" ToolTip.Tip="Pan (P)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/pan.png" />
+				</Button>
+				<Button x:Name="toolStripButtonLookAround" Classes="tool" ToolTip.Tip="Look around (L)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/lookAround.png" />
+				</Button>
+				<Button x:Name="toolStripButtonZoomWindow" Classes="tool" ToolTip.Tip="Zoom window (Z)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/zoomWindow.png" />
+				</Button>
+				<Separator Classes="tool" Margin="3,0" />
+				<Button x:Name="toolStripButtonZoomToFit" Classes="tool" ToolTip.Tip="Zoom to fit" Click="zoomToFitToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/zoomToFit.png" />
+				</Button>
+				<Separator Classes="tool" Margin="3,0" />
+				<Button x:Name="toolStripButtonSelectElements" Classes="tool" ToolTip.Tip="Select elements (E)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectElements.png" />
+				</Button>
+				<Button x:Name="toolStripButtonSelectNodes" Classes="tool" ToolTip.Tip="Select nodes (N)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectNodes.png" />
+				</Button>
+				<Button x:Name="toolStripButtonSelectFaces" Classes="tool" ToolTip.Tip="Select faces (F)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectFaces.png" />
+				</Button>
+				<Button x:Name="toolStripButtonSelectEdges" Classes="tool" ToolTip.Tip="Select edges (G)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectEdges.png" />
+				</Button>
+				<Button x:Name="toolStripButtonSelectBeams" Classes="tool" ToolTip.Tip="Select beams (B)" Click="toolStripButtonEditorModeTool_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectBeams.png" />
+				</Button>
+				<Separator Classes="tool" />
+				<DropDownButton x:Name="propertyColorsTtoolStripDropDownButton" Classes="tool" ToolTip.Tip="Show property colors (Num 1-5)">
+					<Image Source="avares://MeshEditor/Assets/Icons/propertyColors.png" />
+					<DropDownButton.Flyout>
+						<MenuFlyout Placement="BottomEdgeAlignedLeft" Opening="propertyColorsFlyout_Opening">
+							<MenuItem x:Name="elementPropertyColorsToolStripMenuItem2" Header="_Element property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+							<MenuItem x:Name="nodePropertyColorsToolStripMenuItem2" Header="_Node property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+							<MenuItem x:Name="facesPropertyColorsToolStripMenuItem2" Header="_Face property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+							<MenuItem x:Name="edgesPropertyColorsToolStripMenuItem2" Header="Ed_ge property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+							<MenuItem x:Name="beamsPropertyColorsToolStripMenuItem2" Header="_Beam property colors" ToggleType="CheckBox" Click="propertyColorsToolStripMenuItem_Click" />
+							<Separator />
+							<MenuItem x:Name="configurePropertyColorsToolStripMenuItem1" Header="_Configure property colors" Click="configurePropertyColorsToolStripMenuItem_Click" />
+						</MenuFlyout>
+					</DropDownButton.Flyout>
+				</DropDownButton>
+				<Button x:Name="toolStripButtonSetPropertyOfSelectedItems" Classes="tool" ToolTip.Tip="Set property of selected entities (Enter)" Click="setPropertyOfSelectedItemsToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/setPropertyOfSelectedItems.png" />
+				</Button>
+				<Button x:Name="toolStripButtonSelectItemsByProperty" Classes="tool" ToolTip.Tip="Select entities by property (F6)" Click="selectItemsByPropertyToolStripMenuItem_Click"
+				        PointerEntered="toolStripButtonSelectItemsByProperty_MouseEnter">
+					<Image Source="avares://MeshEditor/Assets/Icons/selectItemsByProperty.png" />
+				</Button>
+				<Separator Classes="tool" />
+				<Button x:Name="toolStripButtonListOfSelectedItems" Classes="tool" ToolTip.Tip="Show list of selected entities (F3)" Click="listOfSelectedItemsToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/listOfSelectedItems.png" />
+				</Button>
+				<Button x:Name="toolStripButtonMeshInfo" Classes="tool" ToolTip.Tip="Mesh info (F4)" Click="meshInfoToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/About.png" />
+				</Button>
+				<Separator Classes="tool" Margin="3,0" />
+				<Button x:Name="toolStripButtonCutSelectArea" Classes="tool" ToolTip.Tip="Cut / Select area (F8)" Click="cutMeshToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/cutAndSelectArea.png" />
+				</Button>
+				<Button x:Name="toolStripButtonShowHideElements" Classes="tool" ToolTip.Tip="Show / hide elements (F9)" Click="showHideElementsToolStripMenuItem_Click">
+					<Image Source="avares://MeshEditor/Assets/Icons/show_hide.png" />
+				</Button>
+			</StackPanel>
+		</Border>
+
+		<!-- ======================= STATUS STRIP ======================= -->
+		<Border x:Name="statusStrip" DockPanel.Dock="Bottom" BorderBrush="#DADADA" BorderThickness="0,1,0,0" Padding="4,3,13,3">
+			<TextBlock x:Name="statusLabel" Text="Ready" />
+		</Border>
+
+		<!-- ======================= CENTRAL PANEL (viewports) ======================= -->
+		<Border x:Name="centralPanel" />
+	</DockPanel>
+</Window>

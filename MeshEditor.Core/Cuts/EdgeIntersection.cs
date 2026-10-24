@@ -1,5 +1,5 @@
-﻿using MeshEditor.Data;
-using OpenTK;
+using MeshEditor.Data;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

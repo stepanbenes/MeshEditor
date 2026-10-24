@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.LayerManager.Filters
 {
@@ -17,7 +17,7 @@ namespace MeshEditor.LayerManager.Filters
 	[EnumValueTypeSelector(FilterType.IsoSurface, typeof(IsoSurfaceFilter), enumPropertyName: nameof(Type))]
 	public abstract class Filter
 	{
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumJsonConverter))]
 		public abstract FilterType Type { get; }
 	}
 }

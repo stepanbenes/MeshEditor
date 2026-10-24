@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -6,7 +6,7 @@ using System.IO;
 using System.Drawing;
 using System.Diagnostics;
 
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using System.Text.RegularExpressions;
 using System.Globalization;

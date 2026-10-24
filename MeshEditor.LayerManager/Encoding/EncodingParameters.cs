@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MeshEditor.LayerManager.Data;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.LayerManager.Encoding
 {
 	public class EncodingParameters
 	{
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumJsonConverter))]
 		public DataArrayType DataType { get; set; }
 
 		public int OriginalLength { get; set; }
@@ -20,7 +20,7 @@ namespace MeshEditor.LayerManager.Encoding
 
 		public int Length { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public string DefaultValue { get; set; }
 	}
 }

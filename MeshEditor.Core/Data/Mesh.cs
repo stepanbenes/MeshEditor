@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 
 using MeshEditor.Graphics;
@@ -47,6 +47,7 @@ namespace MeshEditor.Data
 
 		// -------------------------------
 		private CrossHatchShader crossHatchShader;
+		private TwoSidedLightingShader twoSidedLightingShader;
 		// -------------------------------
 		// -- parametry noveho souradneho systemu site
 		private Vector3 positionOffset;
@@ -510,6 +511,7 @@ namespace MeshEditor.Data
 
 				bool drawData = content.DataVisualizer != null & !facePropertyColors & !elementPropertyColors;
 				bool userCrossHatching = HasTwinElements & (elementPropertyColors | facePropertyColors);
+				bool useTwoSidedLightingShader = false;
 
 				if (drawData) // iso-areas shader
 				{
@@ -520,6 +522,13 @@ namespace MeshEditor.Data
 					initializeCrossHatchShader(); // multiple property colors hatching shader
 					crossHatchShader.Use(statistics.GetElementPropertyColorsPalette());
 				}
+				else if (Scene.FaceLighting)
+				{
+					twoSidedLightingShader ??= new TwoSidedLightingShader(); // the fixed-function two-sided lighting is slow
+					useTwoSidedLightingShader = twoSidedLightingShader.IsReady;
+					if (useTwoSidedLightingShader)
+						twoSidedLightingShader.Use();
+				}
 
 				content.DrawFaces(selectedItems, facePropertyColors, elementPropertyColors, camera);
 
@@ -528,6 +537,8 @@ namespace MeshEditor.Data
 					content.DataVisualizer.EndDraw();
 				else if (userCrossHatching)
 					crossHatchShader.Unuse();
+				else if (useTwoSidedLightingShader)
+					twoSidedLightingShader.Unuse();
 
 				if (showElementNumbers)
 					content.DrawVisibleElementNumbers(selectedItems);
@@ -545,7 +556,7 @@ namespace MeshEditor.Data
 				GL.ShadeModel(ShadingModel.Flat);
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
-				GL.LineWidth(Scene.BorderEdgeWidth);
+				MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.BorderEdgeWidth);
 				// -----------------------------------------
 				if(Scene.LineSmooth)
 				{
@@ -569,7 +580,7 @@ namespace MeshEditor.Data
 			{
 				if (!Scene.EdgeLighting)
 					GL.Disable(EnableCap.Lighting);
-				GL.LineWidth(Scene.OrdinaryEdgeWidth);
+				MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.OrdinaryEdgeWidth);
 				if (Scene.LineSmooth)
 				{
 					GL.Enable(EnableCap.LineSmooth);
@@ -621,7 +632,7 @@ namespace MeshEditor.Data
 
 			if ((renderMode & RenderMode.Points) != 0)
 			{
-				GL.PointSize(Scene.PointSize);
+				MeshEditor.Graphics.DeviceScaling.PointSize(Scene.PointSize);
 				GL.Disable(EnableCap.Lighting);
 
 				if (Scene.PointSmooth & !(optimizeForMoving || optimizeForSelecting))
@@ -728,6 +739,9 @@ namespace MeshEditor.Data
 				crossHatchShader.Dispose();
 				crossHatchShader = null;
 			}
+
+			twoSidedLightingShader?.Dispose();
+			twoSidedLightingShader = null;
 		}
 
 		public void RecreateBuffers()

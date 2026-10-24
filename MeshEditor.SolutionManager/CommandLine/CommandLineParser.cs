@@ -9,6 +9,7 @@ using MeshEditor.SolutionManager.IO;
 using CommandLine;
 using System.IO;
 using MeshEditor.Common.Extensions;
+using System.Threading;
 
 namespace MeshEditor.SolutionManager.CommandLine
 {
@@ -41,7 +42,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 
 		public int Run(IEnumerable<string> args)
 		{
-			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions, DiffOptions>(args)
+			return Parser.Default.ParseArguments<ImportOptions, FilterOptions, CompressOptions, ListOptions, DeleteOptions, DiffOptions, RemoteStorageOptions>(args)
 					.MapResult(
 						(ImportOptions options) => runImportCommand(options),
 						(FilterOptions options) => runFilterCommand(options),
@@ -49,6 +50,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 						(ListOptions options) => runListCommand(options),
 						(DeleteOptions options) => runDeleteCommand(options),
 						(DiffOptions options) => runDiffCommand(options),
+						(RemoteStorageOptions options) => runRemoteStorageCommand(options),
 						errors => 1);
 		}
 
@@ -102,6 +104,40 @@ namespace MeshEditor.SolutionManager.CommandLine
 			return 0;
 		}
 
+		private int runRemoteStorageCommand(RemoteStorageOptions options)
+		{
+			if (!SolutionHub.IsRemoteStorageConfigured)
+			{
+				logger?.LogMessage("Remote storage is not configured (AccountUrl, TenantId and ClientId in the AzureBlobStorage section of config.json).");
+				return 2;
+			}
+
+			if (options.Login)
+			{
+				// device code flow: works without a web browser on this machine (SSH, headless Linux)
+				var user = SolutionHub.SignInToRemoteStorageWithDeviceCodeAsync(message =>
+				{
+					using (new ConsoleBrush(ConsoleColor.Yellow))
+						Console.WriteLine(message);
+					return Task.CompletedTask;
+				}, CancellationToken.None).GetAwaiter().GetResult();
+				logger?.LogMessage($"Signed in as {user}.");
+			}
+			else if (options.Logout)
+			{
+				SolutionHub.SignOutFromRemoteStorageAsync().GetAwaiter().GetResult();
+				logger?.LogMessage("Signed out.");
+			}
+			else if (options.UploadSolution != null)
+			{
+				SolutionHub.UploadLocalSolutionToRemoteAsync(Path.GetFullPath(options.UploadSolution), CancellationToken.None, logger).GetAwaiter().GetResult();
+			}
+
+			var signedInUser = SolutionHub.GetRemoteUserAsync(CancellationToken.None).GetAwaiter().GetResult();
+			logger?.LogMessage(signedInUser != null ? $"Signed in to the remote storage as {signedInUser}." : "Not signed in to the remote storage (use --login).");
+			return 0;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -113,13 +149,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 				logger.Level = TraceLevel.Verbose;
 			}
 
-			int solutionId;
-			if (!isRunningLocally && !int.TryParse(options.Solution, NumberStyles.Integer, CultureInfo.InvariantCulture, out solutionId))
-			{
-				throw new FormatException("Argument Solution is not an integer");
-			}
-
-			StorageType requestedStorageType = options.ForceUseRemoteStorage ? StorageType.Remote : this.storageType;
+			StorageType requestedStorageType = options.UseRemoteStorage ? StorageType.Remote : this.storageType;
 
 			switch (requestedStorageType)
 			{
@@ -150,15 +180,15 @@ namespace MeshEditor.SolutionManager.CommandLine
 					}
 				case StorageType.Remote:
 					{
+						int solutionId;
 						if (options.Solution == null)
 						{
 							var solutions = SolutionHub.EnumerateAllRemoteSolutions(logger).ToArray();
-							var solutionIndex = chooseSolution(solutions);
-							solutionId = solutions[solutionIndex].Id;
+							solutionId = solutions[chooseSolution(solutions)].Id;
 						}
-						else
+						else if (!int.TryParse(options.Solution, NumberStyles.Integer, CultureInfo.InvariantCulture, out solutionId))
 						{
-							solutionId = int.Parse(options.Solution, CultureInfo.InvariantCulture);
+							throw new FormatException("Remote solution must be specified by its id (integer).");
 						}
 						return SolutionHub.OpenRemote(solutionId, logger);
 					}
@@ -175,7 +205,7 @@ namespace MeshEditor.SolutionManager.CommandLine
 				throw new FileNotFoundException("No solution found.");
 
 			if (solutions.Count == 1)
-				return solutions[0].Id;
+				return 0;
 
 			// otherwise show menu:
 			Console.WriteLine("Choose solution:");

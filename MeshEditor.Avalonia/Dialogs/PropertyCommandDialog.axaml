@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.PropertyCommandDialog"
+        Title="Preprocessor commands"
+        Width="813" Height="542" MinWidth="600" MinHeight="420"
+        CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+	<Grid Margin="12,9,12,12" RowDefinitions="Auto,Auto,Auto,*,Auto">
+		<StackPanel Orientation="Horizontal" Margin="6,0,0,8">
+			<TextBlock x:Name="label6" Text="Commands for property:" Margin="0,0,6,0" />
+			<TextBlock x:Name="labelPropertyNumber" Text="0" FontWeight="Bold" />
+		</StackPanel>
+		<ComboBox x:Name="comboBoxAllCommands" Grid.Row="1" Margin="9,0,0,6" MinWidth="160" SelectionChanged="comboBoxAllCommands_SelectedIndexChanged" />
+		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6" Margin="9,0,0,10">
+			<Button x:Name="buttonAddCommand" Content="Add command" MinWidth="133" HorizontalContentAlignment="Center" Click="buttonAddCommand_Click" />
+			<Button x:Name="buttonRemoveCommand" Content="Remove command" MinWidth="133" HorizontalContentAlignment="Center" Click="buttonRemoveCommand_Click" />
+		</StackPanel>
+		<HeaderedContentControl x:Name="groupBoxCommandDescription" Grid.Row="3" Header="Command description" Theme="{StaticResource GroupBox}">
+			<Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnDefinitions="390,*">
+				<TextBlock x:Name="label2" Text="Type" />
+				<ComboBox x:Name="comboBoxPropertyType" Grid.Row="1" MinWidth="133" Margin="0,2,0,8" SelectionChanged="comboBoxPropertyType_SelectedIndexChanged" />
+				<TextBlock x:Name="label3" Grid.Row="2" Text="Command pattern:" />
+				<TextBlock x:Name="labelCommandPattern" Grid.Row="3" Grid.ColumnSpan="2" Text="Description pattern" FontWeight="Bold" Margin="0,2,0,6" TextWrapping="Wrap" />
+				<!-- variables (DataGridView of the WinForms form) -->
+				<Border Grid.Row="4" BorderBrush="#ABADB3" BorderThickness="1">
+					<DockPanel>
+						<Grid DockPanel.Dock="Top" ColumnDefinitions="130,*" Background="#F0F0F0">
+							<TextBlock Text="Variable" Margin="4,3" FontWeight="SemiBold" />
+							<TextBlock Grid.Column="1" Text="Value" Margin="4,3" FontWeight="SemiBold" />
+						</Grid>
+						<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<StackPanel x:Name="dataGridViewVariables" />
+						</ScrollViewer>
+					</DockPanel>
+				</Border>
+				<StackPanel Grid.Row="4" Grid.Column="1" Margin="6,0,0,0" IsVisible="False">
+					<TextBlock x:Name="label5" Text="Filled pattern (Invisible):" />
+					<TextBlock x:Name="labelFilledPattern" Text="Filled pattern" FontWeight="Bold" />
+				</StackPanel>
+				<TextBlock x:Name="label4" Grid.Row="5" Text="Result text:" Margin="0,6,0,0" />
+				<TextBlock x:Name="labelResultText" Grid.Row="6" Grid.ColumnSpan="2" Text="Result text" FontWeight="Bold" TextWrapping="Wrap" />
+			</Grid>
+		</HeaderedContentControl>
+		<StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,6,0,0">
+			<Button x:Name="buttonOK" Content="OK" MinWidth="75" HorizontalContentAlignment="Center" Click="buttonOK_Click" />
+			<Button x:Name="buttonCancel" Content="Cancel" MinWidth="75" HorizontalContentAlignment="Center" IsCancel="True" Click="buttonCancel_Click" />
+		</StackPanel>
+	</Grid>
+</Window>

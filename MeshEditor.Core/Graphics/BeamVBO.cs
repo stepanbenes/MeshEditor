@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MeshEditor.Data;
 using OpenTK.Graphics.OpenGL;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace MeshEditor.Graphics
 {

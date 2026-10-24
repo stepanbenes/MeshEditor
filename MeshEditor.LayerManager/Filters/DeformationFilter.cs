@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace MeshEditor.LayerManager.Filters
 	{
 		public override FilterType Type => FilterType.Deformation;
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public string DeformationFieldName { get; set; } = null;
 
 		public double? RelativeScale { get; set; }

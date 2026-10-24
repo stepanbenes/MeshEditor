@@ -1,0 +1,123 @@
+@page "/import"
+@inject RemoteStorage Storage
+@inject NavigationManager Navigation
+
+<PageTitle>Import FEM results · MeshEditor Online</PageTitle>
+<SectionContent SectionName="crumbs"><a href="">Remote solutions</a> / <b>Import FEM results</b></SectionContent>
+
+<div class="content">
+    <div class="dialog page-dialog">
+        <header>
+            <div>
+                <h2>Import FEM results</h2>
+                <p>Creates a new remote solution with a master layer. The files are read and processed in this browser tab, then stored in your folder.</p>
+            </div>
+        </header>
+        <div class="body">
+            <label class="drop" for="meshFile">
+                Mesh file
+                <span>GiD <code>.msh</code>, or VTK <code>.vtu</code> (serial unstructured grid)</span>
+                <input id="meshFile" type="file" accept=".msh,.vtu" @onchange="filesChangedAsync" />
+            </label>
+            <label class="drop" for="resultFiles">
+                Result files
+                <span>GiD <code>.res</code>, or the <code>.vtu</code> files with the results. Several files can be chosen.</span>
+                <input id="resultFiles" type="file" accept=".res,.vtu" multiple @onchange="filesChangedAsync" />
+            </label>
+            @if (files.Count > 0)
+            {
+                <ul class="files">
+                    @foreach (var (kind, file) in files)
+                    {
+                        <li><span class="tag">@kind</span><span class="fn">@file.Name</span><span class="sz">@size(file.Size)</span></li>
+                    }
+                </ul>
+            }
+            <div class="row">
+                <div class="field"><label for="projectName">Project name</label><input class="input" id="projectName" @bind="projectName" /></div>
+                <div class="field">
+                    <label for="gauss">Gauss points extrapolation</label>
+                    <select class="input" id="gauss" @bind="gaussStrategy"><option value="Nearest">Nearest</option></select>
+                </div>
+            </div>
+            <KeyTimeSteps @ref="keyTimeSteps" Id="importKeyTimeSteps" />
+            <CompressionOptions @ref="compression" IdPrefix="importCompression" />
+            @if (error != null)
+            {
+                <div class="note error">@error</div>
+            }
+            <JobList />
+            <p class="hint">Keep this tab open until the import finishes. The solution is listed only when it is complete.</p>
+        </div>
+        <footer>
+            <a class="btn" href="">Back to solutions</a>
+            <button class="btn primary" type="button" @onclick="importAsync" disabled="@(running || meshFile == null)">Import</button>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private KeyTimeSteps? keyTimeSteps;
+    private CompressionOptions? compression;
+    private PickedFile? meshFile;
+    private PickedFile[] resultFiles = Array.Empty<PickedFile>();
+    private List<(string kind, PickedFile file)> files = new();
+    private string projectName = "";
+    private string gaussStrategy = "Nearest";
+    private string? error;
+    private bool running;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (await Storage.InitializeAsync() == null)
+                Navigation.NavigateTo("");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    private async Task filesChangedAsync(ChangeEventArgs e)
+    {
+        meshFile = (await Storage.GetPickedFilesAsync("meshFile")).FirstOrDefault();
+        resultFiles = await Storage.GetPickedFilesAsync("resultFiles");
+        files = new();
+        if (meshFile != null)
+        {
+            files.Add(("mesh", meshFile));
+            if (string.IsNullOrWhiteSpace(projectName))
+                projectName = Path.GetFileNameWithoutExtension(meshFile.Name);
+        }
+        files.AddRange(resultFiles.Select(f => ("results", f)));
+    }
+
+    private async Task importAsync()
+    {
+        if (meshFile == null)
+            return;
+        error = null;
+        running = true;
+        var created = await Storage.RunJobAsync<CreatedItem>($"Importing {projectName}", "importResults", new
+        {
+            projectName,
+            meshFile = meshFile.Name,
+            dataFiles = resultFiles.Select(f => f.Name).ToArray(),
+            keyTimeSteps = keyTimeSteps?.GetKeyTimeSteps() ?? Array.Empty<decimal>(),
+            compression = compression?.GetParameters() ?? Array.Empty<string>(),
+            gaussPointsExtrapolationStrategy = gaussStrategy
+        }, fileInputIds: new[] { "meshFile", "resultFiles" });
+        running = false;
+        if (created != null)
+            Navigation.NavigateTo($"solutions/{created.Id}");
+    }
+
+    private static string size(long bytes) => bytes switch
+    {
+        >= 1024 * 1024 => $"{bytes / 1024.0 / 1024.0:0.0} MB",
+        >= 1024 => $"{bytes / 1024.0:0} KB",
+        _ => $"{bytes} B"
+    };
+}

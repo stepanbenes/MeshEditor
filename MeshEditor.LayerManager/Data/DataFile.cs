@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using MeshEditor.LayerManager.Compression;
 using MeshEditor.LayerManager.Encoding;
 using MeshEditor.LayerManager.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.LayerManager.Data
 {
@@ -21,13 +21,13 @@ namespace MeshEditor.LayerManager.Data
 
 		public string FieldName { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public string ComponentName { get; set; }
 
-		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public decimal[] TimeSteps { get; set; }
 
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumJsonConverter))]
 		public DataLocationType Location { get; set; }
 
 		public CompressionParameters Compression { get; set; }

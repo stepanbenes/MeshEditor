@@ -1,0 +1,127 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MeshEditor.AvaloniaUI.App"
+             RequestedThemeVariant="Light">
+	<Application.Styles>
+		<FluentTheme DensityStyle="Compact" />
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+		<!-- disabled group boxes look disabled as a whole (WinForms greys out also the labels) -->
+		<Style Selector="HeaderedContentControl:disabled">
+			<Setter Property="Opacity" Value="0.55" />
+		</Style>
+	</Application.Styles>
+
+	<Application.Resources>
+		<!-- WinForms GroupBox: titled border (use HeaderedContentControl with Theme="{StaticResource GroupBox}") -->
+		<ControlTheme x:Key="GroupBox" TargetType="HeaderedContentControl">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Grid RowDefinitions="Auto,*">
+						<Border Grid.Row="1" Grid.RowSpan="1" Margin="0,-8,0,0" Padding="8,12,8,8"
+						        BorderBrush="#DCDCDC" BorderThickness="1" CornerRadius="3">
+							<ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+						</Border>
+						<TextBlock Grid.Row="0" Margin="8,0,0,0" Padding="2,0" HorizontalAlignment="Left"
+						           Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+						           Text="{TemplateBinding Header}" />
+					</Grid>
+				</ControlTemplate>
+			</Setter>
+		</ControlTheme>
+
+		<!-- tabs drawn as pills (the Fluent toggle button look, as in the PropertyGrid toolbar) instead of the Fluent underlined text -->
+		<ControlTheme x:Key="{x:Type TabItem}" TargetType="TabItem">
+			<Setter Property="Background" Value="{DynamicResource ToggleButtonBackground}" />
+			<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForeground}" />
+			<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrush}" />
+			<Setter Property="BorderThickness" Value="{DynamicResource ButtonBorderThemeThickness}" />
+			<Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+			<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+			<Setter Property="Padding" Value="10,4" />
+			<Setter Property="Margin" Value="0,0,4,0" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border Name="PART_LayoutRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+					        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+						<ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}"
+						                  Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+					</Border>
+				</ControlTemplate>
+			</Setter>
+			<Style Selector="^:pointerover">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundPointerOver}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundPointerOver}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushPointerOver}" />
+			</Style>
+			<Style Selector="^:pressed">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundPressed}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundPressed}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushPressed}" />
+			</Style>
+			<Style Selector="^:selected">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundChecked}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundChecked}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushChecked}" />
+				<Setter Property="Cursor" Value="Arrow" />
+			</Style>
+			<Style Selector="^:selected:pointerover">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundCheckedPointerOver}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundCheckedPointerOver}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushCheckedPointerOver}" />
+			</Style>
+			<Style Selector="^:disabled">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundDisabled}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundDisabled}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushDisabled}" />
+			</Style>
+		</ControlTheme>
+		<ControlTheme x:Key="{x:Type TabStripItem}" TargetType="TabStripItem">
+			<Setter Property="Background" Value="{DynamicResource ToggleButtonBackground}" />
+			<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForeground}" />
+			<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrush}" />
+			<Setter Property="BorderThickness" Value="{DynamicResource ButtonBorderThemeThickness}" />
+			<Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+			<Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+			<Setter Property="Padding" Value="10,4" />
+			<Setter Property="Margin" Value="0,0,4,0" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border Name="PART_LayoutRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+					        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+						<ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+						                  Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+					</Border>
+				</ControlTemplate>
+			</Setter>
+			<Style Selector="^:pointerover">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundPointerOver}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundPointerOver}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushPointerOver}" />
+			</Style>
+			<Style Selector="^:pressed">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundPressed}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundPressed}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushPressed}" />
+			</Style>
+			<Style Selector="^:selected">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundChecked}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundChecked}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushChecked}" />
+				<Setter Property="Cursor" Value="Arrow" />
+			</Style>
+			<Style Selector="^:selected:pointerover">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundCheckedPointerOver}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundCheckedPointerOver}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushCheckedPointerOver}" />
+			</Style>
+			<Style Selector="^:disabled">
+				<Setter Property="Background" Value="{DynamicResource ToggleButtonBackgroundDisabled}" />
+				<Setter Property="Foreground" Value="{DynamicResource ToggleButtonForegroundDisabled}" />
+				<Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonBorderBrushDisabled}" />
+			</Style>
+		</ControlTheme>
+	</Application.Resources>
+</Application>

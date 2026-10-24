@@ -1,0 +1,10 @@
+# Scripts run with a shebang, also on Linux and macOS: keep them LF in every checkout
+scripts/** text eol=lf
+# The Debian package is built on Linux: its scripts and text files must stay LF
+linux-deployment/mesheditor/build text eol=lf
+linux-deployment/mesheditor/install text eol=lf
+linux-deployment/mesheditor/uninstall text eol=lf
+linux-deployment/mesheditor/package/DEBIAN/* text eol=lf
+linux-deployment/mesheditor/package/usr/bin/* text eol=lf
+linux-deployment/mesheditor/package/usr/share/applications/* text eol=lf
+linux-deployment/mesheditor/package/usr/share/doc/** text eol=lf

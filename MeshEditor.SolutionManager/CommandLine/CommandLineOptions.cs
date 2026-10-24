@@ -12,11 +12,11 @@ namespace MeshEditor.SolutionManager.CommandLine
 		[Option(Required = false, HelpText = "Prints all messages to standard output.")]
 		public bool Verbose { get; set; }
 
-		[Option("solution", Required = false, HelpText = "Solution id (for remote solutions) or solution file path (for local solutions)")]
+		[Option("solution", Required = false, HelpText = "Solution file path (local solutions) or solution id (remote solutions)")]
 		public string Solution { get; set; }
 
-		[Option("remote", Required = false, HelpText = "Use remote storage")]
-		public bool ForceUseRemoteStorage { get; set; }
+		[Option("remote", Required = false, HelpText = "Use the remote solutions of the signed-in user (Azure Blob Storage, see the remote-storage command)")]
+		public bool UseRemoteStorage { get; set; }
 
 		[Option("pressanykey", Required = false, HelpText = "Require pressing any key before quitting the program")]
 		public bool PressAnyKeyToQuit { get; set; }
@@ -80,6 +80,19 @@ namespace MeshEditor.SolutionManager.CommandLine
 
 		[Option("all", Required = false, HelpText = "Delete all layers in solution")]
 		public bool DeleteAll { get; set; }
+	}
+
+	[Verb("remote-storage", HelpText = "Sign in to the remote solution storage (Azure Blob Storage) with a Microsoft account, upload solutions. Without options prints the signed-in user.")]
+	class RemoteStorageOptions
+	{
+		[Option("login", Required = false, SetName = "login", HelpText = "Sign in with a Microsoft account (enter the printed code in a web browser, on any device)")]
+		public bool Login { get; set; }
+
+		[Option("logout", Required = false, SetName = "logout", HelpText = "Sign out (removes the cached sign-in)")]
+		public bool Logout { get; set; }
+
+		[Option("upload", Required = false, SetName = "upload", HelpText = "Upload the local solution (solution file path) to the remote storage as a solution of the signed-in user")]
+		public string UploadSolution { get; set; }
 	}
 
 	[Verb("diff", HelpText = "Compare layer with its parent")]

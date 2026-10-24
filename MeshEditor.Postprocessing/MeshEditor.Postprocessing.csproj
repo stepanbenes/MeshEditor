@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- UI independent part of the postprocessor (data visualizers, postprocess scene, color scale, filters);
+	     namespaces MeshEditor.DataVisualizer.* are kept from the original MeshEditor.DataVisualizer project -->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<RootNamespace>MeshEditor.DataVisualizer</RootNamespace>
+		<AssemblyName>MeshEditor.Postprocessing</AssemblyName>
+		<LangVersion>latest</LangVersion>
+		<Nullable>disable</Nullable>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- internal types (e.g. VisualizerSettings, LayerDataVisualizer) are used by the UI (they were in one assembly before) -->
+		<InternalsVisibleTo Include="MeshEditor" /><!-- MeshEditor.Avalonia -->
+		<InternalsVisibleTo Include="MeshEditor.Avalonia.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="OpenTK" Version="4.9.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MeshEditor.Core\MeshEditor.Core.csproj" />
+		<ProjectReference Include="..\MeshEditor.Common\MeshEditor.Common.csproj" />
+		<ProjectReference Include="..\MeshEditor.LayerManager\MeshEditor.LayerManager.csproj" />
+		<ProjectReference Include="..\MeshEditor.SolutionManager\MeshEditor.SolutionManager.csproj" />
+	</ItemGroup>
+</Project>

@@ -5,10 +5,12 @@ using MeshEditor.Data;
 using System.Drawing;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using OpenTK.Graphics.OpenGL;
 using MeshEditor.Graphics;
 using MeshEditor.Common;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using MeshEditor.Common.Serialization;
 
 namespace MeshEditor.CoreInterface
 {
@@ -50,10 +52,13 @@ namespace MeshEditor.CoreInterface
 				mem.Close();
 			// serializace do pameti
 			mem = new MemoryStream();
-			BinaryFormatter formatter = new BinaryFormatter();
 			try
 			{
-				formatter.Serialize(mem, Instance);
+				using (var writer = new StreamWriter(mem, Encoding.UTF8, 1024, leaveOpen: true))
+				{
+					writer.Write(JsonSerializer.Serialize(Instance, JsonOptions.Compact));
+					writer.Flush();
+				}
 				mem.Position = 0;
 			}
 			catch (Exception)
@@ -67,11 +72,15 @@ namespace MeshEditor.CoreInterface
 			if (mem == null)
 				return;
 			// deserializace z pameti
-			BinaryFormatter formatter = new BinaryFormatter();
 			try
 			{
-				instance = (SceneSettings)formatter.Deserialize(mem);
-				instance.update();
+				mem.Position = 0;
+				using (var reader = new StreamReader(mem, Encoding.UTF8, true, 1024, true))
+				{
+					string json = reader.ReadToEnd();
+					instance = JsonSerializer.Deserialize<SceneSettings>(json, JsonOptions.Compact);
+					instance?.update();
+				}
 			}
 #if !DEBUG
 			catch (Exception)
@@ -82,6 +91,7 @@ namespace MeshEditor.CoreInterface
 			finally
 			{
 				mem.Close();
+				mem = null;
 			}
 		}
 
@@ -204,6 +214,7 @@ namespace MeshEditor.CoreInterface
 		/// <summary>
 		/// Private constructor
 		/// </summary>
+		[JsonConstructor] // private constructor is used for deserialization (as by Newtonsoft.Json)
 		private SceneSettings()
 		{
 			lineSmooth = LineSmooth;

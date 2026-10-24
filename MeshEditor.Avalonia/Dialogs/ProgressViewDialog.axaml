@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MeshEditor.AvaloniaUI.Dialogs.ProgressViewDialog"
+        Title="Operation in progress ..."
+        Width="515" MinWidth="300" SizeToContent="Height"
+        CanMinimize="False" CanMaximize="False"
+        ShowInTaskbar="False" Topmost="True"
+        WindowStartupLocation="CenterScreen">
+	<Grid Margin="12,8,12,10" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto">
+		<TextBlock x:Name="labelOperationName" Grid.ColumnSpan="2" Margin="0,0,0,6" />
+		<ProgressBar x:Name="progressBar" Grid.Row="1" Minimum="0" Maximum="100" MinHeight="23" VerticalAlignment="Center" Margin="0,0,8,0" />
+		<Button x:Name="buttonCancel" Grid.Row="1" Grid.Column="1" Content="Cancel" MinWidth="75" MinHeight="31"
+		        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsCancel="True" Click="buttonCancel_Click" />
+		<ListBox x:Name="listBoxLog" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0" IsVisible="False" />
+	</Grid>
+</Window>

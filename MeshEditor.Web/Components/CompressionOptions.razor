@@ -1,0 +1,66 @@
+@* Compression of the generated layer, the same parameters as in the desktop app: method, then "error <NRMSD>" or "size <factor>", optionally "randomized". *@
+<div class="row">
+    <div class="field">
+        <label for="@($"{IdPrefix}-method")">Compression</label>
+        <select class="input" id="@($"{IdPrefix}-method")" @bind="method" @bind:after="changed">
+            @if (AllowNone)
+            {
+                <option value="">None</option>
+            }
+            <option value="SVD">SVD</option>
+            <option value="WT">Wavelet</option>
+        </select>
+    </div>
+    @if (method == "SVD")
+    {
+        <div class="field">
+            <label for="@($"{IdPrefix}-pref")">Preference</label>
+            <select class="input" id="@($"{IdPrefix}-pref")" @bind="preference" @bind:after="changed">
+                <option value="error">Compression error</option>
+                <option value="size">Compressed size</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="@($"{IdPrefix}-value")">@(preference == "error" ? "NRMSD" : "Size factor")</label>
+            <input class="input mono" id="@($"{IdPrefix}-value")" @bind="value" @bind:after="changed" />
+        </div>
+    }
+</div>
+@if (method == "SVD")
+{
+    <label class="check"><input type="checkbox" @bind="randomized" @bind:after="changed" /> Use randomized SVD to accelerate the compression</label>
+}
+
+@code {
+    [Parameter] public string IdPrefix { get; set; } = "cmp";
+    [Parameter] public bool AllowNone { get; set; } = true;
+    [Parameter] public EventCallback<string[]> ParametersChanged { get; set; }
+
+    private string method = "";
+    private string preference = "error";
+    private string value = "0.01";
+    private bool randomized;
+
+    protected override void OnInitialized()
+    {
+        if (!AllowNone)
+            method = "SVD";
+    }
+
+    public string[] GetParameters()
+    {
+        if (string.IsNullOrEmpty(method))
+            return Array.Empty<string>();
+        var parameters = new List<string> { method };
+        if (method == "SVD")
+        {
+            parameters.Add(preference);
+            parameters.Add((value ?? "").Trim().Replace(',', '.'));
+            if (randomized)
+                parameters.Add("randomized");
+        }
+        return parameters.ToArray();
+    }
+
+    private Task changed() => ParametersChanged.InvokeAsync(GetParameters());
+}

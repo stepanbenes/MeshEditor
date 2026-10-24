@@ -1,6 +1,6 @@
-﻿using MeshEditor.Data;
+using MeshEditor.Data;
 using MeshEditor.Graphics;
-using OpenTK;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Linq;

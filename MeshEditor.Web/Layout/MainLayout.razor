@@ -1,0 +1,46 @@
+@inherits LayoutComponentBase
+@inject RemoteStorage Storage
+
+<div class="shell">
+    <header class="appbar">
+        <a class="brand" href=""><span class="logo"></span>MeshEditor Online</a>
+        <div class="crumbs" id="crumbs"><SectionOutlet SectionName="crumbs" /></div>
+        <div class="spacer"></div>
+        @if (Storage.User != null)
+        {
+            <div class="user">
+                @if (Storage.IsDevelopment)
+                {
+                    <span class="devtag" title="Development storage (Azurite), no sign-in">DEV STORAGE</span>
+                }
+                <span class="avatar">@initials(Storage.User.Name)</span>
+                <span>@Storage.User.Name</span>
+                @if (!Storage.IsDevelopment)
+                {
+                    <button class="btn sm ghost" type="button" @onclick="Storage.SignOutAsync">Sign out</button>
+                }
+            </div>
+        }
+    </header>
+    @Body
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Storage.InitializeAsync();
+        }
+        catch (Exception)
+        {
+            // the page shows the error
+        }
+    }
+
+    private static string initials(string name)
+    {
+        var parts = name.Split(new[] { ' ', '.', '@', '_' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    }
+}

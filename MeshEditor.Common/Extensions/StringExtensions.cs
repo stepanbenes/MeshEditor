@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -76,8 +77,19 @@ namespace MeshEditor.Common.Extensions
 		{
 			if (string.IsNullOrEmpty(text))
 				return string.Empty;
-			byte[] tempBytes = Encoding.GetEncoding("ISO-8859-8").GetBytes(text);
-			return Encoding.UTF8.GetString(tempBytes, 0, tempBytes.Length);
+
+			var normalized = text.Normalize(NormalizationForm.FormD);
+			var builder = new StringBuilder(normalized.Length);
+			foreach (var ch in normalized)
+			{
+				var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(ch);
+				if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+				{
+					builder.Append(ch);
+				}
+			}
+
+			return builder.ToString().Normalize(NormalizationForm.FormC);
 		}
 
 		public static string TrimOrExtendToLength(this string text, int length)

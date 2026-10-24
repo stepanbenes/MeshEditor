@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
@@ -10,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("MeshEditor - FEM format converter")]
-[assembly: AssemblyCopyright("Copyright © 2024")]
+[assembly: AssemblyCopyright("Copyright © 2015-2026 Stepan Benes")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -18,6 +19,11 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
+
+// UI tests replace the Microsoft account sign-in by a test storage connection
+[assembly: InternalsVisibleTo("MeshEditor.Avalonia.Tests")]
+// the web app works with the remote solutions in the browser
+[assembly: InternalsVisibleTo("MeshEditor.Web.Worker")]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("551f7428-7a4e-4ee2-9681-5de0105bf887")]
@@ -32,5 +38,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.5.2")]
-[assembly: AssemblyFileVersion("2.5.2")]
+[assembly: AssemblyVersion("3.0.0")]
+[assembly: AssemblyFileVersion("3.0.0")]

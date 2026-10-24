@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using System.Diagnostics;
 using System.Linq;
 
-using OpenTK;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 
@@ -920,7 +920,7 @@ namespace MeshEditor.Data
 
 		public void DrawBeams(HashSet<ISelectable> selectedItems, bool beamPropertyColors)
 		{
-			GL.LineWidth(Scene.BeamWidth);
+			MeshEditor.Graphics.DeviceScaling.LineWidth(Scene.BeamWidth);
 			if (Scene.LineSmooth)
 			{
 				GL.Enable(EnableCap.LineSmooth);
@@ -1011,7 +1011,7 @@ namespace MeshEditor.Data
 					selected = selectedItems.Contains(faceOfElement.ParentElement);
 				}
 				// --------------------------------------------------------------------------
-				textPrinter.Print(id.ToString(), new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
+				textPrinter.Print(id.ToString(), new Vector2(winPos.X - MeshEditor.Graphics.DeviceScaling.Scale(10), viewport[3] - winPos.Y - MeshEditor.Graphics.DeviceScaling.Scale(8)), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1033,7 +1033,7 @@ namespace MeshEditor.Data
 				if (stickyNodes.Contains(n))
 					continue;
 				Utils.GluProject(n.Position, modelview, projection, viewport, out winPos);
-				textPrinter.Print(n.ID.ToString(), new Vector2(winPos.X + 2, viewport[3] - winPos.Y + 2), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor);
+				textPrinter.Print(n.ID.ToString(), new Vector2(winPos.X + MeshEditor.Graphics.DeviceScaling.Scale(2), viewport[3] - winPos.Y + MeshEditor.Graphics.DeviceScaling.Scale(2)), selectedItems.Contains(n) ? Scene.SelectedNodeColor : Scene.NodeNumbersColor);
 			}
 			textPrinter.End(); // restores projection matrix
 		}
@@ -1063,7 +1063,7 @@ namespace MeshEditor.Data
 				//if (winPos.Z >= 0f && winPos.Z <= 1f)
 				//{
 				bool selected = selectedItems.Contains(beam);
-				textPrinter.Print(beam.ID.ToString(), new Vector2(winPos.X - 10, viewport[3] - winPos.Y - 8), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
+				textPrinter.Print(beam.ID.ToString(), new Vector2(winPos.X - MeshEditor.Graphics.DeviceScaling.Scale(10), viewport[3] - winPos.Y - MeshEditor.Graphics.DeviceScaling.Scale(8)), selected ? Scene.SelectedElementNumbersColor : Scene.ElementNumbersColor);
 				//}
 			}
 			textPrinter.End(); // restores projection matrix
@@ -1110,7 +1110,7 @@ namespace MeshEditor.Data
 			foreach (var textPosition in textPositions)
 			{
 				Vector2 winPos = textPosition.Value;
-				textPrinter.Print(textPosition.Key, new Vector2(winPos.X + 1, windowHeight - winPos.Y + 1), Scene.LabelColor, fontSize: 14);
+				textPrinter.Print(textPosition.Key, new Vector2(winPos.X + MeshEditor.Graphics.DeviceScaling.Scale(1), windowHeight - winPos.Y + MeshEditor.Graphics.DeviceScaling.Scale(1)), Scene.LabelColor, fontSize: 14);
 			}
 			textPrinter.End(); // restores projection matrix
 		}

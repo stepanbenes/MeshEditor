@@ -1,28 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using MeshEditor.LayerManager.Storage;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
 
 namespace MeshEditor.SolutionManager.AzureStorage
 {
+	/// <summary>
+	/// Records stored as blobs of one Azure Blob Storage container under a folder (the owner's id, or the layer folder of a remote solution).
+	/// Record "a/b.json" is blob "{folder}/a/b.json".
+	/// </summary>
 	class AzureBlobStorageService : IStorageService
 	{
 		#region Fields, constructor
 
-		private readonly CloudStorageAccount storageAccount;
-		private readonly string blobContainerName;
+		private readonly BlobContainerClient container;
+		private readonly Lazy<string> folder;
 
-		public AzureBlobStorageService(string connectionString, string blobContainerName)
+		public AzureBlobStorageService(BlobContainerClient container, string folder)
 		{
-			storageAccount = CloudStorageAccount.Parse(connectionString);
-			this.blobContainerName = blobContainerName;
+			this.container = container ?? throw new ArgumentNullException(nameof(container));
+			string checkedFolder = checkFolder(folder);
+			this.folder = new Lazy<string>(() => checkedFolder);
 		}
+
+		/// <summary>
+		/// The folder is found on the first access to a record (e.g. read from the remote solution). A failure is not remembered, it is tried again.
+		/// </summary>
+		public AzureBlobStorageService(BlobContainerClient container, Func<string> getFolder)
+		{
+			this.container = container ?? throw new ArgumentNullException(nameof(container));
+			if (getFolder == null)
+				throw new ArgumentNullException(nameof(getFolder));
+			folder = new Lazy<string>(() => checkFolder(getFolder()), LazyThreadSafetyMode.PublicationOnly);
+		}
+
+		private static string checkFolder(string folder) => string.IsNullOrWhiteSpace(folder) ? throw new ArgumentException("Folder is not specified", nameof(folder)) : folder;
 
 		#endregion
 
@@ -30,83 +46,36 @@ namespace MeshEditor.SolutionManager.AzureStorage
 
 		public Stream Load(string record)
 		{
-			return downloadFile(storageAccount, blobContainerName, record);
+			return container.GetBlobClient(ToBlobName(folder.Value, record)).OpenRead();
 		}
 
 		public Stream Save(string record)
 		{
-			return uploadFile(storageAccount, blobContainerName, record);
+			return container.GetBlockBlobClient(ToBlobName(folder.Value, record)).OpenWrite(overwrite: true);
 		}
 
 		public void Delete(string record)
 		{
-			deleteFileFromBlobStorage(storageAccount, blobContainerName, record);
+			container.GetBlobClient(ToBlobName(folder.Value, record)).DeleteIfExists();
 		}
 
 		public void DeleteDirectory(string name)
 		{
-			var blobClient = storageAccount.CreateCloudBlobClient();
-			var container = blobClient.GetContainerReference(blobContainerName);
-			List<IListBlobItem> blobsToDelete = new List<IListBlobItem>();
-
-			CloudBlobDirectory blobDirectory = container.GetDirectoryReference(name);
-			BlobContinuationToken continuationToken = null;
-			do
+			string prefix = ToBlobName(folder.Value, name).TrimEnd('/') + "/";
+			foreach (var blob in container.GetBlobs(BlobTraits.None, BlobStates.None, prefix, CancellationToken.None).ToList())
 			{
-				var listingResult = blobDirectory.ListBlobsSegmented(continuationToken);
-				continuationToken = listingResult.ContinuationToken;
-				blobsToDelete.AddRange(listingResult.Results);
-			} while (continuationToken != null);
-
-			foreach (CloudBlob cloudBlob in blobsToDelete)
-			{
-				cloudBlob.DeleteIfExists();
+				container.GetBlobClient(blob.Name).DeleteIfExists();
 			}
 		}
 
 		#endregion
 
-		#region Private methods
+		#region Internal static methods
 
-		private static Stream downloadFile(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
-		{
-			// Create the blob client and reference the container
-			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
-
-			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
-
-			return blockBlob.OpenRead();
-		}
-
-		private static Stream uploadFile(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
-		{
-			// Create the blob client and reference the container
-			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
-
-			// Upload file to Blob Storage
-			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
-			//blockBlob.Properties.ContentType = formFile.ContentType;
-			return blockBlob.OpenWrite();
-			// Convert to be HTTP based URI (default storage path is HTTPS)
-			//var uriBuilder = new UriBuilder(blockBlob.Uri);
-			//uriBuilder.Port = -1;
-			//uriBuilder.Scheme = "http";
-			//string fullPath = uriBuilder.ToString();
-			//return fullPath;
-		}
-
-		private static bool deleteFileFromBlobStorage(CloudStorageAccount storageAccount, string blobContainerName, string blobName)
-		{
-			// Create the blob client and reference the container
-			CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-			CloudBlobContainer container = blobClient.GetContainerReference(blobContainerName);
-			// Retrieve reference to a blob
-			CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
-			// Delete the blob
-			return blockBlob.DeleteIfExists(); // TODO: make async
-		}
+		/// <summary>
+		/// Blob name of the record in the folder. Blob names always use forward slashes (record names of local solutions may contain backslashes on Windows).
+		/// </summary>
+		internal static string ToBlobName(string folder, string record) => folder + "/" + record.Replace('\\', '/').TrimStart('/');
 
 		#endregion
 	}
