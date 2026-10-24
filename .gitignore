@@ -192,3 +192,6 @@ _Pvt_Extensions/
 ModelManifest.xml
 *.pubxml
 /MeshEditor.FormatConverter/Properties/webjob-publish-settings.json
+
+# Azurite started by scripts/start-azurite.cs
+.azurite/

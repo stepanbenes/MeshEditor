@@ -6,6 +6,7 @@ Everything runs in the browser. The app is a static site: there is no server of 
 
 - **MeshEditor.Web**: the Blazor WebAssembly UI. The 3D view is three.js (`wwwroot/js/viewer.js`). Sign-in is MSAL.js.
 - **MeshEditor.Web.Worker**: the layer code (`MeshEditor.LayerManager`, `MeshEditor.SolutionManager`) compiled to WebAssembly. It runs in a Web Worker, so long computations don't freeze the page. Building MeshEditor.Web publishes it into `wwwroot/worker`.
+- **scripts/start-azurite.cs**, **scripts/stop-azurite.cs**: start and stop Azurite in the background for local testing.
 - **scripts/setup-azurite.cs**: prepares Azurite for local testing.
 
 The worker downloads the records of a layer into memory, runs the same layer generator as the desktop app, and uploads the new records. Solutions made in the web app open in the desktop app, and the other way round.
@@ -16,13 +17,21 @@ No Azure account and no sign-in: the app uses the Azure Storage emulator and a f
 
 Needs the .NET 10 SDK and Node.js.
 
-1. Start Azurite (the blob service is enough):
+1. Start Azurite (the blob service is enough) in the background:
+
+   ```sh
+   dotnet run scripts/start-azurite.cs
+   ```
+
+   The first run installs Azurite from npm into `.azurite` (delete `.azurite/node_modules` to get a newer version). The data is kept in memory; pass `--persist` to keep it between runs in `.azurite/data`. Azurite's output goes to `.azurite/azurite.log`. Stop it with `dotnet run scripts/stop-azurite.cs`.
+
+   To run Azurite in the foreground instead:
 
    ```sh
    npx --package azurite azurite-blob --blobHost 127.0.0.1 --blobPort 10000 --inMemoryPersistence --loose --skipApiVersionCheck
    ```
 
-   Leave out `--inMemoryPersistence` to keep the data between runs. `--skipApiVersionCheck` is needed because the Azure SDK of the app uses a newer storage API version than Azurite knows.
+   `--skipApiVersionCheck` is needed because the Azure SDK of the app uses a newer storage API version than Azurite knows.
 
 2. Create the containers and allow the app's origin (CORS). Run it again after each restart of an in-memory Azurite:
 
