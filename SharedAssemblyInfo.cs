@@ -8,5 +8,5 @@
 [assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("MeshEditor")]
 [assembly: AssemblyCopyright("Copyright © 2015-2026 Stepan Benes")]
-[assembly: AssemblyVersion("2.5.2")]
-[assembly: AssemblyFileVersion("2.5.2")]
+[assembly: AssemblyVersion("3.0.0")]
+[assembly: AssemblyFileVersion("3.0.0")]

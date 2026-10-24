@@ -51,7 +51,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 		public async Task Newer_release_is_an_update_with_the_package_link()
 		{
 			// the releases.txt files published before scripts/publish-update.cs start with a byte order mark
-			await publishReleasesAsync("﻿99.0.0 package-99.0.0\r\n2.5.2 package-2.5.2\r\n");
+			await publishReleasesAsync("\uFEFF99.0.0 package-99.0.0\r\n2.5.2 package-2.5.2\r\n");
 
 			var updateChecker = new UpdateChecker();
 			Assert.That(await updateChecker.CheckForUpdates(), Is.True);
