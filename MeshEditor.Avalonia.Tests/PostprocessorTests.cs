@@ -189,6 +189,42 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public async Task ParaView_collection_is_imported_as_time_series()
+		{
+			var window = showMainWindow();
+			click(window.importFEMResultsToolStripMenuItem);
+			var dialog = await waitForWindow<ImportFEMResultsDialog>();
+			dialog.textBoxMeshFile.Text = testDataPath("plate.pvd");
+			dialog.textBoxLocation.Text = tempDirectory;
+			Dispatcher.UIThread.RunJobs(); // TextChanged
+			Assert.That(dialog.textBoxProjectName.Text, Is.EqualTo("plate"));
+			Assert.That(dialog.textBoxResultFiles.IsEnabled, Is.False, "the .vtu files of the collection have the results");
+
+			click(dialog.buttonImport);
+			await waitUntil(() => !dialog.IsVisible, "import finishes and closes the dialog");
+			Assert.That(ErrorReports(), Is.Null);
+			await waitUntil(() => window.LayoutMode == LayoutMode.Postprocessor, "postprocessor layout");
+			var dataSelection = window.getCurrentPostprocessView().dataSelectionControl;
+			await waitUntil(() => dataSelection.comboBoxField.ItemCount > 0, "layer is loaded");
+
+			// time steps of the collection (in the file they are not ordered), with the temperature of each
+			dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == "Temperature");
+			await waitUntil(() => dataSelection.comboBoxTimeStep.ItemCount == 2, "time steps of the field");
+			decimal timeStepOf(object item) => decimal.Parse(item.ToString(), System.Globalization.CultureInfo.CurrentCulture); // the tests run with the OS culture
+			Assert.That(dataSelection.comboBoxTimeStep.Items.Select(timeStepOf), Is.EqualTo(new[] { 0m, 0.5m }));
+			foreach (var (timeStep, maximum) in new[] { (0m, 5.0), (0.5m, 10.0) })
+			{
+				dataSelection.comboBoxTimeStep.SelectedItem = dataSelection.comboBoxTimeStep.Items.Single(i => timeStepOf(i) == timeStep);
+				IDataVisualizer dataVisualizer = null;
+				await waitUntil(() => dataSelection.CurrentDataSelection.TimeStep == timeStep
+					&& (dataVisualizer = window.ActiveViewport.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer) != null
+					&& dataVisualizer.GetMaximumDataValue() == maximum, $"temperature of time step {timeStep}", timeoutSeconds: 10);
+				Assert.That(dataVisualizer.GetMinimumDataValue(), Is.EqualTo(0));
+			}
+			Assert.That(ErrorReports(), Is.Null);
+		}
+
+		[AvaloniaTest]
 		public async Task Import_with_invalid_key_time_step_is_reported_before_creating_the_solution()
 		{
 			var window = showMainWindow();

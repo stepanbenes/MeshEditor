@@ -238,7 +238,7 @@ namespace MeshEditor.CoreInterface
 
 		public static string OutputFileFormatFilter => string.Format("SIFEL file format (*{0})|*{0}|GiD mesh file format (*.msh)|*.msh|VTK Simple ASCII file format (*.vtk)|*.vtk|All files (*.*)|*.*", SceneSettings.Instance.SifelFileformatExtension);
 
-		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu)|*.msh;*.vtu|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|All files (*.*)|*.*";
+		public static string ImportMeshFileFormatFilter => "All supported files (*.msh, *.vtu, *.pvd)|*.msh;*.vtu;*.pvd|GiD mesh file format (*.msh)|*.msh|VTK XML unstructured grid (*.vtu)|*.vtu|ParaView data collection, a time series of .vtu files (*.pvd)|*.pvd|All files (*.*)|*.*";
 
 		public static string ImportDataFileFormatFilter => "All supported files (*.res, *.vtu)|*.res;*.vtu|GiD data file format (*.res)|*.res|VTK XML unstructured grid data (*.vtu)|*.vtu|All files (*.*)|*.*";
 

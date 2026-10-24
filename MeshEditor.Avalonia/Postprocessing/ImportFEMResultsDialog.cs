@@ -240,7 +240,13 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 			buttonChooseMeshFile.Click += buttonChooseMeshFile_Click;
 			buttonChooseResultFiles.Click += buttonChooseResultFiles_Click;
 			buttonChooseSolutionDirectory.Click += buttonChooseSolutionDirectory_Click;
-			textBoxMeshFile.TextChanged += (s, e) => textBoxProjectName.Text = Path.GetFileNameWithoutExtension((textBoxMeshFile.Text ?? "").RemoveQuotes()).MakeAlphanumeric();
+			textBoxMeshFile.TextChanged += (s, e) =>
+			{
+				string meshFile = (textBoxMeshFile.Text ?? "").RemoveQuotes();
+				textBoxProjectName.Text = Path.GetFileNameWithoutExtension(meshFile).MakeAlphanumeric();
+				// the .vtu files of a ParaView collection have the results too
+				textBoxResultFiles.IsEnabled = buttonChooseResultFiles.IsEnabled = !ParaViewCollection.IsCollection(meshFile);
+			};
 			textBoxProjectName.TextChanged += (s, e) => updateUI();
 			textBoxLocation.TextChanged += (s, e) => updateUI();
 
@@ -314,15 +320,16 @@ namespace MeshEditor.AvaloniaUI.Postprocessing
 				isImportOperationRunning = true;
 				updateUI();
 
-				string[] resultFiles = (textBoxResultFiles.Text ?? "").SplitToTokensWithQuotes();
-
-				IEnumerable<AnalysisResult> analysisResults = new[]
+				string meshFile = textBoxMeshFile.Text.RemoveQuotes();
+				IEnumerable<AnalysisResult> analysisResults = ParaViewCollection.IsCollection(meshFile)
+					? ParaViewCollection.ReadAnalysisResults(meshFile) // a time series: its .vtu files have the meshes and the results
+					: new[]
 					{
 						new AnalysisResult
 						{
-							TimeStep = null, // TODO: use explicit time steps for .vtu
-							MeshRecordNames = new[] { textBoxMeshFile.Text.RemoveQuotes() },
-							DataRecordNames = resultFiles
+							TimeStep = null, // the time steps are in the result files (.res); a .vtu file is at time 0
+							MeshRecordNames = new[] { meshFile },
+							DataRecordNames = (textBoxResultFiles.Text ?? "").SplitToTokensWithQuotes()
 						}
 					};
 				string projectName = textBoxProjectName.Text;

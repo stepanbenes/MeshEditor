@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- time step 0.5 of plate.pvd: the same quads, temperature 0..10 -->
+<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <Piece NumberOfPoints="6" NumberOfCells="2">
+      <PointData Scalars="Temperature">
+        <DataArray type="Float64" Name="Temperature" format="ascii">0 2 4 6 8 10</DataArray>
+      </PointData>
+      <CellData>
+      </CellData>
+      <Points>
+        <DataArray type="Float32" NumberOfComponents="3" format="ascii">0 0 0  1 0 0  2 0 0  0 1 0  1 1 0  2 1 0</DataArray>
+      </Points>
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii">0 1 4 3  1 2 5 4</DataArray>
+        <DataArray type="Int32" Name="offsets" format="ascii">4 8</DataArray>
+        <DataArray type="UInt8" Name="types" format="ascii">9 9</DataArray>
+      </Cells>
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>
