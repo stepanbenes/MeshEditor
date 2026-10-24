@@ -78,7 +78,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ./linux-deployment/mesheditor/out/mesheditor_*_amd64.deb
-          fem-format-converter version
+          # the version command exits with 1 (as help does): check its output
+          fem-format-converter version | grep 'FEM format converter'
+          test -x /usr/lib/mesheditor/MeshEditor.Avalonia
 
       - uses: actions/upload-artifact@v4
         with:
