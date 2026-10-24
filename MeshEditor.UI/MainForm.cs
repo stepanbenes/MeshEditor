@@ -1047,7 +1047,8 @@ namespace MeshEditor.WinUI
 
 			bool updateExists = await updateChecker.CheckForUpdates();
 
-			mainWindowSettings.LastCheckedUpdateVersion = updateChecker.ServerVersion.ToString();
+			if (updateChecker.ServerVersion != null)
+				mainWindowSettings.LastCheckedUpdateVersion = updateChecker.ServerVersion.ToString();
 
 			if (updateExists)
 			{

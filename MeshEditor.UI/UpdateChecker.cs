@@ -15,10 +15,14 @@ namespace MeshEditor.WinUI
 	{
 		private static readonly HttpClient HttpClient = new HttpClient();
 
-		public static string MeshEditorUpdateUri => @"https://feastorage.blob.core.windows.net/mesheditor-update";
+		// the public blob container of the update service (tests point it to Azurite); scripts/publish-update.cs publishes there
+		public static string MeshEditorUpdateUri { get; set; } = @"https://feastorage.blob.core.windows.net/mesheditor-update";
 
-		// only linux/x64 packages are published (PlatformID.Unix would also match macOS, Is64BitOperatingSystem also arm64)
-		public static bool IsUpdateServiceAvailableForThisPlatform => OperatingSystem.IsLinux() && RuntimeInformation.OSArchitecture == Architecture.X64;
+		// packages are published for linux/x64 (Debian package) and windows/x64 (zip), each folder with its releases.txt
+		// (PlatformID.Unix would also match macOS, Is64BitOperatingSystem also arm64)
+		public static bool IsUpdateServiceAvailableForThisPlatform => clientFolder != null && RuntimeInformation.OSArchitecture == Architecture.X64;
+
+		private static string clientFolder => OperatingSystem.IsLinux() ? "linux" : OperatingSystem.IsWindows() ? "windows" : null;
 
 		public UpdateChecker()
 		{
@@ -38,11 +42,18 @@ namespace MeshEditor.WinUI
 
 			if (!IsUpdateServiceAvailableForThisPlatform)
 				throw new NotSupportedException($"Updates are not available for this platform ({RuntimeInformation.OSDescription}, {RuntimeInformation.OSArchitecture}).");
-			string clientFolder = "linux";
 			string architectureFolder = "x64";
 
 			string releasesFileUri = $"{MeshEditorUpdateUri}/{clientFolder}/{architectureFolder}/releases.txt";
-			string releasesFileContent = await HttpClient.GetStringAsync(releasesFileUri);
+			string releasesFileContent;
+			try
+			{
+				releasesFileContent = await HttpClient.GetStringAsync(releasesFileUri);
+			}
+			catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+			{
+				return false; // nothing has been released for this platform yet
+			}
 
 			string[] lines = releasesFileContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			if (lines.Length > 0)
