@@ -25,7 +25,6 @@ using MeshEditor.CoreInterface;
 using MeshEditor.Data;
 using Image = Avalonia.Controls.Image;
 using MeshEditor.Graphics;
-using MeshEditor.WinUI;
 
 using DrawingRectangle = System.Drawing.Rectangle;
 

@@ -20,8 +20,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- The WinForms designer file is the reference for the menu/toolbar parity tests. -->
-		<None Include="..\MeshEditor.UI\MainForm.Designer.cs" Link="Reference\MainForm.Designer.cs.txt" CopyToOutputDirectory="PreserveNewest" />
 		<None Update="TestData\sample.obj" CopyToOutputDirectory="PreserveNewest" />
 		<None Update="TestData\props.msh" CopyToOutputDirectory="PreserveNewest" />
 		<None Update="TestData\props.res" CopyToOutputDirectory="PreserveNewest" />

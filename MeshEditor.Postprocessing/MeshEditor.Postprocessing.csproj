@@ -11,8 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- internal types (e.g. VisualizerSettings, LayerDataVisualizer) were used by the UI in the same assembly before -->
-		<InternalsVisibleTo Include="MeshEditor.DataVisualizer" />
+		<!-- internal types (e.g. VisualizerSettings, LayerDataVisualizer) are used by the UI (they were in one assembly before) -->
 		<InternalsVisibleTo Include="MeshEditor" /><!-- MeshEditor.Avalonia -->
 		<InternalsVisibleTo Include="MeshEditor.Avalonia.Tests" />
 	</ItemGroup>

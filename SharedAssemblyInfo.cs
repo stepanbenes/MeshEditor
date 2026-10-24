@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-// Product information shared by the WinForms (MeshEditor.UI) and Avalonia (MeshEditor.Avalonia) applications.
+// Product information of the application (MeshEditor.Avalonia). The package builds (linux-deployment, windows-deployment) read the version.
 // Update the version here when releasing.
 
 [assembly: AssemblyTitle("MeshEditor")]

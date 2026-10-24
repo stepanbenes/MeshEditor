@@ -7,7 +7,7 @@
 		<Nullable>disable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<ApplicationIcon>..\MeshEditor.UI\appIcon.ico</ApplicationIcon>
+		<ApplicationIcon>Assets\appIcon.ico</ApplicationIcon>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 		<!-- product information and version: ..\SharedAssemblyInfo.cs -->
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
@@ -42,13 +42,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Reuse the original toolbar/menu icons of the WinForms UI without copying them. -->
-		<AvaloniaResource Include="..\MeshEditor.UI\Resources\*.png" Link="Assets\Icons\%(Filename)%(Extension)" />
-		<AvaloniaResource Include="..\MeshEditor.UI\appIcon.ico" Link="Assets\appIcon.ico" />
-		<!-- UI-toolkit independent update checker shared with the WinForms UI. -->
-		<Compile Include="..\MeshEditor.UI\UpdateChecker.cs" Link="UpdateChecker.cs" />
+		<AvaloniaResource Include="Assets\**" />
 		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-		<AvaloniaResource Include="..\MeshEditor.Forms\Resources\hinkley.png" Link="Assets\hinkley.png" />
 		<None Include="..\MeshEditor.Core\OpenTK.dll.config" Condition="Exists('..\MeshEditor.Core\OpenTK.dll.config')" CopyToOutputDirectory="Never" />
 	</ItemGroup>
 </Project>

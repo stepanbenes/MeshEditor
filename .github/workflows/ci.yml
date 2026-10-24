@@ -10,8 +10,7 @@ env:
 
 jobs:
   avalonia-tests:
-    # The WinForms projects in the solution (net10.0-windows) don't build here; the Avalonia
-    # test project builds the cross-platform app and everything it depends on.
+    # The test project builds the app and everything it depends on.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

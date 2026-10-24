@@ -3,7 +3,7 @@
 #:package Azure.Identity@1.21.0
 
 // Publishes packages to the update service (the public blob container mesheditor-update of the storage account feastorage),
-// where the app's update check (MeshEditor.UI/UpdateChecker.cs) finds them: uploads each package into <os>/x64/ and puts
+// where the app's update check (MeshEditor.Avalonia/UpdateChecker.cs) finds them: uploads each package into <os>/x64/ and puts
 // "<version> <file name>" as the first line of releases.txt there. The packages are the output of
 // linux-deployment/mesheditor/build (mesheditor_<version>_amd64.deb) and windows-deployment/build.ps1
 // (MeshEditor-<version>-win-x64.zip). --user-guide also uploads the user guide (Help -> User guide).
