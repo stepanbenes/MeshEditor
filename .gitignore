@@ -196,5 +196,8 @@ ModelManifest.xml
 # Azurite started by scripts/start-azurite.cs
 .azurite/
 
-# Debian package built by linux-deployment/mesheditor/build
-linux-deployment/mesheditor/package.deb
+# output of linux-deployment/mesheditor/build and windows-deployment/build.ps1
+linux-deployment/mesheditor/out/
+windows-deployment/out/
+# the launchers in the Debian package (not build output)
+!linux-deployment/mesheditor/package/usr/bin/

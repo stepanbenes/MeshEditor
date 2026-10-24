@@ -59,3 +59,47 @@ jobs:
 
       - name: Publish
         run: dotnet publish MeshEditor.Web -c Release -o publish
+
+  linux-package:
+    # The Debian package (linux-deployment/mesheditor/build), downloadable from the run's artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the package
+        run: linux-deployment/mesheditor/build
+
+      - name: Check that apt can install it
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ./linux-deployment/mesheditor/out/mesheditor_*_amd64.deb
+          fem-format-converter version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-package
+          path: linux-deployment/mesheditor/out/*.deb
+
+  windows-package:
+    # The self-contained Windows zip (windows-deployment/build.ps1), downloadable from the run's artifacts
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the package
+        run: windows-deployment/build.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: windows-deployment/out/*.zip

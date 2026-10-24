@@ -1,0 +1,11 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: MeshEditor
+Upstream-Contact: Stepan Benes <benes.stepan@gmail.com>
+Source: https://github.com/stepanbenes/MeshEditor
+
+Files: *
+Copyright: 2015-2026 Stepan Benes
+License: proprietary
+ All rights reserved.
+Comment: The package also contains the .NET runtime, Avalonia, SkiaSharp, OpenTK and GLFW (MIT, BSD-3-Clause and zlib licenses)
+ and the Inter font (SIL Open Font License 1.1), each under its own license.

@@ -32,6 +32,9 @@
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.91.0" />
         <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.91.0" />
+        <!-- Microsoft.Identity.Client.Extensions.Msal needs only 4.5.0; the same version as in MeshEditor.Core (via
+             System.Configuration.ConfigurationManager), so that the Linux package can put both apps into one directory -->
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
     </ItemGroup>
 
     <ItemGroup>
