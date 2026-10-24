@@ -2,6 +2,8 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [master]
   workflow_dispatch:
 
 env:
@@ -41,6 +43,45 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
+          path: |
+            TestResults
+            MeshEditor.Avalonia.Tests/bin/Debug/net10.0/*.png
+
+  avalonia-tests-windows:
+    # The runners have no GPU: Mesa's software OpenGL (llvmpipe, from mesa-dist-win) is put next to the test host,
+    # which loads it instead of the system opengl32.dll.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      MESA_VERSION: 26.2.3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        # Debug, so Debug.Assert failures in the app fail the tests
+        run: dotnet build MeshEditor.Avalonia.Tests
+
+      - name: Install Mesa next to the test host
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP mesa.7z
+          Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/$env:MESA_VERSION/mesa3d-$env:MESA_VERSION-release-msvc.7z" -OutFile $archive
+          7z e $archive x64/opengl32.dll x64/libgallium_wgl.dll -oMeshEditor.Avalonia.Tests/bin/Debug/net10.0 -y
+
+      - name: Test
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: dotnet test MeshEditor.Avalonia.Tests --no-build --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows
           path: |
             TestResults
             MeshEditor.Avalonia.Tests/bin/Debug/net10.0/*.png
