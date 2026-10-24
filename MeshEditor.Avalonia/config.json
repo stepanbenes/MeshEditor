@@ -1,0 +1,7 @@
+{
+  "AzureBlobStorage": {
+    "AccountUrl": "",
+    "TenantId": "",
+    "ClientId": ""
+  }
+}

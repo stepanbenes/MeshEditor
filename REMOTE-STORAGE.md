@@ -72,7 +72,8 @@ The values are not secret. Put them into the `AzureBlobStorage` section of `conf
 
 Where to put the file:
 
-- **For all users:** the installation `config.json`, next to the executable. It is copied into the user configuration when a newer version starts.
+- **For all users:** the installation `config.json`, next to the executable (in the repository: `MeshEditor.Avalonia/config.json`, which the Linux package and the Windows zip contain). It is copied into the user configuration when a newer version starts. Objects are merged property by property, and empty values (`""`) don't replace the user's values.
+  - The repository has the three values empty for now, so the released app has no remote solutions until they are filled in. Users who set the values in their own configuration keep them.
 - **For one user:** the user configuration file:
   - Windows: `%APPDATA%\MeshEditor\config.json`
   - Linux: `~/.config/MeshEditor/config.json`

@@ -36,6 +36,7 @@ namespace MeshEditor.Common
 
 			var currentAssemblyVersion = Assembly.GetAssembly(typeof(ConfigurationManager)).GetName().Version;
 
+			configurations.Clear(); // nothing of a previously loaded configuration
 			foreach (var pair in readConfigurations(configurationFileFullPath))
 			{
 				configurations[pair.Key] = pair.Value;
@@ -52,13 +53,35 @@ namespace MeshEditor.Common
 				var templateConfigurations = readConfigurations(templateConfigurationFileFullPath);
 				foreach (var pair in templateConfigurations) // copy to current configurations
 				{
-					configurations[pair.Key] = pair.Value;
+					if (!isEmpty(pair.Value))
+						configurations[pair.Key] = configurations.TryGetValue(pair.Key, out JsonNode current) ? mergeTemplate(current, pair.Value) : pair.Value.DeepClone();
 				}
 			}
 
 			// write current assembly version
 			configurations["AssemblyVersion"] = JsonValue.Create(currentAssemblyVersion.ToString());
 		}
+
+		/// <summary>
+		/// Value of the template (installation config.json) applied to the user's value: objects are merged property by property,
+		/// and empty values of the template (null, "") keep the user's ones, so a template that leaves a value empty doesn't erase it.
+		/// </summary>
+		private static JsonNode mergeTemplate(JsonNode current, JsonNode template)
+		{
+			if (current is JsonObject currentObject && template is JsonObject templateObject)
+			{
+				var merged = (JsonObject)currentObject.DeepClone();
+				foreach (var property in templateObject)
+				{
+					if (!isEmpty(property.Value))
+						merged[property.Key] = merged[property.Key] is JsonNode currentValue ? mergeTemplate(currentValue, property.Value) : property.Value.DeepClone();
+				}
+				return merged;
+			}
+			return template.DeepClone();
+		}
+
+		private static bool isEmpty(JsonNode value) => value == null || (value is JsonValue jsonValue && jsonValue.TryGetValue(out string text) && text.Length == 0);
 
 		private static Dictionary<string, JsonNode> readConfigurations(string configurationFileFullPath)
 		{

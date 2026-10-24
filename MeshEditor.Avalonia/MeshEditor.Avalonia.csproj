@@ -43,6 +43,8 @@
 
 	<ItemGroup>
 		<AvaloniaResource Include="Assets\**" />
+		<!-- installation configuration (template of the user's configuration, see REMOTE-STORAGE.md); empty values are not used -->
+		<None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
 		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
 		<None Include="..\MeshEditor.Core\OpenTK.dll.config" Condition="Exists('..\MeshEditor.Core\OpenTK.dll.config')" CopyToOutputDirectory="Never" />
 	</ItemGroup>
