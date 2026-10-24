@@ -30,6 +30,7 @@ Get-ChildItem $converter -Recurse -File | ForEach-Object {
 	}
 }
 Copy-Item (Join-Path $converter '*') $app -Recurse -Force
+Copy-Item (Join-Path $repo 'LICENSE.md'), (Join-Path $repo 'NOTICE.md') $app
 
 $zip = Join-Path $out "MeshEditor-$version-win-x64.zip"
 Compress-Archive -Path $app -DestinationPath $zip

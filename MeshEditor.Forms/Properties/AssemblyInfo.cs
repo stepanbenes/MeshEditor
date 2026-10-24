@@ -13,7 +13,7 @@ using System.Runtime.Versioning;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("MeshEditor")]
-[assembly: AssemblyCopyright("Copyright © 2024")]
+[assembly: AssemblyCopyright("Copyright © 2015-2026 Stepan Benes")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

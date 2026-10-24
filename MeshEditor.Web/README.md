@@ -96,7 +96,7 @@ To test against Azure locally, also set `DevelopmentStorage.Enabled` to `false` 
 dotnet publish MeshEditor.Web -c Release -o publish
 ```
 
-Deploy `publish/wwwroot` to any static host. For Azure Static Web Apps, `staticwebapp.config.json` sends the app's routes to `index.html`. The download is about 8 MB compressed. The browser caches it after the first visit.
+Deploy `publish/wwwroot` to any static host. For Azure Static Web Apps, `staticwebapp.config.json` sends the app's routes to `index.html`. It also sends the `tdm-reservation: 1` header (the text and data mining reservation, see `NOTICE.md`), and `robots.txt` keeps AI crawlers out and lets search engines see only the start page. The download is about 8 MB compressed. The browser caches it after the first visit.
 
 #### Azure Static Web Apps
 

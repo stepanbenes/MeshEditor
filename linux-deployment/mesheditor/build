@@ -20,6 +20,7 @@ fi
 rm -rf "$out"
 mkdir -p "$out"
 cp -r package "$root"
+cp "$repo/LICENSE.md" "$repo/NOTICE.md" "$root/usr/share/doc/mesheditor"
 
 publish() {
 	dotnet publish "$repo/$1" -c Release -r linux-x64 --self-contained -p:DebugType=None -o "$out/publish/$2"

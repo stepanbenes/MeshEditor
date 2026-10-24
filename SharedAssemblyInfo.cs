@@ -7,6 +7,6 @@
 [assembly: AssemblyDescription("3D graphical editor for finite element meshes and postpocessor of the results from the Finite element method")]
 [assembly: AssemblyCompany("Stepan Benes")]
 [assembly: AssemblyProduct("MeshEditor")]
-[assembly: AssemblyCopyright("Copyright © 2024")]
+[assembly: AssemblyCopyright("Copyright © 2015-2026 Stepan Benes")]
 [assembly: AssemblyVersion("2.5.2")]
 [assembly: AssemblyFileVersion("2.5.2")]
