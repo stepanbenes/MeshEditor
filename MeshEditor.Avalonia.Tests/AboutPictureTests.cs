@@ -295,7 +295,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 			double y = p.y + 0.10 * p.y + 0.08 * p.y * q;
 			z += 0.22 * (p.y / halfHeight) * (p.y / halfHeight);
 			// the top tilted away from the camera, turned a bit around the vertical axis
-			double tilt = setting("ABOUT_PICTURE_TILT", -25) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 12) * Math.PI / 180;
+			double tilt = setting("ABOUT_PICTURE_TILT", -15) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 12) * Math.PI / 180;
 			(y, z) = (y * Math.Cos(tilt) - z * Math.Sin(tilt), y * Math.Sin(tilt) + z * Math.Cos(tilt));
 			(x, z) = (x * Math.Cos(turn) + z * Math.Sin(turn), -x * Math.Sin(turn) + z * Math.Cos(turn));
 			return (x, y, z);
