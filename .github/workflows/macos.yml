@@ -4,6 +4,9 @@ name: macOS smoke test
 # uploads a screenshot and the app's output, to see whether the OpenGL 2.1 viewport works there.
 on:
   workflow_dispatch:
+  # also when this workflow changes (a manual run needs the workflow on master)
+  push:
+    paths: ['.github/workflows/macos.yml']
 
 env:
   DOTNET_NOLOGO: true
