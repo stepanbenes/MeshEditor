@@ -30,12 +30,10 @@ namespace MeshEditor.AvaloniaUI.Tests
 			? directory
 			: TestContext.CurrentContext.WorkDirectory;
 
-		// a plate with a hole under tension in the y direction (and compression in the x direction: pure shear)
-		private static double holeRadius => setting("ABOUT_PICTURE_HOLE", 0.55);
-		private static double halfHeight => setting("ABOUT_PICTURE_HALF_HEIGHT", 1.45);
-		private static double compression => setting("ABOUT_PICTURE_COMPRESSION", 0);
-		private const double thickness = 0.16;
-		private const int angleDivisions = 48, radialDivisions = 10, endDivisions = 5; // angleDivisions is a multiple of 8: rays go to the corners of the square
+		// a spur gear driving a pinion (involute teeth, module 0.1, the pressure angle 20°)
+		private const double module = 0.1, pressureAngle = 20 * Math.PI / 180;
+		private const int toothDivisions = 2, gapDivisions = 1, toothLayers = 4;
+		private static double lineOfCentersAngle => setting("ABOUT_PICTURE_DIRECTION", 100) * Math.PI / 180; // from the gear to the pinion
 
 		private static async Task waitUntil(Func<bool> condition, string description, int timeoutSeconds = 60)
 		{
@@ -57,11 +55,11 @@ namespace MeshEditor.AvaloniaUI.Tests
 		{
 			string directory = Path.Combine(Path.GetTempPath(), "MeshEditorTests", Guid.NewGuid().ToString("N"));
 			Directory.CreateDirectory(directory);
-			string meshFile = Path.Combine(directory, "plate.msh"), resultFile = Path.Combine(directory, "plate.res");
-			writePlate(meshFile, resultFile);
+			string meshFile = Path.Combine(directory, "gears.msh"), resultFile = Path.Combine(directory, "gears.res");
+			writeGears(meshFile, resultFile);
 
 			var analysisResults = new[] { new AnalysisResult { TimeStep = null, MeshRecordNames = new[] { meshFile }, DataRecordNames = new[] { resultFile } } };
-			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(directory, "plate"), analysisResults, "plate");
+			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(directory, "gears"), analysisResults, "gears");
 			solutionHub.Import(Enumerable.Empty<decimal>(), Array.Empty<string>(), "Nearest");
 
 			// dark background (the legend text gets the contrast color), dark edges
@@ -169,72 +167,143 @@ namespace MeshEditor.AvaloniaUI.Tests
 			TestContext.Out.WriteLine(path);
 		}
 
-		/// <summary>
-		/// GiD mesh (hexahedra) of the plate, deformed (exaggerated) and tilted towards the camera of the front view, and the von Mises stress
-		/// of the Kirsch solution (an infinite plate with a hole) in its nodes.
-		/// </summary>
-		private static void writePlate(string meshFile, string resultFile)
+		private sealed class Gear
 		{
-			var quads = new List<(double x, double y)[]>();
-			// rays from the hole to the boundary of the square [-1, 1]^2, graded towards the hole
-			var rays = new (double x, double y)[radialDivisions + 1, angleDivisions];
-			for (int j = 0; j < angleDivisions; j++)
+			public int Teeth;
+			public double CenterX, CenterY;
+			public double Rotation; // the angle of the centre of the first tooth
+			public double[] RingRadii; // from the bore to the root circle
+			public int[] RingDivisions;
+			public (double radius, double halfThickness)[] Profile; // the half of the thickness: hub, web, rim
+
+			public double PitchRadius => module * Teeth / 2;
+			public double BaseRadius => PitchRadius * Math.Cos(pressureAngle);
+			public double RootRadius => PitchRadius - 1.25 * module;
+			public double TipRadius => PitchRadius + module;
+			public double PitchAngle => 2 * Math.PI / Teeth;
+
+			/// <summary>
+			/// The half of the angular thickness of a tooth at the radius (the involute flanks, radial below the base circle).
+			/// </summary>
+			public double HalfToothAngle(double r) => Math.PI / (2 * Teeth) + involute(PitchRadius) - involute(Math.Max(r, BaseRadius));
+
+			private double involute(double r)
 			{
-				double angle = 2 * Math.PI * j / angleDivisions;
-				double cos = Math.Cos(angle), sin = Math.Sin(angle);
-				double toSquare = 1 / Math.Max(Math.Abs(cos), Math.Abs(sin));
-				for (int i = 0; i <= radialDivisions; i++)
-				{
-					double t = Math.Pow((double)i / radialDivisions, 1.6);
-					double r = holeRadius * (1 - t) + toSquare * t;
-					rays[i, j] = (r * cos, r * sin);
-				}
-			}
-			for (int i = 0; i < radialDivisions; i++)
-				for (int j = 0; j < angleDivisions; j++)
-				{
-					int k = (j + 1) % angleDivisions;
-					quads.Add(new[] { rays[i, j], rays[i + 1, j], rays[i + 1, k], rays[i, k] });
-				}
-			// blocks above and below the square, with the nodes of its top and bottom edges
-			foreach (int sign in new[] { 1, -1 })
-			{
-				var xs = Enumerable.Range(0, angleDivisions).Select(j => rays[radialDivisions, j]).Where(p => Math.Abs(p.y - sign) < 1e-9).Select(p => p.x).OrderBy(x => x).ToArray();
-				for (int i = 0; i < endDivisions; i++)
-				{
-					double y0 = sign * (1 + (halfHeight - 1) * i / endDivisions), y1 = sign * (1 + (halfHeight - 1) * (i + 1) / endDivisions);
-					for (int j = 0; j + 1 < xs.Length; j++)
-					{
-						var quad = new[] { (xs[j], y0), (xs[j + 1], y0), (xs[j + 1], y1), (xs[j], y1) };
-						quads.Add(sign > 0 ? quad : quad.Reverse().ToArray());
-					}
-				}
+				double angle = Math.Acos(Math.Min(BaseRadius / r, 1));
+				return Math.Tan(angle) - angle;
 			}
 
-			// nodes: the plane nodes (merged) in the bottom and top layer
-			var planeNodes = new Dictionary<(long, long), int>();
-			var planeCoordinates = new List<(double x, double y)>();
-			int planeNode((double x, double y) p)
+			public double HalfThickness(double r)
 			{
-				var key = ((long)Math.Round(p.x * 1e7), (long)Math.Round(p.y * 1e7));
-				if (!planeNodes.TryGetValue(key, out int index))
-				{
-					index = planeCoordinates.Count;
-					planeNodes.Add(key, index);
-					planeCoordinates.Add(p);
-				}
-				return index;
+				if (r <= Profile[0].radius)
+					return Profile[0].halfThickness;
+				for (int i = 1; i < Profile.Length; i++)
+					if (r <= Profile[i].radius)
+					{
+						double t = (r - Profile[i - 1].radius) / (Profile[i].radius - Profile[i - 1].radius);
+						return Profile[i - 1].halfThickness * (1 - t) + Profile[i].halfThickness * t;
+					}
+				return Profile[^1].halfThickness;
 			}
-			var elements = quads.Select(q => q.Select(planeNode).ToArray()).ToList();
+
+			public (double x, double y) Point(double r, double angle) => (CenterX + r * Math.Cos(angle), CenterY + r * Math.Sin(angle));
+		}
+
+		/// <summary>
+		/// GiD mesh (hexahedra) of the gear and the pinion in mesh, tilted towards the camera of the front view, and the von Mises stress
+		/// in their nodes: the torsion of the webs, the bending of the loaded teeth with the concentration at the roots, the contact at the pitch point.
+		/// </summary>
+		private static void writeGears(string meshFile, string resultFile)
+		{
+			double direction = lineOfCentersAngle;
+			var gear = new Gear
+			{
+				Teeth = 22,
+				RingRadii = new[] { 0.36, 0.5, 0.58, 0.78, 0.86, 0.975 },
+				RingDivisions = new[] { 2, 1, 4, 1, 2 },
+				Profile = new[] { (0.5, 0.22), (0.58, 0.09), (0.78, 0.09), (0.86, 0.18) },
+			};
+			var pinion = new Gear
+			{
+				Teeth = 14,
+				RingRadii = new[] { 0.19, 0.3, 0.36, 0.575 },
+				RingDivisions = new[] { 2, 1, 4 },
+				Profile = new[] { (0.3, 0.26), (0.36, 0.18) },
+			};
+			double centerDistance = gear.PitchRadius + pinion.PitchRadius;
+			pinion.CenterX = centerDistance * Math.Cos(direction);
+			pinion.CenterY = centerDistance * Math.Sin(direction);
+			// the flanks of a tooth of the gear and a tooth of the pinion touch at the pitch point
+			gear.Rotation = direction + Math.PI / (2 * gear.Teeth);
+			pinion.Rotation = direction + Math.PI + Math.PI / (2 * pinion.Teeth);
+			var contact = gear.Point(gear.PitchRadius, direction);
+
+			var planeNodes = new Dictionary<(int, long, long), int>();
+			var planeCoordinates = new List<(double x, double y, double halfThickness, double stress)>();
+			var elements = new List<int[]>();
+			foreach (var (g, index) in new[] { (gear, 0), (pinion, 1) })
+			{
+				int planeNode(double r, double angle)
+				{
+					var (x, y) = g.Point(r, angle);
+					var key = (index, (long)Math.Round(x * 1e7), (long)Math.Round(y * 1e7));
+					if (!planeNodes.TryGetValue(key, out int node))
+					{
+						node = planeCoordinates.Count;
+						planeNodes.Add(key, node);
+						planeCoordinates.Add((x, y, g.HalfThickness(Math.Min(r, g.RootRadius)), vonMises(g, r, angle, contact)));
+					}
+					return node;
+				}
+
+				// the rings of the body, the angles of its rays: the roots of the teeth, the gaps between them
+				var radii = new List<double> { g.RingRadii[0] };
+				for (int i = 0; i < g.RingDivisions.Length; i++)
+					for (int k = 1; k <= g.RingDivisions[i]; k++)
+						radii.Add(g.RingRadii[i] + (g.RingRadii[i + 1] - g.RingRadii[i]) * k / g.RingDivisions[i]);
+				double rootHalfAngle = g.HalfToothAngle(g.RootRadius);
+				var angles = new List<double>();
+				for (int t = 0; t < g.Teeth; t++)
+				{
+					double center = g.Rotation + t * g.PitchAngle;
+					for (int i = 0; i < toothDivisions; i++)
+						angles.Add(center + rootHalfAngle * (-1 + 2.0 * i / toothDivisions));
+					for (int i = 0; i < gapDivisions; i++)
+						angles.Add(center + rootHalfAngle + (g.PitchAngle - 2 * rootHalfAngle) * i / gapDivisions);
+				}
+				for (int i = 0; i + 1 < radii.Count; i++)
+					for (int j = 0; j < angles.Count; j++)
+					{
+						int k = (j + 1) % angles.Count;
+						elements.Add(new[] { planeNode(radii[i], angles[j]), planeNode(radii[i + 1], angles[j]), planeNode(radii[i + 1], angles[k]), planeNode(radii[i], angles[k]) });
+					}
+				// the teeth on the root circle
+				for (int t = 0; t < g.Teeth; t++)
+				{
+					double center = g.Rotation + t * g.PitchAngle;
+					(double r, double angle) toothPoint(int layer, int i)
+					{
+						double r = g.RootRadius + (g.TipRadius - g.RootRadius) * layer / toothLayers;
+						return (r, center + g.HalfToothAngle(r) * (-1 + 2.0 * i / toothDivisions));
+					}
+					for (int layer = 0; layer < toothLayers; layer++)
+						for (int i = 0; i < toothDivisions; i++)
+						{
+							var corners = new[] { toothPoint(layer, i), toothPoint(layer + 1, i), toothPoint(layer + 1, i + 1), toothPoint(layer, i + 1) };
+							elements.Add(corners.Select(p => planeNode(p.r, p.angle)).ToArray());
+						}
+				}
+			}
 			int n = planeCoordinates.Count;
 
 			var mesh = new StringBuilder();
-			mesh.AppendLine("MESH \"plate\" dimension 3 ElemType Hexahedra Nnode 8");
+			mesh.AppendLine("MESH \"gears\" dimension 3 ElemType Hexahedra Nnode 8");
 			mesh.AppendLine("Coordinates");
 			for (int layer = 0; layer < 2; layer++)
 				for (int i = 0; i < n; i++)
 				{
-					var (x, y, z) = deformAndTilt(planeCoordinates[i], (layer - 0.5) * thickness);
+					var p = planeCoordinates[i];
+					var (x, y, z) = tilt(p.x, p.y, (2 * layer - 1) * p.halfThickness);
 					mesh.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{layer * n + i + 1} {x:R} {y:R} {z:R}"));
 				}
 			mesh.AppendLine("end coordinates");
@@ -255,47 +324,67 @@ namespace MeshEditor.AvaloniaUI.Tests
 			results.AppendLine("Values");
 			for (int layer = 0; layer < 2; layer++)
 				for (int i = 0; i < n; i++)
-					results.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{layer * n + i + 1} {vonMises(planeCoordinates[i]):0.0000}"));
+					results.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{layer * n + i + 1} {planeCoordinates[i].stress:0.0000}"));
 			results.AppendLine("End Values");
 			File.WriteAllText(resultFile, results.ToString());
 		}
 
 		/// <summary>
-		/// Von Mises stress of an infinite plate with a hole under the unit tension in the y direction and the compression
-		/// in the x direction (the sum of two Kirsch solutions).
+		/// An engineering estimate of the von Mises stress of the gear <paramref name="g"/> under the unit tooth force at the pitch point
+		/// <paramref name="contact"/>: the torsion of the body, the bending and shear of the loaded teeth (Lewis) with the concentration
+		/// at the root fillets, the Hertz contact.
 		/// </summary>
-		private static double vonMises((double x, double y) p)
+		private static double vonMises(Gear g, double r, double angle, (double x, double y) contact)
 		{
-			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
-			double angle = Math.Atan2(p.y, p.x);
-			var (srr1, stt1, srt1) = kirsch(r, angle - Math.PI / 2, 1); // tension along y
-			var (srr2, stt2, srt2) = kirsch(r, angle, -compression); // compression along x
-			double srr = srr1 + srr2, stt = stt1 + stt2, srt = srt1 + srt2;
-			return Math.Sqrt(srr * srr - srr * stt + stt * stt + 3 * srt * srt);
+			double faceWidth = 2 * g.HalfThickness(g.RootRadius);
+			double torsion = 16 * Math.Sqrt(3) * g.PitchRadius / (2 * Math.PI * r * r * 2 * g.HalfThickness(r));
+			double stress = torsion;
+
+			// the loaded tooth (the nearest to the pitch point) carries the most of the force, its neighbours a part (the contact ratio)
+			var (cx, cy) = (contact.x - g.CenterX, contact.y - g.CenterY);
+			double contactAngle = Math.Atan2(cy, cx);
+			int loaded = (int)Math.Round(wrap(contactAngle - g.Rotation) / g.PitchAngle);
+			double rootHalfAngle = g.HalfToothAngle(g.RootRadius), rootWidth = 2 * rootHalfAngle * g.RootRadius;
+			for (int offset = -2; offset <= 2; offset++)
+			{
+				double force = offset == 0 ? 1 : Math.Abs(offset) == 1 ? 0.5 : 0.15;
+				double center = g.Rotation + (loaded + offset) * g.PitchAngle;
+				double local = wrap(angle - center);
+				double rootBending = 6 * force * (g.PitchRadius - g.RootRadius) / (faceWidth * rootWidth * rootWidth);
+				if (r >= g.RootRadius - 1e-9 && Math.Abs(local) <= g.HalfToothAngle(r) + 1e-9)
+				{
+					double halfAngle = g.HalfToothAngle(r), width = 2 * halfAngle * r, s = local / halfAngle;
+					double bending = 6 * force * Math.Max(g.PitchRadius - r, 0) / (faceWidth * width * width) * s;
+					double shear = 1.5 * force / (faceWidth * width) * (1 - s * s) * (r < g.PitchRadius ? 1 : 0.3);
+					double concentration = 1 + 0.9 * s * s * Math.Exp(-Math.Pow((r - g.RootRadius) / (0.35 * module), 2));
+					stress += Math.Sqrt(Math.Pow(concentration * bending, 2) + 3 * shear * shear);
+				}
+				else if (r < g.RootRadius)
+				{
+					// the fillets spread into the rim
+					foreach (int side in new[] { -1, 1 })
+					{
+						var (fx, fy) = (g.RootRadius * Math.Cos(center + side * rootHalfAngle), g.RootRadius * Math.Sin(center + side * rootHalfAngle));
+						var (x, y) = (r * Math.Cos(angle), r * Math.Sin(angle));
+						double distance = Math.Sqrt((x - fx) * (x - fx) + (y - fy) * (y - fy));
+						stress += 1.9 * rootBending * Math.Exp(-Math.Pow(distance / (1.3 * module), 2));
+					}
+				}
+			}
+
+			// Hertz contact at the pitch point
+			var (px, py) = g.Point(r, angle);
+			double contactDistance = Math.Sqrt((px - contact.x) * (px - contact.x) + (py - contact.y) * (py - contact.y));
+			stress += 1.6 * 6 * (g.PitchRadius - g.RootRadius) / (faceWidth * rootWidth * rootWidth) * Math.Exp(-Math.Pow(contactDistance / (module), 2));
+			return stress;
 		}
 
-		/// <summary>
-		/// Polar stresses around a hole under the uniaxial stress <paramref name="load"/>; <paramref name="angle"/> from the load direction.
-		/// </summary>
-		private static (double srr, double stt, double srt) kirsch(double r, double angle, double load)
-		{
-			double q = holeRadius * holeRadius / (r * r);
-			double cos = Math.Cos(2 * angle), sin = Math.Sin(2 * angle);
-			return (load / 2 * (1 - q) + load / 2 * (1 - 4 * q + 3 * q * q) * cos,
-				load / 2 * (1 + q) - load / 2 * (1 + 3 * q * q) * cos,
-				-load / 2 * (1 + 2 * q - 3 * q * q) * sin);
-		}
+		private static double wrap(double angle) => Math.IEEERemainder(angle, 2 * Math.PI);
 
-		private static (double x, double y, double z) deformAndTilt((double x, double y) p, double z)
+		private static (double x, double y, double z) tilt(double x, double y, double z)
 		{
-			// exaggerated: stretching along the load, the necking of the ligaments, a gentle bend out of the plane
-			double r = Math.Max(Math.Sqrt(p.x * p.x + p.y * p.y), holeRadius);
-			double q = holeRadius * holeRadius / (r * r);
-			double x = p.x - (0.06 + 0.03 * compression) * p.x * (1 + q);
-			double y = p.y + 0.10 * p.y + 0.08 * p.y * q;
-			z += 0.22 * (p.y / halfHeight) * (p.y / halfHeight);
 			// the top tilted away from the camera, turned a bit around the vertical axis
-			double tilt = setting("ABOUT_PICTURE_TILT", -15) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 12) * Math.PI / 180;
+			double tilt = setting("ABOUT_PICTURE_TILT", -20) * Math.PI / 180, turn = setting("ABOUT_PICTURE_TURN", 18) * Math.PI / 180;
 			(y, z) = (y * Math.Cos(tilt) - z * Math.Sin(tilt), y * Math.Sin(tilt) + z * Math.Cos(tilt));
 			(x, z) = (x * Math.Cos(turn) + z * Math.Sin(turn), -x * Math.Sin(turn) + z * Math.Cos(turn));
 			return (x, y, z);
