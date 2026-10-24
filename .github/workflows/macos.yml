@@ -1,0 +1,48 @@
+name: macOS smoke test
+
+# MeshEditor is not supported on macOS yet (issue #2). This starts the app on a macOS runner with a sample mesh and
+# uploads a screenshot and the app's output, to see whether the OpenGL 2.1 viewport works there.
+on:
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  smoke:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish
+        run: dotnet publish MeshEditor.Avalonia -c Release -r osx-arm64 --self-contained -o publish
+
+      - name: Start the app with a mesh and take a screenshot
+        run: |
+          mkdir -p smoke
+          ./publish/MeshEditor "$PWD/MeshEditor.Avalonia.Tests/TestData/sample.obj" > smoke/output.txt 2>&1 &
+          pid=$!
+          sleep 25
+          screencapture -x smoke/screen.png || true
+          if kill -0 $pid 2>/dev/null; then
+            echo "The app is running after 25 s."
+            kill $pid
+          else
+            wait $pid
+            echo "::error::The app exited with code $?."
+            failed=1
+          fi
+          cat smoke/output.txt
+          exit ${failed:-0}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-smoke
+          path: smoke
