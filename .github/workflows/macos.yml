@@ -26,6 +26,9 @@ jobs:
       - name: Publish
         run: dotnet publish MeshEditor.Avalonia -c Release -r osx-arm64 --self-contained -o publish
 
+      - name: Graphics of the runner
+        run: system_profiler SPDisplaysDataType || true
+
       - name: Start the app with a mesh and take a screenshot
         run: |
           mkdir -p smoke
