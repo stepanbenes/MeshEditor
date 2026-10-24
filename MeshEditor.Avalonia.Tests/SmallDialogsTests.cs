@@ -31,6 +31,19 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
+		public void AboutDialog_OK_button_is_not_clipped()
+		{
+			var dialog = new AboutDialog();
+			dialog.Show();
+			Dispatcher.UIThread.RunJobs();
+
+			var button = dialog.okButton;
+			double arrangedHeight = button.Bounds.Height + button.Margin.Top + button.Margin.Bottom;
+			Assert.That(arrangedHeight, Is.GreaterThanOrEqualTo(button.DesiredSize.Height), "the button gets the height it needs");
+			Assert.That(button.Bounds.Bottom, Is.LessThanOrEqualTo(((Avalonia.Controls.Control)button.Parent).Bounds.Height));
+		}
+
+		[AvaloniaTest]
 		public void ScreenshotOptions_remember_choice_and_name_the_button()
 		{
 			var first = new ScreenshotOptionsDialog();
