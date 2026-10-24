@@ -512,6 +512,100 @@ namespace MeshEditor.AvaloniaUI.Tests
 			Assert.That(layersTree.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "parent layer is selected");
 		}
 
+		[AvaloniaTest]
+		public async Task Slice_filter_plane_is_defined_by_picking_nodes_and_creates_child_layer()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var rootNode = postprocessView.layersTreeView.RootNodes.Single();
+			var applyFilter = (MenuItem)postprocessView.layersTreeView.LayerContextMenu.Items[0];
+
+			click((MenuItem)applyFilter.Items[1]);
+			var dialog = await waitForWindow<SliceFilterParamsDialog>();
+			Assert.That(dialog.buttonOK.IsEnabled, Is.False, "no plane yet");
+			Assert.That(postprocessView.layersTreeView.GetSelectedLayer()?.Id, Is.EqualTo(rootNode.Layer.Id), "the points are picked on the selected layer");
+			click(dialog.buttonSelectTwoPoints);
+			Assert.That(SceneFacade.EditorMode, Is.EqualTo(EditorMode.PickCuttingPlanePoint));
+			Assert.That(dialog.labelSuggestion.IsVisible, Is.True);
+
+			// props.msh is a 2x2 grid of quads seen from the front: its nodes are at the corners and in the centre of the white
+			// square of the faces; the plane through the left top corner and the centre (and the view direction) cuts it diagonally
+			var viewport = window.ActiveViewport;
+			var scene = viewport.SceneFacade;
+			viewport.Refresh();
+			byte[] frame = viewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out int width, out int height);
+			int left = width, top = height, right = 0, bottom = 0;
+			for (int y = 0; y < height; y++)
+				for (int x = 0; x < width; x++)
+				{
+					int i = (y * width + x) * 4;
+					if (frame[i] > 245 && frame[i + 1] > 245 && frame[i + 2] > 245)
+					{
+						left = Math.Min(left, x); right = Math.Max(right, x);
+						top = Math.Min(top, y); bottom = Math.Max(bottom, y);
+					}
+				}
+			Assert.That(right - left, Is.GreaterThan(100), "the mesh faces are drawn white");
+			double pixelsPerUnit = width / viewport.Bounds.Width;
+			foreach (var (x, y) in new[] { (left, top), ((left + right) / 2, (top + bottom) / 2) })
+			{
+				var point = viewport.TranslatePoint(new Point(x / pixelsPerUnit, y / pixelsPerUnit), window) ?? throw new InvalidOperationException("viewport is not in the window");
+				window.MouseMove(point);
+				window.MouseDown(point, MouseButton.Left);
+				window.MouseUp(point, MouseButton.Left);
+				Dispatcher.UIThread.RunJobs();
+			}
+			Assert.That(scene.CutPlanes, Has.Count.EqualTo(1), "the plane is created from the two picked nodes (which are cleared then)");
+			Assert.That(dialog.buttonOK.IsEnabled, Is.True);
+			Assert.That(dialog.labelSuggestion.IsVisible, Is.False);
+			Assert.That(dialog.textBoxLayerName.Text, Does.Match(@"^slice -?\d+\.\d\d$"), "layer name with the plane offset");
+			string layerName = dialog.textBoxLayerName.Text;
+
+			click(dialog.buttonOK);
+			await waitUntil(() => rootNode.Children.Count == 1, "slice layer is added");
+			Assert.That(rootNode.Children.Single().Name, Is.EqualTo(layerName));
+			Assert.That(SceneFacade.EditorMode, Is.EqualTo(EditorMode.Orbit), "picking ends with the dialog");
+			await waitUntil(() => postprocessView.layersTreeView.GetSelectedLayer()?.Id == rootNode.Children.Single().Layer.Id, "slice layer is selected");
+			await waitUntil(() => postprocessView.dataSelectionControl.comboBoxField.ItemCount > 0, "slice layer is loaded");
+			Assert.That(ErrorReports(), Is.Null);
+		}
+
+		[AvaloniaTest]
+		public async Task Iso_surface_filter_creates_child_layer()
+		{
+			string solutionFileName = importSolution();
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, solutionFileName);
+			var rootNode = postprocessView.layersTreeView.RootNodes.Single();
+
+			// an iso-value in the middle of the temperature range
+			var dataSelection = postprocessView.dataSelectionControl;
+			dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == "Temperature");
+			IDataVisualizer dataVisualizer = null;
+			await waitUntil(() => dataSelection.CurrentDataSelection.FieldName == "Temperature"
+				&& (dataVisualizer = window.ActiveViewport.SceneFacade.GetValue(AvailableValue.DataVisualizer) as IDataVisualizer) != null
+				&& !double.IsNaN(dataVisualizer.GetMinimumDataValue()), "Temperature data is displayed");
+			double isoValue = (dataVisualizer.GetMinimumDataValue() + dataVisualizer.GetMaximumDataValue()) / 2;
+
+			var applyFilter = (MenuItem)postprocessView.layersTreeView.LayerContextMenu.Items[0];
+			click((MenuItem)applyFilter.Items[2]);
+			var dialog = await waitForWindow<IsoSurfaceFilterParamsDialog>();
+			dialog.comboBoxField.SelectedItem = "Temperature";
+			Assert.That(dialog.comboBoxComponent.ItemCount, Is.GreaterThan(0));
+			dialog.textBoxValue.Text = isoValue.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+			Dispatcher.UIThread.RunJobs(); // TextChanged
+			string layerName = dialog.textBoxLayerName.Text;
+			Assert.That(layerName, Does.StartWith("isosurface Temperature/").And.EndWith(" = " + isoValue.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+
+			click(dialog.buttonOK);
+			await waitUntil(() => rootNode.Children.Count == 1, "iso-surface layer is added");
+			Assert.That(rootNode.Children.Single().Name, Is.EqualTo(layerName));
+			await waitUntil(() => postprocessView.layersTreeView.GetSelectedLayer()?.Id == rootNode.Children.Single().Layer.Id, "iso-surface layer is selected");
+			await waitUntil(() => postprocessView.dataSelectionControl.comboBoxField.ItemCount > 0, "iso-surface layer is loaded");
+			Assert.That(ErrorReports(), Is.Null);
+		}
+
 		/// <summary>
 		/// Real mouse click (pointer pressed + released) on the control (near its left edge: long layer names are clipped by the panel).
 		/// </summary>
