@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using MeshEditor.AvaloniaUI.Dialogs;
 using MeshEditor.Graphics;
@@ -163,7 +164,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 			Dispatcher.UIThread.RunJobs();
 			using var frame = dialog.CaptureRenderedFrame();
 			string path = Path.Combine(outputDirectory, "about-dialog.png");
-			frame.Save(path);
+			frame.Save(path, PngBitmapEncoderOptions.Default);
 			TestContext.Out.WriteLine(path);
 		}
 
