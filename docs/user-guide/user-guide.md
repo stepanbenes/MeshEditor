@@ -1,3 +1,5 @@
+![A finite element model of a slope in MeshEditor, colored by the horizontal displacement](figures/hero.png)
+
 # MeshEditor 3.0 – User Guide
 
 MeshEditor is a graphical editor of 3D finite element meshes. It is used to prepare input data for the finite element method (the preprocessor) and to visualize the results of a finite element analysis (the postprocessor).
