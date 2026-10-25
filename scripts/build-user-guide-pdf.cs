@@ -13,6 +13,7 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using System.Runtime.CompilerServices;
 
@@ -32,7 +33,7 @@ const string Style = """
 	pre { background: #f6f8fa; padding: 6pt; font-size: 9pt; white-space: pre-wrap; break-inside: avoid; }
 	pre code { padding: 0; }
 	a { color: #0969da; text-decoration: none; }
-	.anchor, hr { display: none; }
+	hr { display: none; }
 	@page { size: A4; margin: 16mm 15mm; }
 	""";
 
@@ -73,14 +74,20 @@ if (!response.IsSuccessStatusCode)
 	Console.Error.WriteLine($"GitHub could not render the guide: {(int)response.StatusCode} {await response.Content.ReadAsStringAsync()}");
 	return 1;
 }
-// GitHub prefixes the heading ids with user-content- and its scripts fix the links up; the PDF has no scripts
-string body = (await response.Content.ReadAsStringAsync()).Replace("id=\"user-content-", "id=\"");
+string body = await response.Content.ReadAsStringAsync();
+// GitHub puts the heading id, prefixed with user-content- (its scripts fix the links up), on the permalink next to the
+// heading; the permalink is hidden in print and Chrome makes no PDF destination for a hidden element, so the id goes on the heading
+body = Regex.Replace(body, """<h([1-6]) class="heading-element">(.*?)</h\1><a id="user-content-([^"]*)" class="anchor"[^>]*>.*?</a>""",
+	"""<h$1 class="heading-element" id="$3">$2</h$1>""");
+// GitHub links every image to its file, which would be a dead link in the PDF
+body = Regex.Replace(body, """<a [^>]*>(<img [^>]*>)</a>""", "$1");
+// the figure paths are relative to the guide folder; a <base> would also turn the #links into links to that folder
+string guideUri = new Uri(guideDirectory + Path.DirectorySeparatorChar).AbsoluteUri;
+body = Regex.Replace(body, """src="(?![a-z]+:)([^"]*)" """.TrimEnd(), match => $"src=\"{new Uri(new Uri(guideUri), match.Groups[1].Value).AbsoluteUri}\"");
 
-// the base makes the relative figure paths resolve in the guide folder
-string baseUri = new Uri(guideDirectory + Path.DirectorySeparatorChar).AbsoluteUri;
 string html = $"""
 	<!doctype html>
-	<html><head><meta charset="utf-8"><base href="{baseUri}"><title>MeshEditor User Guide</title>
+	<html><head><meta charset="utf-8"><title>MeshEditor User Guide</title>
 	<style>{Style}</style></head>
 	<body>{body}</body></html>
 	""";
