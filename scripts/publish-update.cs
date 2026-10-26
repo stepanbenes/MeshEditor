@@ -8,7 +8,7 @@
 // linux-deployment/mesheditor/build (mesheditor_<version>_amd64.deb) and windows-deployment/build.ps1
 // (MeshEditor-<version>-win-x64.zip). --user-guide also uploads the user guide (Help -> User guide).
 //
-// Signs in with DefaultAzureCredential (e.g. after `az login`); the account needs the Storage Blob Data Contributor role
+// Signs in with the Azure CLI (az login); the account needs the Storage Blob Data Contributor role
 // on the storage account. Or pass a connection string with a key or SAS, or UseDevelopmentStorage=true for Azurite.
 //
 //   dotnet run scripts/publish-update.cs <package> [<package> ...] [--user-guide <pdf>] [--connection-string <value>] [--dry-run]
@@ -75,7 +75,7 @@ if (userGuide != null && !File.Exists(userGuide))
 
 BlobContainerClient container = connectionString != null
 	? new BlobContainerClient(connectionString, ContainerName)
-	: new BlobContainerClient(new Uri($"{AccountUrl}/{ContainerName}"), new DefaultAzureCredential());
+	: new BlobContainerClient(new Uri($"{AccountUrl}/{ContainerName}"), new AzureCliCredential()); // not DefaultAzureCredential: it fails on the managed identity before it gets to the CLI
 
 try
 {
