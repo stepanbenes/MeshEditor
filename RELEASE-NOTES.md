@@ -25,6 +25,7 @@ The settings of 2.x are kept (`%APPDATA%\MeshEditor` on Windows, `~/.config/Mesh
 - **ParaView time series**: *Import FEM results* imports a ParaView data collection (`.pvd`) with all its `.vtu` files, each at its time step. Before, a `.vtu` file was always imported at time 0.
 - **Import FEM results** reports an invalid key time step or NRMSD before it starts the import.
 - **Update check** on Windows too (it was only on Linux).
+- **User guide** (*Help → User guide*) rewritten for 3.0.
 
 ### Changed
 
@@ -37,4 +38,3 @@ The settings of 2.x are kept (`%APPDATA%\MeshEditor` on Windows, `~/.config/Mesh
 
 - **Remote solutions**: the new remote storage, with a Microsoft account sign-in and a private folder for each user, is in the app, but no storage is configured in this release, so the *Remote solutions* tab is not shown. The remote solutions of 2.x (the storage key) are not available any more.
 - **macOS** is not supported yet.
-- The **user guide** (*Help → User guide*) still shows the 2.x screens.
