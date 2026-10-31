@@ -84,15 +84,17 @@ namespace MeshEditor.AvaloniaUI.Tests
 
 		private static void click(Control control) => control.RaiseEvent(new RoutedEventArgs(control is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
 
-		private string importSolution(string solutionName = "props", params string[] compressionParameters)
+		private string importSolution(string solutionName = "props", params string[] compressionParameters) => importDataSolution("props", solutionName, compressionParameters);
+
+		private string importDataSolution(string dataName, string solutionName, params string[] compressionParameters)
 		{
 			var analysisResults = new[]
 			{
 				new AnalysisResult
 				{
 					TimeStep = null,
-					MeshRecordNames = new[] { testDataPath("props.msh") },
-					DataRecordNames = new[] { testDataPath("props.res") },
+					MeshRecordNames = new[] { testDataPath(dataName + ".msh") },
+					DataRecordNames = new[] { testDataPath(dataName + ".res") },
 				}
 			};
 			var solutionHub = SolutionHub.CreateNewLocal(Path.Combine(tempDirectory, solutionName), analysisResults, solutionName);
@@ -330,6 +332,19 @@ namespace MeshEditor.AvaloniaUI.Tests
 			await waitUntil(() => window.LayoutMode == LayoutMode.Preprocessor, "preprocessor layout");
 			Assert.That(window.getCurrentPostprocessView(), Is.Null);
 			Assert.That(window.ActiveViewport.SceneFacade.ContainsMesh, Is.False);
+		}
+
+		[AvaloniaTest]
+		public async Task Result_field_without_values_is_not_offered()
+		{
+			// a Values block with no values used to give a NaN color scale and a black mesh (issue #52)
+			var window = showMainWindow();
+			var postprocessView = await openSolution(window, importDataSolution("cube", "cube"));
+			var fields = postprocessView.dataSelectionControl.comboBoxField.Items.Select(i => i.ToString()).ToArray();
+			Assert.That(fields, Does.Contain("temperature"));
+			Assert.That(fields, Does.Not.Contain("empty"));
+			window.Close();
+			Assert.That(ErrorReports(), Is.Null);
 		}
 
 		[AvaloniaTest]
