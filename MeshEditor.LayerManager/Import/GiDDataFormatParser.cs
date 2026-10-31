@@ -230,7 +230,11 @@ namespace MeshEditor.LayerManager.Import
 									if (parsedFieldsStack.Count > 0 && !parsedFieldsStack.Peek().IsMergeableWith(newParsedField))
 									{
 										// yield one or merge all accumulated fields
-										yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
+										var merged = ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
+										if (!hasAnyValue(merged))
+											System.Diagnostics.Trace.TraceWarning($"Result \"{merged.FieldName}\" (time step {merged.TimeStep}) has no values and was skipped.");
+										else
+											yield return merged;
 										parsedFieldsStack.Clear();
 									}
 
@@ -345,10 +349,20 @@ namespace MeshEditor.LayerManager.Import
 					} // end of file loop
 
 					// yield one or merge all remaining accumulated fields
-					yield return ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
+					var remaining = ParsedField.CreateMergedDataDescription(parsedFieldsStack, correspondingGeometry, gaussPointsExtrapolationStrategy);
+					if (!hasAnyValue(remaining))
+						System.Diagnostics.Trace.TraceWarning($"Result \"{remaining.FieldName}\" (time step {remaining.TimeStep}) has no values and was skipped.");
+					else
+						yield return remaining;
 				}
 			}
 		}
+
+		/// <summary>
+		/// A Values block without any value yields an array filled only with NaN (missing value marker).
+		/// Such a field has nothing to display, so it must not be offered to the user.
+		/// </summary>
+		private static bool hasAnyValue(FieldDataDescription field) => field.Values.Any(v => !double.IsNaN(v));
 
 		private static IEnumerable<double> zeroes(int count)
 		{
