@@ -19,9 +19,9 @@ public sealed record CreatedItem(int Id, string ProjectName);
 public sealed record PickedFile(string Name, string RelativePath, long Size);
 
 /// <summary>
-/// What the 3D viewer reports after showing a layer.
+/// What the 3D viewer reports after showing a layer. NoData: the shown component has no value at all (Min and Max are null).
 /// </summary>
-public sealed record ViewSummary(int Points, int Cells, int Triangles, double? Min, double? Max, double Scale, float[]? Bounds, string? Error);
+public sealed record ViewSummary(int Points, int Cells, int Triangles, double? Min, double? Max, bool NoData, double Scale, float[]? Bounds, string? Error);
 
 public sealed class RemoteStorageException(string message, bool cancelled) : Exception(message)
 {

@@ -97,7 +97,7 @@ namespace MeshEditor.DataVisualizer.Data
 
 		#region Static members
 
-		public static readonly int UndefinedValueColor = unchecked((int)0xFD000000); // black color for undefined values; alpha must be set to this value correctly display color on beams (not zero, almost 255, but not exactly to disable iso-areas shader, should be lower than other special colors to take precedence in UpdateColors methods)
+		public static readonly int UndefinedValueColor = unchecked((int)0xFD4D4D4D); // dark gray color for undefined (missing) values, darker than OutOfRangeColor (black hid the mesh edges); alpha must be set to this value correctly display color on beams (not zero, almost 255, but not exactly to disable iso-areas shader, should be lower than other special colors to take precedence in UpdateColors methods)
 		public static readonly int OutOfRangeColor = unchecked((int)0xFE808080); // gray color for value out of minimum and maximum limit in color scale
 
 		#endregion

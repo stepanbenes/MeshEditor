@@ -304,7 +304,15 @@ namespace MeshEditor.DataVisualizer
 
 		private void setupColorScale()
 		{
-			Settings.ColorScale.SetMinMaxValue(minValue: GetMinimumDataValue(), maxValue: GetMaximumDataValue());
+			double minValue = GetMinimumDataValue();
+			double maxValue = GetMaximumDataValue();
+			// the selected component has no defined value anywhere (all values are missing, e.g. an empty result block)
+			HasNoScalarValues = currentScalarComponent != null && (double.IsNaN(minValue) || double.IsNaN(maxValue));
+			if (double.IsNaN(minValue) || double.IsNaN(maxValue))
+			{
+				minValue = maxValue = 0.0; // keep a valid scale (e.g. for the color scale settings), the legend says "no data"
+			}
+			Settings.ColorScale.SetMinMaxValue(minValue, maxValue);
 		}
 
 		private void buildDataDescription()

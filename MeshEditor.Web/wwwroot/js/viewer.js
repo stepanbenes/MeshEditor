@@ -231,7 +231,7 @@ class Viewer {
             this.updateLegend(o, min, max);
             this.pick.hidden = true;
             this.setStatus('');
-            return { points: this.meta.points, cells: this.meta.cells, triangles: this.meta.triangles, min: scalars?.min ?? null, max: scalars?.max ?? null, scale, bounds: [...this.meta.boundsMin, ...this.meta.boundsMax], error: null };
+            return { points: this.meta.points, cells: this.meta.cells, triangles: this.meta.triangles, min: scalars?.min ?? null, max: scalars?.max ?? null, noData: !!scalars && scalars.min == null, scale, bounds: [...this.meta.boundsMin, ...this.meta.boundsMax], error: null };
         } catch (err) {
             if (stale()) return null;
             this.setStatus('');
@@ -352,18 +352,26 @@ class Viewer {
             this.legend.hidden = true;
             return;
         }
-        const { stops, bands } = this.colormap;
-        let gradient;
-        if (bands) {
-            const parts = [];
-            for (let i = 0; i < bands; i++) parts.push(`${css(colorAt(stops, (i + 0.5) / bands))} ${i / bands * 100}% ${(i + 1) / bands * 100}%`);
-            gradient = `linear-gradient(90deg, ${parts.join(', ')})`;
+        let body;
+        if (this.scalars.min == null) {
+            // no value at all (e.g. an empty result block): the mesh has the undefined color, and the legend says so
+            // instead of showing the color scale (as MeshEditor does)
+            body = `<div class="vp-nodata"><span class="vp-swatch" style="background:${this.uniforms.undefinedColor.value.getStyle()}"></span>no data</div>`;
         } else {
-            gradient = `linear-gradient(90deg, ${stops.map((_, i) => css(colorAt(stops, i / (stops.length - 1)))).join(', ')})`;
+            const { stops, bands } = this.colormap;
+            let gradient;
+            if (bands) {
+                const parts = [];
+                for (let i = 0; i < bands; i++) parts.push(`${css(colorAt(stops, (i + 0.5) / bands))} ${i / bands * 100}% ${(i + 1) / bands * 100}%`);
+                gradient = `linear-gradient(90deg, ${parts.join(', ')})`;
+            } else {
+                gradient = `linear-gradient(90deg, ${stops.map((_, i) => css(colorAt(stops, i / (stops.length - 1)))).join(', ')})`;
+            }
+            const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => `<span>${formatValue(min + (max - min) * t)}</span>`).join('');
+            body = `<div class="vp-ramp" style="background:${gradient}"></div><div class="vp-ticks">${ticks}</div>`;
         }
-        const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => `<span>${formatValue(min + (max - min) * t)}</span>`).join('');
         const component = o.component && o.component !== 'magnitude' ? o.component : '|magnitude|';
-        this.legend.innerHTML = `<div class="vp-legend-title"></div><div class="vp-ramp" style="background:${gradient}"></div><div class="vp-ticks">${ticks}</div>`;
+        this.legend.innerHTML = `<div class="vp-legend-title"></div>${body}`;
         this.legend.firstChild.textContent = `${o.field} · ${component} · step ${o.timeStep}`;
         this.legend.hidden = false;
     }
