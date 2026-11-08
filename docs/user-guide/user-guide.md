@@ -31,12 +31,12 @@ This guide describes the desktop application MeshEditor 3.0 for Windows and Linu
 
 MeshEditor needs no .NET installation: the packages contain everything the application needs. The graphics card has to support OpenGL (version 2.0 or newer is recommended).
 
-**Windows** (10 or 11, 64-bit): unzip `MeshEditor-3.0.1-win-x64.zip` to any folder and start `MeshEditor.exe`.
+**Windows** (10 or 11, 64-bit): unzip the package `MeshEditor-<version>-win-x64.zip` to any folder and start `MeshEditor.exe`.
 
-**Linux** (Ubuntu 22.04 or newer, current Debian): install the package with apt, which also installs the libraries that MeshEditor needs:
+**Linux** (Ubuntu 22.04 or newer, current Debian): install the package with apt, which also installs the libraries that MeshEditor needs (`<version>` is the version in the file name of the package):
 
 ```
-sudo apt install ./mesheditor_3.0.1_amd64.deb
+sudo apt install ./mesheditor_<version>_amd64.deb
 ```
 
 Don't use `dpkg -i`, it doesn't install the dependencies. The package also replaces an installed MeshEditor 2.x. MeshEditor runs on X11; Wayland desktops run it through XWayland, which Ubuntu has by default. When a library is missing or the OpenGL driver doesn't work, MeshEditor says so at startup.
