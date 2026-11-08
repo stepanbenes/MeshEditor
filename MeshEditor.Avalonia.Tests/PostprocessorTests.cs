@@ -335,14 +335,58 @@ namespace MeshEditor.AvaloniaUI.Tests
 		}
 
 		[AvaloniaTest]
-		public async Task Result_field_without_values_is_not_offered()
+		public async Task Result_field_without_values_is_shown_as_no_data()
 		{
-			// a Values block with no values used to give a NaN color scale and a black mesh (issue #52)
+			// a Values block with no values gave a NaN color scale and a black mesh (issue #52): the field is offered,
+			// the mesh is drawn in the gray undefined value color and the legend says "no data" instead of the color scale
 			var window = showMainWindow();
 			var postprocessView = await openSolution(window, importDataSolution("cube", "cube"));
-			var fields = postprocessView.dataSelectionControl.comboBoxField.Items.Select(i => i.ToString()).ToArray();
-			Assert.That(fields, Does.Contain("temperature"));
-			Assert.That(fields, Does.Not.Contain("empty"));
+			var dataSelection = postprocessView.dataSelectionControl;
+			var viewport = window.ActiveViewport;
+			var scene = viewport.SceneFacade.GetUnderlyingSceneObject();
+			scene.DrawAxes = false; // the only colors are those of the data
+			scene.DrawAxisArrows = false;
+			LayerDataVisualizer currentDataVisualizer() => viewport.SceneFacade.GetValue(AvailableValue.DataVisualizer) as LayerDataVisualizer;
+
+			static int countGrayPixels(byte[] bgra) // neither black nor the light background
+			{
+				int count = 0;
+				for (int i = 0; i < bgra.Length; i += 4)
+				{
+					int b = bgra[i], g = bgra[i + 1], r = bgra[i + 2];
+					int min = Math.Min(r, Math.Min(g, b)), max = Math.Max(r, Math.Max(g, b));
+					if (max - min < 16 && min > 40 && max < 200)
+						count++;
+				}
+				return count;
+			}
+
+			async Task<(LayerDataVisualizer DataVisualizer, byte[] Frame)> show(string field)
+			{
+				dataSelection.comboBoxField.SelectedItem = dataSelection.comboBoxField.Items.Single(i => i.ToString() == field);
+				await waitUntil(() => currentDataVisualizer()?.DataSelection is DataSelection s && s.FieldName == field, $"{field} is displayed");
+				for (int i = 0; i < 5; i++) // the color buffers are updated asynchronously
+				{
+					viewport.Refresh();
+					await Task.Delay(100);
+					Dispatcher.UIThread.RunJobs();
+				}
+				viewport.Refresh();
+				return (currentDataVisualizer(), viewport.TakeScreenshot(System.Drawing.Rectangle.Empty, out _, out _));
+			}
+
+			var temperature = await show("temperature");
+			Assert.That(temperature.DataVisualizer.HasNoScalarValues, Is.False);
+			Assert.That(countColoredPixels(temperature.Frame), Is.GreaterThan(1000), "mesh and legend show the color scale");
+
+			var empty = await show("empty");
+			Assert.That(empty.DataVisualizer.HasNoScalarValues, Is.True);
+			Assert.That(empty.DataVisualizer.GetMinimumDataValue(), Is.NaN, "there is no minimum");
+			var colorScale = empty.DataVisualizer.Settings.ColorScale;
+			Assert.That((colorScale.MinValue, colorScale.MaxValue), Is.EqualTo((0.0, 0.0)), "the color scale stays valid (no NaN)");
+			Assert.That(countColoredPixels(empty.Frame), Is.Zero, "no color of the color scale, neither on the mesh nor in the legend");
+			Assert.That(countGrayPixels(empty.Frame), Is.GreaterThan(10000), "the mesh is gray, not black");
+
 			window.Close();
 			Assert.That(ErrorReports(), Is.Null);
 		}

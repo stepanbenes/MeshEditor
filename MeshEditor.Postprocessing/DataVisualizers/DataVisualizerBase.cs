@@ -36,6 +36,14 @@ namespace MeshEditor.DataVisualizer
 
 		public abstract bool DisplayColors { get; }
 
+		/// <summary>
+		/// The displayed scalar component has no value at all (e.g. a result block without values): the mesh is drawn
+		/// in the undefined value color and the legend says "no data" instead of showing the color scale.
+		/// </summary>
+		public bool HasNoScalarValues { get; protected set; }
+
+		public const string NoDataLegendText = "no data";
+
 		public IVisualizerSettings Settings { get; }
 
 		public string StatusText { get; protected set; }
@@ -138,25 +146,32 @@ namespace MeshEditor.DataVisualizer
 
 			string description = LegendText;
 
+			// the color scale: a cell between each two control points, labeled by the values of the control points; a component
+			// without any value has a single cell in the undefined value color (the color of the mesh) labeled "no data" instead
+			bool noData = HasNoScalarValues;
+			int[] boundaryColors = noData ? new[] { ColorScale.UndefinedValueColor, ColorScale.UndefinedValueColor } : controlPoints.Select(cp => cp.Color).ToArray();
+			string[] labels = noData ? new[] { NoDataLegendText } : controlPoints.Select(getControlPointValueText).ToArray();
+			int cellCount = boundaryColors.Length - 1;
+
 			// -----------------------------------------------------------------------
 
 			// sizes in device pixels (the text is measured in device pixels already)
 			static int scale(int logicalPixels) => (int)MathF.Round(MeshEditor.Graphics.DeviceScaling.Scale(logicalPixels));
 
 			Point startLocation;
-			Size tableCellSize = new Size(scale(20), scale(40));
+			Size tableCellSize = new Size(scale(20), noData ? scale(20) : scale(40));
 			SizeF captionSize = Utilities.Functions.MeasureTextLines(description);
 
 			int captionHeight = (int)captionSize.Height + scale(20);
 
-			int tableHeight = tableCellSize.Height * (controlPoints.Length - 1);
+			int tableHeight = tableCellSize.Height * cellCount;
 			var tableWidth = new Lazy<int>(() => calculateTableWidth());
 			int margin = scale(10);
 
 			int calculateTableWidth()
 			{
-				int maxControlPointValueTextWidth = controlPoints.Select(cp => (int)Utilities.Functions.MeasureText(getControlPointValueText(cp)).Width).DefaultIfEmpty().Max();
-				return Math.Max(tableCellSize.Width + maxControlPointValueTextWidth, (int)captionSize.Width);
+				int maxLabelWidth = labels.Select(label => (int)Utilities.Functions.MeasureText(label).Width).DefaultIfEmpty().Max();
+				return Math.Max(tableCellSize.Width + maxLabelWidth, (int)captionSize.Width);
 			}
 
 			switch (Scene.ColorScaleLegendPosition)
@@ -202,14 +217,14 @@ namespace MeshEditor.DataVisualizer
 					{
 						Point location = startLocation;
 						byte r, g, b, a;
-						Utilities.Functions.GetColorComponents(controlPoints[0].Color, out r, out g, out b, out a);
-						for (int i = 0; i < controlPoints.Length - 1; i++)
+						Utilities.Functions.GetColorComponents(boundaryColors[0], out r, out g, out b, out a);
+						for (int i = 0; i < cellCount; i++)
 						{
 							GL.Color4(r, g, b, a);
 							GL.Vertex2(location.X, location.Y);
 							GL.Vertex2(location.X + tableCellSize.Width, location.Y);
 
-							Utilities.Functions.GetColorComponents(controlPoints[i + 1].Color, out r, out g, out b, out a);
+							Utilities.Functions.GetColorComponents(boundaryColors[i + 1], out r, out g, out b, out a);
 							GL.Color4(r, g, b, a);
 							GL.Vertex2(location.X + tableCellSize.Width, location.Y + tableCellSize.Height);
 							GL.Vertex2(location.X, location.Y + tableCellSize.Height);
@@ -227,7 +242,7 @@ namespace MeshEditor.DataVisualizer
 					GL.Begin(PrimitiveType.Lines);
 					{
 						Point location = startLocation;
-						for (int i = 0; i < controlPoints.Length; i++)
+						for (int i = 0; i <= cellCount; i++)
 						{
 							GL.Vertex2(location.X, location.Y);
 							GL.Vertex2(location.X + tableCellSize.Width, location.Y);
@@ -253,12 +268,12 @@ namespace MeshEditor.DataVisualizer
 
 			GL.MatrixMode(MatrixMode.Modelview);
 
-			// DRAW NUMBERS
+			// DRAW NUMBERS (at the cell boundaries) or "no data" (in the middle of the cell)
 			float valueTextHeight = Utilities.Functions.MeasureText("0").Height;
-			textPosition = new Vector2(startLocation.X + tableCellSize.Width + scale(6), startLocation.Y - valueTextHeight / 2);
-			for (int i = 0; i < controlPoints.Length; i++)
+			textPosition = new Vector2(startLocation.X + tableCellSize.Width + scale(6), startLocation.Y - valueTextHeight / 2 + (noData ? tableCellSize.Height / 2 : 0));
+			foreach (string label in labels)
 			{
-				Utilities.Functions.DrawText(getControlPointValueText(controlPoints[i]), textPosition, contrastColor);
+				Utilities.Functions.DrawText(label, textPosition, contrastColor);
 				textPosition.Y += tableCellSize.Height;
 			}
 

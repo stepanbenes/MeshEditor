@@ -546,6 +546,8 @@ The width of the panel and the ratio of its two parts can be changed by dragging
 
 The color map is described by the **legend** in the corner of the view with the name of the field, its component, the time step and the values of the color scale. The position of the legend can be changed in [Settings](#11-settings).
 
+Parts of the mesh without a value are drawn gray. When the field has no value at all in the time step (for example a result that the solver wrote with an empty block of values), the whole mesh is gray and the legend says *no data* instead of showing the color scale.
+
 ![Displacements displayed as vector arrows](figures/postprocessor-vectors.png)
 
 ### 10.5 Color scale settings
