@@ -1,5 +1,15 @@
 # Release notes
 
+## MeshEditor 3.0.1
+
+### Installation
+
+Install it as 3.0.0: on Linux `sudo apt install ./mesheditor_3.0.1_amd64.deb`, on Windows unzip `MeshEditor-3.0.1-win-x64.zip` and start `MeshEditor.exe`. MeshEditor 3.0.0 offers the update by itself (*Help → Check for updates*).
+
+### Fixed
+
+- **Postprocessor**: a result field without any value in a time step (for example a GiD result written with an empty block of values, issue #52) showed NaN on the color scale and a black mesh. The field is still listed, the mesh is drawn gray and the legend says *no data*. Missing values are drawn in a darker gray than the values outside the color scale, so the two are easy to tell apart.
+
 ## MeshEditor 3.0.0
 
 MeshEditor 3.0 has a new user interface and runs on .NET 10. The main window, the dialogs and the postprocessor work as in 2.5, but MeshEditor no longer needs Mono on Linux, and no .NET installation at all: the packages contain everything.
