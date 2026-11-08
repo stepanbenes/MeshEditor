@@ -286,6 +286,7 @@ namespace MeshEditor.Web.Worker
 
 		/// <summary>
 		/// One component (or the magnitude of the field) at one time step, per triangle corner of the mesh the time step belongs to.
+		/// The minimum and maximum are null when no value is defined (e.g. an empty result block): the viewer says "no data".
 		/// </summary>
 		public async Task<(object meta, Dictionary<string, byte[]> buffers)> GetScalarsAsync(int solutionId, Guid layerId, string fieldName, string componentName, decimal timeStep, CancellationToken cancellationToken)
 		{
@@ -296,8 +297,15 @@ namespace MeshEditor.Web.Worker
 				? i => components[0].Values[i]
 				: i => Math.Sqrt(components.Sum(c => c.Values[i] * c.Values[i]));
 			float[] values = view.MapToCorners(location, valueAt);
-			float min = values.Length == 0 ? 0 : values.Where(v => !float.IsNaN(v)).DefaultIfEmpty(0).Min();
-			float max = values.Length == 0 ? 0 : values.Where(v => !float.IsNaN(v)).DefaultIfEmpty(0).Max();
+			float? min = null, max = null;
+			foreach (float v in values)
+			{
+				if (!float.IsNaN(v))
+				{
+					min = Math.Min(min ?? v, v);
+					max = Math.Max(max ?? v, v);
+				}
+			}
 			return (new { meshIndex, min, max, location = location.ToString() }, new Dictionary<string, byte[]> { ["scalars"] = toBytes(values) });
 		}
 

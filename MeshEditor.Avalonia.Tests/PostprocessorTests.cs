@@ -355,7 +355,7 @@ namespace MeshEditor.AvaloniaUI.Tests
 				{
 					int b = bgra[i], g = bgra[i + 1], r = bgra[i + 2];
 					int min = Math.Min(r, Math.Min(g, b)), max = Math.Max(r, Math.Max(g, b));
-					if (max - min < 16 && min > 40 && max < 200)
+					if (max - min < 16 && min > 25 && max < 200)
 						count++;
 				}
 				return count;

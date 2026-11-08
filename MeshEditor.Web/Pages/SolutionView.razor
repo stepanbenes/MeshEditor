@@ -148,13 +148,20 @@
                     <dt>none</dt><dd></dd>
                 }
             </dl>
-            @if (summary?.Min != null)
+            @if (summary?.Min != null || summary?.NoData == true)
             {
                 <div class="sep"></div>
                 <h3>Shown values</h3>
                 <dl class="kv">
-                    <dt>Minimum</dt><dd>@fmt(summary.Min.Value)</dd>
-                    <dt>Maximum</dt><dd>@fmt(summary.Max!.Value)</dd>
+                    @if (summary.Min != null)
+                    {
+                        <dt>Minimum</dt><dd>@fmt(summary.Min.Value)</dd>
+                        <dt>Maximum</dt><dd>@fmt(summary.Max!.Value)</dd>
+                    }
+                    else
+                    {
+                        <dt>Values</dt><dd>no data</dd>
+                    }
                     @if (!string.IsNullOrEmpty(deformField))
                     {
                         <dt>Deformation scale</dt><dd>×@fmt(summary.Scale)</dd>
